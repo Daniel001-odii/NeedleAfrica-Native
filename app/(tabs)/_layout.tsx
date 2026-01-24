@@ -44,7 +44,7 @@ export default function TabLayout() {
             />
 
             <Tabs.Screen
-                name="customers/index"
+                name="customers"
                 options={{
                     title: 'Customers',
                     tabBarIcon: ({ color, focused }) => (
@@ -54,7 +54,7 @@ export default function TabLayout() {
             />
 
             <Tabs.Screen
-                name="orders/index"
+                name="orders"
                 options={{
                     title: 'Orders',
                     tabBarIcon: ({ color, focused }) => (
@@ -74,7 +74,7 @@ export default function TabLayout() {
             />
 
             <Tabs.Screen
-                name="profile/index"
+                name="profile"
                 options={{
                     title: 'Profile',
                     tabBarIcon: ({ color, focused }) => (
@@ -84,8 +84,7 @@ export default function TabLayout() {
             />
 
             {/* Hidden screens (no tab button) */}
-            <Tabs.Screen name="customers/new" options={{ href: null }} />
-            <Tabs.Screen name="customers/[id]" options={{ href: null }} />
+            {/* Note: Sub-screens are now handled by nested Stacks in profile/ and customers/ directories */}
         </Tabs>
     );
 }

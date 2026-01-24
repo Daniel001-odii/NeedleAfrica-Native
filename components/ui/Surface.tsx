@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface SurfaceProps extends ViewProps {
     variant?: 'white' | 'lavender' | 'peach' | 'blue' | 'green' | 'muted' | 'dark';
-    rounded?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
+    rounded?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full' | 'none';
     hasShadow?: boolean;
     hasBorder?: boolean;
 }
@@ -36,6 +36,7 @@ export function Surface({
         '2xl': 'rounded-2xl',
         '3xl': 'rounded-3xl',
         full: 'rounded-full',
+        none: 'rounded-none',
     };
 
     return (

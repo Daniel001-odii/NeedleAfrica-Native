@@ -3,7 +3,9 @@ import { View, ScrollView, Animated, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
-import { Box, FilterSearch, Sort } from 'iconsax-react-native';
+import { IconButton } from '../../../components/ui/IconButton';
+import { Box, FilterSearch, Sort, Add } from 'iconsax-react-native';
+import { useRouter } from 'expo-router';
 
 const TABS = ['All', 'Pending', 'Delivered'] as const;
 type TabType = typeof TABS[number];
@@ -20,6 +22,7 @@ interface Order {
 
 export default function Orders() {
     const [activeTab, setActiveTab] = useState<TabType>('All');
+    const router = useRouter();
 
     // Mock data
     const orders: Order[] = [
@@ -48,6 +51,11 @@ export default function Orders() {
                             <Pressable className="w-10 h-10 bg-muted rounded-full items-center justify-center">
                                 <FilterSearch size={20} color="black" />
                             </Pressable>
+                            <IconButton
+                                icon={<Add size={24} color="white" />}
+                                variant="dark"
+                                onPress={() => router.push('/(tabs)/orders/new')}
+                            />
                         </View>
                     </View>
 
@@ -102,9 +110,9 @@ export default function Orders() {
                     contentContainerClassName="px-6 pb-32"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View className="gap-4">
+                    <View className="gap-2">
                         {filteredOrders.map((order) => (
-                            <Pressable key={order.id}>
+                            <Pressable key={order.id} onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
                                 <Surface
                                     variant="white"
                                     className="p-4 border border-gray-100 flex-row items-center"

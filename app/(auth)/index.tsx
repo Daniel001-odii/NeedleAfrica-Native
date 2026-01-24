@@ -22,9 +22,9 @@ export default function Welcome() {
                 >
                     {/* Logo/Brand at Top */}
                     <SafeAreaView edges={['top']} className="absolute top-12 self-center">
-                        <Typography variant="h2" weight="bold" color="white" className="tracking-widest">
+                        {/* <Typography variant="h2" weight="bold" color="white" className="tracking-widest">
                             NEEDLE AFRICA
-                        </Typography>
+                        </Typography> */}
                     </SafeAreaView>
 
                     {/* Content */}
