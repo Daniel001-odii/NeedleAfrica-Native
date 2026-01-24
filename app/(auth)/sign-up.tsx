@@ -112,15 +112,15 @@ export default function SignUp() {
                             <Button
                                 onPress={handleSignUp}
                                 isLoading={isLoading}
-                                className="h-16 rounded-full bg-dark border-0 shadow-lg mb-8"
+                                className="h-16 rounded-full bg-dark border-0 shadow-lg mb-4"
                                 textClassName="text-white text-lg font-bold"
                             >
                                 Get Started
                             </Button>
 
-                            <View className="flex-row items-center mb-8">
+                            <View className="flex-row items-center mb-4">
                                 <View className="flex-1 h-[1px] bg-gray-100" />
-                                <Typography variant="small" color="gray" className="mx-4 font-bold uppercase">Or sign up with</Typography>
+                                <Typography variant="small" color="gray" className="mx-4 font-bold uppercase">Or continue with</Typography>
                                 <View className="flex-1 h-[1px] bg-gray-100" />
                             </View>
 

@@ -29,12 +29,12 @@ export default function Welcome() {
 
                     {/* Content */}
                     <View className="mb-10">
-                        <Typography variant="h1" weight="bold" color="white" className="text-5xl leading-[60px] mb-4">
+                        <Typography variant="h1" weight="bold" color="white" className="text-5xl leading-[60px]">
                             Your Journey to Perfect Fit
                         </Typography>
-                        <Typography color="white" className="text-lg opacity-80 leading-7">
+                        {/* <Typography color="white" className="text-lg opacity-80 leading-7">
                             The professional workshop management tool for modern tailors and fashion designers.
-                        </Typography>
+                        </Typography> */}
                     </View>
 
                     {/* Actions */}
@@ -72,8 +72,8 @@ export default function Welcome() {
                     {/* Footer Links */}
                     <View className="mt-8 items-center">
                         <Typography color="white" variant="small" className="opacity-60 text-center">
-                            By proceeding you agree to our {'\n'}
-                            <Typography variant="small" weight="bold" className="underline">Terms of use</Typography> and acknowledge <Typography variant="small" weight="bold" className="underline">Privacy policy</Typography>
+                            By proceeding to use NeedleAfrica, you agree to our {'\n'}
+                            <Typography variant="small" weight="bold" color="white" className="underline">Terms of use</Typography> and acknowledge <Typography color="white" variant="small" weight="bold" className="underline">Privacy policy</Typography>
                         </Typography>
                     </View>
                 </LinearGradient>
