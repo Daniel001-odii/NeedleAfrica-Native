@@ -36,7 +36,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
     const { user, isLoading } = useAuth();
-    const { performSync } = useSync();
+    const { sync } = useSync();
     const segments = useSegments();
     const router = useRouter();
 
@@ -60,25 +60,25 @@ function RootLayoutNav() {
         // Sync every 30 seconds
         const interval = setInterval(() => {
             console.log('Performing periodic background sync...');
-            performSync().catch(console.error);
+            sync().catch(console.error);
         }, 30 * 1000);
 
         // Sync on app foreground
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (nextAppState === 'active') {
                 console.log('App returned to foreground, performing sync...');
-                performSync().catch(console.error);
+                sync().catch(console.error);
             }
         });
 
         // Initial sync on mount if logged in
-        performSync().catch(console.error);
+        sync().catch(console.error);
 
         return () => {
             clearInterval(interval);
             subscription.remove();
         };
-    }, [user, performSync]);
+    }, [user, sync]);
 
     if (isLoading) return null;
 
