@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, TextInput, Alert, TouchableOpacity, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, User, Shop, Sms, Call, Location, Trash } from 'iconsax-react-native';
@@ -8,26 +8,63 @@ import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import Toast from 'react-native-toast-message';
 
 export default function PersonalInformation() {
-    const { user } = useAuth();
+    const { user, updateProfile, deleteAccount, isLoading: isAuthLoading } = useAuth();
     const router = useRouter();
 
-    const [username, setUsername] = useState('janedoe_tailor');
-    const [fullName, setFullName] = useState(user?.name || '');
-    const [businessName, setBusinessName] = useState('Needle Africa Studio');
+    const [username, setUsername] = useState(user?.username || '');
+    const [businessName, setBusinessName] = useState(user?.businessName || '');
     const [email, setEmail] = useState(user?.email || '');
-    const [phone, setPhone] = useState('08012345678');
-    const [address, setAddress] = useState('123 Fashion Lane, Lagos, Nigeria');
+    const [phone, setPhone] = useState(user?.phoneNumber || '');
+    const [address, setAddress] = useState(user?.address || '');
     const [isSaving, setIsSaving] = useState(false);
 
+    useEffect(() => {
+        if (user) {
+            setUsername(user.username || '');
+            setBusinessName(user.businessName || '');
+            setEmail(user.email || '');
+            setPhone(user.phoneNumber || '');
+            setAddress(user.address || '');
+        }
+    }, [user]);
+
     const handleSave = async () => {
+        if (!username || !email) {
+            Toast.show({
+                type: 'error',
+                text1: 'Required',
+                text2: 'Username and Email are required'
+            });
+            return;
+        }
+
         setIsSaving(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSaving(false);
-        Alert.alert('Success', 'Profile updated successfully');
-        router.back();
+        try {
+            await updateProfile({
+                username,
+                businessName,
+                email,
+                phoneNumber: phone,
+                address
+            });
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Profile updated successfully'
+            });
+            router.back();
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: error.message || 'Something went wrong'
+            });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleDeleteAccount = () => {
@@ -36,7 +73,26 @@ export default function PersonalInformation() {
             'Are you sure you want to delete your account? This action is irreversible.',
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => console.log('Delete Account') }
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deleteAccount();
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Account Deleted',
+                                text2: 'Your account has been permanently removed.'
+                            });
+                        } catch (error: any) {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Delete Failed',
+                                text2: error.message || 'Something went wrong'
+                            });
+                        }
+                    }
+                }
             ]
         );
     };
@@ -179,5 +235,4 @@ function InputGroup({ label, value, onChangeText, icon, placeholder, keyboardTyp
     );
 }
 
-import { Pressable } from 'react-native';
 

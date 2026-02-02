@@ -9,20 +9,42 @@ import { IconButton } from '../../components/ui/IconButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { useAuth } from '../../contexts/AuthContext';
+import Toast from 'react-native-toast-message';
+
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { forgotPassword, isLoading } = useAuth();
     const router = useRouter();
 
     const handleReset = async () => {
-        if (!email) return;
+        if (!email) {
+            Toast.show({
+                type: 'error',
+                text1: 'Required',
+                text2: 'Please enter your email address'
+            });
+            return;
+        }
 
-        setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        alert('Reset link sent to your email');
-        setIsSubmitting(false);
-        router.back();
+        try {
+            await forgotPassword(email);
+            Toast.show({
+                type: 'success',
+                text1: 'OTP Sent',
+                text2: 'Check your email for the 4-digit code'
+            });
+            router.push({
+                pathname: '/(auth)/reset-password',
+                params: { email }
+            });
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to send OTP'
+            });
+        }
     };
 
     return (
@@ -77,11 +99,11 @@ export default function ForgotPassword() {
 
                             <Button
                                 onPress={handleReset}
-                                isLoading={isSubmitting}
+                                isLoading={isLoading}
                                 className="h-16 rounded-full bg-dark border-0 shadow-lg"
                                 textClassName="text-white text-lg font-bold"
                             >
-                                Send Reset Link
+                                Send OTP Code
                             </Button>
                         </ScrollView>
                     </SafeAreaView>

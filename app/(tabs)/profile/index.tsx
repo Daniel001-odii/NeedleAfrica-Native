@@ -26,14 +26,14 @@ export default function Profile() {
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
                 <View className="flex-row items-center mb-6">
                     <Image
-                        source={{ uri: user?.photo || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' }}
+                        source={{ uri: user?.profilePicture || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' }}
                         className="w-20 h-20 rounded-full mr-5"
                     />
                     <View className="flex-1">
-                        <Typography variant="h3" weight="bold">{user?.name || 'Jane Doe'}</Typography>
-                        <Typography variant="caption" color="gray" className="mb-2">{user?.email || 'jane@needleafrica.com'}</Typography>
+                        <Typography variant="h3" weight="bold">{user?.username || 'Jane Doe'}</Typography>
+                        <Typography variant="caption" color="gray" className="mb-2">{user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>
                         <View className="bg-blue-500/50 self-start px-3 py-1 rounded-full">
-                            <Typography variant="small" weight="bold">Tailor</Typography>
+                            <Typography variant="small" weight="bold">{user?.role || 'Tailor'}</Typography>
                         </View>
                     </View>
                     {/* <IconButton icon={<Setting2 size={20} color="black" />} variant="white" /> */}

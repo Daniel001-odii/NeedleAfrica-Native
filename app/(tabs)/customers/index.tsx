@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, Pressable, TextInput, Linking } from 'react-native';
+import { View, FlatList, Pressable, TextInput, Linking, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
@@ -12,8 +12,15 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 function CustomersScreen() {
     const [search, setSearch] = useState('');
-    const { customers, loading, seedCustomers } = useCustomers(search);
+    const [refreshing, setRefreshing] = useState(false);
+    const { customers, loading, seedCustomers, refresh } = useCustomers(search);
     const router = useRouter();
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        await refresh();
+        setRefreshing(false);
+    }, [refresh]);
 
     const handleCall = (phoneNumber: string | null) => {
         if (phoneNumber) {
@@ -53,6 +60,9 @@ function CustomersScreen() {
                 keyExtractor={item => item.id}
                 contentContainerClassName="p-6 pt-0 pb-32"
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
                 renderItem={({ item }) => (
                     <Pressable
                         onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
@@ -102,13 +112,13 @@ function CustomersScreen() {
                                     >
                                         Add New
                                     </Button>
-                                    <Button
+                                    {/* <Button
                                         onPress={seedCustomers}
                                         className="bg-lavender px-6 rounded-full h-12"
                                         variant="secondary"
                                     >
                                         Seed Test Data
-                                    </Button>
+                                    </Button> */}
                                 </View>
                             )}
                         </View>

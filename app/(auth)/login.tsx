@@ -9,6 +9,9 @@ import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuthAPI } from '../../hooks/useAuth';
+
+import Toast from 'react-native-toast-message';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -18,12 +21,32 @@ export default function Login() {
     const router = useRouter();
 
     const handleLogin = async () => {
+        if (!email || !password) {
+            Toast.show({
+                type: 'error',
+                text1: 'Required Fields',
+                text2: 'Please enter both email and password'
+            });
+            return;
+        }
         try {
             await signIn(email, password);
-        } catch (error) {
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in successfully'
+            });
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Login Failed',
+                text2: error.message || 'Check your credentials and try again'
+            });
             console.error(error);
         }
     };
+
+    const authService = useAuthAPI();
 
     return (
         <View className="flex-1 bg-white">
@@ -112,23 +135,6 @@ export default function Login() {
                                 Sign In
                             </Button>
 
-                            <View className="flex-row items-center mb-4">
-                                <View className="flex-1 h-[1px] bg-gray-100" />
-                                <Typography variant="small" color="gray" className="mx-4 font-bold uppercase">Or continue with</Typography>
-                                <View className="flex-1 h-[1px] bg-gray-100" />
-                            </View>
-
-                            <TouchableOpacity
-                                onPress={() => {/* Handle Google Sign In */ }}
-                                className="h-16 rounded-full bg-white border border-gray-200 flex-row items-center justify-center mb-10 shadow-sm"
-                            >
-                                <Image
-                                    source={require('../../assets/images/google_logo.png')}
-                                    className="w-6 h-6 mr-3"
-                                    resizeMode="contain"
-                                />
-                                <Typography weight="bold" className="text-lg">Google Account</Typography>
-                            </TouchableOpacity>
 
                             <View className="flex-row justify-center items-center pb-10">
                                 <Typography color="gray">Don't have an account? </Typography>

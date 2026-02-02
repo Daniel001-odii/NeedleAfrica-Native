@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft } from 'iconsax-react-native';
+import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft, Shop } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
@@ -10,8 +10,11 @@ import { IconButton } from '../../components/ui/IconButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import Toast from 'react-native-toast-message';
+
 export default function SignUp() {
     const [name, setName] = useState('');
+    const [businessName, setBusinessName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -19,9 +22,27 @@ export default function SignUp() {
     const router = useRouter();
 
     const handleSignUp = async () => {
+        if (!name || !email || !password || !businessName) {
+            Toast.show({
+                type: 'error',
+                text1: 'Required Fields',
+                text2: 'Please fill in all fields'
+            });
+            return;
+        }
         try {
-            await signUp(email, password, name);
-        } catch (error) {
+            await signUp(email, password, name, businessName);
+            Toast.show({
+                type: 'success',
+                text1: 'Account Created',
+                text2: 'Welcome to Needle Africa!'
+            });
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Registration Failed',
+                text2: error.message || 'Something went wrong'
+            });
             console.error(error);
         }
     };
@@ -66,6 +87,19 @@ export default function SignUp() {
                                             placeholderTextColor="#9CA3AF"
                                             value={name}
                                             onChangeText={setName}
+                                        />
+                                    </Surface>
+                                </View>
+                                <View className="mb-6">
+                                    <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Business Name</Typography>
+                                    <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-100">
+                                        <Shop size={20} color="#6B7280" variant="Bulk" />
+                                        <TextInput
+                                            className="flex-1 ml-3 h-full font-semibold text-dark"
+                                            placeholder="Needle Africa Tailors"
+                                            placeholderTextColor="#9CA3AF"
+                                            value={businessName}
+                                            onChangeText={setBusinessName}
                                         />
                                     </Surface>
                                 </View>
@@ -118,23 +152,6 @@ export default function SignUp() {
                                 Get Started
                             </Button>
 
-                            <View className="flex-row items-center mb-4">
-                                <View className="flex-1 h-[1px] bg-gray-100" />
-                                <Typography variant="small" color="gray" className="mx-4 font-bold uppercase">Or continue with</Typography>
-                                <View className="flex-1 h-[1px] bg-gray-100" />
-                            </View>
-
-                            <TouchableOpacity
-                                onPress={() => {/* Handle Google Sign In */ }}
-                                className="h-16 rounded-full bg-white border border-gray-200 flex-row items-center justify-center mb-10 shadow-sm"
-                            >
-                                <Image
-                                    source={require('../../assets/images/google_logo.png')}
-                                    className="w-6 h-6 mr-3"
-                                    resizeMode="contain"
-                                />
-                                <Typography weight="bold" className="text-lg">Google Account</Typography>
-                            </TouchableOpacity>
 
                             <View className="flex-row justify-center items-center pb-10">
                                 <Typography color="gray">Already have an account? </Typography>

@@ -1,75 +1,49 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSQLiteContext } from 'expo-sqlite';
-import * as Crypto from 'expo-crypto';
-
-export interface Customer {
-    id: string;
-    server_id: string | null;
-    full_name: string;
-    phone_number: string | null;
-    gender: string | null;
-    notes: string | null;
-    is_synced: boolean;
-    created_at: number;
-    updated_at: number;
-}
-
-// Map database row to interface
-const mapRow = (row: any): Customer => ({
-    ...row,
-    is_synced: !!row.is_synced,
-    fullName: row.full_name, // Support old camelCase if needed, but let's stick to what UI expects
-});
+import { useDatabase } from '@nozbe/watermelondb/hooks';
+import { Q } from '@nozbe/watermelondb';
+import Customer from '../database/watermelon/models/Customer';
+export { Customer };
 
 export function useCustomers(searchQuery: string = '') {
-    const [customers, setCustomers] = useState<(Customer & { fullName: string; phoneNumber: string | null })[]>([]);
+    const database = useDatabase();
+    const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
-    const db = useSQLiteContext();
 
-    const fetchCustomers = useCallback(async () => {
-        try {
-            setLoading(true);
-            let query = 'SELECT * FROM customers';
-            let params: any[] = [];
+    const fetchCustomers = useCallback(() => {
+        let query = database.get<Customer>('customers').query();
 
-            if (searchQuery) {
-                query += ' WHERE full_name LIKE ? OR phone_number LIKE ?';
-                const searchParam = `%${searchQuery}%`;
-                params = [searchParam, searchParam];
-            }
-
-            query += ' ORDER BY created_at DESC';
-
-            const result = await db.getAllAsync(query, params);
-            const mapped = result.map((row: any) => ({
-                ...row,
-                fullName: row.full_name,
-                phoneNumber: row.phone_number,
-                is_synced: !!row.is_synced,
-            }));
-            setCustomers(mapped);
-        } catch (error) {
-            console.error('Error fetching customers:', error);
-        } finally {
-            setLoading(false);
+        if (searchQuery) {
+            query = query.extend(
+                Q.or(
+                    Q.where('full_name', Q.like(`%${Q.sanitizeLikeString(searchQuery)}%`)),
+                    Q.where('phone_number', Q.like(`%${Q.sanitizeLikeString(searchQuery)}%`))
+                )
+            );
         }
-    }, [db, searchQuery]);
+
+        const subscription = query.observe().subscribe(data => {
+            setCustomers(data);
+            setLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [database, searchQuery]);
 
     useEffect(() => {
-        fetchCustomers();
+        const unsubscribe = fetchCustomers();
+        return unsubscribe;
     }, [fetchCustomers]);
 
     const addCustomer = async (data: { fullName: string; phoneNumber: string; gender?: string; notes?: string }) => {
-        const id = Crypto.randomUUID();
-        const now = Date.now();
-
-        await db.runAsync(
-            `INSERT INTO customers (id, full_name, phone_number, gender, notes, is_synced, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, data.fullName, data.phoneNumber, data.gender || '', data.notes || '', 0, now, now]
-        );
-
-        await fetchCustomers(); // Refresh list
+        await database.write(async () => {
+            await database.get<Customer>('customers').create(customer => {
+                customer.fullName = data.fullName;
+                customer.phoneNumber = data.phoneNumber;
+                customer.gender = data.gender || '';
+                customer.notes = data.notes || '';
+                customer.syncStatus = 'created';
+            });
+        });
     };
 
     const seedCustomers = async () => {
@@ -80,18 +54,38 @@ export function useCustomers(searchQuery: string = '') {
             { fullName: 'David Okoro', phoneNumber: '08155667788', gender: 'male', notes: 'Slim fit preferences.' },
         ];
 
-        for (const data of dummyData) {
-            const id = Crypto.randomUUID();
-            const now = Date.now();
-            await db.runAsync(
-                `INSERT INTO customers (id, full_name, phone_number, gender, notes, is_synced, created_at, updated_at) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [id, data.fullName, data.phoneNumber, data.gender, data.notes, 0, now, now]
-            );
-        }
-
-        await fetchCustomers();
+        await database.write(async () => {
+            for (const data of dummyData) {
+                await database.get<Customer>('customers').create(customer => {
+                    customer.fullName = data.fullName;
+                    customer.phoneNumber = data.phoneNumber;
+                    customer.gender = data.gender;
+                    customer.notes = data.notes;
+                    customer.syncStatus = 'created';
+                });
+            }
+        });
     };
 
-    return { customers, loading, addCustomer, seedCustomers, refresh: fetchCustomers };
+    const updateCustomer = async (id: string, data: { fullName?: string; phoneNumber?: string; gender?: string; notes?: string }) => {
+        await database.write(async () => {
+            const customer = await database.get<Customer>('customers').find(id);
+            await customer.update(record => {
+                if (data.fullName !== undefined) record.fullName = data.fullName;
+                if (data.phoneNumber !== undefined) record.phoneNumber = data.phoneNumber;
+                if (data.gender !== undefined) record.gender = data.gender;
+                if (data.notes !== undefined) record.notes = data.notes;
+                record.syncStatus = 'created';
+            });
+        });
+    };
+
+    const deleteCustomer = async (id: string) => {
+        await database.write(async () => {
+            const customer = await database.get<Customer>('customers').find(id);
+            await customer.markAsDeleted(); // WatermelonDB's standard way to handle deletions for sync
+        });
+    };
+
+    return { customers, loading, addCustomer, updateCustomer, deleteCustomer, seedCustomers, refresh: fetchCustomers };
 }

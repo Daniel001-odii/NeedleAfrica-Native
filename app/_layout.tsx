@@ -1,11 +1,13 @@
-import { Stack } from 'expo-router';
-import { AuthProvider } from '../contexts/AuthContext';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { SQLiteProvider } from 'expo-sqlite';
-import { migrateDbIfNeeded } from '../database/sqlite';
+import { database } from '../database/watermelon';
+import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { AppState, NativeModules } from 'react-native';
+import { useSync } from '../hooks/useSync';
 import {
     useFonts,
     PlayfairDisplay_400Regular,
@@ -24,8 +26,70 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import "../global.css";
 
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '../components/ui/CustomToast';
+
+console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+function RootLayoutNav() {
+    const { user, isLoading } = useAuth();
+    const { performSync } = useSync();
+    const segments = useSegments();
+    const router = useRouter();
+
+    // 1. Auth redirection logic
+    useEffect(() => {
+        if (isLoading) return;
+
+        const inAuthGroup = segments[0] === '(auth)';
+
+        if (!user && !inAuthGroup) {
+            router.replace('/(auth)/login');
+        } else if (user && inAuthGroup) {
+            router.replace('/(tabs)');
+        }
+    }, [user, isLoading, segments]);
+
+    // 2. Sync logic: Interval & Foreground
+    useEffect(() => {
+        if (!user) return;
+
+        // Sync every 30 seconds
+        const interval = setInterval(() => {
+            console.log('Performing periodic background sync...');
+            performSync().catch(console.error);
+        }, 30 * 1000);
+
+        // Sync on app foreground
+        const subscription = AppState.addEventListener('change', nextAppState => {
+            if (nextAppState === 'active') {
+                console.log('App returned to foreground, performing sync...');
+                performSync().catch(console.error);
+            }
+        });
+
+        // Initial sync on mount if logged in
+        performSync().catch(console.error);
+
+        return () => {
+            clearInterval(interval);
+            subscription.remove();
+        };
+    }, [user, performSync]);
+
+    if (isLoading) return null;
+
+    return (
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+        </Stack>
+    );
+}
 
 export default function RootLayout() {
     const [loaded, error] = useFonts({
@@ -54,15 +118,13 @@ export default function RootLayout() {
 
     return (
         <SafeAreaProvider>
-            <SQLiteProvider databaseName="needleafrica.db" onInit={migrateDbIfNeeded}>
+            <DatabaseProvider database={database}>
                 <AuthProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    </Stack>
+                    <RootLayoutNav />
                     <StatusBar style="auto" />
+                    <Toast config={toastConfig} />
                 </AuthProvider>
-            </SQLiteProvider>
+            </DatabaseProvider>
         </SafeAreaProvider>
     );
 }

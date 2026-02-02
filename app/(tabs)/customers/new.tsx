@@ -8,6 +8,9 @@ import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+
+import { useSync } from '../../../hooks/useSync';
 
 export default function NewCustomer() {
     const [fullName, setFullName] = useState('');
@@ -17,6 +20,7 @@ export default function NewCustomer() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { addCustomer } = useCustomers();
+    const { performSync } = useSync();
     const router = useRouter();
 
     const handleSubmit = async () => {
@@ -26,18 +30,27 @@ export default function NewCustomer() {
         }
 
         try {
-            setIsSubmitting(true);
-            await addCustomer({
+            // OPTIMISTIC UPDATE: Write to local DB and redirect immediately
+            addCustomer({
                 fullName,
                 phoneNumber,
                 gender,
                 notes
             });
+
+            // Trigger sync in background (fire and forget)
+            performSync().catch(console.error);
+
+            // Redirect immediately - don't wait for server!
             router.back();
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Customer created locally'
+            });
         } catch (error) {
             Alert.alert('Error', 'Failed to save customer');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 

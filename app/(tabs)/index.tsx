@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SearchNormal, Notification, Calendar, Profile2User, Box, MagicStar, ArrowRight, Wallet, People, Timer1, Add, Ruler, Gallery } from 'iconsax-react-native';
@@ -7,16 +7,16 @@ import { useRouter } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
+import { useSync } from '../../hooks/useSync';
 
 export default function Home() {
     const { user } = useAuth();
     const router = useRouter();
-    const [refreshing, setRefreshing] = useState(false);
+    const { isSyncing, performSync } = useSync();
 
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 1500);
-    }, []);
+    const onRefresh = useCallback(async () => {
+        await performSync();
+    }, [performSync]);
 
     // Helper for date formatting
     const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
@@ -26,19 +26,19 @@ export default function Home() {
             <ScrollView
                 contentContainerClassName="p-6 pb-12"
                 showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={onRefresh} />}
             >
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
                     <View className="flex-row items-center justify-between">
                         <Image
-                            source={{ uri: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' }}
+                            source={{ uri: user?.profilePicture || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' }}
                             className="w-12 h-12 rounded-full mr-3"
                         />
 
                     </View>
                     <View className="text-center flex flex-col justify-center items-center">
-                        <Typography variant="h3" weight="bold" color="black">Hello, {user?.name || 'Sandra'}</Typography>
+                        <Typography variant="h3" weight="bold" color="black">Hello, {user?.username || 'Tailor'}</Typography>
                         <Typography variant="caption" weight="bold" color="gray">Today {today}</Typography>
                     </View>
                     <View>
@@ -52,8 +52,8 @@ export default function Home() {
                 {/* Daily Activity Card */}
                 <Surface variant="lavender" className="p-6 mb-4 relative" rounded="3xl">
                     <View className="z-10 w-2/3">
-                        <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Production goal</Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">Do your plan before 09:00 AM</Typography>
+                        <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Use with your team!</Typography>
+                        <Typography variant="caption" color="gray" className="mb-4">Cross-team feature</Typography>
 
                         <View className="flex-row items-center">
                             <View className="flex-row mr-2">
@@ -126,11 +126,11 @@ export default function Home() {
                             bg="bg-accent-peach"
                             onPress={() => router.push('/(tabs)/customers/new')}
                         />
-                        <QuickAccessItem
+                        {/* <QuickAccessItem
                             icon={<Ruler size={24} color="black" />}
                             label="Calculator"
                             bg="bg-accent-lavender"
-                        />
+                        /> */}
                         <QuickAccessItem
                             icon={<Gallery size={24} color="black" />}
                             label="Lookbook"
