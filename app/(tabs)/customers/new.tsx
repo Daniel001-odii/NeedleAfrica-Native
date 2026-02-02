@@ -20,7 +20,7 @@ export default function NewCustomer() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { addCustomer } = useCustomers();
-    const { performSync } = useSync();
+    const { sync: performSync } = useSync();
     const router = useRouter();
 
     const handleSubmit = async () => {

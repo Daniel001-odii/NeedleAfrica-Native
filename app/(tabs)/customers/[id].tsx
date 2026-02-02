@@ -15,7 +15,7 @@ export default function CustomerDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const { customers, updateCustomer, deleteCustomer } = useCustomers();
-    const { performSync } = useSync();
+    const { sync: performSync } = useSync();
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -38,7 +38,7 @@ export default function CustomerDetail() {
 
     if (!customer) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={['top']}>
                 <Typography variant="body" color="gray">Customer not found</Typography>
                 <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
             </SafeAreaView>
@@ -128,7 +128,7 @@ export default function CustomerDetail() {
         .slice(0, 2);
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             {/* Header */}
             <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
                 <IconButton

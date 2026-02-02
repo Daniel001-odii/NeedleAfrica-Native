@@ -12,7 +12,7 @@ import { useSync } from '../../hooks/useSync';
 export default function Home() {
     const { user } = useAuth();
     const router = useRouter();
-    const { isSyncing, performSync } = useSync();
+    const { isSyncing, sync: performSync } = useSync();
 
     const onRefresh = useCallback(async () => {
         await performSync();

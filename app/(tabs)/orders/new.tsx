@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Add, Camera, TickCircle, ArrowDown2, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2 } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Typography } from '../../../components/ui/Typography';
@@ -10,19 +10,19 @@ import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useCustomers, Customer } from '../../../hooks/useCustomers';
+import { useOrders } from '../../../hooks/useOrders';
 import { Modal, FlatList } from 'react-native';
 import { SearchNormal1, CloseCircle as CloseCircleIcon, User } from 'iconsax-react-native';
 
 export default function NewOrder() {
     const router = useRouter();
-    const { customers, loading } = useCustomers();
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer & { fullName: string } | null>(null);
+    const { customers } = useCustomers();
+    const { addOrder } = useOrders();
+
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [showCustomerModal, setShowCustomerModal] = useState(true);
     const [customerSearch, setCustomerSearch] = useState('');
 
-    const filteredCustomers = customers.filter(c =>
-        c.fullName.toLowerCase().includes(customerSearch.toLowerCase())
-    );
     const [dressType, setDressType] = useState('');
     const [notes, setNotes] = useState('');
     const [price, setPrice] = useState('');
@@ -30,6 +30,36 @@ export default function NewOrder() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [fabricImage, setFabricImage] = useState<string | null>(null);
     const [styleImage, setStyleImage] = useState<string | null>(null);
+
+    const filteredCustomers = customers.filter(c =>
+        c.fullName.toLowerCase().includes(customerSearch.toLowerCase())
+    );
+
+    const handleCreateOrder = async () => {
+        if (!selectedCustomer) {
+            alert('Please select a client');
+            return;
+        }
+        if (!dressType) {
+            alert('Please enter a dress type');
+            return;
+        }
+
+        try {
+            await addOrder({
+                customerId: selectedCustomer.id,
+                styleName: dressType,
+                amount: parseInt(price) || 0,
+                status: 'PENDING',
+                notes: notes,
+                deliveryDate: dueDate,
+            });
+            router.back();
+        } catch (error) {
+            console.error('Failed to create order:', error);
+            alert('Failed to create order');
+        }
+    };
 
     const onDateChange = (event: any, selectedDate?: Date) => {
         const currentDate = selectedDate || dueDate;
@@ -103,15 +133,12 @@ export default function NewOrder() {
                             placeholderTextColor="#E5E7EB"
                             value={dressType}
                             onChangeText={setDressType}
-                            autoFocus
                         />
                     </View>
 
                     {/* Grid Layout */}
                     <View className="flex-row gap-4 mb-4">
-                        {/* Left Column */}
                         <View className="flex-1 gap-4">
-                            {/* Date Picker Button */}
                             <Pressable onPress={() => setShowDatePicker(true)}>
                                 <Surface variant="blue" className="p-4 h-32 justify-between bg-blue-500" rounded="3xl">
                                     <View className="flex-row justify-between items-start">
@@ -137,12 +164,11 @@ export default function NewOrder() {
                                 />
                             )}
 
-                            {/* Notes Input */}
                             <Surface variant="muted" className="p-4 h-48" rounded="3xl">
                                 <Typography variant="caption" weight="bold" color="gray" className="mb-2 uppercase">Notes...</Typography>
                                 <TextInput
                                     className="flex-1 font-medium text-dark text-base leading-6"
-                                    placeholder="Add specific details about the style, measurements adjustments, or fabric handling..."
+                                    placeholder="Add specific details..."
                                     placeholderTextColor="#9CA3AF"
                                     multiline
                                     value={notes}
@@ -152,18 +178,11 @@ export default function NewOrder() {
                             </Surface>
                         </View>
 
-                        {/* Right Column */}
                         <View className="flex-1 gap-4">
-                            {/* Fabric Image Upload */}
                             <Pressable onPress={() => pickImage('fabric')} className="flex-1">
                                 <Surface variant="white" className="h-56 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
                                     {fabricImage ? (
-                                        <>
-                                            <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                            <View className="absolute top-2 right-2 bg-white/80 p-1 rounded-full">
-                                                <TickCircle size={20} color="#10B981" variant="Bold" />
-                                            </View>
-                                        </>
+                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
                                     ) : (
                                         <>
                                             <View className="w-12 h-12 bg-blue-50 rounded-xl items-center justify-center mb-3">
@@ -175,7 +194,6 @@ export default function NewOrder() {
                                 </Surface>
                             </Pressable>
 
-                            {/* Price Input */}
                             <Surface variant="muted" className="p-4 h-24 justify-center" rounded="3xl">
                                 <View className="flex-row items-center justify-center">
                                     <Typography variant="h3" color="gray" className="mr-1">$</Typography>
@@ -192,21 +210,11 @@ export default function NewOrder() {
                         </View>
                     </View>
 
-                    {/* Bottom Row */}
                     <View className="flex-row gap-4 mb-8">
-                        {/* Style Image */}
-                        {/* Style Image */}
                         <Pressable className="flex-[3]" onPress={() => pickImage('style')}>
                             <Surface variant="white" className="h-20 flex-row items-center justify-center border-2 border-dashed border-blue-200 space-x-3 overflow-hidden" rounded="3xl">
                                 {styleImage ? (
-                                    <>
-                                        <Image source={{ uri: styleImage }} className="w-full h-full absolute" resizeMode="cover" />
-                                        <View className="w-full h-full bg-black/10 absolute" />
-                                        <View className="flex-row items-center bg-white/80 px-3 py-1 rounded-full z-10">
-                                            <TickCircle size={16} color="#10B981" variant="Bold" className="mr-2" />
-                                            <Typography variant="caption" weight="bold">Image chosen</Typography>
-                                        </View>
-                                    </>
+                                    <Image source={{ uri: styleImage }} className="w-full h-full absolute" resizeMode="cover" />
                                 ) : (
                                     <>
                                         <Add size={20} color="#3B82F6" />
@@ -215,17 +223,10 @@ export default function NewOrder() {
                                 )}
                             </Surface>
                         </Pressable>
-
-                        {/* Camera Button */}
-                        {/* <Pressable className="flex-1">
-                            <Surface variant="white" className="h-20 items-center justify-center border-2 border-dashed border-blue-200" rounded="3xl">
-                                <Camera size={24} color="#3B82F6" variant="Bold" />
-                            </Surface>
-                        </Pressable> */}
                     </View>
 
                     <Button
-                        onPress={() => router.back()}
+                        onPress={handleCreateOrder}
                         className="h-16 rounded-full bg-black border-0 shadow-xl shadow-brand-primary/30"
                         textClassName="text-white text-lg"
                     >
@@ -235,7 +236,6 @@ export default function NewOrder() {
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* Customer Selection Modal */}
             <Modal
                 visible={showCustomerModal}
                 animationType="slide"

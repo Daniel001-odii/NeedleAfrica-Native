@@ -27,12 +27,24 @@ import {
 import "../global.css";
 
 import Toast from 'react-native-toast-message';
+import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+function RootLayoutNavWithLoading() {
+    const { isLoading } = useAuth();
+
+    // Show loading screen while auth state is being determined
+    if (isLoading) {
+        return <LoadingScreen />;
+    }
+
+    return <RootLayoutNav />;
+}
 
 function RootLayoutNav() {
     const { user, isLoading } = useAuth();
@@ -42,6 +54,7 @@ function RootLayoutNav() {
 
     // 1. Auth redirection logic
     useEffect(() => {
+        // Wait for auth to be ready
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
@@ -80,10 +93,13 @@ function RootLayoutNav() {
         };
     }, [user, sync]);
 
-    if (isLoading) return null;
-
     return (
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack
+            screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: 'white' },
+            }}
+        >
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -106,13 +122,15 @@ export default function RootLayout() {
         'Grotesk-Bold': SpaceGrotesk_700Bold,
     });
 
+    const fontsReady = loaded || error;
+
     useEffect(() => {
-        if (loaded || error) {
+        if (fontsReady) {
             SplashScreen.hideAsync();
         }
-    }, [loaded, error]);
+    }, [fontsReady]);
 
-    if (!loaded && !error) {
+    if (!fontsReady) {
         return null;
     }
 
@@ -120,8 +138,8 @@ export default function RootLayout() {
         <SafeAreaProvider>
             <DatabaseProvider database={database}>
                 <AuthProvider>
-                    <RootLayoutNav />
-                    <StatusBar style="auto" />
+                    <RootLayoutNavWithLoading />
+                    <StatusBar style="auto" translucent={false} />
                     <Toast config={toastConfig} />
                 </AuthProvider>
             </DatabaseProvider>

@@ -1,40 +1,37 @@
 import React from 'react';
-import { View, ImageBackground, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, ImageBackground, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Welcome() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
 
     return (
-        <View className="flex-1">
+        <View style={{ flex: 1 }}>
             <ImageBackground
                 source={require('../../assets/images/tailor_auth_bg.png')}
-                className="flex-1"
+                style={{ flex: 1 }}
                 resizeMode="cover"
             >
                 <LinearGradient
                     colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
-                    className="flex-1 px-8 pb-12 justify-end"
+                    style={{
+                        flex: 1,
+                        paddingHorizontal: 32,
+                        paddingTop: insets.top,
+                        paddingBottom: insets.bottom + 24,
+                        justifyContent: 'flex-end'
+                    }}
                 >
-                    {/* Logo/Brand at Top */}
-                    <SafeAreaView edges={['top']} className="absolute top-12 self-center">
-                        {/* <Typography variant="h2" weight="bold" color="white" className="tracking-widest">
-                            NEEDLE AFRICA
-                        </Typography> */}
-                    </SafeAreaView>
-
                     {/* Content */}
-                    <View className="mb-10">
+                    <View style={{ marginBottom: 40 }}>
                         <Typography variant="h1" weight="bold" color="white" className="text-5xl leading-[60px]">
                             Your Journey to Perfect Fit
                         </Typography>
-                        {/* <Typography color="white" className="text-lg opacity-80 leading-7">
-                            The professional workshop management tool for modern tailors and fashion designers.
-                        </Typography> */}
                     </View>
 
                     {/* Actions */}

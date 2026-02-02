@@ -6,10 +6,10 @@ import { Associations } from '@nozbe/watermelondb/Model';
 import { SyncStatus } from '../../../types/sync';
 
 const generateUUID = async () => {
-  const randomBytes = await Crypto.getRandomBytesAsync(16);
-  return Array.from(randomBytes)
-    .map((b, i) => (i === 4 ? '-' : '') + b.toString(16).padStart(2, '0'))
-    .join('');
+    const randomBytes = await Crypto.getRandomBytesAsync(16);
+    return Array.from(randomBytes)
+        .map((b, i) => (i === 4 ? '-' : '') + b.toString(16).padStart(2, '0'))
+        .join('');
 };
 
 export default class Order extends Model {
@@ -28,8 +28,8 @@ export default class Order extends Model {
     @field('deleted_at') deletedAt!: number | null;
     @text('sync_status') _syncStatus!: string;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @date('created_at') createdAt!: Date;
+    @date('updated_at') updatedAt!: Date;
 
     @relation('customers', 'customer_id') customer!: Relation<Customer>;
 
@@ -43,10 +43,8 @@ export default class Order extends Model {
 
     static async createSyncable(database: any, userId: string, customerId: string, data: any) {
         const now = Date.now();
-        const id = await generateUUID();
         return await database.write(async () => {
             return await database.get('orders').create((record: any) => {
-                record.id = id;
                 record.userId = userId;
                 record.customerId = customerId;
                 record.styleName = data.styleName;
