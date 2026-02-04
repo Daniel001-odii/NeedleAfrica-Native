@@ -65,11 +65,7 @@ export default class Measurement extends Model {
 
     async softDelete() {
         await this.database.write(async () => {
-            await this.update((record: any) => {
-                record.deletedAt = Date.now();
-                record.syncStatus = 'created';
-                record.updatedAt = new Date();
-            });
+            await this.markAsDeleted();
         });
     }
 }

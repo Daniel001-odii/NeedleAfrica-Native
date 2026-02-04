@@ -29,7 +29,7 @@ export function useSync() {
     }, []);
 
     const performSync = useCallback(async () => {
-        if (syncInProgress.current || isSyncing) {
+        if (syncInProgress.current) {
             console.log('[Sync] Synchronization already in progress, skipping...');
             return;
         }
@@ -55,7 +55,7 @@ export function useSync() {
             syncInProgress.current = false;
             setIsSyncing(false);
         }
-    }, [isSyncing]);
+    }, []);
 
     return {
         isSyncing,

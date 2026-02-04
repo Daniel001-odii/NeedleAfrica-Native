@@ -80,10 +80,8 @@ export function useCustomers(searchQuery: string = '') {
     };
 
     const deleteCustomer = async (id: string) => {
-        await database.write(async () => {
-            const customer = await database.get<Customer>('customers').find(id);
-            await customer.markAsDeleted();
-        });
+        const customer = await database.get<Customer>('customers').find(id);
+        await customer.softDelete();
         sync().catch(console.error);
     };
 

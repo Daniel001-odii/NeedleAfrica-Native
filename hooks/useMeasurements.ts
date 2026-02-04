@@ -64,10 +64,8 @@ export function useMeasurements(customerId?: string) {
     };
 
     const deleteMeasurement = async (id: string) => {
-        await database.write(async () => {
-            const measurement = await database.get<Measurement>('measurements').find(id);
-            await measurement.markAsDeleted();
-        });
+        const measurement = await database.get<Measurement>('measurements').find(id);
+        await measurement.softDelete();
         sync().catch(console.error);
     };
 

@@ -10,7 +10,7 @@ import Order from './models/Order';
 const adapter = new SQLiteAdapter({
     schema,
     // (Optional) Database name
-    // dbName: 'NeedleAfrica',
+    dbName: 'NeedleAfrica_v3',
     // (Optional) Migrations
     migrations,
     // (Optional) Synchronous mode (experimental)

@@ -66,10 +66,8 @@ export function useOrders(customerId?: string) {
     };
 
     const deleteOrder = async (id: string) => {
-        await database.write(async () => {
-            const order = await database.get<Order>('orders').find(id);
-            await order.markAsDeleted();
-        });
+        const order = await database.get<Order>('orders').find(id);
+        await order.softDelete();
         sync().catch(console.error);
     };
 

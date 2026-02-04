@@ -51,10 +51,12 @@ export async function sync() {
                 orders: {
                     created: (changes.orders?.created || []).map((o: any) => ({
                         ...o,
+                        delivery_date: o.delivery_date ? new Date(o.delivery_date).getTime() : null,
                         sync_status: 'synced'
                     })),
                     updated: (changes.orders?.updated || []).map((o: any) => ({
                         ...o,
+                        delivery_date: o.delivery_date ? new Date(o.delivery_date).getTime() : null,
                         sync_status: 'synced'
                     })),
                     deleted: changes.orders?.deleted?.map((o: any) => typeof o === 'string' ? o : o.id) || [],
@@ -67,11 +69,28 @@ export async function sync() {
         pushChanges: async ({ changes, lastPulledAt }) => {
             console.log('[Sync] Pushing changes');
 
+            const allChanges = changes as any;
+            const ordersChanges = allChanges.orders;
+
             // We need to ensure we send the changes in a format the backend expects
-            // and include necessary metadata.
+            // Normalize dates to ISO strings for Prisma
+            const normalizedChanges = {
+                ...changes,
+                orders: ordersChanges ? {
+                    ...ordersChanges,
+                    created: (ordersChanges.created || []).map((o: any) => ({
+                        ...o,
+                        delivery_date: o.delivery_date ? o.delivery_date > 0 ? new Date(o.delivery_date).toISOString() : null : null
+                    })),
+                    updated: (ordersChanges.updated || []).map((o: any) => ({
+                        ...o,
+                        delivery_date: o.delivery_date ? o.delivery_date > 0 ? new Date(o.delivery_date).toISOString() : null : null
+                    }))
+                } : undefined
+            };
 
             const response = await axiosInstance.post('/sync', {
-                changes,
+                changes: normalizedChanges,
                 last_pulled_at: lastPulledAt || 0,
             });
 

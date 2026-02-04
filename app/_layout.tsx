@@ -107,6 +107,8 @@ function RootLayoutNav() {
     );
 }
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export default function RootLayout() {
     const [loaded, error] = useFonts({
         'Playfair-Regular': PlayfairDisplay_400Regular,
@@ -135,14 +137,16 @@ export default function RootLayout() {
     }
 
     return (
-        <SafeAreaProvider>
-            <DatabaseProvider database={database}>
-                <AuthProvider>
-                    <RootLayoutNavWithLoading />
-                    <StatusBar style="auto" translucent={false} />
-                    <Toast config={toastConfig} />
-                </AuthProvider>
-            </DatabaseProvider>
-        </SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+                <DatabaseProvider database={database}>
+                    <AuthProvider>
+                        <RootLayoutNavWithLoading />
+                        <StatusBar style="auto" translucent={false} />
+                        <Toast config={toastConfig} />
+                    </AuthProvider>
+                </DatabaseProvider>
+            </SafeAreaProvider>
+        </GestureHandlerRootView>
     );
 }
