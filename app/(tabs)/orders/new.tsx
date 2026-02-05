@@ -53,6 +53,8 @@ export default function NewOrder() {
                 status: 'PENDING',
                 notes: notes,
                 deliveryDate: dueDate,
+                fabricImage: fabricImage || undefined,
+                styleImage: styleImage || undefined,
             });
             router.back();
         } catch (error) {

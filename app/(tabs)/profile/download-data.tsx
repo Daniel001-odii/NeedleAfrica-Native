@@ -7,6 +7,8 @@ import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import axiosInstance from '../../../lib/axios';
+import Toast from 'react-native-toast-message';
 
 export default function DownloadData() {
     const router = useRouter();
@@ -14,14 +16,24 @@ export default function DownloadData() {
 
     const handleRequestDownload = async () => {
         setIsRequesting(true);
-        // Simulate request processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsRequesting(false);
-        Alert.alert(
-            "Request Successful",
-            "Your data request has been received. We will send a download link to your registered email address when it's ready.",
-            [{ text: "OK", onPress: () => router.back() }]
-        );
+        try {
+            const response = await axiosInstance.post('/users/download-data');
+
+            Alert.alert(
+                "Request Successful",
+                response.data.message || "Your data request has been received. We will send a download link to your registered email address when it's ready.",
+                [{ text: "OK", onPress: () => router.back() }]
+            );
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to request data';
+            Toast.show({
+                type: 'error',
+                text1: 'Request Failed',
+                text2: errorMsg
+            });
+        } finally {
+            setIsRequesting(false);
+        }
     };
 
     return (

@@ -24,11 +24,20 @@ export default function Profile() {
 
                 {/* User Card */}
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
-                <View className="flex-row items-center mb-6">
-                    <Image
-                        source={{ uri: user?.profilePicture || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' }}
-                        className="w-20 h-20 rounded-full mr-5"
-                    />
+                <View className="flex-row items-center mb-10 bg-lavender/30 p-6 rounded-[36px]">
+                    {/* {user?.profilePicture ? (
+                        <Image
+                            source={{ uri: user.profilePicture }}
+                            className="w-20 h-20 rounded-full mr-5"
+                        />
+                    ) : (
+                        <Surface variant="white" className="w-20 h-20 items-center justify-center mr-5 shadow-sm" rounded="full">
+                            <Typography variant="h1" weight="bold" className="text-brand-primary">
+                                {(user?.username || 'J')[0].toUpperCase()}
+                                {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
+                            </Typography>
+                        </Surface>
+                    )} */}
                     <View className="flex-1">
                         <Typography variant="h3" weight="bold">{user?.username || 'Jane Doe'}</Typography>
                         <Typography variant="caption" color="gray" className="mb-2">{user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>

@@ -2,23 +2,54 @@ import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, CloudChange, TickCircle, Refresh, ShieldTick } from 'iconsax-react-native';
+import { ArrowLeft, CloudChange, TickCircle, Refresh, ShieldTick, Danger } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useSync } from '../../../hooks/useSync';
+import Toast from 'react-native-toast-message';
 
 export default function BackupData() {
     const router = useRouter();
-    const [isBackingUp, setIsBackingUp] = useState(false);
-    const [lastBackup, setLastBackup] = useState('Today, 10:45 AM');
+    const { sync: performSync, isSyncing, lastSyncedAt, lastSyncError, isOnline } = useSync();
+
+    const formatDate = (timestamp: number | null) => {
+        if (!timestamp) return 'Never';
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
 
     const handleBackup = async () => {
-        setIsBackingUp(true);
-        // Simulate backup process
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        setIsBackingUp(false);
-        setLastBackup('Just now');
+        if (!isOnline) {
+            Toast.show({
+                type: 'error',
+                text1: 'Offline',
+                text2: 'Please connect to the internet to backup'
+            });
+            return;
+        }
+
+        try {
+            await performSync();
+            Toast.show({
+                type: 'success',
+                text1: 'Backup complete',
+                text2: 'Your data is now safe in the cloud'
+            });
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Backup failed',
+                text2: 'Could not reach the server'
+            });
+        }
     };
 
     return (
@@ -48,14 +79,20 @@ export default function BackupData() {
                     <View className="flex-row items-center justify-between mb-4">
                         <View>
                             <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Status</Typography>
-                            <Typography variant="body" weight="bold" className="mt-1">Everything is safe</Typography>
+                            <Typography variant="body" weight="bold" className="mt-1">
+                                {lastSyncError ? 'Sync Error' : (lastSyncedAt ? 'Everything is safe' : 'Not backed up yet')}
+                            </Typography>
                         </View>
-                        <TickCircle size={24} color="#10B981" variant="Bold" />
+                        {lastSyncError ? (
+                            <Danger size={24} color="#EF4444" variant="Bold" />
+                        ) : (
+                            <TickCircle size={24} color="#10B981" variant="Bold" />
+                        )}
                     </View>
                     <View className="h-[1px] bg-gray-200 mb-4" />
                     <View>
                         <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Last Backup</Typography>
-                        <Typography variant="body" weight="semibold" className="mt-1">{lastBackup}</Typography>
+                        <Typography variant="body" weight="semibold" className="mt-1">{formatDate(lastSyncedAt)}</Typography>
                     </View>
                 </Surface>
 
@@ -83,11 +120,11 @@ export default function BackupData() {
 
                 <Button
                     onPress={handleBackup}
-                    isLoading={isBackingUp}
+                    isLoading={isSyncing}
                     className="h-16 rounded-full bg-dark border-0 shadow-lg"
                     textClassName="text-white"
                 >
-                    {isBackingUp ? 'Backing up...' : 'Backup Now'}
+                    {isSyncing ? 'Backing up...' : 'Backup Now'}
                 </Button>
             </ScrollView>
         </SafeAreaView>

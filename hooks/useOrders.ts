@@ -45,6 +45,8 @@ export function useOrders(customerId?: string) {
         status: string;
         notes?: string;
         deliveryDate?: Date;
+        fabricImage?: string;
+        styleImage?: string;
     }) => {
         if (!user) return;
 
@@ -54,15 +56,34 @@ export function useOrders(customerId?: string) {
         sync().catch(console.error);
     };
 
-    const updateOrderStatus = async (id: string, status: string) => {
+    const updateOrder = async (id: string, data: {
+        styleName?: string;
+        amount?: number;
+        status?: string;
+        notes?: string;
+        deliveryDate?: Date | null;
+        fabricImage?: string;
+        styleImage?: string;
+    }) => {
         await database.write(async () => {
             const order = await database.get<Order>('orders').find(id);
             await order.update(record => {
-                record.status = status;
+                if (data.styleName !== undefined) record.styleName = data.styleName;
+                if (data.amount !== undefined) record.amount = data.amount;
+                if (data.status !== undefined) record.status = data.status;
+                if (data.notes !== undefined) record.notes = data.notes;
+                if (data.deliveryDate !== undefined) record.deliveryDate = data.deliveryDate;
+                if (data.fabricImage !== undefined) record.fabricImage = data.fabricImage;
+                if (data.styleImage !== undefined) record.styleImage = data.styleImage;
                 record.syncStatus = 'created';
+                record.updatedAt = new Date();
             });
         });
         sync().catch(console.error);
+    };
+
+    const updateOrderStatus = async (id: string, status: string) => {
+        await updateOrder(id, { status });
     };
 
     const deleteOrder = async (id: string) => {
@@ -71,5 +92,5 @@ export function useOrders(customerId?: string) {
         sync().catch(console.error);
     };
 
-    return { orders, loading, addOrder, updateOrderStatus, deleteOrder, refresh: fetchOrders };
+    return { orders, loading, addOrder, updateOrder, updateOrderStatus, deleteOrder, refresh: fetchOrders };
 }

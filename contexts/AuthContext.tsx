@@ -14,11 +14,18 @@ interface User {
     profilePicture?: string;
     role: string;
     token?: string;
+    smsAlerts?: boolean;
+    emailNotifications?: boolean;
+    marketingTips?: boolean;
+    reminderDays?: string;
+    measurementUnit?: 'cm' | 'inch';
+    currency?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
+    isActionLoading: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     signUp: (email: string, password: string, username: string, businessName: string) => Promise<void>;
@@ -33,6 +40,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
         checkUser();
@@ -102,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const forgotPassword = async (email: string) => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             const response = await axiosInstance.post('/auth/forgot-password', { email });
             const { status, message } = response.data;
@@ -114,12 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const errorMsg = error.response?.data?.message || error.message || 'Forgot password failed';
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
     const resetPassword = async (email: string, otp: string, password: string) => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             const response = await axiosInstance.post('/auth/reset-password', { email, otp, password });
             const { status, message } = response.data;
@@ -131,12 +139,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const errorMsg = error.response?.data?.message || error.message || 'Reset password failed';
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
     const updateProfile = async (data: Partial<User>) => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             const response = await axiosInstance.put('/users/me', data);
             const { status, user: userData, message } = response.data;
@@ -152,12 +160,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const errorMsg = error.response?.data?.message || error.message || 'Update failed';
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
     const deleteAccount = async () => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             await axiosInstance.delete('/users/me');
             await logout();
@@ -165,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const errorMsg = error.response?.data?.message || error.message || 'Delete account failed';
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
@@ -177,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount }}>
             {children}
         </AuthContext.Provider>
     );

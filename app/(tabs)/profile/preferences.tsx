@@ -8,28 +8,60 @@ import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useAuth } from '../../../contexts/AuthContext';
+import Toast from 'react-native-toast-message';
 
 
 export default function Preferences() {
     const router = useRouter();
+    const { user, updateProfile } = useAuth();
+    const [isSaving, setIsSaving] = useState(false);
 
     // Notification states
-    const [smsAlerts, setSmsAlerts] = useState(true);
-    const [emailNotifs, setEmailNotifs] = useState(true);
-    const [marketingTips, setMarketingTips] = useState(false);
+    const [smsAlerts, setSmsAlerts] = useState(user?.smsAlerts ?? true);
+    const [emailNotifs, setEmailNotifs] = useState(user?.emailNotifications ?? true);
+    const [marketingTips, setMarketingTips] = useState(user?.marketingTips ?? false);
 
     // Delivery Reminder states
-    const [reminderDay, setReminderDay] = useState('1'); // '1', '2', '3', 'custom'
-    const [customDays, setCustomDays] = useState('');
-    const [showCustomInput, setShowCustomInput] = useState(false);
+    const [reminderDay, setReminderDay] = useState(user?.reminderDays || '1'); // '1', '2', '3', 'custom'
+    const [customDays, setCustomDays] = useState(user?.reminderDays && !['1', '2', '3'].includes(user?.reminderDays) ? user?.reminderDays : '');
+    const [showCustomInput, setShowCustomInput] = useState(user?.reminderDays && !['1', '2', '3'].includes(user?.reminderDays) ? true : false);
 
     // Personal Setting states
-    const [unit, setUnit] = useState('inch'); // 'cm' or 'inch'
-    const [currency, setCurrency] = useState('NGN');
+    const [unit, setUnit] = useState<'cm' | 'inch'>(user?.measurementUnit || 'inch'); // 'cm' or 'inch'
+    const [currency, setCurrency] = useState(user?.currency || 'NGN');
     const [isCurrencyModalVisible, setIsCurrencyModalVisible] = useState(false);
     const [currencySearchQuery, setCurrencySearchQuery] = useState('');
 
     const selectedCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await updateProfile({
+                smsAlerts,
+                emailNotifications: emailNotifs,
+                marketingTips,
+                reminderDays: showCustomInput ? customDays : reminderDay,
+                measurementUnit: unit,
+                currency
+            });
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Preferences updated successfully'
+            });
+            router.back();
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: error.message || 'Something went wrong'
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const filteredCurrencies = CURRENCIES.filter(c =>
         c.name.toLowerCase().includes(currencySearchQuery.toLowerCase()) ||
@@ -237,13 +269,14 @@ export default function Preferences() {
                     </View>
                 </Modal>
 
-                {/*           <Button
-                    onPress={() => router.back()}
+                <Button
+                    onPress={handleSave}
+                    isLoading={isSaving}
                     className="h-16 rounded-full bg-dark border-0 shadow-lg"
                     textClassName="text-white"
                 >
                     Save Preferences
-                </Button> */}
+                </Button>
             </ScrollView>
         </SafeAreaView>
     );

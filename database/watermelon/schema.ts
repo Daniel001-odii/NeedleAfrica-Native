@@ -43,6 +43,8 @@ export default appSchema({
                 { name: 'status', type: 'string' },
                 { name: 'amount', type: 'number', isOptional: true },
                 { name: 'notes', type: 'string', isOptional: true },
+                { name: 'fabric_image', type: 'string', isOptional: true },
+                { name: 'style_image', type: 'string', isOptional: true },
                 { name: 'deleted_at', type: 'number', isOptional: true },
                 { name: 'sync_status', type: 'string' },
                 { name: 'created_at', type: 'number' },

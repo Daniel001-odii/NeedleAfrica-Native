@@ -32,11 +32,11 @@ export default function PersonalInformation() {
     }, [user]);
 
     const handleSave = async () => {
-        if (!username || !email) {
+        if (!username) {
             Toast.show({
                 type: 'error',
                 text1: 'Required',
-                text2: 'Username and Email are required'
+                text2: 'Username is required'
             });
             return;
         }
@@ -46,7 +46,6 @@ export default function PersonalInformation() {
             await updateProfile({
                 username,
                 businessName,
-                email,
                 phoneNumber: phone,
                 address
             });
@@ -148,6 +147,7 @@ export default function PersonalInformation() {
                         placeholder="email@example.com"
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        editable={false}
                     />
 
                     <InputGroup
@@ -209,9 +209,10 @@ interface InputGroupProps {
     keyboardType?: any;
     autoCapitalize?: any;
     multiline?: boolean;
+    editable?: boolean;
 }
 
-function InputGroup({ label, value, onChangeText, icon, placeholder, keyboardType, autoCapitalize, multiline }: InputGroupProps) {
+function InputGroup({ label, value, onChangeText, icon, placeholder, keyboardType, autoCapitalize, multiline, editable = true }: InputGroupProps) {
     return (
         <View className="mb-6">
             <View className="flex-row items-center mb-2 ml-1">
@@ -229,6 +230,8 @@ function InputGroup({ label, value, onChangeText, icon, placeholder, keyboardTyp
                     autoCapitalize={autoCapitalize}
                     multiline={multiline}
                     textAlignVertical={multiline ? 'top' : 'center'}
+                    editable={editable}
+                    style={!editable ? { opacity: 0.6 } : {}}
                 />
             </Surface>
         </View>

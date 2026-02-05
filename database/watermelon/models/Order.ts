@@ -25,6 +25,8 @@ export default class Order extends Model {
     @text('status') status!: string;
     @field('amount') amount!: number | null;
     @text('notes') notes!: string | null;
+    @text('fabric_image') fabricImage!: string | null;
+    @text('style_image') styleImage!: string | null;
     @field('deleted_at') deletedAt!: number | null;
     @text('sync_status') _syncStatus!: string;
 
@@ -52,6 +54,8 @@ export default class Order extends Model {
                 record.status = data.status || 'PENDING';
                 record.amount = data.amount || null;
                 record.notes = data.notes || null;
+                record.fabricImage = data.fabricImage || null;
+                record.styleImage = data.styleImage || null;
                 record.deletedAt = null;
                 record.syncStatus = 'created';
                 record.createdAt = new Date(now);

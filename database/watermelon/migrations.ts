@@ -30,7 +30,15 @@ export default schemaMigrations({
         },
         {
             toVersion: 3,
-            steps: [], // No new columns in v3, just forcing a reset/sync
+            steps: [
+                addColumns({
+                    table: 'orders',
+                    columns: [
+                        { name: 'fabric_image', type: 'string', isOptional: true },
+                        { name: 'style_image', type: 'string', isOptional: true },
+                    ],
+                }),
+            ],
         },
     ],
 });
