@@ -58,5 +58,27 @@ export default schemaMigrations({
                 }),
             ],
         },
+        {
+            toVersion: 5,
+            steps: [
+                createTable({
+                    name: 'invoices',
+                    columns: [
+                        { name: 'server_id', type: 'string', isOptional: true },
+                        { name: 'user_id', type: 'string', isOptional: true },
+                        { name: 'customer_id', type: 'string', isIndexed: true },
+                        { name: 'order_id', type: 'string', isIndexed: true },
+                        { name: 'invoice_number', type: 'string' },
+                        { name: 'amount', type: 'number' },
+                        { name: 'currency', type: 'string' },
+                        { name: 'notes', type: 'string', isOptional: true },
+                        { name: 'deleted_at', type: 'number', isOptional: true },
+                        { name: 'sync_status', type: 'string' },
+                        { name: 'created_at', type: 'number' },
+                        { name: 'updated_at', type: 'number' },
+                    ],
+                }),
+            ],
+        },
     ],
 });

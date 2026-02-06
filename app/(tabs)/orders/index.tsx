@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
-import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle } from 'iconsax-react-native';
+import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle, DocumentText } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
@@ -135,6 +135,12 @@ export default function Orders() {
                     <View className="flex-row justify-between items-center mb-6">
                         <Typography variant="h2" weight="bold">Orders</Typography>
                         <View className="flex-row gap-2">
+                            <Pressable
+                                className="w-10 h-10 bg-muted rounded-full items-center justify-center"
+                                onPress={() => router.push('/(tabs)/orders/invoices')}
+                            >
+                                <DocumentText size={20} color="black" />
+                            </Pressable>
                             <Pressable
                                 className="w-10 h-10 bg-muted rounded-full items-center justify-center"
                                 onPress={() => setShowSortModal(true)}

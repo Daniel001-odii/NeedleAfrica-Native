@@ -67,7 +67,7 @@ export default function BackupData() {
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false}>
                 <View className="items-center my-10">
                     <Surface variant="lavender" className="w-24 h-24 items-center justify-center mb-6" rounded="3xl">
-                        <CloudChange size={48} color="#1C1C1E" variant="Bulk" />
+                        <CloudChange size={48} color="#06b6d4" variant="Bulk" />
                     </Surface>
                     <Typography variant="h2" weight="bold" className="text-center mb-2">Cloud Backup</Typography>
                     <Typography variant="body" color="gray" className="text-center px-4">

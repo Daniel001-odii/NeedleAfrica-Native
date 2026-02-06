@@ -51,7 +51,7 @@ export default function DownloadData() {
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false}>
                 <View className="items-center my-10">
                     <Surface variant="peach" className="w-24 h-24 items-center justify-center mb-6" rounded="3xl">
-                        <DocumentDownload size={48} color="#1C1C1E" variant="Bulk" />
+                        <DocumentDownload size={48} color="#10b981" variant="Bulk" />
                     </Surface>
                     <Typography variant="h2" weight="bold" className="text-center mb-2">Your Information</Typography>
                     <Typography variant="body" color="gray" className="text-center px-4">

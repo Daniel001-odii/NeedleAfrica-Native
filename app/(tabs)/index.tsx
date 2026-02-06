@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -142,10 +142,10 @@ export default function Home() {
                                     onPress={() => router.push('/(tabs)/customers/new')}
                                 />
                                 <QuickAccessItem
-                                    icon={<Gallery size={24} color="black" />}
-                                    label="Lookbook"
+                                    icon={<DocumentText size={24} color="black" />}
+                                    label="New Invoice"
                                     bg="bg-accent-blue"
-                                    onPress={() => router.push('/(tabs)/profile')}
+                                    onPress={() => router.push('/invoices/create')}
                                 />
                             </ScrollView>
                         </View>

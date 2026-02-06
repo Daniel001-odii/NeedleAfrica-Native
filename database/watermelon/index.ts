@@ -7,6 +7,7 @@ import Customer from './models/Customer';
 import Measurement from './models/Measurement';
 import MeasurementTemplate from './models/MeasurementTemplate';
 import Order from './models/Order';
+import Invoice from './models/Invoice';
 
 const adapter = new SQLiteAdapter({
     schema,
@@ -30,5 +31,6 @@ export const database = new Database({
         Measurement,
         MeasurementTemplate,
         Order,
+        Invoice,
     ],
 });

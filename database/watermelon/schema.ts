@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-    version: 4,
+    version: 5,
     tables: [
         tableSchema({
             name: 'customers',
@@ -58,6 +58,23 @@ export default appSchema({
                 { name: 'user_id', type: 'string', isOptional: true },
                 { name: 'name', type: 'string' },
                 { name: 'fields_json', type: 'string' }, // Store as JSON string
+                { name: 'deleted_at', type: 'number', isOptional: true },
+                { name: 'sync_status', type: 'string' },
+                { name: 'created_at', type: 'number' },
+                { name: 'updated_at', type: 'number' },
+            ],
+        }),
+        tableSchema({
+            name: 'invoices',
+            columns: [
+                { name: 'server_id', type: 'string', isOptional: true },
+                { name: 'user_id', type: 'string', isOptional: true },
+                { name: 'customer_id', type: 'string', isIndexed: true },
+                { name: 'order_id', type: 'string', isIndexed: true },
+                { name: 'invoice_number', type: 'string' },
+                { name: 'amount', type: 'number' },
+                { name: 'currency', type: 'string' },
+                { name: 'notes', type: 'string', isOptional: true },
                 { name: 'deleted_at', type: 'number', isOptional: true },
                 { name: 'sync_status', type: 'string' },
                 { name: 'created_at', type: 'number' },

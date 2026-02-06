@@ -64,6 +64,9 @@ function RootLayoutNav() {
         const inAuthGroup = segments[0] === '(auth)';
         const inOnboarding = segments[0] === 'onboarding';
         const inTabs = segments[0] === '(tabs)';
+        const inMeasurements = segments[0] === 'measurements';
+        const inTemplates = segments[0] === 'measurement-templates';
+        const inInvoices = segments[0] === 'invoices';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             // Not logged in: redirect to login
@@ -75,8 +78,8 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     router.replace('/onboarding');
                 }
-            } else if (!inTabs) {
-                // Existing user not in tabs: go to main app
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices) {
+                // Existing user not in a valid protected route (like measurements): go to main app
                 router.replace('/(tabs)');
             }
         }
