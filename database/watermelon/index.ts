@@ -5,6 +5,7 @@ import schema from './schema';
 import migrations from './migrations'; // We'll create an empty migrations file
 import Customer from './models/Customer';
 import Measurement from './models/Measurement';
+import MeasurementTemplate from './models/MeasurementTemplate';
 import Order from './models/Order';
 
 const adapter = new SQLiteAdapter({
@@ -27,6 +28,7 @@ export const database = new Database({
     modelClasses: [
         Customer,
         Measurement,
+        MeasurementTemplate,
         Order,
     ],
 });

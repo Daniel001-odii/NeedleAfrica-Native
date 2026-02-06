@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator, Modal, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
-import { Box, FilterSearch, Add, Trash, TickCircle } from 'iconsax-react-native';
+import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
@@ -15,12 +15,23 @@ type TabType = typeof TABS[number];
 
 type SurfaceVariant = 'white' | 'lavender' | 'peach' | 'blue' | 'green' | 'muted' | 'dark';
 
+type SortOption = 'recent' | 'oldest' | 'due-soon' | 'due-later';
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+    { key: 'recent', label: 'Most Recent' },
+    { key: 'oldest', label: 'Oldest First' },
+    { key: 'due-soon', label: 'Due Date (Soonest)' },
+    { key: 'due-later', label: 'Due Date (Latest)' },
+];
+
 import { Swipeable } from 'react-native-gesture-handler';
 import { Alert } from 'react-native';
 
 export default function Orders() {
     const [activeTab, setActiveTab] = useState<TabType>('All');
     const [refreshing, setRefreshing] = useState(false);
+    const [sortBy, setSortBy] = useState<SortOption>('recent');
+    const [showSortModal, setShowSortModal] = useState(false);
     const { orders, loading, refresh, deleteOrder, updateOrderStatus } = useOrders();
     const router = useRouter();
     const { sync: performSync } = useSync();
@@ -80,7 +91,6 @@ export default function Orders() {
     };
 
     const getVariantForOrder = (id: string): SurfaceVariant => {
-        // Deterministic variation based on ID
         const variants: SurfaceVariant[] = ['peach', 'green', 'lavender', 'blue'];
         const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return variants[index % variants.length];
@@ -90,6 +100,34 @@ export default function Orders() {
         ? orders
         : orders.filter(o => o.status === activeTab.toUpperCase());
 
+    const sortedOrders = useMemo(() => {
+        const sorted = [...filteredOrders];
+        switch (sortBy) {
+            case 'recent':
+                return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            case 'oldest':
+                return sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            case 'due-soon':
+                return sorted.sort((a, b) => {
+                    if (!a.deliveryDate && !b.deliveryDate) return 0;
+                    if (!a.deliveryDate) return 1;
+                    if (!b.deliveryDate) return -1;
+                    return new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime();
+                });
+            case 'due-later':
+                return sorted.sort((a, b) => {
+                    if (!a.deliveryDate && !b.deliveryDate) return 0;
+                    if (!a.deliveryDate) return 1;
+                    if (!b.deliveryDate) return -1;
+                    return new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime();
+                });
+            default:
+                return sorted;
+        }
+    }, [filteredOrders, sortBy]);
+
+    const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
+
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             <View className="flex-1">
@@ -97,7 +135,10 @@ export default function Orders() {
                     <View className="flex-row justify-between items-center mb-6">
                         <Typography variant="h2" weight="bold">Orders</Typography>
                         <View className="flex-row gap-2">
-                            <Pressable className="w-10 h-10 bg-muted rounded-full items-center justify-center">
+                            <Pressable
+                                className="w-10 h-10 bg-muted rounded-full items-center justify-center"
+                                onPress={() => setShowSortModal(true)}
+                            >
                                 <FilterSearch size={20} color="black" />
                             </Pressable>
                             <IconButton
@@ -111,7 +152,7 @@ export default function Orders() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="mb-8"
+                        className="mb-6"
                         contentContainerClassName="pr-6"
                     >
                         {TABS.map((tab) => {
@@ -158,7 +199,7 @@ export default function Orders() {
                     </View>
                 ) : (
                     <FlatList
-                        data={filteredOrders}
+                        data={sortedOrders}
                         keyExtractor={(item) => item.id}
                         contentContainerClassName="px-6 pb-32"
                         showsVerticalScrollIndicator={false}
@@ -178,11 +219,18 @@ export default function Orders() {
                                         rounded="2xl"
                                     >
                                         <Surface
-                                            variant={getVariantForOrder(order.id)}
-                                            className="w-14 h-14 items-center justify-center mr-4"
+                                            variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
+                                            className="w-14 h-14 items-center justify-center mr-4 overflow-hidden"
                                             rounded="2xl"
                                         >
-                                            <Box size={24} color="black" variant="Bulk" />
+                                            {(order.fabricImage || order.styleImage) ? (
+                                                <Image
+                                                    source={{ uri: (order.fabricImage || order.styleImage) as string }}
+                                                    className="w-full h-full"
+                                                />
+                                            ) : (
+                                                <Box size={24} color="black" variant="Bulk" />
+                                            )}
                                         </Surface>
 
                                         <View className="flex-1">
@@ -235,6 +283,53 @@ export default function Orders() {
                     />
                 )}
             </View>
+
+            {/* Sort Modal */}
+            <Modal
+                visible={showSortModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowSortModal(false)}
+            >
+                <Pressable
+                    className="flex-1 bg-black/50 justify-end"
+                    onPress={() => setShowSortModal(false)}
+                >
+                    <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
+                        <View className="flex-row justify-between items-center mb-6">
+                            <Typography variant="h3" weight="bold">Sort Orders By</Typography>
+                            <IconButton
+                                icon={<CloseCircle size={24} color="#9CA3AF" variant="Bold" />}
+                                variant="ghost"
+                                onPress={() => setShowSortModal(false)}
+                            />
+                        </View>
+                        <View className="gap-2">
+                            {SORT_OPTIONS.map((option) => (
+                                <Pressable
+                                    key={option.key}
+                                    onPress={() => {
+                                        setSortBy(option.key);
+                                        setShowSortModal(false);
+                                    }}
+                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? 'bg-lavender' : 'bg-gray-50'}`}
+                                >
+                                    <Typography
+                                        weight={sortBy === option.key ? 'bold' : 'medium'}
+                                        color={sortBy === option.key ? 'primary' : 'black'}
+                                    >
+                                        {option.label}
+                                    </Typography>
+                                    {sortBy === option.key && (
+                                        <TickCircle size={20} color="#4F46E5" variant="Bold" />
+                                    )}
+                                </Pressable>
+                            ))}
+                        </View>
+                        <View className="h-8" />
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }

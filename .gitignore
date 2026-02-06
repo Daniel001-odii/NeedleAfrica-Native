@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# google services
+google-services.json
+needlebird-ed8fc-firebase-adminsdk-fbsvc-897c519792.json
+

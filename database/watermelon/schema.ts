@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-    version: 3,
+    version: 4,
     tables: [
         tableSchema({
             name: 'customers',
@@ -45,6 +45,19 @@ export default appSchema({
                 { name: 'notes', type: 'string', isOptional: true },
                 { name: 'fabric_image', type: 'string', isOptional: true },
                 { name: 'style_image', type: 'string', isOptional: true },
+                { name: 'deleted_at', type: 'number', isOptional: true },
+                { name: 'sync_status', type: 'string' },
+                { name: 'created_at', type: 'number' },
+                { name: 'updated_at', type: 'number' },
+            ],
+        }),
+        tableSchema({
+            name: 'measurement_templates',
+            columns: [
+                { name: 'server_id', type: 'string', isOptional: true },
+                { name: 'user_id', type: 'string', isOptional: true },
+                { name: 'name', type: 'string' },
+                { name: 'fields_json', type: 'string' }, // Store as JSON string
                 { name: 'deleted_at', type: 'number', isOptional: true },
                 { name: 'sync_status', type: 'string' },
                 { name: 'created_at', type: 'number' },

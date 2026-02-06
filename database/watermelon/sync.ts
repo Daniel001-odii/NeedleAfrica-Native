@@ -61,6 +61,17 @@ export async function sync() {
                     })),
                     deleted: changes.orders?.deleted?.map((o: any) => typeof o === 'string' ? o : o.id) || [],
                 },
+                measurement_templates: {
+                    created: (changes.measurement_templates?.created || []).map((t: any) => ({
+                        ...t,
+                        sync_status: 'synced'
+                    })),
+                    updated: (changes.measurement_templates?.updated || []).map((t: any) => ({
+                        ...t,
+                        sync_status: 'synced'
+                    })),
+                    deleted: changes.measurement_templates?.deleted?.map((t: any) => typeof t === 'string' ? t : t.id) || [],
+                },
             };
 
             console.log('[Sync] Pulled changes successfully');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, Alert, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle, ShoppingCart } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
@@ -9,6 +9,8 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
+import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
+import { Add } from 'iconsax-react-native';
 import Toast from 'react-native-toast-message';
 
 export default function CustomerDetail() {
@@ -16,6 +18,7 @@ export default function CustomerDetail() {
     const router = useRouter();
     const { customers, updateCustomer, deleteCustomer } = useCustomers();
     const { sync: performSync } = useSync();
+    const { measurements, loading: loadingMeasurements } = useCustomerMeasurements(id as string);
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -213,16 +216,86 @@ export default function CustomerDetail() {
                                 </View>
 
                                 <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-3 uppercase ml-1">Measurements & Notes</Typography>
+                                    <View className="flex-row justify-between items-center mb-3 ml-1">
+                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase">Measurements</Typography>
+                                        <Pressable onPress={() => router.push('/measurement-templates')}>
+                                            <Typography variant="small" color="primary" weight="bold">Manage Templates</Typography>
+                                        </Pressable>
+                                    </View>
+
+                                    <View className="flex-row gap-3 mb-4">
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1 h-12 bg-gray-100 rounded-2xl border-0"
+                                            textClassName="text-dark font-semibold"
+                                            onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}
+                                        >
+                                            <Add size={18} color="black" className="mr-2" />
+                                            Add Measurement
+                                        </Button>
+                                    </View>
+
+                                    {loadingMeasurements ? (
+                                        <Typography color="gray" className="text-center py-4">Loading measurements...</Typography>
+                                    ) : measurements.length === 0 ? (
+                                        <Surface variant="muted" className="p-6 items-center justify-center border border-dashed border-gray-300" rounded="2xl">
+                                            <Typography color="gray" variant="small" className="text-center mb-2">No measurements added yet.</Typography>
+                                            <Typography color="gray" variant="small" className="text-center">Use templates to quickly add measurements.</Typography>
+                                        </Surface>
+                                    ) : (
+                                        <View className="gap-3">
+                                            {measurements.map(m => (
+                                                <Pressable key={m.id} onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: customer?.id } })}>
+                                                    <Surface variant="white" className="p-4 border border-gray-100" rounded="2xl">
+                                                        <View className="flex-row justify-between items-center mb-2">
+                                                            <Typography variant="body" weight="bold">{m.title}</Typography>
+                                                            <View className="flex-row items-center gap-2">
+                                                                <Typography variant="caption" color="gray">{new Date(m.createdAt).toLocaleDateString()}</Typography>
+                                                                <Edit2 size={14} color="#9CA3AF" />
+                                                            </View>
+                                                        </View>
+                                                        <View className="flex-row flex-wrap gap-2">
+                                                            {Object.entries(JSON.parse(m.valuesJson)).map(([key, value]) => (
+                                                                <View key={key} className="bg-gray-50 px-3 py-1 rounded-lg">
+                                                                    <Typography variant="caption" color="gray">
+                                                                        <Typography weight="bold">{key}: </Typography>
+                                                                        {value as any}
+                                                                    </Typography>
+                                                                </View>
+                                                            ))}
+                                                        </View>
+                                                    </Surface>
+                                                </Pressable>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+
+                                <View>
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-3 uppercase ml-1">Notes</Typography>
                                     <Surface variant="muted" className="p-5 border border-gray-50 min-h-[120px]" rounded="2xl">
                                         <View className="flex-row mb-3">
                                             <InfoCircle size={20} color="#9CA3AF" variant="Bulk" />
                                             <Typography variant="body" weight="medium" className="ml-2 text-gray-400">Notes Overview</Typography>
                                         </View>
                                         <Typography variant="body" className="leading-relaxed">
-                                            {customer?.notes || "No measurements or specific style preferences recorded for this customer yet."}
+                                            {customer?.notes || "No specific notes recorded for this customer yet."}
                                         </Typography>
                                     </Surface>
+                                </View>
+
+                                {/* Create Order Button */}
+                                <View className="mt-4">
+                                    <Button
+                                        onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
+                                        className="h-16 rounded-full bg-dark"
+                                        textClassName="text-white"
+                                    >
+                                        <View className="flex-row items-center justify-center">
+                                            <ShoppingCart size={20} color="white" variant="Bold" />
+                                            <Typography weight="bold" className="ml-3 text-white" family="grotesk">Create Order</Typography>
+                                        </View>
+                                    </Button>
                                 </View>
                             </View>
                         </>

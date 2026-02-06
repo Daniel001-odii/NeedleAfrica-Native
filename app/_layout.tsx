@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppState, NativeModules } from 'react-native';
 import { useSync } from '../hooks/useSync';
+import { NotificationService } from '../services/NotificationService';
+import * as Notifications from 'expo-notifications';
 import {
     useFonts,
     PlayfairDisplay_400Regular,
@@ -37,8 +39,10 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNavWithLoading() {
     const { isLoading } = useAuth();
+    const segments = useSegments();
 
     // Show loading screen while auth state is being determined
+    // This is the global blocking loading state
     if (isLoading) {
         return <LoadingScreen />;
     }
@@ -47,7 +51,7 @@ function RootLayoutNavWithLoading() {
 }
 
 function RootLayoutNav() {
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, isNewUser } = useAuth();
     const { sync } = useSync();
     const segments = useSegments();
     const router = useRouter();
@@ -58,13 +62,25 @@ function RootLayoutNav() {
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
+        const inOnboarding = segments[0] === 'onboarding';
+        const inTabs = segments[0] === '(tabs)';
 
-        if (!user && !inAuthGroup) {
+        if (!user && !inAuthGroup && !inOnboarding) {
+            // Not logged in: redirect to login
             router.replace('/(auth)/login');
-        } else if (user && inAuthGroup) {
-            router.replace('/(tabs)');
+        } else if (user) {
+            // Logged in
+            if (isNewUser) {
+                // New user: go to onboarding
+                if (!inOnboarding) {
+                    router.replace('/onboarding');
+                }
+            } else if (!inTabs) {
+                // Existing user not in tabs: go to main app
+                router.replace('/(tabs)');
+            }
         }
-    }, [user, isLoading, segments]);
+    }, [user, isLoading, segments, isNewUser]);
 
     // 2. Sync logic: Interval & Foreground
     useEffect(() => {
@@ -92,6 +108,23 @@ function RootLayoutNav() {
             subscription.remove();
         };
     }, [user, sync]);
+
+    // 3. Notification listeners
+    useEffect(() => {
+        const notificationListener = NotificationService.addNotificationReceivedListener(notification => {
+            console.log('Notification received in foreground:', notification);
+        });
+
+        const responseListener = NotificationService.addNotificationResponseReceivedListener(response => {
+            console.log('Notification response received:', response);
+            // Handle navigation here if needed
+        });
+
+        return () => {
+            NotificationService.removeNotificationSubscription(notificationListener);
+            NotificationService.removeNotificationSubscription(responseListener);
+        };
+    }, []);
 
     return (
         <Stack

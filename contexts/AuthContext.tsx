@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import axiosInstance from '../lib/axios';
+import { NotificationService } from '../services/NotificationService';
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 interface User {
@@ -20,12 +21,14 @@ interface User {
     reminderDays?: string;
     measurementUnit?: 'cm' | 'inch';
     currency?: string;
+    pushTokens?: string[];
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     isActionLoading: boolean;
+    isNewUser: boolean; // Flag to trigger onboarding
     signIn: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     signUp: (email: string, password: string, username: string, businessName: string) => Promise<void>;
@@ -33,6 +36,7 @@ interface AuthContextType {
     resetPassword: (email: string, otp: string, password: string) => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<void>;
     deleteAccount: () => Promise<void>;
+    completeOnboarding: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [isNewUser, setIsNewUser] = useState(false);
 
     useEffect(() => {
         checkUser();
@@ -53,6 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (token && userData) {
                 setUser(JSON.parse(userData));
+                // Re-register push token on start to ensure it's up to date
+                registerPushToken();
             }
         } catch (e) {
             console.error(e);
@@ -73,8 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            setIsNewUser(false);
             setUser(userData);
-            router.replace('/(tabs)');
+            registerPushToken();
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Sign in failed';
             console.log('Sign in error details:', error.response?.data || error.message);
@@ -98,8 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 await SecureStore.setItemAsync('auth_token', token);
             }
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            setIsNewUser(true);
             setUser(userData);
-            router.replace('/(tabs)');
+            registerPushToken();
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Sign up failed';
             console.log('Sign up error details:', error.response?.data || error.message);
@@ -177,15 +186,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const registerPushToken = async () => {
+        try {
+            const token = await NotificationService.registerForPushNotificationsAsync();
+            if (token) {
+                console.log('Push Token registered:', token);
+                await axiosInstance.post('/users/push-token', { token });
+            }
+        } catch (error) {
+            console.error('Failed to register push token:', error);
+        }
+    };
+
+    const completeOnboarding = () => {
+        setIsNewUser(false);
+    };
+
     const logout = async () => {
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('user_data');
+        setIsNewUser(false);
         setUser(null);
         router.replace('/(auth)/login');
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding }}>
             {children}
         </AuthContext.Provider>
     );

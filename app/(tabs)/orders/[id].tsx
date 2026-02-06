@@ -12,7 +12,10 @@ import { useOrders } from '../../../hooks/useOrders';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { uploadOrderImages } from '../../../services/ImageUploadService';
 import Toast from 'react-native-toast-message';
+
+const isLocalUri = (uri: string | null) => uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
 export default function OrderDetail() {
     const { id } = useLocalSearchParams();
@@ -55,27 +58,52 @@ export default function OrderDetail() {
         );
     }
 
+    const [isUpdating, setIsUpdating] = useState(false);
+
     const handleUpdate = async () => {
         if (!styleName.trim()) {
             Toast.show({ type: 'error', text1: 'Required', text2: 'Style name is required' });
             return;
         }
 
+        setIsUpdating(true);
+
         try {
+            let finalFabricImage = fabricImage;
+            let finalStyleImage = styleImage;
+
+            // Only upload if they are local URIs (newly picked)
+            const needsFabricUpload = isLocalUri(fabricImage);
+            const needsStyleUpload = isLocalUri(styleImage);
+
+            if (needsFabricUpload || needsStyleUpload) {
+                Toast.show({ type: 'info', text1: 'Uploading new images...' });
+                const uploaded = await uploadOrderImages(
+                    needsFabricUpload ? fabricImage : null,
+                    needsStyleUpload ? styleImage : null
+                );
+
+                if (needsFabricUpload && uploaded.fabricImage) finalFabricImage = uploaded.fabricImage;
+                if (needsStyleUpload && uploaded.styleImage) finalStyleImage = uploaded.styleImage;
+            }
+
             await updateOrder(id as string, {
                 styleName,
                 amount: parseFloat(amount) || 0,
                 notes,
                 deliveryDate: deliveryDate,
-                fabricImage: fabricImage || undefined,
-                styleImage: styleImage || undefined
+                fabricImage: finalFabricImage || undefined,
+                styleImage: finalStyleImage || undefined
             });
 
             setIsEditing(false);
-            Toast.show({ type: 'success', text1: 'Success', text2: 'Saved to device' });
+            Toast.show({ type: 'success', text1: 'Success', text2: 'Saved and synced' });
             performSync().catch(console.error);
         } catch (error) {
+            console.error('Update error:', error);
             Toast.show({ type: 'error', text1: 'Update Failed', text2: 'Could not update order' });
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -364,8 +392,14 @@ export default function OrderDetail() {
                                 <Button onPress={handleDelete} className="flex-1 h-16 rounded-full bg-red-50 border-0" textClassName="text-red-500">
                                     Delete
                                 </Button>
-                                <Button onPress={handleUpdate} className="flex-[2] h-16 rounded-full bg-dark" textClassName="text-white">
-                                    Save Changes
+                                <Button
+                                    onPress={handleUpdate}
+                                    className="flex-[2] h-16 rounded-full bg-dark"
+                                    textClassName="text-white"
+                                    isLoading={isUpdating}
+                                    disabled={isUpdating}
+                                >
+                                    {isUpdating ? 'Saving...' : 'Save Changes'}
                                 </Button>
                             </View>
                         </View>

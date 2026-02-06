@@ -1,24 +1,50 @@
-import React, { useState } from 'react';
-import { View, FlatList, Pressable, TextInput, Linking, RefreshControl } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
-import { Add, SearchNormal, User, ArrowRight, Call, Refresh } from 'iconsax-react-native';
+import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, TickCircle, CloseCircle } from 'iconsax-react-native';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import { Swipeable } from 'react-native-gesture-handler';
 import { Trash } from 'iconsax-react-native';
 import { Alert } from 'react-native';
 
+type SortOption = 'recent' | 'oldest' | 'a-z' | 'z-a';
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+    { key: 'recent', label: 'Most Recent' },
+    { key: 'oldest', label: 'Oldest First' },
+    { key: 'a-z', label: 'Name (A-Z)' },
+    { key: 'z-a', label: 'Name (Z-A)' },
+];
+
 function CustomersScreen() {
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const [sortBy, setSortBy] = useState<SortOption>('recent');
+    const [showSortModal, setShowSortModal] = useState(false);
     const { customers, loading, seedCustomers, refresh, deleteCustomer } = useCustomers(search);
     const router = useRouter();
+
+    const sortedCustomers = useMemo(() => {
+        const sorted = [...customers];
+        switch (sortBy) {
+            case 'recent':
+                return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            case 'oldest':
+                return sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            case 'a-z':
+                return sorted.sort((a, b) => a.fullName.localeCompare(b.fullName));
+            case 'z-a':
+                return sorted.sort((a, b) => b.fullName.localeCompare(a.fullName));
+            default:
+                return sorted;
+        }
+    }, [customers, sortBy]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
@@ -60,6 +86,8 @@ function CustomersScreen() {
         );
     };
 
+    const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
+
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             <View className="p-6 pb-0">
@@ -67,6 +95,11 @@ function CustomersScreen() {
                 <View className="flex-row justify-between items-center mb-6">
                     <Typography variant="h2" weight="bold">Customers</Typography>
                     <View className="flex-row gap-2">
+                        <IconButton
+                            icon={<FilterSearch size={20} color="black" />}
+                            variant="ghost"
+                            onPress={() => setShowSortModal(true)}
+                        />
                         <IconButton
                             icon={<Refresh size={20} color="black" />}
                             variant="ghost"
@@ -95,7 +128,7 @@ function CustomersScreen() {
 
             {/* List */}
             <FlatList
-                data={customers}
+                data={sortedCustomers}
                 keyExtractor={item => item.id}
                 contentContainerClassName="p-6 pt-0 pb-16 gap-3"
                 showsVerticalScrollIndicator={false}
@@ -130,7 +163,6 @@ function CustomersScreen() {
                                             variant="ghost"
                                         />
                                     )}
-                                    {/* <ArrowRight size={18} color="#9CA3AF" /> */}
                                 </View>
                             </Surface>
                         </Pressable>
@@ -157,19 +189,59 @@ function CustomersScreen() {
                                     >
                                         Add New
                                     </Button>
-                                    {/* <Button
-                                        onPress={seedCustomers}
-                                        className="bg-lavender px-6 rounded-full h-12"
-                                        variant="secondary"
-                                    >
-                                        Seed Test Data
-                                    </Button> */}
                                 </View>
                             )}
                         </View>
                     ) : null
                 }
             />
+
+            {/* Sort Modal */}
+            <Modal
+                visible={showSortModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowSortModal(false)}
+            >
+                <Pressable
+                    className="flex-1 bg-black/50 justify-end"
+                    onPress={() => setShowSortModal(false)}
+                >
+                    <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
+                        <View className="flex-row justify-between items-center mb-6">
+                            <Typography variant="h3" weight="bold">Sort By</Typography>
+                            <IconButton
+                                icon={<CloseCircle size={24} color="#9CA3AF" variant="Bold" />}
+                                variant="ghost"
+                                onPress={() => setShowSortModal(false)}
+                            />
+                        </View>
+                        <View className="gap-2">
+                            {SORT_OPTIONS.map((option) => (
+                                <Pressable
+                                    key={option.key}
+                                    onPress={() => {
+                                        setSortBy(option.key);
+                                        setShowSortModal(false);
+                                    }}
+                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? 'bg-lavender' : 'bg-gray-50'}`}
+                                >
+                                    <Typography
+                                        weight={sortBy === option.key ? 'bold' : 'medium'}
+                                        color={sortBy === option.key ? 'primary' : 'black'}
+                                    >
+                                        {option.label}
+                                    </Typography>
+                                    {sortBy === option.key && (
+                                        <TickCircle size={20} color="#4F46E5" variant="Bold" />
+                                    )}
+                                </Pressable>
+                            ))}
+                        </View>
+                        <View className="h-8" />
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }

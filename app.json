@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.daniel-odii.needleafricaapp"
     },
     "android": {
+      "googleServicesFile": "google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
@@ -29,6 +30,19 @@
       "favicon": "./assets/icon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 100,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/icon.png",
+            "backgroundColor": "#FFFFFF"
+          }
+        }
+      ],
       [
         "expo-build-properties",
         {
@@ -45,7 +59,8 @@
         }
       ],
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

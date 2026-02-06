@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2 } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,11 +13,15 @@ import { useCustomers, Customer } from '../../../hooks/useCustomers';
 import { useOrders } from '../../../hooks/useOrders';
 import { Modal, FlatList } from 'react-native';
 import { SearchNormal1, CloseCircle as CloseCircleIcon, User } from 'iconsax-react-native';
+import { uploadOrderImages } from '../../../services/ImageUploadService';
+import Toast from 'react-native-toast-message';
 
 export default function NewOrder() {
     const router = useRouter();
     const { customers } = useCustomers();
     const { addOrder } = useOrders();
+
+    const { customerId } = useLocalSearchParams<{ customerId: string }>();
 
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [showCustomerModal, setShowCustomerModal] = useState(true);
@@ -30,6 +34,17 @@ export default function NewOrder() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [fabricImage, setFabricImage] = useState<string | null>(null);
     const [styleImage, setStyleImage] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
+
+    React.useEffect(() => {
+        if (customerId && customers.length > 0) {
+            const preSelected = customers.find(c => c.id === customerId);
+            if (preSelected) {
+                setSelectedCustomer(preSelected);
+                setShowCustomerModal(false);
+            }
+        }
+    }, [customerId, customers]);
 
     const filteredCustomers = customers.filter(c =>
         c.fullName.toLowerCase().includes(customerSearch.toLowerCase())
@@ -45,7 +60,17 @@ export default function NewOrder() {
             return;
         }
 
+        setIsCreating(true);
+
         try {
+            // Upload images to Cloudinary first
+            let uploadedImages: { fabricImage?: string; styleImage?: string } = {};
+
+            if (fabricImage || styleImage) {
+                Toast.show({ type: 'info', text1: 'Uploading images...' });
+                uploadedImages = await uploadOrderImages(fabricImage, styleImage);
+            }
+
             await addOrder({
                 customerId: selectedCustomer.id,
                 styleName: dressType,
@@ -53,13 +78,17 @@ export default function NewOrder() {
                 status: 'PENDING',
                 notes: notes,
                 deliveryDate: dueDate,
-                fabricImage: fabricImage || undefined,
-                styleImage: styleImage || undefined,
+                fabricImage: uploadedImages.fabricImage || undefined,
+                styleImage: uploadedImages.styleImage || undefined,
             });
+
+            Toast.show({ type: 'success', text1: 'Order created!' });
             router.back();
         } catch (error) {
             console.error('Failed to create order:', error);
-            alert('Failed to create order');
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to create order' });
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -231,8 +260,10 @@ export default function NewOrder() {
                         onPress={handleCreateOrder}
                         className="h-16 rounded-full bg-black border-0 shadow-xl shadow-brand-primary/30"
                         textClassName="text-white text-lg"
+                        isLoading={isCreating}
+                        disabled={isCreating}
                     >
-                        Create order
+                        {isCreating ? 'Creating...' : 'Create order'}
                     </Button>
 
                 </ScrollView>
