@@ -49,6 +49,8 @@ export default function OrderDetail() {
         }
     }, [order, isEditing]);
 
+    const [isUpdating, setIsUpdating] = useState(false);
+
     if (!order) {
         return (
             <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={['top']}>
@@ -57,8 +59,6 @@ export default function OrderDetail() {
             </SafeAreaView>
         );
     }
-
-    const [isUpdating, setIsUpdating] = useState(false);
 
     const handleUpdate = async () => {
         if (!styleName.trim()) {
