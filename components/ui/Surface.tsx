@@ -44,7 +44,7 @@ export function Surface({
             className={twMerge(
                 variants[variant],
                 roundedMap[rounded],
-                hasShadow && 'shadow-sm',
+                hasShadow && '',
                 hasBorder && 'border border-gray-100',
                 className
             )}

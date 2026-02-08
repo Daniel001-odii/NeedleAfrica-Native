@@ -7,6 +7,7 @@ import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
 import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
@@ -16,6 +17,7 @@ import Toast from 'react-native-toast-message';
 export default function CustomerDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
+    const { user } = useAuth();
     const { customers, updateCustomer, deleteCustomer } = useCustomers();
     const { sync: performSync } = useSync();
     const { measurements, loading: loadingMeasurements } = useCustomerMeasurements(id as string);
@@ -259,7 +261,7 @@ export default function CustomerDetail() {
                                                                 <View key={key} className="bg-gray-50 px-3 py-1 rounded-lg">
                                                                     <Typography variant="caption" color="gray">
                                                                         <Typography weight="bold">{key}: </Typography>
-                                                                        {value as any}
+                                                                        {value as any} {user?.measurementUnit || 'inch'}
                                                                     </Typography>
                                                                 </View>
                                                             ))}

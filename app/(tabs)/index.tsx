@@ -95,10 +95,10 @@ export default function Home() {
                             <Typography variant="caption" weight="bold" color="gray">Today {today}</Typography>
                         </View>
                     </View>
-                    <IconButton
+                    {/* <IconButton
                         icon={<Notification size={20} color="black" />}
                         variant="white"
-                    />
+                    /> */}
                 </View>
 
                 {isNewUser ? (
@@ -282,7 +282,7 @@ function EmptyStateHome({ router }: { router: any }) {
 function QuickAccessItem({ icon, label, bg, onPress }: any) {
     return (
         <Pressable className="items-center" onPress={onPress}>
-            <View className={`w-14 h-14 ${bg} rounded-3xl items-center justify-center mb-2 shadow-sm`}>
+            <View className={`w-14 h-14 ${bg} rounded-3xl items-center justify-center mb-2 border-2 border-gray-500/20`}>
                 {icon}
             </View>
             <Typography variant="caption" weight="bold" className="text-dark">{label}</Typography>

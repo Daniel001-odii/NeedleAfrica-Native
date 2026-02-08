@@ -36,6 +36,7 @@ export default function Login() {
                 text1: 'Success',
                 text2: 'Logged in successfully'
             });
+            // Navigation handled by RootLayoutNav auth effect
         } catch (error: any) {
             Toast.show({
                 type: 'error',

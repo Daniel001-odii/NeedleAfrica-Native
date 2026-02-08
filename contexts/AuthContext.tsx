@@ -22,6 +22,11 @@ interface User {
     measurementUnit?: 'cm' | 'inch';
     currency?: string;
     pushTokens?: string[];
+    // Subscription fields
+    subscriptionPlan?: 'FREE' | 'PRO' | 'STUDIO_AI';
+    subscriptionStatus?: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' | 'UNPAID' | 'EXPIRED';
+    subscriptionExpiry?: string;
+    currentPlanCode?: string;
 }
 
 interface AuthContextType {
@@ -37,6 +42,7 @@ interface AuthContextType {
     updateProfile: (data: Partial<User>) => Promise<void>;
     deleteAccount: () => Promise<void>;
     completeOnboarding: () => void;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -202,6 +208,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsNewUser(false);
     };
 
+    const refreshUser = async () => {
+        try {
+            const response = await axiosInstance.get('/users/me');
+            const { status } = response.data;
+            // console.log("user profile: ", response.data);
+            console.log("res status: ", status);
+            if (status !== 'error') {
+                const updatedUser = { ...response.data };
+                await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+            }
+        } catch (error) {
+            console.error('Failed to refresh user:', error);
+        }
+    };
+
     const logout = async () => {
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('user_data');
@@ -211,7 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

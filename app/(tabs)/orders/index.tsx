@@ -136,10 +136,11 @@ export default function Orders() {
                         <Typography variant="h2" weight="bold">Orders</Typography>
                         <View className="flex-row gap-2">
                             <Pressable
-                                className="w-10 h-10 bg-muted rounded-full items-center justify-center"
+                                className="h-10 bg-muted rounded-full items-center justify-center flex-row gap-2 px-3"
                                 onPress={() => router.push('/(tabs)/orders/invoices')}
                             >
                                 <DocumentText size={20} color="black" />
+                                <Typography variant="body" weight="bold">Invoices</Typography>
                             </Pressable>
                             <Pressable
                                 className="w-10 h-10 bg-muted rounded-full items-center justify-center"

@@ -3,14 +3,17 @@ import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle } from 'iconsax-react-native';
+import * as Notifications from 'expo-notifications';
 import { CURRENCIES, Currency } from '../../../constants/currencies';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import axiosInstance from '../../../lib/axios';
 import Toast from 'react-native-toast-message';
 
+import { NotificationService } from '../../../services/NotificationService';
 
 export default function Preferences() {
     const router = useRouter();

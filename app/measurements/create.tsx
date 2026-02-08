@@ -10,11 +10,16 @@ import { ArrowLeft, DocumentText } from 'iconsax-react-native';
 import { useCustomerMeasurements } from '../../hooks/useMeasurement';
 import { useMeasurementTemplates, MeasurementTemplate } from '../../hooks/useMeasurementTemplates';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export default function CreateMeasurementScreen() {
     const router = useRouter();
+    const { user } = useAuth();
     const { customerId } = useLocalSearchParams<{ customerId: string }>();
     const { addMeasurement } = useCustomerMeasurements(customerId!);
     const { templates, loading: templatesLoading } = useMeasurementTemplates();
+
+    const unit = user?.measurementUnit || 'inch';
 
     const [selectedTemplate, setSelectedTemplate] = useState<MeasurementTemplate | null>(null);
     const [title, setTitle] = useState('');
@@ -121,7 +126,7 @@ export default function CreateMeasurementScreen() {
                                 <View className="gap-3 mb-8">
                                     {selectedTemplate.fields.map((field: string) => (
                                         <View key={field}>
-                                            <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field}</Typography>
+                                            <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field} ({unit})</Typography>
                                             <Surface variant="muted" className="px-4 py-3" rounded="xl" hasBorder>
                                                 <TextInput
                                                     className="text-base text-dark font-medium"

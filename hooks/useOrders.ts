@@ -4,6 +4,8 @@ import { Q } from '@nozbe/watermelondb';
 import Order from '../database/watermelon/models/Order';
 import { useAuth } from '../contexts/AuthContext';
 import { useSync } from './useSync';
+import { NotificationService } from '../services/NotificationService';
+import Customer from '../database/watermelon/models/Customer';
 export { Order };
 
 export function useOrders(customerId?: string) {
@@ -50,7 +52,18 @@ export function useOrders(customerId?: string) {
     }) => {
         if (!user) return;
 
-        await Order.createSyncable(database, user.id, data.customerId, data);
+        const newOrder = await Order.createSyncable(database, user.id, data.customerId, data);
+
+        // Schedule Notification if delivery date is set
+        if (data.deliveryDate) {
+            const customer = await database.get<Customer>('customers').find(data.customerId);
+            await NotificationService.scheduleDeliveryReminder(
+                newOrder.id,
+                customer.fullName,
+                data.deliveryDate,
+                parseInt(user.reminderDays || '1')
+            );
+        }
 
         // Trigger immediate sync to server
         sync().catch(console.error);
@@ -78,6 +91,27 @@ export function useOrders(customerId?: string) {
                 record.syncStatus = 'created';
                 record.updatedAt = new Date();
             });
+
+            // Handle Notification Rescheduling
+            if (data.status === 'COMPLETED' || data.status === 'CANCELLED') {
+                await NotificationService.cancelOrderReminders(id);
+            } else if (data.deliveryDate) {
+                // Determine user reminder days setting (default to '1' if not set)
+                const reminderDaysStr = user?.reminderDays || '1';
+                // If custom days like "5", parseInt handles it. If "custom", we expect the numeric value stored.
+                // Based on preferences.tsx, it stores the actual number string.
+                const days = parseInt(reminderDaysStr);
+
+                const customer = await order.customer.fetch(); // WatermelonDB relation fetch
+                if (customer) {
+                    await NotificationService.scheduleDeliveryReminder(
+                        id,
+                        customer.fullName,
+                        data.deliveryDate,
+                        isNaN(days) ? 1 : days
+                    );
+                }
+            }
         });
         sync().catch(console.error);
     };
@@ -89,6 +123,7 @@ export function useOrders(customerId?: string) {
     const deleteOrder = async (id: string) => {
         const order = await database.get<Order>('orders').find(id);
         await order.softDelete();
+        await NotificationService.cancelOrderReminders(id);
         sync().catch(console.error);
     };
 

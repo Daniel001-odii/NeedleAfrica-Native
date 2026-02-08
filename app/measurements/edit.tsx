@@ -10,10 +10,15 @@ import { ArrowLeft, Trash } from 'iconsax-react-native';
 import { useCustomerMeasurements } from '../../hooks/useMeasurement';
 import Toast from 'react-native-toast-message';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export default function EditMeasurementScreen() {
     const router = useRouter();
+    const { user } = useAuth();
     const { measurementId, customerId } = useLocalSearchParams<{ measurementId: string; customerId: string }>();
     const { measurements, updateMeasurement, deleteMeasurement } = useCustomerMeasurements(customerId!);
+
+    const unit = user?.measurementUnit || 'inch';
 
     const [title, setTitle] = useState('');
     const [values, setValues] = useState<Record<string, string>>({});
@@ -140,7 +145,7 @@ export default function EditMeasurementScreen() {
                         <View className="gap-3 mb-8">
                             {Object.keys(values).map((field) => (
                                 <View key={field}>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field}</Typography>
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field} ({unit})</Typography>
                                     <Surface variant="muted" className="px-4 py-3" rounded="xl" hasBorder>
                                         <TextInput
                                             className="text-base text-dark font-medium"

@@ -66,10 +66,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="extras/index"
                 options={{
-                    title: 'Extras',
-                    tabBarIcon: ({ color, focused }) => (
-                        <MagicStar size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
-                    ),
+                    href: null,
                 }}
             />
 

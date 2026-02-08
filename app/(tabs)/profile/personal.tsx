@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, Alert, TouchableOpacity, Pressable } from 'react-native';
+import { View, ScrollView, TextInput, Alert, TouchableOpacity, Pressable, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, User, Shop, Sms, Call, Location, Trash } from 'iconsax-react-native';
+import { ArrowLeft, User, Shop, Sms, Call, Location, Trash, Warning2, CloseCircle } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -20,6 +20,9 @@ export default function PersonalInformation() {
     const [phone, setPhone] = useState(user?.phoneNumber || '');
     const [address, setAddress] = useState(user?.address || '');
     const [isSaving, setIsSaving] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -67,33 +70,37 @@ export default function PersonalInformation() {
     };
 
     const handleDeleteAccount = () => {
-        Alert.alert(
-            'Delete Account',
-            'Are you sure you want to delete your account? This action is irreversible.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteAccount();
-                            Toast.show({
-                                type: 'success',
-                                text1: 'Account Deleted',
-                                text2: 'Your account has been permanently removed.'
-                            });
-                        } catch (error: any) {
-                            Toast.show({
-                                type: 'error',
-                                text1: 'Delete Failed',
-                                text2: error.message || 'Something went wrong'
-                            });
-                        }
-                    }
-                }
-            ]
-        );
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteAccount = async () => {
+        if (deleteConfirmationText !== 'DELETE') {
+            Toast.show({
+                type: 'error',
+                text1: 'Confirmation Failed',
+                text2: 'Please type DELETE in all caps to confirm'
+            });
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            await deleteAccount();
+            setShowDeleteModal(false);
+            Toast.show({
+                type: 'success',
+                text1: 'Account Deleted',
+                text2: 'Your account has been permanently removed.'
+            });
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Delete Failed',
+                text2: error.message || 'Something went wrong'
+            });
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -109,6 +116,29 @@ export default function PersonalInformation() {
             </View>
 
             <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
+                {/* Email Display - Non-editable */}
+                <View className="mb-8">
+                    <View className="flex-row items-center mb-2 ml-1">
+                        {/* <Sms size={18} color="#6B7280" variant="Bulk" /> */}
+                        {/* <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">EMAIL ADDRESS</Typography> */}
+                    </View>
+                    <Surface variant="white" rounded="2xl" className=" justify-center border-gray-100">
+                        <Typography variant="body" weight="semibold" className="text-dark">
+                            {user?.email || 'No email set'}
+                        </Typography>
+                    </Surface>
+                    <TouchableOpacity 
+                        onPress={() => Alert.alert(
+                            'Change Email',
+                            'Please contact us at support@needleafrica.com if you need to change your email address.',
+                            [{ text: 'OK' }]
+                        )}
+                        className="mt-2 ml-1"
+                    >
+                        <Typography variant="small" color="primary" className="underline">Need to change your email? Contact us</Typography>
+                    </TouchableOpacity>
+                </View>
+
                 {/* Section: Profile Details */}
                 <View className="mb-10">
                     <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Profile Details</Typography>
@@ -140,22 +170,11 @@ export default function PersonalInformation() {
                     <View className="h-6" />
 
                     <InputGroup
-                        label="EMAIL ADDRESS"
-                        value={email}
-                        onChangeText={setEmail}
-                        icon={<Sms size={18} color="#6B7280" variant="Bulk" />}
-                        placeholder="email@example.com"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        editable={false}
-                    />
-
-                    <InputGroup
-                        label="PHONE (WHATSAPP)"
+                        label="PHONE (WHATSAPP PREFERRED)"
                         value={phone}
                         onChangeText={setPhone}
                         icon={<Call size={18} color="#6B7280" variant="Bulk" />}
-                        placeholder="Phone number"
+                        placeholder="+234 800 000 0000"
                         keyboardType="phone-pad"
                     />
 
@@ -196,6 +215,66 @@ export default function PersonalInformation() {
 
 
             </ScrollView>
+
+            {/* Delete Account Confirmation Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showDeleteModal}
+                onRequestClose={() => setShowDeleteModal(false)}
+            >
+                <View className="flex-1 bg-black/50 justify-end">
+                    <View className="bg-white rounded-t-3xl p-6 pb-10">
+                        <View className="flex-row justify-between items-center mb-6">
+                            <View className="flex-row items-center">
+                                <Warning2 size={28} color="#EF4444" variant="Bulk" />
+                                <Typography variant="h3" weight="bold" color="red" className="ml-2">Delete Account</Typography>
+                            </View>
+                            <TouchableOpacity onPress={() => setShowDeleteModal(false)}>
+                                <CloseCircle size={28} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+                            <Typography variant="body" weight="bold" color="red" className="mb-2">Warning: This action cannot be undone</Typography>
+                            <Typography variant="small" color="gray" className="leading-5">
+                                Deleting your account will permanently remove:
+                            </Typography>
+                            <View className="mt-3 ml-1">
+                                <Typography variant="small" color="gray" className="mb-1">• All your customer records</Typography>
+                                <Typography variant="small" color="gray" className="mb-1">• All order history and measurements</Typography>
+                                <Typography variant="small" color="gray" className="mb-1">• All invoices and payment data</Typography>
+                                <Typography variant="small" color="gray">• Your account and profile information</Typography>
+                            </View>
+                        </View>
+
+                        <Typography variant="body" weight="semibold" className="mb-3">
+                            To confirm deletion, type <Typography variant="body" weight="bold" className="text-red-600">DELETE</Typography> below:
+                        </Typography>
+                        <Surface variant="white" rounded="2xl" className="px-4 h-16 justify-center border border-gray-200 mb-6">
+                            <TextInput
+                                className="font-semibold text-dark flex-1"
+                                placeholder="Type DELETE to confirm"
+                                placeholderTextColor="#9CA3AF"
+                                value={deleteConfirmationText}
+                                onChangeText={setDeleteConfirmationText}
+                                autoCapitalize="characters"
+                                autoCorrect={false}
+                            />
+                        </Surface>
+
+                        <Button
+                            onPress={confirmDeleteAccount}
+                            isLoading={isDeleting}
+                            disabled={deleteConfirmationText !== 'DELETE'}
+                            className={`h-16 rounded-full ${deleteConfirmationText === 'DELETE' ? 'bg-red-600' : 'bg-gray-300'}`}
+                            textClassName="text-white"
+                        >
+                            Permanently Delete My Account
+                        </Button>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

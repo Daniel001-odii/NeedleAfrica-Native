@@ -107,8 +107,8 @@ export default function CreateInvoiceScreen() {
                             {filteredCustomers.slice(0, 5).map(customer => (
                                 <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
                                     <Surface variant="white" className="p-4 border border-gray-100 flex-row items-center" rounded="2xl" hasBorder>
-                                        <View className="w-10 h-10 bg-lavender rounded-full items-center justify-center mr-4">
-                                            <Typography weight="bold">{customer.fullName[0].toUpperCase()}</Typography>
+                                        <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4">
+                                            <Typography weight="bold" color="white">{customer.fullName[0].toUpperCase()}</Typography>
                                         </View>
                                         <Typography weight="bold">{customer.fullName}</Typography>
                                     </Surface>
@@ -194,7 +194,7 @@ export default function CreateInvoiceScreen() {
                     onPress={handleCreate}
                     isLoading={submitting}
                     disabled={!selectedCustomerId || !selectedOrderId}
-                    className={`h-16 rounded-full mt-4 ${(!selectedCustomerId || !selectedOrderId) ? 'bg-gray-300' : 'bg-dark'}`}
+                    className={`h-16 rounded-full mt-4 ${(!selectedCustomerId || !selectedOrderId) ? 'bg-gray-800' : 'bg-dark'}`}
                 >
                     <Typography weight="bold" color="white">Generate Invoice</Typography>
                 </Button>

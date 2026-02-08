@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, ScrollView, Image, Pressable } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, ScrollView, Image, Pressable, Linking, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity } from 'iconsax-react-native';
+import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
@@ -10,12 +10,35 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 
 export default function Profile() {
-    const { user, logout } = useAuth();
+    const { user, logout, refreshUser } = useAuth();
     const router = useRouter();
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshUser();
+        setRefreshing(false);
+    }, [refreshUser]);
+
+    // Refresh user data when profile page mounts
+    useEffect(() => {
+        refreshUser();
+    }, []);
+
+    const handleLogout = () => {
+        Alert.alert(
+            'Log Out',
+            'Are you sure you want to log out? You will need to sign in again to access your account.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Log Out', style: 'destructive', onPress: logout }
+            ]
+        );
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
                 <View className="mb-8">
                     <Typography variant="h1" weight="bold">Profile</Typography>
@@ -24,20 +47,20 @@ export default function Profile() {
 
                 {/* User Card */}
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
-                <View className="flex-row items-center mb-10 bg-lavender/30 p-6 rounded-[36px]">
-                    {/* {user?.profilePicture ? (
+                <View className="flex-row items-center mb-10 bg-lavender/30 rounded-[36px]">
+                    {user?.profilePicture ? (
                         <Image
                             source={{ uri: user.profilePicture }}
                             className="w-20 h-20 rounded-full mr-5"
                         />
                     ) : (
-                        <Surface variant="white" className="w-20 h-20 items-center justify-center mr-5 shadow-sm" rounded="full">
-                            <Typography variant="h1" weight="bold" className="text-brand-primary">
+                        <View className="w-20 h-20 items-center justify-center mr-5 bg-black rounded-full">
+                            <Typography variant="h1" weight="bold" className="text-white">
                                 {(user?.username || 'J')[0].toUpperCase()}
                                 {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
                             </Typography>
-                        </Surface>
-                    )} */}
+                        </View>
+                    )}
                     <View className="flex-1">
                         <Typography variant="h3" weight="bold">{user?.username || 'Jane Doe'}</Typography>
                         <Typography variant="caption" color="gray" className="mb-2">{user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>
@@ -93,6 +116,15 @@ export default function Profile() {
                             subtitle="Showcase your work as a digital catalogue"
                             badge="Coming Soon"
                         />
+                        <ProfileItem
+                            icon={<Crown size={20} color="#Eab308" variant="Bulk" />}
+                            iconBgColor="bg-yellow-50"
+                            title="Subscription"
+                            subtitle="Manage your plan & billing"
+                            badge={user?.subscriptionPlan === 'PRO' ? 'Pro' : user?.subscriptionPlan === 'STUDIO_AI' ? 'Studio AI' : 'Free Plan'}
+                            badgeColor={user?.subscriptionPlan === 'PRO' ? 'bg-yellow-500' : user?.subscriptionPlan === 'STUDIO_AI' ? 'bg-purple-600' : 'bg-blue-600'}
+                            onPress={() => router.push('/(tabs)/profile/subscription')}
+                        />
                     </View>
                 </View>
 
@@ -112,7 +144,7 @@ export default function Profile() {
                             iconBgColor="bg-emerald-50"
                             title="Download Your Data"
                             subtitle="Get a copy of all your records"
-                            onPress={() => router.push('/(tabs)/profile/download-data')}
+                            badge="Coming Soon"
                         />
                     </View>
                 </View>
@@ -125,21 +157,22 @@ export default function Profile() {
                             icon={<MessageQuestion size={20} color="#db2777" variant="Bulk" />}
                             iconBgColor="bg-pink-50"
                             title="Help & Support"
+                            onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                         />
                     </View>
                 </View>
 
                 {/* Logout Action */}
                 <Pressable
-                    onPress={logout}
+                    onPress={handleLogout}
                     className="h-16 rounded-full text-white border-red-500 bg-red-500/10 flex-row shadow-none items-center justify-center gap-3 active:bg-red-500/50 active:text-white"
                 >
                     <Logout size={20} color="red" />
                     <Typography weight="bold" color="red">Log Out</Typography>
                 </Pressable>
 
-            </ScrollView>
-        </SafeAreaView>
+            </ScrollView >
+        </SafeAreaView >
     );
 }
 
@@ -150,14 +183,15 @@ interface ProfileItemProps {
     badge?: string;
     onPress?: () => void;
     iconBgColor?: string;
+    badgeColor?: string;
 }
 
-function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-white' }: ProfileItemProps) {
+function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-white', badgeColor = 'bg-dark' }: ProfileItemProps) {
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
             <Surface variant="white" className="p-4 bg-muted/50" rounded="2xl" hasBorder>
                 <View className="flex-row items-center">
-                    <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 shadow-sm border border-black/5 ${iconBgColor}`}>
+                    <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${iconBgColor}`}>
                         {icon}
                     </View>
                     <View className="flex-1">
@@ -165,13 +199,13 @@ function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-
                             <Typography variant="body" weight="bold">{title}</Typography>
                             {!badge && <ArrowRight size={18} color="#9CA3AF" />}
                             {badge && (
-                                <View className="bg-dark px-3 py-1 rounded-full">
+                                <View className={`${badgeColor} px-3 py-1 rounded-full`}>
                                     <Typography variant="small" color="white" weight="bold" className="text-[10px] uppercase">{badge}</Typography>
                                 </View>
                             )}
                         </View>
                         {subtitle && (
-                            <Typography variant="small" color="gray" className="mt-1 pr-6 leading-tight">
+                            <Typography variant="small" color="gray" className="mt-1 pr-6 leading-tight max-w-[80%]">
                                 {subtitle}
                             </Typography>
                         )}
