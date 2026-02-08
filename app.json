@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "needleafrica-app",
+    "name": "NeedleAfrica",
     "slug": "needleafrica-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.daniel-odii.needleafricaapp"
+      "bundleIdentifier": "com.needleafrica.app"
     },
     "android": {
       "googleServicesFile": "google-services.json",
@@ -24,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.daniel_odii.needleafricaapp"
+      "package": "com.needleafrica.app"
     },
     "web": {
       "favicon": "./assets/icon.png"
