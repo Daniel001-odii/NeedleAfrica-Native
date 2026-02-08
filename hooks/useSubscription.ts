@@ -121,10 +121,10 @@ export function useSubscription(): UseSubscriptionReturn {
     resource: 'orders' | 'customers' | 'templates' | 'invoices'
   ): number => {
     const limits = {
-      orders: 10,
-      customers: 10,
+      orders: 5,
+      customers: 5,
       templates: 3,
-      invoices: 10,
+      invoices: 5,
     };
     return limits[resource];
   }, []);

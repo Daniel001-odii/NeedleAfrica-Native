@@ -8,13 +8,30 @@ import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { ArrowLeft, Add, Trash } from 'iconsax-react-native';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
+import { useResourceLimits } from '../../hooks/useResourceLimits';
+import { useSubscription } from '../../hooks/useSubscription';
+import { useSync } from '../../hooks/useSync';
+import { ResourceLimitModal } from '../../components/ResourceLimitModal';
 
 export default function CreateTemplateScreen() {
     const router = useRouter();
     const { addTemplate } = useMeasurementTemplates();
+    const { canCreate } = useResourceLimits();
+    const { isFree } = useSubscription();
+    const { isOnline } = useSync();
     const [name, setName] = useState('');
     const [fields, setFields] = useState<string[]>(['', '', '', '']); // Start with 4 empty fields
     const [submitting, setSubmitting] = useState(false);
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitModalData, setLimitModalData] = useState({
+        allowed: true,
+        currentCount: 0,
+        limit: 3,
+        message: '',
+        isAtLimit: false,
+        isNearLimit: false,
+    });
+    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const handleAddField = () => {
         setFields([...fields, '']);
@@ -41,6 +58,16 @@ export default function CreateTemplateScreen() {
         if (validFields.length === 0) {
             Alert.alert('Error', 'Please add at least one field');
             return;
+        }
+
+        // Check resource limits for free tier
+        if (isFree) {
+            const limitCheck = canCreate('templates');
+            if (!limitCheck.allowed && !proceedAnyway) {
+                setLimitModalData(limitCheck);
+                setShowLimitModal(true);
+                return;
+            }
         }
 
         setSubmitting(true);
@@ -130,6 +157,24 @@ export default function CreateTemplateScreen() {
                         Save Template
                     </Button>
                 </ScrollView>
+
+                <ResourceLimitModal
+                    visible={showLimitModal}
+                    onClose={() => setShowLimitModal(false)}
+                    onUpgrade={() => {
+                        setShowLimitModal(false);
+                        router.push('/(tabs)/profile/subscription');
+                    }}
+                    onContinueAnyway={() => {
+                        setShowLimitModal(false);
+                        setProceedAnyway(true);
+                        setTimeout(() => handleSave(), 100);
+                    }}
+                    resource="templates"
+                    currentCount={limitModalData.currentCount}
+                    limit={limitModalData.limit}
+                    isOffline={!isOnline}
+                />
             </View>
         </SafeAreaView>
     );

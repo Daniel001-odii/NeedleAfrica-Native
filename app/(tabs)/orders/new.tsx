@@ -11,6 +11,10 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useCustomers, Customer } from '../../../hooks/useCustomers';
 import { useOrders } from '../../../hooks/useOrders';
+import { useResourceLimits } from '../../../hooks/useResourceLimits';
+import { useSubscription } from '../../../hooks/useSubscription';
+import { useSync } from '../../../hooks/useSync';
+import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
 import { Modal, FlatList } from 'react-native';
 import { SearchNormal1, CloseCircle as CloseCircleIcon, User } from 'iconsax-react-native';
 import { uploadOrderImages } from '../../../services/ImageUploadService';
@@ -20,6 +24,19 @@ export default function NewOrder() {
     const router = useRouter();
     const { customers } = useCustomers();
     const { addOrder } = useOrders();
+    const { canCreate, counts } = useResourceLimits();
+    const { isFree } = useSubscription();
+    const { isOnline } = useSync();
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitModalData, setLimitModalData] = useState({
+        allowed: true,
+        currentCount: 0,
+        limit: 5,
+        message: '',
+        isAtLimit: false,
+        isNearLimit: false,
+    });
+    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const { customerId } = useLocalSearchParams<{ customerId: string }>();
 
@@ -58,6 +75,16 @@ export default function NewOrder() {
         if (!dressType) {
             alert('Please enter a dress type');
             return;
+        }
+
+        // Check resource limits for free tier
+        if (isFree) {
+            const limitCheck = canCreate('orders');
+            if (!limitCheck.allowed && !proceedAnyway) {
+                setLimitModalData(limitCheck);
+                setShowLimitModal(true);
+                return;
+            }
         }
 
         setIsCreating(true);
@@ -347,6 +374,25 @@ export default function NewOrder() {
                     </Surface>
                 </View>
             </Modal>
+
+            <ResourceLimitModal
+                visible={showLimitModal}
+                onClose={() => setShowLimitModal(false)}
+                onUpgrade={() => {
+                    setShowLimitModal(false);
+                    router.push('/(tabs)/profile/subscription');
+                }}
+                onContinueAnyway={() => {
+                    setShowLimitModal(false);
+                    setProceedAnyway(true);
+                    // Small delay to let state update before trying again
+                    setTimeout(() => handleCreateOrder(), 100);
+                }}
+                resource="orders"
+                currentCount={limitModalData.currentCount}
+                limit={limitModalData.limit}
+                isOffline={!isOnline}
+            />
         </SafeAreaView>
     );
 }

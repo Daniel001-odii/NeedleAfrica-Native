@@ -1,16 +1,20 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, User, Notepad, People, Calendar, MagicStar } from 'iconsax-react-native';
+import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
 
     return (
-        <Tabs
-            screenOptions={{
-                headerShown: false,
-                tabBarActiveTintColor: '#1C1C1E',
-                tabBarInactiveTintColor: '#9CA3AF',
+        <View className="flex-1">
+            <LimitedOfflineBanner />
+            <Tabs
+                screenOptions={{
+                    headerShown: false,
+                    tabBarActiveTintColor: '#1C1C1E',
+                    tabBarInactiveTintColor: '#9CA3AF',
 
                 tabBarStyle: {
                     backgroundColor: '#FFFFFF',
@@ -83,5 +87,6 @@ export default function TabLayout() {
             {/* Hidden screens (no tab button) */}
             {/* Note: Sub-screens are now handled by nested Stacks in profile/ and customers/ directories */}
         </Tabs>
+        </View>
     );
 }

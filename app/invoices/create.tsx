@@ -11,6 +11,10 @@ import { useCustomers } from '../../hooks/useCustomers';
 import { useOrders } from '../../hooks/useOrders';
 import { useInvoices } from '../../hooks/useInvoices';
 import { useAuth } from '../../contexts/AuthContext';
+import { useResourceLimits } from '../../hooks/useResourceLimits';
+import { useSubscription } from '../../hooks/useSubscription';
+import { useSync } from '../../hooks/useSync';
+import { ResourceLimitModal } from '../../components/ResourceLimitModal';
 import Toast from 'react-native-toast-message';
 
 export default function CreateInvoiceScreen() {
@@ -20,12 +24,25 @@ export default function CreateInvoiceScreen() {
     const { customers, loading: loadingCustomers } = useCustomers();
     const { orders, loading: loadingOrders } = useOrders();
     const { createInvoice } = useInvoices();
+    const { canCreate } = useResourceLimits();
+    const { isFree } = useSubscription();
+    const { isOnline } = useSync();
 
     const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
     const [selectedOrderId, setSelectedOrderId] = useState('');
     const [notes, setNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitModalData, setLimitModalData] = useState({
+        allowed: true,
+        currentCount: 0,
+        limit: 5,
+        message: '',
+        isAtLimit: false,
+        isNearLimit: false,
+    });
+    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const filteredCustomers = useMemo(() => {
         return customers.filter(c =>
@@ -47,6 +64,16 @@ export default function CreateInvoiceScreen() {
         if (!selectedCustomerId || !selectedOrderId) {
             Alert.alert('Error', 'Please select both a customer and an order');
             return;
+        }
+
+        // Check resource limits for free tier
+        if (isFree) {
+            const limitCheck = canCreate('invoices');
+            if (!limitCheck.allowed && !proceedAnyway) {
+                setLimitModalData(limitCheck);
+                setShowLimitModal(true);
+                return;
+            }
         }
 
         setSubmitting(true);
@@ -199,6 +226,24 @@ export default function CreateInvoiceScreen() {
                     <Typography weight="bold" color="white">Generate Invoice</Typography>
                 </Button>
             </ScrollView>
+
+            <ResourceLimitModal
+                visible={showLimitModal}
+                onClose={() => setShowLimitModal(false)}
+                onUpgrade={() => {
+                    setShowLimitModal(false);
+                    router.push('/(tabs)/profile/subscription');
+                }}
+                onContinueAnyway={() => {
+                    setShowLimitModal(false);
+                    setProceedAnyway(true);
+                    setTimeout(() => handleCreate(), 100);
+                }}
+                resource="invoices"
+                currentCount={limitModalData.currentCount}
+                limit={limitModalData.limit}
+                isOffline={!isOnline}
+            />
         </SafeAreaView>
     );
 }

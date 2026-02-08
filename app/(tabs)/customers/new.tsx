@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
+import { useResourceLimits } from '../../../hooks/useResourceLimits';
+import { useSubscription } from '../../../hooks/useSubscription';
+import { useSync } from '../../../hooks/useSync';
 import { ArrowLeft, User, Call, InfoCircle } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
@@ -9,8 +12,7 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-
-import { useSync } from '../../../hooks/useSync';
+import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
 
 export default function NewCustomer() {
     const [fullName, setFullName] = useState('');
@@ -18,15 +20,37 @@ export default function NewCustomer() {
     const [gender, setGender] = useState('female');
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitModalData, setLimitModalData] = useState({
+        allowed: true,
+        currentCount: 0,
+        limit: 5,
+        message: '',
+        isAtLimit: false,
+        isNearLimit: false,
+    });
+    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const { addCustomer } = useCustomers();
-    const { sync: performSync } = useSync();
+    const { sync: performSync, isOnline } = useSync();
+    const { canCreate } = useResourceLimits();
+    const { isFree } = useSubscription();
     const router = useRouter();
 
     const handleSubmit = async () => {
         if (!fullName.trim()) {
             Alert.alert('Error', 'Full name is required');
             return;
+        }
+
+        // Check resource limits for free tier
+        if (isFree) {
+            const limitCheck = canCreate('customers');
+            if (!limitCheck.allowed && !proceedAnyway) {
+                setLimitModalData(limitCheck);
+                setShowLimitModal(true);
+                return;
+            }
         }
 
         try {
@@ -178,6 +202,24 @@ export default function NewCustomer() {
 
 
             </KeyboardAvoidingView>
+
+            <ResourceLimitModal
+                visible={showLimitModal}
+                onClose={() => setShowLimitModal(false)}
+                onUpgrade={() => {
+                    setShowLimitModal(false);
+                    router.push('/(tabs)/profile/subscription');
+                }}
+                onContinueAnyway={() => {
+                    setShowLimitModal(false);
+                    setProceedAnyway(true);
+                    setTimeout(() => handleSubmit(), 100);
+                }}
+                resource="customers"
+                currentCount={limitModalData.currentCount}
+                limit={limitModalData.limit}
+                isOffline={!isOnline}
+            />
         </SafeAreaView>
     );
 }
