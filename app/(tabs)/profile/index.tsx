@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, Image, Pressable, Linking, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown } from 'iconsax-react-native';
+import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown, DocumentText } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
@@ -158,6 +158,20 @@ export default function Profile() {
                             iconBgColor="bg-pink-50"
                             title="Help & Support"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
+                        />
+                        <ProfileItem
+                            icon={<MessageQuestion size={20} color="#8b5cf6" variant="Bulk" />}
+                            iconBgColor="bg-purple-50"
+                            title="Send Feedback"
+                            subtitle="Help us improve NeedleAfrica"
+                            onPress={() => Linking.openURL('mailto:support@needleafrica.com?subject=Feedback for NeedleAfrica')}
+                        />
+                        <ProfileItem
+                            icon={<DocumentText size={20} color="#6b7280" variant="Bulk" />}
+                            iconBgColor="bg-gray-50"
+                            title="Privacy Policy"
+                            subtitle="View our privacy policy"
+                            onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}
                         />
                     </View>
                 </View>

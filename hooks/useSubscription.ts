@@ -33,7 +33,7 @@ export function useSubscription(): UseSubscriptionReturn {
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
 
   const refreshStatus = useCallback(async () => {
     setIsLoading(true);
@@ -43,10 +43,20 @@ export function useSubscription(): UseSubscriptionReturn {
       setStatus(data);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch subscription status');
+      // OFFLINE FALLBACK: use cached user data from AuthContext/SecureStore
+      if (user?.subscriptionPlan) {
+        setStatus({
+          plan: user.subscriptionPlan,
+          status: user.subscriptionStatus || 'ACTIVE',
+          expiry: user.subscriptionExpiry || null,
+          isExpired: false,
+          planCode: user.currentPlanCode || null,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Fetch status on mount
   useEffect(() => {

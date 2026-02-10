@@ -36,7 +36,8 @@ export default function Login() {
                 text1: 'Success',
                 text2: 'Logged in successfully'
             });
-            // Navigation handled by RootLayoutNav auth effect
+            // Explicitly redirect to tabs
+            router.replace('/(tabs)');
         } catch (error: any) {
             Toast.show({
                 type: 'error',

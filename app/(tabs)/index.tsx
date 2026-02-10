@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -131,21 +131,27 @@ export default function Home() {
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4 pr-6">
                                 <QuickAccessItem
                                     icon={<Add size={24} color="white" />}
-                                    label="New Order"
+                                    label="Order"
                                     bg="bg-black"
                                     onPress={() => router.push('/(tabs)/orders/new')}
                                 />
                                 <QuickAccessItem
+                                    icon={<Ruler size={24} color="black" />}
+                                    label="Measurement"
+                                    bg="bg-accent-lavender"
+                                    onPress={() => router.push('/measurements/create')}
+                                />
+                                <QuickAccessItem
                                     icon={<People size={24} color="black" />}
-                                    label="Add Client"
+                                    label="Client"
                                     bg="bg-accent-peach"
                                     onPress={() => router.push('/(tabs)/customers/new')}
                                 />
                                 <QuickAccessItem
                                     icon={<DocumentText size={24} color="black" />}
-                                    label="New Invoice"
+                                    label="Invoice"
                                     bg="bg-accent-blue"
-                                    onPress={() => router.push('/invoices/create')}
+                                    onPress={() => router.push('/(tabs)/orders/invoices/new')}
                                 />
                             </ScrollView>
                         </View>

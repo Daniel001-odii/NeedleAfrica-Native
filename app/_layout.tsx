@@ -70,7 +70,7 @@ function RootLayoutNav() {
 
         if (!user && !inAuthGroup && !inOnboarding) {
             // Not logged in: redirect to login
-            router.replace('/(auth)/login');
+            router.replace('/(auth)');
         } else if (user) {
             // Logged in
             if (isNewUser) {
@@ -84,6 +84,7 @@ function RootLayoutNav() {
             }
         }
     }, [user, isLoading, segments, isNewUser]);
+
 
     // 2. Sync logic: Interval & Foreground
     useEffect(() => {
@@ -128,6 +129,21 @@ function RootLayoutNav() {
             NotificationService.removeNotificationSubscription(responseListener);
         };
     }, []);
+
+    // 4. Loading & Redirection state handling
+    // Prevent rendering anything while we are potentially redirecting on startup
+    // This helps avoid showing the index/welcome page briefly before the useEffect redirect kicks in
+    if (isLoading) return <LoadingScreen />;
+
+    // For existing users who are logged in, if they are still on the root or auth group, show loading while redirect clears
+    if (user && !isNewUser && (segments.length === 0 || segments[0] === '(auth)' || segments[0] === 'onboarding')) {
+        return <LoadingScreen />;
+    }
+
+    // For logged out users, if they are on a protected route, show loading while redirect to auth kicks in
+    if (!user && (segments[0] === '(tabs)' || segments[0] === 'measurements' || segments[0] === 'measurement-templates' || segments[0] === 'invoices')) {
+        return <LoadingScreen />;
+    }
 
     return (
         <Stack

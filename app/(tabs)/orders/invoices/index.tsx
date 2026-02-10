@@ -3,11 +3,11 @@ import { View, FlatList, Pressable, ActivityIndicator, RefreshControl } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Add, DocumentText, SearchNormal1 } from 'iconsax-react-native';
-import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
-import { IconButton } from '../../../components/ui/IconButton';
-import { useInvoices } from '../../../hooks/useInvoices';
-import { useAuth } from '../../../contexts/AuthContext';
+import { Typography } from '../../../../components/ui/Typography';
+import { Surface } from '../../../../components/ui/Surface';
+import { IconButton } from '../../../../components/ui/IconButton';
+import { useInvoices } from '../../../../hooks/useInvoices';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 export default function InvoicesScreen() {
     const router = useRouter();
@@ -36,7 +36,7 @@ export default function InvoicesScreen() {
                 <IconButton
                     icon={<Add size={24} color="white" />}
                     variant="dark"
-                    onPress={() => router.push('/invoices/create')}
+                    onPress={() => router.push('/(tabs)/orders/invoices/new')}
                 />
             </View>
 

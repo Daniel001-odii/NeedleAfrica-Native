@@ -137,7 +137,7 @@ export default function Orders() {
                         <View className="flex-row gap-2">
                             <Pressable
                                 className="h-10 bg-muted rounded-full items-center justify-center flex-row gap-2 px-3"
-                                onPress={() => router.push('/(tabs)/orders/invoices')}
+                                onPress={() => router.push('/(tabs)/orders/invoices/')}
                             >
                                 <DocumentText size={20} color="black" />
                                 <Typography variant="body" weight="bold">Invoices</Typography>

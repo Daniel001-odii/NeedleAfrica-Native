@@ -3,18 +3,18 @@ import { View, ScrollView, Pressable, TextInput, ActivityIndicator, Alert } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, User, Box, SearchNormal1, TickCircle } from 'iconsax-react-native';
-import { Typography } from '../../components/ui/Typography';
-import { Surface } from '../../components/ui/Surface';
-import { IconButton } from '../../components/ui/IconButton';
-import { Button } from '../../components/ui/Button';
-import { useCustomers } from '../../hooks/useCustomers';
-import { useOrders } from '../../hooks/useOrders';
-import { useInvoices } from '../../hooks/useInvoices';
-import { useAuth } from '../../contexts/AuthContext';
-import { useResourceLimits } from '../../hooks/useResourceLimits';
-import { useSubscription } from '../../hooks/useSubscription';
-import { useSync } from '../../hooks/useSync';
-import { ResourceLimitModal } from '../../components/ResourceLimitModal';
+import { Typography } from '../../../../components/ui/Typography';
+import { Surface } from '../../../../components/ui/Surface';
+import { IconButton } from '../../../../components/ui/IconButton';
+import { Button } from '../../../../components/ui/Button';
+import { useCustomers } from '../../../../hooks/useCustomers';
+import { useOrders } from '../../../../hooks/useOrders';
+import { useInvoices } from '../../../../hooks/useInvoices';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { useResourceLimits } from '../../../../hooks/useResourceLimits';
+import { useSubscription } from '../../../../hooks/useSubscription';
+import { useSync } from '../../../../hooks/useSync';
+import { ResourceLimitModal } from '../../../../components/ResourceLimitModal';
 import Toast from 'react-native-toast-message';
 
 export default function CreateInvoiceScreen() {
@@ -92,7 +92,7 @@ export default function CreateInvoiceScreen() {
                 text2: `Invoice ${invoice?.invoiceNumber} generated successfully`
             });
 
-            router.replace(`/(tabs)/orders/invoices`);
+            router.navigate(`/(tabs)/orders/invoices/`);
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to create invoice');
