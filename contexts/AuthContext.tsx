@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import axiosInstance from '../lib/axios';
 import { NotificationService } from '../services/NotificationService';
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 interface User {
     id: string;
@@ -43,6 +43,7 @@ interface AuthContextType {
     deleteAccount: () => Promise<void>;
     completeOnboarding: () => void;
     refreshUser: () => Promise<void>;
+    signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         checkUser();
+
+        GoogleSignin.configure({
+            webClientId: '818250734262-nj9ef9hbi560dkusujg5eta6l1bolrqr.apps.googleusercontent.com',
+            iosClientId: '818250734262-na9hqkuq758b6id6gab1ohonot5qram9.apps.googleusercontent.com', // Optional for iOS if using Firebase
+            offlineAccess: true,
+        });
     }, []);
 
     const checkUser = async () => {
@@ -69,6 +76,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (e) {
             console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const signInWithGoogle = async () => {
+        setIsLoading(true);
+        try {
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+
+            // Get tokens to extract the access token required by the API
+            const tokens = await GoogleSignin.getTokens();
+            const accessToken = tokens.accessToken;
+
+            if (!accessToken) {
+                throw new Error('Failed to obtain Google access token');
+            }
+
+            const response = await axiosInstance.post('/auth/google', { accessToken });
+            const { status, token, user: userData, message, isNewUser: isNew } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Google Login failed');
+            }
+
+            await SecureStore.setItemAsync('auth_token', token);
+            await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            setIsNewUser(!!isNew);
+            setUser(userData);
+            registerPushToken();
+        } catch (error: any) {
+            console.error('Google Sign-In Error:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'Google Sign-In failed';
+            throw new Error(errorMsg);
         } finally {
             setIsLoading(false);
         }
@@ -213,7 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await axiosInstance.get('/users/me');
             const { status } = response.data;
             // console.log("user profile: ", response.data);
-            console.log("res status: ", status);
+            // console.log("res status: ", status);
             if (status !== 'error') {
                 const updatedUser = { ...response.data };
                 await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
@@ -233,7 +275,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle }}>
             {children}
         </AuthContext.Provider>
     );

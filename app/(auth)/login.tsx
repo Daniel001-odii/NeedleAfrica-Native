@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sms, Lock, Eye, EyeSlash, ArrowLeft } from 'iconsax-react-native';
@@ -16,9 +16,29 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signIn, isLoading } = useAuth();
+    const { signIn, signInWithGoogle, isLoading } = useAuth();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await signInWithGoogle();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in with Google'
+            });
+            router.replace('/(tabs)');
+        } catch (error: any) {
+            if (error.code !== 'ASYNC_OP_IN_PROGRESS') {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Google Sign-In Failed',
+                    text2: error.message || 'Check your internet and try again'
+                });
+            }
+        }
+    };
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -136,6 +156,19 @@ export default function Login() {
                         >
                             Sign In
                         </Button>
+
+                        <TouchableOpacity
+                            onPress={handleGoogleSignIn}
+                            disabled={isLoading}
+                            className="h-16 rounded-full bg-white border border-gray-100 flex-row items-center justify-center shadow-sm mb-8 active:bg-gray-50"
+                        >
+                            <Image
+                                source={require('../../assets/images/google_logo.png')}
+                                className="w-6 h-6 mr-3"
+                                resizeMode="contain"
+                            />
+                            <Typography weight="bold" color="dark">Continue with Google</Typography>
+                        </TouchableOpacity>
 
                         <View className="flex-row justify-center items-center pb-10">
                             <Typography color="gray">Don't have an account? </Typography>

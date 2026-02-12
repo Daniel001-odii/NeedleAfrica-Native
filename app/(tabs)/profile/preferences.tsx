@@ -26,9 +26,12 @@ export default function Preferences() {
     const [marketingTips, setMarketingTips] = useState(user?.marketingTips ?? false);
 
     // Delivery Reminder states
-    const [reminderDay, setReminderDay] = useState(user?.reminderDays || '1'); // '1', '2', '3', 'custom'
-    const [customDays, setCustomDays] = useState(user?.reminderDays && !['1', '2', '3'].includes(user?.reminderDays) ? user?.reminderDays : '');
-    const [showCustomInput, setShowCustomInput] = useState(user?.reminderDays && !['1', '2', '3'].includes(user?.reminderDays) ? true : false);
+    // Initialize with '1' if reminderDays is '0', null, or undefined to ensure a default is visible
+    const initialReminderValue = (!user?.reminderDays || user.reminderDays === '0') ? '1' : user.reminderDays;
+
+    const [reminderDay, setReminderDay] = useState(initialReminderValue); // '1', '2', '3', 'custom'
+    const [customDays, setCustomDays] = useState(!['1', '2', '3'].includes(initialReminderValue) ? initialReminderValue : '');
+    const [showCustomInput, setShowCustomInput] = useState(!['1', '2', '3'].includes(initialReminderValue));
 
     // Personal Setting states
     const [unit, setUnit] = useState<'cm' | 'inch'>(user?.measurementUnit || 'inch'); // 'cm' or 'inch'
@@ -128,9 +131,9 @@ export default function Preferences() {
                                     setReminderDay(day);
                                     setShowCustomInput(false);
                                 }}
-                                className={`px-6 py-3 rounded-full border ${reminderDay === day ? 'bg-dark border-dark' : 'bg-white border-gray-100'}`}
+                                className={`px-6 py-3 rounded-full border ${reminderDay === day && !showCustomInput ? 'bg-dark border-dark' : 'bg-white border-gray-100'}`}
                             >
-                                <Typography weight="bold" color={reminderDay === day ? 'white' : 'black'}>
+                                <Typography weight="bold" color={(reminderDay === day && !showCustomInput) ? 'white' : 'black'}>
                                     {day} Day{day !== '1' ? 's' : ''}
                                 </Typography>
                             </TouchableOpacity>

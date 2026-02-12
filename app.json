@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.needleafrica.app"
+      "bundleIdentifier": "com.needleafrica.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "googleServicesFile": "google-services.json",
@@ -58,6 +61,12 @@
           }
         }
       ],
+      [
+        "@react-native-google-signin/google-signin/app.plugin.js",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.818250734262-na9hqkuq758b6id6gab1ohonot5qram9"
+        }
+      ],
       "expo-font",
       "@react-native-community/datetimepicker",
       "expo-notifications"
@@ -66,6 +75,12 @@
       "eas": {
         "projectId": "98abe4c7-3401-411c-bdf7-8ce4adb0f761"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/98abe4c7-3401-411c-bdf7-8ce4adb0f761"
     }
   }
 }

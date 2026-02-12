@@ -18,6 +18,7 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-google-signin/google-signin": "^16.1.1",
     "@react-navigation/native": "^7.1.28",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
@@ -42,6 +43,7 @@
     "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "^16.0.10",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "~29.0.16",
     "iconsax-react-native": "^0.0.8",
     "nativewind": "^4.2.1",
     "postcss": "^8.5.6",
@@ -73,9 +75,9 @@
   },
   "private": true,
   "overrides": {
-  "@nozbe/with-observables": {
-    "@types/react": "$@types/react",
-    "react": "$react"
+    "@nozbe/with-observables": {
+      "@types/react": "$@types/react",
+      "react": "$react"
+    }
   }
-}
 }

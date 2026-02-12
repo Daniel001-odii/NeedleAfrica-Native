@@ -74,6 +74,16 @@ export default function TabLayout() {
                     }}
                 />
 
+                {/*  <Tabs.Screen
+                    name="extras/index"
+                    options={{
+                        title: 'AI Lab',
+                        tabBarIcon: ({ color, focused }) => (
+                            <MagicStar size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                        ),
+                    }}
+                /> */}
+
                 <Tabs.Screen
                     name="profile"
                     options={{

@@ -61,7 +61,7 @@ export function useOrders(customerId?: string) {
                 newOrder.id,
                 customer.fullName,
                 data.deliveryDate,
-                parseInt(user.reminderDays || '1')
+                parseInt((!user.reminderDays || user.reminderDays === '0') ? '1' : user.reminderDays)
             );
         }
 
@@ -97,7 +97,7 @@ export function useOrders(customerId?: string) {
                 await NotificationService.cancelOrderReminders(id);
             } else if (data.deliveryDate) {
                 // Determine user reminder days setting (default to '1' if not set)
-                const reminderDaysStr = user?.reminderDays || '1';
+                const reminderDaysStr = (!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays;
                 // If custom days like "5", parseInt handles it. If "custom", we expect the numeric value stored.
                 // Based on preferences.tsx, it stores the actual number string.
                 const days = parseInt(reminderDaysStr);

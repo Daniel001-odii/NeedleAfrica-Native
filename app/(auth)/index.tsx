@@ -5,10 +5,33 @@ import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Welcome() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { signInWithGoogle, isLoading } = useAuth();
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await signInWithGoogle();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in with Google'
+            });
+            router.replace('/(tabs)');
+        } catch (error: any) {
+            if (error.code !== 'ASYNC_OP_IN_PROGRESS') {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Google Sign-In Failed',
+                    text2: error.message || 'Check your internet and try again'
+                });
+            }
+        }
+    };
 
     return (
         <View style={{ flex: 1 }}>
@@ -54,8 +77,9 @@ export default function Welcome() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={() => {/* Handle Google Sign In */ }}
-                            className="h-14 rounded-full bg-white/10 border border-white/20 flex-row items-center justify-center"
+                            onPress={handleGoogleSignIn}
+                            disabled={isLoading}
+                            className="h-14 rounded-full bg-white/10 border border-white/20 flex-row items-center justify-center opacity-90 active:bg-white/20"
                         >
                             <Image
                                 source={require('../../assets/images/google_logo.png')}
