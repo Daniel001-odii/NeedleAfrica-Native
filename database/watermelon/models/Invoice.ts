@@ -12,21 +12,21 @@ export default class Invoice extends Model {
         orders: { type: 'belongs_to', key: 'order_id' },
     };
 
-    @text('user_id') userId!: string;
-    @text('customer_id') customerId!: string;
-    @text('order_id') orderId!: string;
-    @text('invoice_number') invoiceNumber!: string;
-    @field('amount') amount!: number;
-    @text('currency') currency!: string;
-    @text('notes') notes!: string | null;
-    @field('deleted_at') deletedAt!: number | null;
-    @text('sync_status') _syncStatus!: string;
+    @text('user_id') userId?: string;
+    @text('customer_id') customerId?: string;
+    @text('order_id') orderId?: string;
+    @text('invoice_number') invoiceNumber?: string;
+    @field('amount') amount?: number;
+    @text('currency') currency?: string;
+    @text('notes') notes?: string | null;
+    @field('deleted_at') deletedAt?: number | null;
+    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt!: Date;
-    @date('updated_at') updatedAt!: Date;
+    @date('created_at') createdAt?: Date;
+    @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
-    @relation('orders', 'order_id') order!: Relation<Order>;
+    @relation('customers', 'customer_id') customer?: Relation<Customer>;
+    @relation('orders', 'order_id') order?: Relation<Order>;
 
     get syncStatus(): SyncStatus {
         return this._syncStatus as SyncStatus;

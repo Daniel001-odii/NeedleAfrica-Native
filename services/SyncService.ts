@@ -23,6 +23,11 @@ interface SyncChanges {
     updated: any[];
     deleted: { id: string; deletedAt: number }[];
   };
+  measurement_templates: {
+    created: any[];
+    updated: any[];
+    deleted: { id: string; deletedAt: number }[];
+  };
 }
 
 class SyncService {
@@ -60,6 +65,7 @@ class SyncService {
       customers: { created: [], updated: [], deleted: [] },
       measurements: { created: [], updated: [], deleted: [] },
       orders: { created: [], updated: [], deleted: [] },
+      measurement_templates: { created: [], updated: [], deleted: [] },
     };
 
     try {
@@ -68,26 +74,26 @@ class SyncService {
         .get('customers')
         .query(Q.where('sync_status', 'created'))
         .fetch();
-      
+
       const deletedCustomers = await database
         .get('customers')
         .query(Q.where('deleted_at', Q.notEq(null)))
         .fetch();
-      
+
       const allCustomers = [...pendingCustomers, ...deletedCustomers];
 
       for (const customer of allCustomers) {
         const record = customer as any;
         const customerData = {
           id: record.id,
-          userId: record.userId,
-          fullName: record.fullName,
-          phoneNumber: record.phoneNumber,
+          user_id: record.userId,
+          full_name: record.fullName,
+          phone_number: record.phoneNumber,
           gender: record.gender,
           notes: record.notes,
-          createdAt: record.createdAt.getTime(),
-          updatedAt: record.updatedAt.getTime(),
-          deletedAt: record.deletedAt,
+          created_at: record.createdAt.getTime(),
+          updated_at: record.updatedAt.getTime(),
+          deleted_at: record.deletedAt,
         };
 
         if (record.deletedAt) {
@@ -105,25 +111,25 @@ class SyncService {
         .get('measurements')
         .query(Q.where('sync_status', 'created'))
         .fetch();
-      
+
       const deletedMeasurements = await database
         .get('measurements')
         .query(Q.where('deleted_at', Q.notEq(null)))
         .fetch();
-      
+
       const allMeasurements = [...pendingMeasurements, ...deletedMeasurements];
 
       for (const measurement of allMeasurements) {
         const record = measurement as any;
         const measurementData = {
           id: record.id,
-          userId: record.userId,
-          customerId: record.customerId,
+          user_id: record.userId,
+          customer_id: record.customerId,
           title: record.title,
-          valuesJson: record.valuesJson,
-          createdAt: record.createdAt.getTime(),
-          updatedAt: record.updatedAt.getTime(),
-          deletedAt: record.deletedAt,
+          values_json: record.valuesJson,
+          created_at: record.createdAt.getTime(),
+          updated_at: record.updatedAt.getTime(),
+          deleted_at: record.deletedAt,
         };
 
         if (record.deletedAt) {
@@ -141,28 +147,29 @@ class SyncService {
         .get('orders')
         .query(Q.where('sync_status', 'created'))
         .fetch();
-      
+
       const deletedOrders = await database
         .get('orders')
         .query(Q.where('deleted_at', Q.notEq(null)))
         .fetch();
-      
+
       const allOrders = [...pendingOrders, ...deletedOrders];
 
       for (const order of allOrders) {
         const record = order as any;
         const orderData = {
           id: record.id,
-          userId: record.userId,
-          customerId: record.customerId,
-          styleName: record.styleName,
-          deliveryDate: record.deliveryDate ? record.deliveryDate.getTime() : null,
+          user_id: record.userId,
+          customer_id: record.customerId,
+          style_name: record.styleName,
+          delivery_date: record.deliveryDate ? record.deliveryDate.getTime() : null,
           status: record.status,
           amount: record.amount,
+          amount_paid: record.amountPaid,
           notes: record.notes,
-          createdAt: record.createdAt.getTime(),
-          updatedAt: record.updatedAt.getTime(),
-          deletedAt: record.deletedAt,
+          created_at: record.createdAt.getTime(),
+          updated_at: record.updatedAt.getTime(),
+          deleted_at: record.deletedAt,
         };
 
         if (record.deletedAt) {
@@ -172,6 +179,41 @@ class SyncService {
           });
         } else if (record.syncStatus === 'created') {
           changes.orders.created.push(orderData);
+        }
+      }
+
+      // Get pending measurement templates
+      const pendingTemplates = await database
+        .get('measurement_templates')
+        .query(Q.where('sync_status', 'created'))
+        .fetch();
+
+      const deletedTemplates = await database
+        .get('measurement_templates')
+        .query(Q.where('deleted_at', Q.notEq(null)))
+        .fetch();
+
+      const allTemplates = [...pendingTemplates, ...deletedTemplates];
+
+      for (const template of allTemplates) {
+        const record = template as any;
+        const templateData = {
+          id: record.id,
+          user_id: record.userId,
+          name: record.name,
+          fields_json: record.fieldsJson,
+          created_at: record.createdAt.getTime(),
+          updated_at: record.updatedAt.getTime(),
+          deleted_at: record.deletedAt,
+        };
+
+        if (record.deletedAt) {
+          changes.measurement_templates.deleted.push({
+            id: record.id,
+            deletedAt: record.deletedAt,
+          });
+        } else if (record.syncStatus === 'created') {
+          changes.measurement_templates.created.push(templateData);
         }
       }
     } catch (error) {
@@ -185,13 +227,15 @@ class SyncService {
     const changes = await this.getPendingChanges();
 
     // Only push if there are changes
-    const hasChanges = 
+    const hasChanges =
       changes.customers.created.length > 0 ||
       changes.customers.deleted.length > 0 ||
       changes.measurements.created.length > 0 ||
       changes.measurements.deleted.length > 0 ||
       changes.orders.created.length > 0 ||
-      changes.orders.deleted.length > 0;
+      changes.orders.deleted.length > 0 ||
+      changes.measurement_templates.created.length > 0 ||
+      changes.measurement_templates.deleted.length > 0;
 
     if (!hasChanges) {
       return;
@@ -301,34 +345,34 @@ class SyncService {
         // Apply customer changes
         for (const customer of changes.customers.created) {
           const existingRecord = await database.get('customers').find(customer.id).catch(() => null);
-          
+
           if (existingRecord) {
             // Update existing record if server version is newer
             const existingTime = (existingRecord as any).updatedAt.getTime();
-            if (customer.updatedAt > existingTime) {
+            if (customer.updated_at > existingTime) {
               await existingRecord.update((record: any) => {
-                record.fullName = customer.fullName;
-                record.phoneNumber = customer.phoneNumber;
+                record.fullName = customer.full_name;
+                record.phoneNumber = customer.phone_number;
                 record.gender = customer.gender;
                 record.notes = customer.notes;
-                record.deletedAt = customer.deletedAt;
+                record.deletedAt = customer.deleted_at;
                 record.syncStatus = 'synced';
-                record.updatedAt = new Date(customer.updatedAt);
+                record.updatedAt = new Date(customer.updated_at);
               });
             }
-          } else if (!customer.deletedAt) {
+          } else if (!customer.deleted_at) {
             // Create new record if not deleted
             await database.get('customers').create((record: any) => {
               record.id = customer.id;
-              record.userId = customer.userId;
-              record.fullName = customer.fullName;
-              record.phoneNumber = customer.phoneNumber;
+              record.userId = customer.user_id;
+              record.fullName = customer.full_name;
+              record.phoneNumber = customer.phone_number;
               record.gender = customer.gender;
               record.notes = customer.notes;
-              record.deletedAt = customer.deletedAt;
+              record.deletedAt = customer.deleted_at;
               record.syncStatus = 'synced';
-              record.createdAt = new Date(customer.createdAt);
-              record.updatedAt = new Date(customer.updatedAt);
+              record.createdAt = new Date(customer.created_at);
+              record.updatedAt = new Date(customer.updated_at);
             });
           }
         }
@@ -336,30 +380,30 @@ class SyncService {
         // Apply measurement changes
         for (const measurement of changes.measurements.created) {
           const existingRecord = await database.get('measurements').find(measurement.id).catch(() => null);
-          
+
           if (existingRecord) {
             const existingTime = (existingRecord as any).updatedAt.getTime();
-            if (measurement.updatedAt > existingTime) {
+            if (measurement.updated_at > existingTime) {
               await existingRecord.update((record: any) => {
-                record.customerId = measurement.customerId;
+                record.customerId = measurement.customer_id;
                 record.title = measurement.title;
-                record.valuesJson = measurement.valuesJson;
-                record.deletedAt = measurement.deletedAt;
+                record.valuesJson = measurement.values_json;
+                record.deletedAt = measurement.deleted_at;
                 record.syncStatus = 'synced';
-                record.updatedAt = new Date(measurement.updatedAt);
+                record.updatedAt = new Date(measurement.updated_at);
               });
             }
-          } else if (!measurement.deletedAt) {
+          } else if (!measurement.deleted_at) {
             await database.get('measurements').create((record: any) => {
               record.id = measurement.id;
-              record.userId = measurement.userId;
-              record.customerId = measurement.customerId;
+              record.userId = measurement.user_id;
+              record.customerId = measurement.customer_id;
               record.title = measurement.title;
-              record.valuesJson = measurement.valuesJson;
-              record.deletedAt = measurement.deletedAt;
+              record.valuesJson = measurement.values_json;
+              record.deletedAt = measurement.deleted_at;
               record.syncStatus = 'synced';
-              record.createdAt = new Date(measurement.createdAt);
-              record.updatedAt = new Date(measurement.updatedAt);
+              record.createdAt = new Date(measurement.created_at);
+              record.updatedAt = new Date(measurement.updated_at);
             });
           }
         }
@@ -367,37 +411,70 @@ class SyncService {
         // Apply order changes
         for (const order of changes.orders.created) {
           const existingRecord = await database.get('orders').find(order.id).catch(() => null);
-          
+
           if (existingRecord) {
             const existingTime = (existingRecord as any).updatedAt.getTime();
-            if (order.updatedAt > existingTime) {
+            if (order.updated_at > existingTime) {
               await existingRecord.update((record: any) => {
-                record.customerId = order.customerId;
-                record.styleName = order.styleName;
-                record.deliveryDate = order.deliveryDate ? new Date(order.deliveryDate) : null;
+                record.customerId = order.customer_id;
+                record.styleName = order.style_name;
+                record.deliveryDate = order.delivery_date ? new Date(order.delivery_date) : null;
                 record.status = order.status;
                 record.amount = order.amount;
+                record.amountPaid = order.amount_paid;
                 record.notes = order.notes;
-                record.deletedAt = order.deletedAt;
+                record.deletedAt = order.deleted_at;
                 record.syncStatus = 'synced';
-                record.updatedAt = new Date(order.updatedAt);
+                record.updatedAt = new Date(order.updated_at);
               });
             }
-          } else if (!order.deletedAt) {
+          } else if (!order.deleted_at) {
             await database.get('orders').create((record: any) => {
               record.id = order.id;
-              record.userId = order.userId;
-              record.customerId = order.customerId;
-              record.styleName = order.styleName;
-              record.deliveryDate = order.deliveryDate ? new Date(order.deliveryDate) : null;
+              record.userId = order.user_id;
+              record.customerId = order.customer_id;
+              record.styleName = order.style_name;
+              record.deliveryDate = order.delivery_date ? new Date(order.delivery_date) : null;
               record.status = order.status;
               record.amount = order.amount;
+              record.amountPaid = order.amount_paid;
               record.notes = order.notes;
-              record.deletedAt = order.deletedAt;
+              record.deletedAt = order.deleted_at;
               record.syncStatus = 'synced';
-              record.createdAt = new Date(order.createdAt);
-              record.updatedAt = new Date(order.updatedAt);
+              record.createdAt = new Date(order.created_at);
+              record.updatedAt = new Date(order.updated_at);
             });
+          }
+        }
+
+        // Apply template changes
+        if (changes.measurement_templates) {
+          for (const template of changes.measurement_templates.created) {
+            const existingRecord = await database.get('measurement_templates').find(template.id).catch(() => null);
+
+            if (existingRecord) {
+              const existingTime = (existingRecord as any).updatedAt.getTime();
+              if (template.updated_at > existingTime) {
+                await existingRecord.update((record: any) => {
+                  record.name = template.name;
+                  record.fieldsJson = template.fields_json;
+                  record.deletedAt = template.deleted_at;
+                  record.syncStatus = 'synced';
+                  record.updatedAt = new Date(template.updated_at);
+                });
+              }
+            } else if (!template.deleted_at) {
+              await database.get('measurement_templates').create((record: any) => {
+                record.id = template.id;
+                record.userId = template.user_id;
+                record.name = template.name;
+                record.fieldsJson = template.fields_json;
+                record.deletedAt = template.deleted_at;
+                record.syncStatus = 'synced';
+                record.createdAt = new Date(template.created_at);
+                record.updatedAt = new Date(template.updated_at);
+              });
+            }
           }
         }
       });
@@ -418,7 +495,7 @@ class SyncService {
 
     this.isSyncing = true;
     this.syncQueue = this.performSync();
-    
+
     try {
       await this.syncQueue;
     } finally {

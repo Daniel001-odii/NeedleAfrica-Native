@@ -18,22 +18,23 @@ export default class Order extends Model {
         customers: { type: 'belongs_to', key: 'customer_id' },
     };
 
-    @text('user_id') userId!: string;
-    @text('customer_id') customerId!: string;
-    @text('style_name') styleName!: string;
-    @date('delivery_date') deliveryDate!: Date | null;
-    @text('status') status!: string;
-    @field('amount') amount!: number | null;
-    @text('notes') notes!: string | null;
-    @text('fabric_image') fabricImage!: string | null;
-    @text('style_image') styleImage!: string | null;
-    @field('deleted_at') deletedAt!: number | null;
-    @text('sync_status') _syncStatus!: string;
+    @text('user_id') userId?: string;
+    @text('customer_id') customerId?: string;
+    @text('style_name') styleName?: string;
+    @date('delivery_date') deliveryDate?: Date | null;
+    @text('status') status?: string;
+    @field('amount') amount?: number | null;
+    @field('amount_paid') amountPaid?: number | null;
+    @text('notes') notes?: string | null;
+    @text('fabric_image') fabricImage?: string | null;
+    @text('style_image') styleImage?: string | null;
+    @field('deleted_at') deletedAt?: number | null;
+    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt!: Date;
-    @date('updated_at') updatedAt!: Date;
+    @date('created_at') createdAt?: Date;
+    @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
+    @relation('customers', 'customer_id') customer?: Relation<Customer>;
 
     get syncStatus(): SyncStatus {
         return this._syncStatus as SyncStatus;
@@ -41,6 +42,10 @@ export default class Order extends Model {
 
     set syncStatus(value: SyncStatus) {
         this._syncStatus = value;
+    }
+
+    get balance(): number {
+        return (this.amount || 0) - (this.amountPaid || 0);
     }
 
     static async createSyncable(database: any, userId: string, customerId: string, data: any) {
@@ -53,6 +58,7 @@ export default class Order extends Model {
                 record.deliveryDate = data.deliveryDate || null;
                 record.status = data.status || 'PENDING';
                 record.amount = data.amount || null;
+                record.amountPaid = data.amountPaid || 0;
                 record.notes = data.notes || null;
                 record.fabricImage = data.fabricImage || null;
                 record.styleImage = data.styleImage || null;

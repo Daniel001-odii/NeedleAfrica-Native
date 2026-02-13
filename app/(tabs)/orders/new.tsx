@@ -47,6 +47,7 @@ export default function NewOrder() {
     const [dressType, setDressType] = useState('');
     const [notes, setNotes] = useState('');
     const [price, setPrice] = useState('');
+    const [amountPaid, setAmountPaid] = useState('');
     const [dueDate, setDueDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [fabricImage, setFabricImage] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export default function NewOrder() {
     }, [customerId, customers]);
 
     const filteredCustomers = customers.filter(c =>
-        c.fullName.toLowerCase().includes(customerSearch.toLowerCase())
+        (c.fullName || '').toLowerCase().includes(customerSearch.toLowerCase())
     );
 
     const handleCreateOrder = async () => {
@@ -102,6 +103,7 @@ export default function NewOrder() {
                 customerId: selectedCustomer.id,
                 styleName: dressType,
                 amount: parseInt(price) || 0,
+                amountPaid: parseInt(amountPaid) || 0,
                 status: 'PENDING',
                 notes: notes,
                 deliveryDate: dueDate,
@@ -195,7 +197,8 @@ export default function NewOrder() {
                     </View>
 
                     {/* Grid Layout */}
-                    <View className="flex-row gap-4 mb-4">
+                    <View className="flex-row gap-4 mb-8">
+                        {/* Left Column: Dates and Finances */}
                         <View className="flex-1 gap-4">
                             <Pressable onPress={() => setShowDatePicker(true)}>
                                 <Surface variant="blue" className="p-4 h-32 justify-between bg-blue-500" rounded="3xl">
@@ -211,21 +214,72 @@ export default function NewOrder() {
                                     </View>
                                 </Surface>
                             </Pressable>
-                            {showDatePicker && (
-                                <DateTimePicker
-                                    testID="dateTimePicker"
-                                    value={dueDate}
-                                    mode="date"
-                                    is24Hour={true}
-                                    display="default"
-                                    onChange={onDateChange}
-                                />
-                            )}
 
-                            <Surface variant="muted" className="p-4 h-48" rounded="3xl">
+                            <Surface variant="muted" className="p-4 h-24 justify-center" rounded="3xl">
+                                <Typography variant="caption" weight="bold" color="gray" className="mb-1 text-center uppercase text-[10px]">Total Price</Typography>
+                                <View className="flex-row items-center justify-center">
+                                    <Typography variant="h3" color="gray" className="mr-1">₦</Typography>
+                                    <TextInput
+                                        className="font-bold text-dark text-xl min-w-[60px] text-center"
+                                        placeholder="0"
+                                        placeholderTextColor="#9CA3AF"
+                                        keyboardType="numeric"
+                                        value={price}
+                                        onChangeText={setPrice}
+                                    />
+                                </View>
+                            </Surface>
+
+                            <Surface variant="green" className="p-4 h-24 justify-center bg-green-50" rounded="3xl">
+                                <Typography variant="caption" weight="bold" color="gray" className="mb-1 text-center uppercase text-[10px]">Initial Deposit</Typography>
+                                <View className="flex-row items-center justify-center">
+                                    <Typography variant="h3" color="gray" className="mr-1">₦</Typography>
+                                    <TextInput
+                                        className="font-bold text-dark text-xl min-w-[60px] text-center"
+                                        placeholder="0"
+                                        placeholderTextColor="#9CA3AF"
+                                        keyboardType="numeric"
+                                        value={amountPaid}
+                                        onChangeText={setAmountPaid}
+                                    />
+                                </View>
+                            </Surface>
+
+                            <Pressable onPress={() => pickImage('style')}>
+                                <Surface variant="white" className="h-24 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
+                                    {styleImage ? (
+                                        <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                    ) : (
+                                        <>
+                                            <Add size={20} color="#3B82F6" className="mb-1" />
+                                            <Typography variant="caption" color="gray" weight="bold">Design image</Typography>
+                                        </>
+                                    )}
+                                </Surface>
+                            </Pressable>
+                        </View>
+
+                        {/* Right Column: Images and Notes */}
+                        <View className="flex-1 gap-4">
+                            <Pressable onPress={() => pickImage('fabric')} className="h-44">
+                                <Surface variant="white" className="flex-1 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
+                                    {fabricImage ? (
+                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                    ) : (
+                                        <>
+                                            <View className="w-10 h-10 bg-blue-50 rounded-xl items-center justify-center mb-2">
+                                                <Add size={20} color="#3B82F6" />
+                                            </View>
+                                            <Typography variant="caption" color="gray" weight="bold">Fabric image</Typography>
+                                        </>
+                                    )}
+                                </Surface>
+                            </Pressable>
+
+                            <Surface variant="muted" className="flex-1 p-4" rounded="3xl">
                                 <Typography variant="caption" weight="bold" color="gray" className="mb-2 uppercase">Notes...</Typography>
                                 <TextInput
-                                    className="flex-1 font-medium text-dark text-base leading-6"
+                                    className="flex-1 font-medium text-dark text-base"
                                     placeholder="Add specific details..."
                                     placeholderTextColor="#9CA3AF"
                                     multiline
@@ -235,53 +289,18 @@ export default function NewOrder() {
                                 />
                             </Surface>
                         </View>
-
-                        <View className="flex-1 gap-4">
-                            <Pressable onPress={() => pickImage('fabric')} className="flex-1">
-                                <Surface variant="white" className="h-56 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
-                                    {fabricImage ? (
-                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <>
-                                            <View className="w-12 h-12 bg-blue-50 rounded-xl items-center justify-center mb-3">
-                                                <Add size={24} color="#3B82F6" />
-                                            </View>
-                                            <Typography variant="caption" color="gray" weight="bold">Fabric image</Typography>
-                                        </>
-                                    )}
-                                </Surface>
-                            </Pressable>
-
-                            <Surface variant="muted" className="p-4 h-24 justify-center" rounded="3xl">
-                                <View className="flex-row items-center justify-center">
-                                    <Typography variant="h3" color="gray" className="mr-1">$</Typography>
-                                    <TextInput
-                                        className="font-bold text-dark text-xl min-w-[60px] text-center"
-                                        placeholder="Price"
-                                        placeholderTextColor="#9CA3AF"
-                                        keyboardType="numeric"
-                                        value={price}
-                                        onChangeText={setPrice}
-                                    />
-                                </View>
-                            </Surface>
-                        </View>
                     </View>
 
-                    <View className="flex-row gap-4 mb-8">
-                        <Pressable className="flex-[3]" onPress={() => pickImage('style')}>
-                            <Surface variant="white" className="h-20 flex-row items-center justify-center border-2 border-dashed border-blue-200 space-x-3 overflow-hidden" rounded="3xl">
-                                {styleImage ? (
-                                    <Image source={{ uri: styleImage }} className="w-full h-full absolute" resizeMode="cover" />
-                                ) : (
-                                    <>
-                                        <Add size={20} color="#3B82F6" />
-                                        <Typography variant="caption" color="gray" weight="bold">Styles image</Typography>
-                                    </>
-                                )}
-                            </Surface>
-                        </Pressable>
-                    </View>
+                    {showDatePicker && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={dueDate}
+                            mode="date"
+                            is24Hour={true}
+                            display="default"
+                            onChange={onDateChange}
+                        />
+                    )}
 
                     <Button
                         onPress={handleCreateOrder}

@@ -21,7 +21,9 @@ export const toastConfig: ToastConfig = {
             shadowRadius: 10,
             elevation: 2,
             alignSelf: 'center',
-            marginTop: 10
+            marginTop: 10,
+            borderWidth: 1,
+            borderColor: '#48BB78'
         }}>
             <TickCircle size={24} color="#48BB78" variant="Bold" />
             <View className="ml-3 flex-1">
@@ -52,7 +54,9 @@ export const toastConfig: ToastConfig = {
             shadowRadius: 10,
             elevation: 2,
             alignSelf: 'center',
-            marginTop: 10
+            marginTop: 10,
+            borderWidth: 1,
+            borderColor: '#F56565'
         }}>
             <CloseCircle size={24} color="#F56565" variant="Bold" />
             <View className="ml-3 flex-1">
@@ -83,7 +87,9 @@ export const toastConfig: ToastConfig = {
             shadowRadius: 10,
             elevation: 2,
             alignSelf: 'center',
-            marginTop: 10
+            marginTop: 10,
+            borderWidth: 1,
+            borderColor: '#4299E1'
         }}>
             <InfoCircle size={24} color="#4299E1" variant="Bold" />
             <View className="ml-3 flex-1">

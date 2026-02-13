@@ -26,6 +26,7 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 
 import { Swipeable } from 'react-native-gesture-handler';
 import { Alert } from 'react-native';
+import { ProgressSquare } from '../../../components/ui/ProgressSquare';
 
 export default function Orders() {
     const [activeTab, setActiveTab] = useState<TabType>('All');
@@ -35,6 +36,44 @@ export default function Orders() {
     const { orders, loading, refresh, deleteOrder, updateOrderStatus } = useOrders();
     const router = useRouter();
     const { sync: performSync } = useSync();
+
+    const getProgressColors = (order: any) => {
+        if (order.status === 'DELIVERED') return '#16a34a'; // Green
+
+        if (!order.deliveryDate) return '#9CA3AF'; // Gray
+
+        const now = new Date();
+        const due = new Date(order.deliveryDate);
+        const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) return '#dc2626'; // Overdue Red
+        if (diffDays <= 3) return '#f97316'; // Soon Orange
+        return '#3b82f6'; // Safe Blue
+    };
+
+    const getProgressValue = (order: any) => {
+        if (order.status === 'DELIVERED') return 1;
+        if (!order.deliveryDate || !order.createdAt) return 0.5;
+
+        const start = new Date(order.createdAt).getTime();
+        const end = new Date(order.deliveryDate).getTime();
+        const now = Date.now();
+
+        if (now >= end) return 1;
+        if (now <= start) return 0;
+
+        const total = end - start;
+        const elapsed = now - start;
+        return Math.min(1, elapsed / total);
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
@@ -104,22 +143,20 @@ export default function Orders() {
         const sorted = [...filteredOrders];
         switch (sortBy) {
             case 'recent':
-                return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
             case 'oldest':
-                return sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                return sorted.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
             case 'due-soon':
                 return sorted.sort((a, b) => {
-                    if (!a.deliveryDate && !b.deliveryDate) return 0;
-                    if (!a.deliveryDate) return 1;
-                    if (!b.deliveryDate) return -1;
-                    return new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime();
+                    const aDate = a.deliveryDate ? new Date(a.deliveryDate).getTime() : Infinity;
+                    const bDate = b.deliveryDate ? new Date(b.deliveryDate).getTime() : Infinity;
+                    return aDate - bDate;
                 });
             case 'due-later':
                 return sorted.sort((a, b) => {
-                    if (!a.deliveryDate && !b.deliveryDate) return 0;
-                    if (!a.deliveryDate) return 1;
-                    if (!b.deliveryDate) return -1;
-                    return new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime();
+                    const aDate = a.deliveryDate ? new Date(a.deliveryDate).getTime() : 0;
+                    const bDate = b.deliveryDate ? new Date(b.deliveryDate).getTime() : 0;
+                    return bDate - aDate;
                 });
             default:
                 return sorted;
@@ -225,29 +262,54 @@ export default function Orders() {
                                         className="p-4 mb-3 border border-gray-100 flex-row items-center"
                                         rounded="2xl"
                                     >
-                                        <Surface
-                                            variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
-                                            className="w-14 h-14 items-center justify-center mr-4 overflow-hidden"
-                                            rounded="2xl"
-                                        >
-                                            {(order.fabricImage || order.styleImage) ? (
-                                                <Image
-                                                    source={{ uri: (order.fabricImage || order.styleImage) as string }}
-                                                    className="w-full h-full"
+                                        <View className="relative mr-5 w-[54px] h-[54px] items-center justify-center">
+                                            <View className="absolute">
+                                                <ProgressSquare
+                                                    progress={getProgressValue(order)}
+                                                    size={54}
+                                                    strokeWidth={2.5}
+                                                    borderRadius={14}
+                                                    color={getProgressColors(order)}
+                                                    backgroundColor="#F3F4F6"
                                                 />
-                                            ) : (
-                                                <Box size={24} color="black" variant="Bulk" />
-                                            )}
-                                        </Surface>
+                                            </View>
+                                            <Surface
+                                                variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
+                                                className="w-11 h-11 items-center justify-center overflow-hidden"
+                                                rounded="xl"
+                                            >
+                                                {(order.fabricImage || order.styleImage) ? (
+                                                    <Image
+                                                        source={{ uri: (order.fabricImage || order.styleImage) as string }}
+                                                        className="w-full h-full"
+                                                    />
+                                                ) : (
+                                                    <Box size={18} color="black" variant="Bulk" />
+                                                )}
+                                            </Surface>
+                                        </View>
 
                                         <View className="flex-1">
                                             <View className="flex-row justify-between items-start mb-1">
                                                 <Typography variant="body" weight="bold">{order.styleName}</Typography>
-                                                <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
+                                                <View className="items-end">
+                                                    <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
+                                                    {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
+                                                        <View className="bg-red-50 px-1.5 py-0.5 rounded mt-0.5">
+                                                            <Typography variant="small" color="red" weight="bold" className="text-[9px]">
+                                                                OWING: {formatCurrency(order.balance || 0)}
+                                                            </Typography>
+                                                        </View>
+                                                    )}
+                                                </View>
                                             </View>
 
                                             <View className="flex-row justify-between items-center">
-                                                <Typography variant="caption" color="gray">Order Detail</Typography>
+                                                <View className="flex-row items-center">
+                                                    <Typography variant="caption" color="gray">
+                                                        {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
+                                                    </Typography>
+                                                </View>
                                                 <Surface
                                                     variant={order.status === 'DELIVERED' ? 'green' : 'peach'}
                                                     className="px-3 py-1"
@@ -262,7 +324,8 @@ export default function Orders() {
                                     </Surface>
                                 </Pressable>
                             </Swipeable>
-                        )}
+                        )
+                        }
                         ListEmptyComponent={
                             <View className="items-center justify-center py-20 px-10">
                                 <Surface

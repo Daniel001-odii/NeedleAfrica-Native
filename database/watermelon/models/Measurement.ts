@@ -18,17 +18,17 @@ export default class Measurement extends Model {
         customers: { type: 'belongs_to', key: 'customer_id' },
     };
 
-    @text('user_id') userId!: string;
-    @text('customer_id') customerId!: string;
-    @text('title') title!: string;
-    @text('values_json') valuesJson!: string;
-    @field('deleted_at') deletedAt!: number | null;
-    @text('sync_status') _syncStatus!: string;
+    @text('user_id') userId?: string;
+    @text('customer_id') customerId?: string;
+    @text('title') title?: string;
+    @text('values_json') valuesJson?: string;
+    @field('deleted_at') deletedAt?: number | null;
+    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt!: Date;
-    @date('updated_at') updatedAt!: Date;
+    @date('created_at') createdAt?: Date;
+    @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
+    @relation('customers', 'customer_id') customer?: Relation<Customer>;
 
     get syncStatus(): SyncStatus {
         return this._syncStatus as SyncStatus;

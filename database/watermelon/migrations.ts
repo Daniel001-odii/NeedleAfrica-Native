@@ -80,5 +80,16 @@ export default schemaMigrations({
                 }),
             ],
         },
+        {
+            toVersion: 6,
+            steps: [
+                addColumns({
+                    table: 'orders',
+                    columns: [
+                        { name: 'amount_paid', type: 'number', isOptional: true },
+                    ],
+                }),
+            ],
+        },
     ],
 });

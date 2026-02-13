@@ -20,19 +20,19 @@ export default class Customer extends Model {
         orders: { type: 'has_many', foreignKey: 'customer_id' },
     };
 
-    @text('user_id') userId!: string;
-    @text('full_name') fullName!: string;
-    @text('phone_number') phoneNumber!: string | null;
-    @text('gender') gender!: string | null;
-    @text('notes') notes!: string | null;
-    @field('deleted_at') deletedAt!: number | null;
-    @text('sync_status') _syncStatus!: string;
+    @text('user_id') userId?: string;
+    @text('full_name') fullName?: string;
+    @text('phone_number') phoneNumber?: string | null;
+    @text('gender') gender?: string | null;
+    @text('notes') notes?: string | null;
+    @field('deleted_at') deletedAt?: number | null;
+    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt!: Date;
-    @date('updated_at') updatedAt!: Date;
+    @date('created_at') createdAt?: Date;
+    @date('updated_at') updatedAt?: Date;
 
-    @children('measurements') measurements!: Query<Measurement>;
-    @children('orders') orders!: Query<Order>;
+    @children('measurements') measurements?: Query<Measurement>;
+    @children('orders') orders?: Query<Order>;
 
     get syncStatus(): SyncStatus {
         return this._syncStatus as SyncStatus;

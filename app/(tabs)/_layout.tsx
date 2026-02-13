@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, User, Notepad, People, Calendar, MagicStar } from 'iconsax-react-native';
 import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
+    const { user } = useAuth();
 
     return (
         <View className="flex-1">
@@ -89,7 +91,25 @@ export default function TabLayout() {
                     options={{
                         title: 'Profile',
                         tabBarIcon: ({ color, focused }) => (
-                            <User size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                            user?.profilePicture ? (
+                                <View style={{
+                                    borderWidth: focused ? 2 : 0,
+                                    borderColor: color,
+                                    borderRadius: 12,
+                                    padding: 1
+                                }}>
+                                    <Image
+                                        source={{ uri: user.profilePicture }}
+                                        style={{
+                                            width: 24,
+                                            height: 24,
+                                            borderRadius: 11
+                                        }}
+                                    />
+                                </View>
+                            ) : (
+                                <User size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                            )
                         ),
                     }}
                 />

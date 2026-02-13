@@ -44,6 +44,7 @@ export function useOrders(customerId?: string) {
         customerId: string;
         styleName: string;
         amount: number;
+        amountPaid?: number;
         status: string;
         notes?: string;
         deliveryDate?: Date;
@@ -59,7 +60,7 @@ export function useOrders(customerId?: string) {
             const customer = await database.get<Customer>('customers').find(data.customerId);
             await NotificationService.scheduleDeliveryReminder(
                 newOrder.id,
-                customer.fullName,
+                customer.fullName || 'Customer',
                 data.deliveryDate,
                 parseInt((!user.reminderDays || user.reminderDays === '0') ? '1' : user.reminderDays)
             );
@@ -72,6 +73,7 @@ export function useOrders(customerId?: string) {
     const updateOrder = async (id: string, data: {
         styleName?: string;
         amount?: number;
+        amountPaid?: number;
         status?: string;
         notes?: string;
         deliveryDate?: Date | null;
@@ -83,6 +85,7 @@ export function useOrders(customerId?: string) {
             await order.update(record => {
                 if (data.styleName !== undefined) record.styleName = data.styleName;
                 if (data.amount !== undefined) record.amount = data.amount;
+                if (data.amountPaid !== undefined) record.amountPaid = data.amountPaid;
                 if (data.status !== undefined) record.status = data.status;
                 if (data.notes !== undefined) record.notes = data.notes;
                 if (data.deliveryDate !== undefined) record.deliveryDate = data.deliveryDate;
@@ -95,18 +98,16 @@ export function useOrders(customerId?: string) {
             // Handle Notification Rescheduling
             if (data.status === 'COMPLETED' || data.status === 'CANCELLED') {
                 await NotificationService.cancelOrderReminders(id);
-            } else if (data.deliveryDate) {
+            } else if (data.deliveryDate && order.customer) {
                 // Determine user reminder days setting (default to '1' if not set)
                 const reminderDaysStr = (!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays;
-                // If custom days like "5", parseInt handles it. If "custom", we expect the numeric value stored.
-                // Based on preferences.tsx, it stores the actual number string.
                 const days = parseInt(reminderDaysStr);
 
-                const customer = await order.customer.fetch(); // WatermelonDB relation fetch
+                const customer = await order.customer.fetch();
                 if (customer) {
                     await NotificationService.scheduleDeliveryReminder(
                         id,
-                        customer.fullName,
+                        customer.fullName || 'Customer',
                         data.deliveryDate,
                         isNaN(days) ? 1 : days
                     );

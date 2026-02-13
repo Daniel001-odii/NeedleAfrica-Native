@@ -31,6 +31,7 @@ import "../global.css";
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
+import { OfflineBanner } from '../components/ui/OfflineBanner';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
 
@@ -136,7 +137,7 @@ function RootLayoutNav() {
     if (isLoading) return <LoadingScreen />;
 
     // For existing users who are logged in, if they are still on the root or auth group, show loading while redirect clears
-    if (user && !isNewUser && (segments.length === 0 || segments[0] === '(auth)' || segments[0] === 'onboarding')) {
+    if (user && !isNewUser && (!segments[0] || segments[0] === '(auth)' || segments[0] === 'onboarding')) {
         return <LoadingScreen />;
     }
 
@@ -193,6 +194,7 @@ export default function RootLayout() {
             <SafeAreaProvider>
                 <DatabaseProvider database={database}>
                     <AuthProvider>
+                        <OfflineBanner />
                         <RootLayoutNavWithLoading />
                         <StatusBar style="auto" translucent={false} />
                         <Toast config={toastConfig} />

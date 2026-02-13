@@ -32,6 +32,7 @@ export default function OrderDetail() {
 
     const [styleName, setStyleName] = useState('');
     const [amount, setAmount] = useState('');
+    const [amountPaid, setAmountPaid] = useState('');
     const [notes, setNotes] = useState('');
     const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
     const [fabricImage, setFabricImage] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function OrderDetail() {
         if (order) {
             setStyleName(order.styleName || '');
             setAmount(order.amount?.toString() || '');
+            setAmountPaid(order.amountPaid?.toString() || '0');
             setNotes(order.notes || '');
             setDeliveryDate(order.deliveryDate ? new Date(order.deliveryDate) : null);
             setFabricImage(order.fabricImage || null);
@@ -90,6 +92,7 @@ export default function OrderDetail() {
             await updateOrder(id as string, {
                 styleName,
                 amount: parseFloat(amount) || 0,
+                amountPaid: parseFloat(amountPaid) || 0,
                 notes,
                 deliveryDate: deliveryDate,
                 fabricImage: finalFabricImage || undefined,
@@ -220,11 +223,11 @@ export default function OrderDetail() {
                                 <Surface variant="white" className="p-4 mb-6 border border-gray-100 flex-row items-center" rounded="2xl">
                                     <View className="w-12 h-12 bg-lavender items-center justify-center rounded-xl mr-4">
                                         <Typography weight="bold" className="text-brand-primary">
-                                            {customer.fullName.charAt(0).toUpperCase()}{customer.fullName.charAt(1).toUpperCase()}
+                                            {(customer.fullName || 'UN').charAt(0).toUpperCase()}{(customer.fullName || 'UN').charAt(1).toUpperCase()}
                                         </Typography>
                                     </View>
                                     <View className="flex-1">
-                                        <Typography weight="bold">{customer.fullName}</Typography>
+                                        <Typography weight="bold">{customer.fullName || 'Unknown'}</Typography>
                                         <Typography variant="small" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
                                     </View>
                                     <IconButton icon={<Call size={20} color="black" />} variant="ghost" />
@@ -232,7 +235,7 @@ export default function OrderDetail() {
                             )}
 
                             {/* Grid Info */}
-                            <View className="flex-row gap-4 mb-6">
+                            <View className="flex-row gap-4 mb-4">
                                 <Surface variant="blue" className="flex-1 p-4" rounded="3xl">
                                     <View className="flex-row items-center mb-2 opacity-60">
                                         <Timer1 size={16} color="black" className="mr-2" />
@@ -240,14 +243,45 @@ export default function OrderDetail() {
                                     </View>
                                     <Typography variant="h3" weight="bold">{formatDate(deliveryDate)}</Typography>
                                 </Surface>
-                                <Surface variant="green" className="flex-1 p-4" rounded="3xl">
+                                <Surface variant="muted" className="flex-1 p-4" rounded="3xl">
                                     <View className="flex-row items-center mb-2 opacity-60">
                                         <Money size={16} color="black" className="mr-2" />
-                                        <Typography variant="small" weight="bold">Price</Typography>
+                                        <Typography variant="small" weight="bold">Total Price</Typography>
                                     </View>
                                     <Typography variant="h3" weight="bold">₦{order.amount?.toLocaleString() || '0'}</Typography>
                                 </Surface>
                             </View>
+
+                            {/* Payment Balance Card */}
+                            <Surface variant={(order.balance || 0) > 0 ? 'peach' : 'green'} className="p-5 mb-6 border border-gray-50" rounded="3xl">
+                                <View className="flex-row justify-between items-center mb-4">
+                                    <View>
+                                        <Typography variant="caption" weight="bold" color="gray" className="uppercase opacity-60">Payment Status</Typography>
+                                        <Typography variant="h3" weight="bold" className={(order.balance || 0) > 0 ? 'text-primary' : 'text-green-600'}>
+                                            {(order.balance || 0) > 0 ? 'Balance Owing' : 'Fully Paid'}
+                                        </Typography>
+                                    </View>
+                                    <View className="bg-white/50 px-3 py-1 rounded-full">
+                                        <Typography variant="small" weight="bold" className={(order.balance || 0) > 0 ? 'text-primary' : 'text-green-600'}>
+                                            ₦{order.amountPaid?.toLocaleString() || '0'} Paid
+                                        </Typography>
+                                    </View>
+                                </View>
+
+                                <View className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+                                    <View
+                                        className={`h-full ${(order.balance || 0) > 0 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                        style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
+                                    />
+                                </View>
+
+                                <View className="flex-row justify-between">
+                                    <Typography variant="caption" color="gray">Balance to pay</Typography>
+                                    <Typography variant="body" weight="bold" className={(order.balance || 0) > 0 ? 'text-primary' : 'text-green-600'}>
+                                        ₦{order.balance?.toLocaleString() || '0'}
+                                    </Typography>
+                                </View>
+                            </Surface>
 
                             {/* Reference Images */}
                             <Typography variant="caption" weight="bold" color="gray" className="mb-3 uppercase ml-1">References</Typography>
@@ -352,6 +386,19 @@ export default function OrderDetail() {
                                         placeholder="E.g. 5000"
                                         value={amount}
                                         onChangeText={setAmount}
+                                        keyboardType="numeric"
+                                    />
+                                </Surface>
+                            </View>
+
+                            <View>
+                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount Paid (₦)</Typography>
+                                <Surface variant="muted" rounded="2xl" className="p-1 px-4 border border-gray-100">
+                                    <TextInput
+                                        className="h-14 font-semibold text-dark"
+                                        placeholder="E.g. 2500"
+                                        value={amountPaid}
+                                        onChangeText={setAmountPaid}
                                         keyboardType="numeric"
                                     />
                                 </Surface>

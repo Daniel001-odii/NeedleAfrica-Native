@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import Constants from 'expo-constants';
 import { View, ScrollView, Image, Pressable, Linking, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -184,6 +185,13 @@ export default function Profile() {
                     <Logout size={20} color="red" />
                     <Typography weight="bold" color="red">Log Out</Typography>
                 </Pressable>
+
+                {/* App Version */}
+                <View className="mt-8 items-center opacity-30">
+                    <Typography variant="small" color="gray">
+                        Version {Constants.expoConfig?.version || '1.0.0'}
+                    </Typography>
+                </View>
 
             </ScrollView >
         </SafeAreaView >
