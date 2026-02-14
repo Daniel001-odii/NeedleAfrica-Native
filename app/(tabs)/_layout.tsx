@@ -21,9 +21,9 @@ export default function TabLayout() {
                     tabBarStyle: {
                         backgroundColor: '#FFFFFF',
                         borderTopWidth: 1,
-                        height: 60 + insets.bottom, // dynamic height
+                        height: 60 + (insets.bottom > 10 ? insets.bottom - 30 : insets.bottom), // dynamic height
                         paddingTop: 6,
-                        paddingBottom: insets.bottom, // safe area aware
+                        paddingBottom: insets.bottom > 10 ? insets.bottom - 30 : insets.bottom, // safe area aware
                         elevation: 0,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: -4 },

@@ -121,7 +121,7 @@ export default function Home() {
                         {/* Quick Access */}
                         <View className="mb-8">
                             <Typography variant="h3" weight="bold" className="mb-4">Quick Actions</Typography>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4 pr-6">
+                            <View className="flex-row gap-6">
                                 <QuickAccessItem
                                     icon={<Add size={24} color="white" />}
                                     label="Order"
@@ -130,7 +130,7 @@ export default function Home() {
                                 />
                                 <QuickAccessItem
                                     icon={<Ruler size={24} color="black" />}
-                                    label="Measurement"
+                                    label="Measure"
                                     bg="bg-accent-lavender"
                                     onPress={() => router.push('/measurements/create')}
                                 />
@@ -146,7 +146,7 @@ export default function Home() {
                                     bg="bg-accent-blue"
                                     onPress={() => router.push('/(tabs)/orders/invoices/new')}
                                 />
-                            </ScrollView>
+                            </View>
                         </View>
 
                         {/* Insights Grid */}
@@ -177,7 +177,7 @@ export default function Home() {
 
                                 <Surface variant="muted" className="p-4 h-28 justify-between" rounded="3xl">
                                     <View className="flex-row items-center justify-between">
-                                        <View className="w-8 h-8 bg-white items-center justify-center rounded-xl shadow-sm">
+                                        <View className="w-8 h-8 bg-white items-center justify-center rounded-xl">
                                             <Wallet size={16} color="#dc2626" variant="Bulk" />
                                         </View>
                                         <Typography variant="small" weight="bold" color="red" className="text-[10px] uppercase">Owed</Typography>
@@ -191,7 +191,7 @@ export default function Home() {
                                 <Surface variant="muted" className="p-4 h-28 justify-between" rounded="3xl">
                                     <Pressable onPress={() => router.push('/(tabs)/customers/')} className="flex-1 justify-between">
                                         <View className="flex-row items-center justify-between">
-                                            <View className="w-8 h-8 bg-white items-center justify-center rounded-xl shadow-sm">
+                                            <View className="w-8 h-8 bg-white items-center justify-center rounded-xl">
                                                 <People size={16} color="black" variant="Bulk" />
                                             </View>
                                             <Typography variant="small" weight="bold" color="gray" className="text-[10px] uppercase">Clients</Typography>
