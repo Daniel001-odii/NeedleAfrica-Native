@@ -79,7 +79,7 @@ export default function NewCustomer() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             {/* Header */}
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
@@ -220,6 +220,6 @@ export default function NewCustomer() {
                 limit={limitModalData.limit}
                 isOffline={!isOnline}
             />
-        </SafeAreaView>
+        </View>
     );
 }

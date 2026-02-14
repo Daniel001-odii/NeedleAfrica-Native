@@ -34,13 +34,13 @@ function CustomersScreen() {
         const sorted = [...customers];
         switch (sortBy) {
             case 'recent':
-                return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
             case 'oldest':
-                return sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                return sorted.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
             case 'a-z':
-                return sorted.sort((a, b) => a.fullName.localeCompare(b.fullName));
+                return sorted.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
             case 'z-a':
-                return sorted.sort((a, b) => b.fullName.localeCompare(a.fullName));
+                return sorted.sort((a, b) => (b.fullName || '').localeCompare(a.fullName || ''));
             default:
                 return sorted;
         }
@@ -89,7 +89,7 @@ function CustomersScreen() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="p-6 pb-0">
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
@@ -137,7 +137,7 @@ function CustomersScreen() {
                 }
                 renderItem={({ item }) => (
                     <Swipeable
-                        renderRightActions={() => renderRightActions(item.id, item.fullName)}
+                        renderRightActions={() => renderRightActions(item.id, item.fullName || 'Client')}
                         friction={2}
                         rightThreshold={40}
                     >
@@ -147,8 +147,8 @@ function CustomersScreen() {
                             <Surface variant="white" className="flex-row items-center p-5 mb-2 border border-gray-100" rounded="3xl" hasShadow>
                                 <Surface variant="lavender" className="w-12 h-12 items-center justify-center mr-4" rounded="full">
                                     <Typography weight="bold" className="text-brand-primary">
-                                        {item.fullName.charAt(0).toUpperCase()}
-                                        {item.fullName.charAt(1).toUpperCase()}
+                                        {(item.fullName || 'C').charAt(0).toUpperCase()}
+                                        {(item.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
                                     </Typography>
                                 </Surface>
                                 <View className="flex-1">
@@ -159,7 +159,7 @@ function CustomersScreen() {
                                     {item.phoneNumber && (
                                         <IconButton
                                             icon={<Call size={18} color="#22c55e" variant="Bold" />}
-                                            onPress={() => handleCall(item.phoneNumber)}
+                                            onPress={() => handleCall(item.phoneNumber || null)}
                                             variant="ghost"
                                         />
                                     )}
@@ -242,7 +242,7 @@ function CustomersScreen() {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 

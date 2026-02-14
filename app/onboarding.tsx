@@ -18,7 +18,7 @@ export default function Onboarding() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <ScrollView contentContainerClassName="p-8 pb-20" showsVerticalScrollIndicator={false}>
                 {/* Welcome Section */}
                 <View className="items-center mb-10 mt-6">
@@ -73,7 +73,7 @@ export default function Onboarding() {
                     <Typography color="gray" weight="semibold">Skip for now</Typography>
                 </TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

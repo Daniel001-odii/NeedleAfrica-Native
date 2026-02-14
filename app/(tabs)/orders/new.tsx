@@ -159,7 +159,7 @@ export default function NewOrder() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -412,6 +412,6 @@ export default function NewOrder() {
                 limit={limitModalData.limit}
                 isOffline={!isOnline}
             />
-        </SafeAreaView>
+        </View>
     );
 }

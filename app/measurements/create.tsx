@@ -33,7 +33,7 @@ export default function CreateMeasurementScreen() {
 
     const filteredCustomers = useMemo(() => {
         return customers.filter(c =>
-            c.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             c.phoneNumber?.includes(searchQuery)
         );
     }, [customers, searchQuery]);
@@ -44,7 +44,7 @@ export default function CreateMeasurementScreen() {
 
     useEffect(() => {
         if (selectedTemplate) {
-            setTitle(selectedTemplate.name);
+            setTitle(selectedTemplate.name || '');
             const initialValues: Record<string, string> = {};
             selectedTemplate.fields.forEach((field: string) => {
                 initialValues[field] = '';
@@ -92,7 +92,7 @@ export default function CreateMeasurementScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
@@ -135,7 +135,7 @@ export default function CreateMeasurementScreen() {
                                             <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
                                                 <Surface variant="white" className="p-4 border border-gray-100 flex-row items-center" rounded="2xl" hasBorder>
                                                     <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4">
-                                                        <Typography weight="bold" color="white">{customer.fullName[0].toUpperCase()}</Typography>
+                                                        <Typography weight="bold" color="white">{(customer.fullName || 'U')[0].toUpperCase()}</Typography>
                                                     </View>
                                                     <Typography weight="bold">{customer.fullName}</Typography>
                                                 </Surface>
@@ -240,6 +240,6 @@ export default function CreateMeasurementScreen() {
                     </ScrollView>
                 </View>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }

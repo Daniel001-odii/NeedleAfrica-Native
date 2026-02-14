@@ -80,7 +80,7 @@ export default function Home() {
     const isNewUser = !ordersLoading && !customersLoading && orders.length === 0 && customers.length === 0;
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <ScrollView
                 contentContainerClassName="p-6 pb-12"
                 showsVerticalScrollIndicator={false}
@@ -250,7 +250,7 @@ export default function Home() {
                     </>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

@@ -104,7 +104,7 @@ export default function PersonalInformation() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -189,7 +189,7 @@ export default function PersonalInformation() {
                     <Button
                         onPress={handleSave}
                         isLoading={isSaving}
-                        className="h-16 rounded-full bg-dark border-0 shadow-lg"
+                        className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
                         textClassName="text-white"
                     >
                         Save Changes
@@ -280,7 +280,7 @@ export default function PersonalInformation() {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 

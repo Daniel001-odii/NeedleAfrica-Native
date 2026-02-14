@@ -22,7 +22,7 @@ export default function InvoicesScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
                 <View className="flex-row items-center">
                     <IconButton
@@ -62,12 +62,12 @@ export default function InvoicesScreen() {
                                     <View className="flex-row justify-between items-center mb-1">
                                         <Typography variant="body" weight="bold">{invoice.invoiceNumber}</Typography>
                                         <Typography variant="body" weight="bold">
-                                            {user?.currency || 'NGN'} {invoice.amount.toLocaleString()}
+                                            {user?.currency || 'NGN'} {(invoice.amount || 0).toLocaleString()}
                                         </Typography>
                                     </View>
                                     <View className="flex-row justify-between items-center">
                                         <Typography variant="caption" color="gray">
-                                            {new Date(invoice.createdAt).toLocaleDateString()}
+                                            {new Date(invoice.createdAt || 0).toLocaleDateString()}
                                         </Typography>
                                         <Surface variant="muted" className="px-2 py-0.5" rounded="full">
                                             <Typography variant="small" weight="bold" className="text-[10px]">PAID</Typography>
@@ -90,6 +90,6 @@ export default function InvoicesScreen() {
                     }
                 />
             )}
-        </SafeAreaView>
+        </View>
     );
 }

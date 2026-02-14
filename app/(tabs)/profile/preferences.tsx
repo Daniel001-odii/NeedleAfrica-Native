@@ -75,7 +75,7 @@ export default function Preferences() {
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -93,7 +93,7 @@ export default function Preferences() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Notifications</Typography>
 
                     <PreferenceToggle
-                        icon={<Sms size={20} color="#6B7280" variant="Bulk" />}
+                        icon={<Sms size={20} color="#3b82f6" variant="Bulk" />}
                         title="SMS Alerts"
                         subtitle="Receive order updates via text"
                         value={smsAlerts}
@@ -101,7 +101,7 @@ export default function Preferences() {
                     />
 
                     <PreferenceToggle
-                        icon={<DirectNotification size={20} color="#6B7280" variant="Bulk" />}
+                        icon={<DirectNotification size={20} color="#3b82f6" variant="Bulk" />}
                         title="Email Notifications"
                         subtitle="Updates about your workshop activities"
                         value={emailNotifs}
@@ -109,7 +109,7 @@ export default function Preferences() {
                     />
 
                     <PreferenceToggle
-                        icon={<MagicStar size={20} color="#6B7280" variant="Bulk" />}
+                        icon={<MagicStar size={20} color="#3b82f6" variant="Bulk" />}
                         title="Marketing & Tips"
                         subtitle="Growth hacks and special offers"
                         value={marketingTips}
@@ -172,8 +172,8 @@ export default function Preferences() {
                             className="active:opacity-90"
                         >
                             <Surface variant="white" className="p-4 border border-gray-50 flex-row items-center" rounded="2xl">
-                                <View className="w-12 h-12 items-center justify-center bg-muted rounded-xl mr-4">
-                                    <Ruler size={20} color="#6B7280" variant="Bulk" />
+                                <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
+                                    <Ruler size={20} color="#3b82f6" variant="Bulk" />
                                 </View>
                                 <View className="flex-1">
                                     <Typography variant="body" weight="bold">Unit System</Typography>
@@ -195,7 +195,7 @@ export default function Preferences() {
                         <Typography variant="body" weight="semibold" className="mb-4 ml-1">Currency</Typography>
                         <Pressable onPress={() => setIsCurrencyModalVisible(true)}>
                             <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-100">
-                                <Coin1 size={20} color="#6B7280" variant="Bulk" />
+                                <Coin1 size={20} color="#3b82f6" variant="Bulk" />
                                 <Typography weight="bold" className="ml-3 flex-1">
                                     {selectedCurrency.name} ({selectedCurrency.symbol})
                                 </Typography>
@@ -278,13 +278,13 @@ export default function Preferences() {
                 <Button
                     onPress={handleSave}
                     isLoading={isSaving}
-                    className="h-16 rounded-full bg-dark border-0 shadow-lg"
+                    className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
                     textClassName="text-white"
                 >
                     Save Preferences
                 </Button>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -300,7 +300,7 @@ function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: Prefe
     return (
         <Surface variant="white" className="p-4 mb-4 border border-gray-50" rounded="2xl">
             <View className="flex-row items-center">
-                <View className="w-12 h-12 items-center justify-center bg-muted rounded-xl mr-4">
+                <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
                     {icon}
                 </View>
                 <View className="flex-1">
@@ -310,7 +310,7 @@ function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: Prefe
                 <Switch
                     value={value}
                     onValueChange={onValueChange}
-                    trackColor={{ false: '#F4F4F4', true: '#1C1C1E' }}
+                    trackColor={{ false: '#F4F4F4', true: '#3b82f6' }}
                     thumbColor="#FFFFFF"
                 />
             </View>

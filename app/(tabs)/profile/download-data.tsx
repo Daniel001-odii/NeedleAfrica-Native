@@ -37,7 +37,7 @@ export default function DownloadData() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -106,6 +106,6 @@ export default function DownloadData() {
                     For security reasons, this link will only be valid for 24 hours after it's generated.
                 </Typography>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

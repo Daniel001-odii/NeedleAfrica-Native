@@ -43,10 +43,10 @@ export default function CustomerDetail() {
 
     if (!customer) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={['top']}>
+            <View className="flex-1 bg-white items-center justify-center">
                 <Typography variant="body" color="gray">Customer not found</Typography>
                 <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
-            </SafeAreaView>
+            </View>
         );
     }
 
@@ -133,7 +133,7 @@ export default function CustomerDetail() {
         .slice(0, 2);
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             {/* Header */}
             <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
                 <IconButton
@@ -252,12 +252,12 @@ export default function CustomerDetail() {
                                                         <View className="flex-row justify-between items-center mb-2">
                                                             <Typography variant="body" weight="bold">{m.title}</Typography>
                                                             <View className="flex-row items-center gap-2">
-                                                                <Typography variant="caption" color="gray">{new Date(m.createdAt).toLocaleDateString()}</Typography>
+                                                                <Typography variant="caption" color="gray">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
                                                                 <Edit2 size={14} color="#9CA3AF" />
                                                             </View>
                                                         </View>
                                                         <View className="flex-row flex-wrap gap-2">
-                                                            {Object.entries(JSON.parse(m.valuesJson)).map(([key, value]) => (
+                                                            {Object.entries(JSON.parse(m.valuesJson || '{}')).map(([key, value]) => (
                                                                 <View key={key} className="bg-gray-50 px-3 py-1 rounded-lg">
                                                                     <Typography variant="caption" color="gray">
                                                                         <Typography weight="bold">{key}: </Typography>
@@ -383,6 +383,6 @@ export default function CustomerDetail() {
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }

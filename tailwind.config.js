@@ -33,10 +33,10 @@ module.exports = {
                 dark: '#1C1C1E',
                 muted: '#F4F4F4',
             },
-            fontFamily: {
-                playfair: ['Playfair-Regular'],
-                grotesk: ['Grotesk-Regular'],
-            },
+            // fontFamily: {
+            //     playfair: ['Playfair-Regular'],
+            //     grotesk: ['Grotesk-Regular'],
+            // },
         },
     },
     plugins: [],

@@ -23,7 +23,7 @@ export default function EditTemplateScreen() {
 
     useEffect(() => {
         if (template) {
-            setName(template.name);
+            setName(template.name || '');
             setFields(template.fields);
         }
     }, [template]);
@@ -105,7 +105,7 @@ export default function EditTemplateScreen() {
     if (!templateId) return null;
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="flex-1 p-6">
                 {/* Header */}
                 <View className="flex-row items-center justify-between mb-6">
@@ -185,6 +185,6 @@ export default function EditTemplateScreen() {
                     </Button>
                 </ScrollView>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

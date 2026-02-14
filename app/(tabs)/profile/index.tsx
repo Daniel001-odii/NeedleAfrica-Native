@@ -38,7 +38,7 @@ export default function Profile() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
                 <View className="mb-8">
@@ -48,7 +48,7 @@ export default function Profile() {
 
                 {/* User Card */}
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
-                <View className="flex-row items-center mb-10 bg-lavender/30 rounded-[36px]">
+                <View className="flex-row items-center mb-10 rounded-[36px]">
                     {user?.profilePicture ? (
                         <Image
                             source={{ uri: user.profilePicture }}
@@ -105,21 +105,22 @@ export default function Profile() {
                             onPress={() => router.push('/(tabs)/profile/personal')}
                         />
                         <ProfileItem
-                            icon={<Setting2 size={20} color="#8b5cf6" variant="Bulk" />}
-                            iconBgColor="bg-violet-50"
+                            icon={<Setting2 size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Preferences"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                         />
                         <ProfileItem
-                            icon={<Gallery size={20} color="#f97316" variant="Bulk" />}
-                            iconBgColor="bg-orange-50"
+                            icon={<Gallery size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Lookbook"
                             subtitle="Showcase your work as a digital catalogue"
                             badge="Coming Soon"
+                            badgeColor="bg-gray-500"
                         />
                         <ProfileItem
-                            icon={<Crown size={20} color="#Eab308" variant="Bulk" />}
-                            iconBgColor="bg-yellow-50"
+                            icon={<Crown size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Subscription"
                             subtitle="Manage your plan & billing"
                             badge={user?.subscriptionPlan === 'PRO' ? 'Pro' : user?.subscriptionPlan === 'STUDIO_AI' ? 'Studio AI' : 'Free Plan'}
@@ -134,19 +135,20 @@ export default function Profile() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Data & Security</Typography>
                     <View className="gap-4">
                         <ProfileItem
-                            icon={<CloudChange size={20} color="#06b6d4" variant="Bulk" />}
-                            iconBgColor="bg-cyan-50"
+                            icon={<CloudChange size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Backup Data"
                             subtitle="Securely sync your workshop data to cloud"
                             onPress={() => router.push('/(tabs)/profile/backup')}
                         />
-                        <ProfileItem
-                            icon={<DocumentDownload size={20} color="#10b981" variant="Bulk" />}
-                            iconBgColor="bg-emerald-50"
+                        {/* <ProfileItem
+                            icon={<DocumentDownload size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Download Your Data"
                             subtitle="Get a copy of all your records"
                             badge="Coming Soon"
-                        />
+                            badgeColor="bg-gray-500"
+                        /> */}
                     </View>
                 </View>
 
@@ -155,21 +157,21 @@ export default function Profile() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Support</Typography>
                     <View className="gap-4">
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color="#db2777" variant="Bulk" />}
-                            iconBgColor="bg-pink-50"
+                            icon={<MessageQuestion size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Help & Support"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                         />
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color="#8b5cf6" variant="Bulk" />}
-                            iconBgColor="bg-purple-50"
+                            icon={<MessageQuestion size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Send Feedback"
                             subtitle="Help us improve NeedleAfrica"
                             onPress={() => Linking.openURL('mailto:support@needleafrica.com?subject=Feedback for NeedleAfrica')}
                         />
                         <ProfileItem
-                            icon={<DocumentText size={20} color="#6b7280" variant="Bulk" />}
-                            iconBgColor="bg-gray-50"
+                            icon={<DocumentText size={20} color="#3b82f6" variant="Bulk" />}
+                            iconBgColor="bg-blue-50"
                             title="Privacy Policy"
                             subtitle="View our privacy policy"
                             onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}
@@ -180,10 +182,10 @@ export default function Profile() {
                 {/* Logout Action */}
                 <Pressable
                     onPress={handleLogout}
-                    className="h-16 rounded-full text-white border-red-500 bg-red-500/10 flex-row shadow-none items-center justify-center gap-3 active:bg-red-500/50 active:text-white"
+                    className="h-16 rounded-full text-white border-blue-500 bg-blue-500/10 flex-row shadow-none items-center justify-center gap-3 active:bg-blue-500/50 active:text-white"
                 >
-                    <Logout size={20} color="red" />
-                    <Typography weight="bold" color="red">Log Out</Typography>
+                    <Logout size={20} color="#3b82f6" />
+                    <Typography weight="bold" className="text-blue-500">Log Out</Typography>
                 </Pressable>
 
                 {/* App Version */}
@@ -194,7 +196,7 @@ export default function Profile() {
                 </View>
 
             </ScrollView >
-        </SafeAreaView >
+        </View >
     );
 }
 
@@ -208,7 +210,7 @@ interface ProfileItemProps {
     badgeColor?: string;
 }
 
-function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-white', badgeColor = 'bg-dark' }: ProfileItemProps) {
+function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-blue-50', badgeColor = 'bg-blue-600' }: ProfileItemProps) {
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
             <Surface variant="white" className="p-4 bg-muted/50" rounded="2xl" hasBorder>

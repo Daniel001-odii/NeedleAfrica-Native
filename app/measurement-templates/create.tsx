@@ -86,7 +86,7 @@ export default function CreateTemplateScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="flex-1 p-6">
                 {/* Header */}
                 <View className="flex-row items-center mb-6 gap-3">
@@ -176,6 +176,6 @@ export default function CreateTemplateScreen() {
                     isOffline={!isOnline}
                 />
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

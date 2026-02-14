@@ -34,11 +34,13 @@ export default function InvoiceDetailScreen() {
                 const inv = await database.get<Invoice>('invoices').find(id);
                 setInvoice(inv);
 
-                const cust = await inv.customer.fetch();
-                setCustomer(cust);
+                if (inv) {
+                    const cust = await inv!.customer!.fetch();
+                    setCustomer(cust);
 
-                const ord = await inv.order.fetch();
-                setOrder(ord);
+                    const ord = await inv!.order!.fetch();
+                    setOrder(ord);
+                }
             } catch (error) {
                 console.error(error);
                 Alert.alert('Error', 'Failed to load invoice details');
@@ -88,7 +90,7 @@ export default function InvoiceDetailScreen() {
                         </div>
                         <div style="text-align: right;">
                             <div class="label">Date</div>
-                            <div class="value">${new Date(invoice.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                            <div class="value">${new Date(invoice.createdAt || 0).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                         </div>
                     </div>
 
@@ -117,7 +119,7 @@ export default function InvoiceDetailScreen() {
                                     <div style="font-weight: bold; font-size: 16px;">${order.styleName}</div>
                                     <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">Custom tailoring service</div>
                                 </td>
-                                <td class="amount">${invoice.currency} ${invoice.amount.toLocaleString()}</td>
+                                <td class="amount">${invoice.currency} ${(invoice.amount || 0).toLocaleString()}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -126,11 +128,11 @@ export default function InvoiceDetailScreen() {
                         <div class="total-box">
                             <div class="total-row">
                                 <span class="total-label">Subtotal</span>
-                                <span>${invoice.currency} ${invoice.amount.toLocaleString()}</span>
+                                <span>${invoice.currency} ${(invoice.amount || 0).toLocaleString()}</span>
                             </div>
                             <div class="total-row" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                                 <span class="total-label">Total Amount</span>
-                                <span class="grand-total">${invoice.currency} ${invoice.amount.toLocaleString()}</span>
+                                <span class="grand-total">${invoice.currency} ${(invoice.amount || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
@@ -207,23 +209,23 @@ export default function InvoiceDetailScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <View className="flex-1 bg-white items-center justify-center">
                 <ActivityIndicator color="black" />
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (!invoice) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <View className="flex-1 bg-white items-center justify-center">
                 <Typography>Invoice not found</Typography>
                 <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -250,7 +252,7 @@ export default function InvoiceDetailScreen() {
                         </View>
                         <View className="items-end">
                             <Typography variant="caption" color="gray" weight="bold" className="uppercase">Date</Typography>
-                            <Typography weight="bold">{new Date(invoice.createdAt).toLocaleDateString()}</Typography>
+                            <Typography weight="bold">{new Date(invoice.createdAt || 0).toLocaleDateString()}</Typography>
                         </View>
                     </View>
 
@@ -277,7 +279,7 @@ export default function InvoiceDetailScreen() {
                                 <Typography variant="caption" color="gray">Custom tailoring</Typography>
                             </View>
                             <Typography weight="bold" variant="body">
-                                {invoice.currency} {invoice.amount.toLocaleString()}
+                                {invoice.currency} {(invoice.amount || 0).toLocaleString()}
                             </Typography>
                         </View>
                     </View>
@@ -286,11 +288,11 @@ export default function InvoiceDetailScreen() {
                         <Surface variant="muted" className="p-4 w-48" rounded="xl">
                             <View className="flex-row justify-between mb-2">
                                 <Typography variant="small" color="gray">Subtotal</Typography>
-                                <Typography variant="small" weight="bold">{invoice.amount.toLocaleString()}</Typography>
+                                <Typography variant="small" weight="bold">{(invoice.amount || 0).toLocaleString()}</Typography>
                             </View>
                             <View className="flex-row justify-between border-t border-gray-200 pt-2">
                                 <Typography variant="body" weight="bold">Total</Typography>
-                                <Typography variant="body" weight="bold">{invoice.currency} {invoice.amount.toLocaleString()}</Typography>
+                                <Typography variant="body" weight="bold">{invoice.currency} {(invoice.amount || 0).toLocaleString()}</Typography>
                             </View>
                         </Surface>
                     </View>
@@ -326,6 +328,6 @@ export default function InvoiceDetailScreen() {
                     </Button>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

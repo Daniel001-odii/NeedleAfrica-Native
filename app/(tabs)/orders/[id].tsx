@@ -55,10 +55,10 @@ export default function OrderDetail() {
 
     if (!order) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={['top']}>
+            <View className="flex-1 bg-white items-center justify-center">
                 <Typography variant="body" color="gray">Order not found</Typography>
                 <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
-            </SafeAreaView>
+            </View>
         );
     }
 
@@ -177,7 +177,7 @@ export default function OrderDetail() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -453,6 +453,6 @@ export default function OrderDetail() {
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }

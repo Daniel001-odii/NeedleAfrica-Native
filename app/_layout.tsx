@@ -1,31 +1,31 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppState, NativeModules } from 'react-native';
+import { AppState, NativeModules, View } from 'react-native';
 import { useSync } from '../hooks/useSync';
 import { NotificationService } from '../services/NotificationService';
 import * as Notifications from 'expo-notifications';
-import {
-    useFonts,
-    PlayfairDisplay_400Regular,
-    PlayfairDisplay_500Medium,
-    PlayfairDisplay_600SemiBold,
-    PlayfairDisplay_700Bold,
-    PlayfairDisplay_800ExtraBold,
-    PlayfairDisplay_900Black
-} from '@expo-google-fonts/playfair-display';
-import {
-    SpaceGrotesk_300Light,
-    SpaceGrotesk_400Regular,
-    SpaceGrotesk_500Medium,
-    SpaceGrotesk_600SemiBold,
-    SpaceGrotesk_700Bold
-} from '@expo-google-fonts/space-grotesk';
+// import {
+//     useFonts,
+//     PlayfairDisplay_400Regular,
+//     PlayfairDisplay_500Medium,
+//     PlayfairDisplay_600SemiBold,
+//     PlayfairDisplay_700Bold,
+//     PlayfairDisplay_800ExtraBold,
+//     PlayfairDisplay_900Black
+// } from '@expo-google-fonts/playfair-display';
+// import {
+//     SpaceGrotesk_300Light,
+//     SpaceGrotesk_400Regular,
+//     SpaceGrotesk_500Medium,
+//     SpaceGrotesk_600SemiBold,
+//     SpaceGrotesk_700Bold
+// } from '@expo-google-fonts/space-grotesk';
 import "../global.css";
 
 import Toast from 'react-native-toast-message';
@@ -163,21 +163,21 @@ function RootLayoutNav() {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
-    const [loaded, error] = useFonts({
-        'Playfair-Regular': PlayfairDisplay_400Regular,
-        'Playfair-Medium': PlayfairDisplay_500Medium,
-        'Playfair-SemiBold': PlayfairDisplay_600SemiBold,
-        'Playfair-Bold': PlayfairDisplay_700Bold,
-        'Playfair-ExtraBold': PlayfairDisplay_800ExtraBold,
-        'Playfair-Black': PlayfairDisplay_900Black,
-        'Grotesk-Light': SpaceGrotesk_300Light,
-        'Grotesk-Regular': SpaceGrotesk_400Regular,
-        'Grotesk-Medium': SpaceGrotesk_500Medium,
-        'Grotesk-SemiBold': SpaceGrotesk_600SemiBold,
-        'Grotesk-Bold': SpaceGrotesk_700Bold,
-    });
+    // const [loaded, error] = useFonts({
+    //     'Playfair-Regular': PlayfairDisplay_400Regular,
+    //     'Playfair-Medium': PlayfairDisplay_500Medium,
+    //     'Playfair-SemiBold': PlayfairDisplay_600SemiBold,
+    //     'Playfair-Bold': PlayfairDisplay_700Bold,
+    //     'Playfair-ExtraBold': PlayfairDisplay_800ExtraBold,
+    //     'Playfair-Black': PlayfairDisplay_900Black,
+    //     'Grotesk-Light': SpaceGrotesk_300Light,
+    //     'Grotesk-Regular': SpaceGrotesk_400Regular,
+    //     'Grotesk-Medium': SpaceGrotesk_500Medium,
+    //     'Grotesk-SemiBold': SpaceGrotesk_600SemiBold,
+    //     'Grotesk-Bold': SpaceGrotesk_700Bold,
+    // });
 
-    const fontsReady = loaded || error;
+    const fontsReady = true; // loaded || error;
 
     useEffect(() => {
         if (fontsReady) {
@@ -194,10 +194,12 @@ export default function RootLayout() {
             <SafeAreaProvider>
                 <DatabaseProvider database={database}>
                     <AuthProvider>
-                        <OfflineBanner />
-                        <RootLayoutNavWithLoading />
-                        <StatusBar style="auto" translucent={false} />
-                        <Toast config={toastConfig} />
+                        <SafeAreaView style={{ flex: 1 }}>
+                            <OfflineBanner />
+                            <RootLayoutNavWithLoading />
+                            <StatusBar style="auto" translucent={true} />
+                            <Toast config={toastConfig} />
+                        </SafeAreaView>
                     </AuthProvider>
                 </DatabaseProvider>
             </SafeAreaProvider>

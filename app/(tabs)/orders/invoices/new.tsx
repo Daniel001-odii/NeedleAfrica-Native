@@ -46,7 +46,7 @@ export default function CreateInvoiceScreen() {
 
     const filteredCustomers = useMemo(() => {
         return customers.filter(c =>
-            c.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             c.phoneNumber?.includes(searchQuery)
         );
     }, [customers, searchQuery]);
@@ -104,7 +104,7 @@ export default function CreateInvoiceScreen() {
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -135,7 +135,7 @@ export default function CreateInvoiceScreen() {
                                 <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
                                     <Surface variant="white" className="p-4 border border-gray-100 flex-row items-center" rounded="2xl" hasBorder>
                                         <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4">
-                                            <Typography weight="bold" color="white">{customer.fullName[0].toUpperCase()}</Typography>
+                                            <Typography weight="bold" color="white">{(customer.fullName || 'C')[0].toUpperCase()}</Typography>
                                         </View>
                                         <Typography weight="bold">{customer.fullName}</Typography>
                                     </Surface>
@@ -244,6 +244,6 @@ export default function CreateInvoiceScreen() {
                 limit={limitModalData.limit}
                 isOffline={!isOnline}
             />
-        </SafeAreaView>
+        </View>
     );
 }

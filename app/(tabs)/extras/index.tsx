@@ -17,7 +17,7 @@ import { IconButton } from '../../../components/ui/IconButton';
 
 export default function Extras() {
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-8">
@@ -97,7 +97,7 @@ export default function Extras() {
                 </View>
 
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

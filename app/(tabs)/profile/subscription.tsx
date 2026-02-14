@@ -13,52 +13,52 @@ import { subscriptionService, Plan } from '../../../services/subscriptionService
 
 // Static free plan since it's not in the database
 const freePlan = {
-  id: 'free',
-  name: 'Free',
-  description: 'Get started and manage a few orders at no cost',
-  price: { monthly: 0, yearly: 0, currency: 'NGN' },
-  features: [
-    'Up to 5 active orders',
-    '3 basic measurement templates',
-    'Up to 5 customer profiles',
-    'Up to 5 invoices',
-  ],
-  isPopular: false,
+    id: 'free',
+    name: 'Free',
+    description: 'Get started and manage a few orders at no cost',
+    price: { monthly: 0, yearly: 0, currency: 'NGN' },
+    features: [
+        'Up to 5 active orders',
+        '3 basic measurement templates',
+        'Up to 5 customer profiles',
+        'Up to 5 invoices',
+    ],
+    isPopular: false,
 };
 
 // Transform API plans into UI format
 function transformPlans(plans: Plan[]) {
-  const grouped = plans.reduce((acc, plan) => {
-    if (!acc[plan.planId]) {
-      acc[plan.planId] = {
-        id: plan.planId,
-        name: plan.name,
-        description: plan.description,
-        price: { monthly: 0, yearly: 0, currency: plan.currency },
-        features: plan.features,
-        isPopular: plan.isPopular,
-      };
-    }
-    acc[plan.planId].price[plan.billingCycle] = plan.price;
-    return acc;
-  }, {} as Record<string, any>);
+    const grouped = plans.reduce((acc, plan) => {
+        if (!acc[plan.planId]) {
+            acc[plan.planId] = {
+                id: plan.planId,
+                name: plan.name,
+                description: plan.description,
+                price: { monthly: 0, yearly: 0, currency: plan.currency },
+                features: plan.features,
+                isPopular: plan.isPopular,
+            };
+        }
+        acc[plan.planId].price[plan.billingCycle] = plan.price;
+        return acc;
+    }, {} as Record<string, any>);
 
-  return [freePlan, ...Object.values(grouped)];
+    return [freePlan, ...Object.values(grouped)];
 }
 
 function formatPrice(price: number, currency: string) {
-  if (price === 0) return 'Free';
-  return `₦${price.toLocaleString()}`;
+    if (price === 0) return 'Free';
+    return `₦${price.toLocaleString()}`;
 }
 
 export default function Subscription() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const { user } = useAuth();
-    const { 
-        status, 
-        isLoading: subscriptionLoading, 
-        initiateSubscription, 
+    const {
+        status,
+        isLoading: subscriptionLoading,
+        initiateSubscription,
         verifySubscription,
         cancelSubscription,
         refreshStatus,
@@ -126,7 +126,7 @@ export default function Subscription() {
         try {
             setProcessingPlan(planId);
             const result = await initiateSubscription(planId, billingCycle);
-            
+
             // Open Paystack payment page
             const supported = await Linking.canOpenURL(result.authorizationUrl);
             if (supported) {
@@ -178,7 +178,7 @@ export default function Subscription() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
                 <IconButton
                     icon={<ArrowLeft size={20} color="black" />}
@@ -252,7 +252,7 @@ export default function Subscription() {
                         <PricingCard
                             key={plan.id}
                             title={plan.name}
-                            price={billingCycle === 'monthly' 
+                            price={billingCycle === 'monthly'
                                 ? (plan.price.monthly === 0 ? 'Free' : `₦${plan.price.monthly.toLocaleString()}/mo`)
                                 : (plan.price.yearly === 0 ? 'Free' : `₦${plan.price.yearly.toLocaleString()}/yr`)
                             }
@@ -329,7 +329,7 @@ export default function Subscription() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 

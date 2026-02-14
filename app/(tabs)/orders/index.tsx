@@ -166,7 +166,7 @@ export default function Orders() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="flex-1">
                 <View className="p-6 pb-0">
                     <View className="flex-row justify-between items-center mb-6">
@@ -400,6 +400,6 @@ export default function Orders() {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }

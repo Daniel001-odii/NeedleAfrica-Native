@@ -32,7 +32,7 @@ export default function MeasurementTemplatesScreen() {
         return (
             <View className="pl-4 mb-2 justify-center">
                 <Pressable
-                    onPress={() => handleDelete(item.id, item.name)}
+                    onPress={() => handleDelete(item.id, item.name || 'Template')}
                     className="bg-red-50 justify-center items-center w-16 h-16 rounded-3xl"
                 >
                     <Trash size={24} color="red" variant="Bold" />
@@ -42,7 +42,7 @@ export default function MeasurementTemplatesScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <View className="flex-1 p-6 pb-0">
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
@@ -94,6 +94,6 @@ export default function MeasurementTemplatesScreen() {
                     }
                 />
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

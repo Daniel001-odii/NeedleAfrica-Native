@@ -28,9 +28,9 @@ export default function EditMeasurementScreen() {
 
     useEffect(() => {
         if (measurement) {
-            setTitle(measurement.title);
+            setTitle(measurement.title || '');
             try {
-                setValues(JSON.parse(measurement.valuesJson));
+                setValues(JSON.parse(measurement.valuesJson || '{}'));
             } catch (e) {
                 setValues({});
             }
@@ -100,7 +100,7 @@ export default function EditMeasurementScreen() {
     if (!measurementId || !customerId) return null;
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="flex-1 bg-white">
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
@@ -170,6 +170,6 @@ export default function EditMeasurementScreen() {
                     </ScrollView>
                 </View>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }
