@@ -52,8 +52,8 @@ export default function Welcome() {
                 >
                     {/* Content */}
                     <View style={{ marginBottom: 40 }}>
-                        <Typography variant="h1" weight="bold" color="white" className="text-5xl leading-[60px]">
-                            Your Journey to Perfect Fit
+                        <Typography variant="h1" weight="bold" color="white" className="text-5xl text-center leading-[45px]">
+                            Your Workshop. Fully Organized.
                         </Typography>
                     </View>
 
