@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
@@ -9,6 +9,7 @@ import { IconButton } from '../../components/ui/IconButton';
 import { ArrowLeft, Trash } from 'iconsax-react-native';
 import { useCustomerMeasurements } from '../../hooks/useMeasurement';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -17,6 +18,7 @@ export default function EditMeasurementScreen() {
     const { user } = useAuth();
     const { measurementId, customerId } = useLocalSearchParams<{ measurementId: string; customerId: string }>();
     const { measurements, updateMeasurement, deleteMeasurement } = useCustomerMeasurements(customerId!);
+    const { confirm } = useConfirm();
 
     const unit = user?.measurementUnit || 'inch';
 
@@ -43,13 +45,23 @@ export default function EditMeasurementScreen() {
 
     const handleSave = async () => {
         if (!title.trim()) {
-            Alert.alert('Error', 'Please enter a title');
+            confirm({
+                title: 'Error',
+                message: 'Please enter a title',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
         const hasValues = Object.values(values).some(v => String(v).trim().length > 0);
         if (!hasValues) {
-            Alert.alert('Error', 'Please enter at least one measurement value');
+            confirm({
+                title: 'Error',
+                message: 'Please enter at least one measurement value',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -64,37 +76,42 @@ export default function EditMeasurementScreen() {
             router.back();
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to update measurement');
+            confirm({
+                title: 'Error',
+                message: 'Failed to update measurement',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Measurement',
-            'Are you sure you want to delete this measurement?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteMeasurement(measurementId!);
-                            Toast.show({
-                                type: 'success',
-                                text1: 'Deleted',
-                                text2: 'Measurement removed'
-                            });
-                            router.back();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete measurement');
-                        }
-                    }
+        confirm({
+            title: 'Delete Measurement',
+            message: 'Are you sure you want to delete this measurement?',
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await deleteMeasurement(measurementId!);
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Deleted',
+                        text2: 'Measurement removed'
+                    });
+                    router.back();
+                } catch (error) {
+                    confirm({
+                        title: 'Error',
+                        message: 'Failed to delete measurement',
+                        confirmText: 'OK',
+                        onConfirm: () => { }
+                    });
                 }
-            ]
-        );
+            }
+        });
     };
 
     if (!measurementId || !customerId) return null;

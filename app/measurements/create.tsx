@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, TextInput, ScrollView, Alert, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, TextInput, ScrollView, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
@@ -12,12 +12,14 @@ import { useMeasurementTemplates, MeasurementTemplate } from '../../hooks/useMea
 import { useCustomers } from '../../hooks/useCustomers';
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 export default function CreateMeasurementScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const { customerId: initialCustomerId } = useLocalSearchParams<{ customerId: string }>();
     const { customers, loading: loadingCustomers } = useCustomers();
+    const { confirm } = useConfirm();
 
     const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
     const { addMeasurement } = useCustomerMeasurements(selectedCustomerId);
@@ -59,18 +61,33 @@ export default function CreateMeasurementScreen() {
 
     const handleSave = async () => {
         if (!selectedCustomerId) {
-            Alert.alert('Error', 'Please select a customer');
+            confirm({
+                title: 'Error',
+                message: 'Please select a customer',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
         if (!title.trim()) {
-            Alert.alert('Error', 'Please enter a title');
+            confirm({
+                title: 'Error',
+                message: 'Please enter a title',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
         const hasValues = Object.values(values).some(v => v.trim().length > 0);
         if (!hasValues) {
-            Alert.alert('Error', 'Please enter at least one measurement value');
+            confirm({
+                title: 'Error',
+                message: 'Please enter at least one measurement value',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -85,7 +102,12 @@ export default function CreateMeasurementScreen() {
             router.back();
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to save measurement');
+            confirm({
+                title: 'Error',
+                message: 'Failed to save measurement',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setSubmitting(false);
         }

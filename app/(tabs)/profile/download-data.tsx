@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, DocumentDownload, InfoCircle, ArchiveBook, Personalcard } from 'iconsax-react-native';
@@ -9,9 +9,11 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import axiosInstance from '../../../lib/axios';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 
 export default function DownloadData() {
     const router = useRouter();
+    const { confirm } = useConfirm();
     const [isRequesting, setIsRequesting] = useState(false);
 
     const handleRequestDownload = async () => {
@@ -19,11 +21,12 @@ export default function DownloadData() {
         try {
             const response = await axiosInstance.post('/users/download-data');
 
-            Alert.alert(
-                "Request Successful",
-                response.data.message || "Your data request has been received. We will send a download link to your registered email address when it's ready.",
-                [{ text: "OK", onPress: () => router.back() }]
-            );
+            confirm({
+                title: "Request Successful",
+                message: response.data.message || "Your data request has been received. We will send a download link to your registered email address when it's ready.",
+                confirmText: "OK",
+                onConfirm: () => router.back()
+            });
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Failed to request data';
             Toast.show({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
@@ -9,11 +9,13 @@ import { IconButton } from '../../components/ui/IconButton';
 import { ArrowLeft, Add, Trash } from 'iconsax-react-native';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 export default function EditTemplateScreen() {
     const router = useRouter();
     const { templateId } = useLocalSearchParams<{ templateId: string }>();
     const { templates, updateTemplate, deleteTemplate } = useMeasurementTemplates();
+    const { confirm } = useConfirm();
 
     const template = templates.find(t => t.id === templateId);
 
@@ -45,13 +47,23 @@ export default function EditTemplateScreen() {
 
     const handleSave = async () => {
         if (!name.trim()) {
-            Alert.alert('Error', 'Please enter a template name');
+            confirm({
+                title: 'Error',
+                message: 'Please enter a template name',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
         const validFields = fields.filter(f => f.trim().length > 0);
         if (validFields.length === 0) {
-            Alert.alert('Error', 'Please add at least one field');
+            confirm({
+                title: 'Error',
+                message: 'Please add at least one field',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -69,37 +81,42 @@ export default function EditTemplateScreen() {
             router.back();
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to update template');
+            confirm({
+                title: 'Error',
+                message: 'Failed to update template',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Template',
-            `Are you sure you want to delete "${name}"?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteTemplate(templateId!);
-                            Toast.show({
-                                type: 'success',
-                                text1: 'Deleted',
-                                text2: 'Template removed'
-                            });
-                            router.back();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete template');
-                        }
-                    }
+        confirm({
+            title: 'Delete Template',
+            message: `Are you sure you want to delete "${name}"?`,
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await deleteTemplate(templateId!);
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Deleted',
+                        text2: 'Template removed'
+                    });
+                    router.back();
+                } catch (error) {
+                    confirm({
+                        title: 'Error',
+                        message: 'Failed to delete template',
+                        confirmText: 'OK',
+                        onConfirm: () => { }
+                    });
                 }
-            ]
-        );
+            }
+        });
     };
 
     if (!templateId) return null;

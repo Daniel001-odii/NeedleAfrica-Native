@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, Alert, TouchableOpacity, Pressable, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, Pressable, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, User, Shop, Sms, Call, Location, Trash, Warning2, CloseCircle } from 'iconsax-react-native';
@@ -9,10 +9,12 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 
 export default function PersonalInformation() {
     const { user, updateProfile, deleteAccount, isLoading: isAuthLoading } = useAuth();
     const router = useRouter();
+    const { confirm } = useConfirm();
 
     const [username, setUsername] = useState(user?.username || '');
     const [businessName, setBusinessName] = useState(user?.businessName || '');
@@ -128,11 +130,12 @@ export default function PersonalInformation() {
                         </Typography>
                     </Surface>
                     <TouchableOpacity
-                        onPress={() => Alert.alert(
-                            'Change Email',
-                            'Please contact us at support@needleafrica.com if you need to change your email address.',
-                            [{ text: 'OK' }]
-                        )}
+                        onPress={() => confirm({
+                            title: 'Change Email',
+                            message: 'Please contact us at support@needleafrica.com if you need to change your email address.',
+                            confirmText: 'OK',
+                            onConfirm: () => { }
+                        })}
                         className="mt-2 ml-1"
                     >
                         <Typography variant="small" color="primary" className="underline">Need to change your email? Contact us</Typography>

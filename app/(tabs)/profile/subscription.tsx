@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Alert, Linking, Modal, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Linking, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, TickCircle, Crown, Star1, Flash, CloseCircle, Check, Warning2 } from 'iconsax-react-native';
@@ -9,6 +9,7 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import { subscriptionService, Plan } from '../../../services/subscriptionService';
 
 // Static free plan since it's not in the database
@@ -67,6 +68,7 @@ export default function Subscription() {
         isStudioAI,
         isFree
     } = useSubscription();
+    const { confirm } = useConfirm();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [processingPlan, setProcessingPlan] = useState<string | null>(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -100,16 +102,19 @@ export default function Subscription() {
             if (reference) {
                 try {
                     await verifySubscription(reference);
-                    Alert.alert(
-                        'Success',
-                        'Your subscription has been activated successfully!',
-                        [{ text: 'OK', onPress: () => refreshStatus() }]
-                    );
+                    confirm({
+                        title: 'Success',
+                        message: 'Your subscription has been activated successfully!',
+                        confirmText: 'OK',
+                        onConfirm: () => refreshStatus()
+                    });
                 } catch (error: any) {
-                    Alert.alert(
-                        'Payment Failed',
-                        error.message || 'Failed to verify payment. Please try again.'
-                    );
+                    confirm({
+                        title: 'Payment Failed',
+                        message: error.message || 'Failed to verify payment. Please try again.',
+                        confirmText: 'OK',
+                        onConfirm: () => { }
+                    });
                 }
             }
         };
@@ -119,7 +124,12 @@ export default function Subscription() {
     // Handle subscribe button press
     const handleSubscribe = async (planId: 'pro' | 'studio_ai') => {
         if (planId === 'studio_ai') {
-            Alert.alert('Coming Soon', 'Studio AI plan will be available soon!');
+            confirm({
+                title: 'Coming Soon',
+                message: 'Studio AI plan will be available soon!',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -132,10 +142,20 @@ export default function Subscription() {
             if (supported) {
                 await Linking.openURL(result.authorizationUrl);
             } else {
-                Alert.alert('Error', 'Cannot open payment URL');
+                confirm({
+                    title: 'Error',
+                    message: 'Cannot open payment URL',
+                    confirmText: 'OK',
+                    onConfirm: () => { }
+                });
             }
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to initiate subscription');
+            confirm({
+                title: 'Error',
+                message: error.message || 'Failed to initiate subscription',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setProcessingPlan(null);
         }
@@ -146,9 +166,19 @@ export default function Subscription() {
         try {
             await cancelSubscription();
             setShowCancelModal(false);
-            Alert.alert('Success', 'Your subscription has been cancelled.');
+            confirm({
+                title: 'Success',
+                message: 'Your subscription has been cancelled.',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to cancel subscription');
+            confirm({
+                title: 'Error',
+                message: error.message || 'Failed to cancel subscription',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         }
     };
 

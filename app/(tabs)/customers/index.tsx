@@ -9,9 +9,9 @@ import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Trash } from 'iconsax-react-native';
-import { Alert } from 'react-native';
 
 type SortOption = 'recent' | 'oldest' | 'a-z' | 'z-a';
 
@@ -28,6 +28,7 @@ function CustomersScreen() {
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [showSortModal, setShowSortModal] = useState(false);
     const { customers, loading, seedCustomers, refresh, deleteCustomer } = useCustomers(search);
+    const { confirm } = useConfirm();
     const router = useRouter();
 
     const sortedCustomers = useMemo(() => {
@@ -59,18 +60,13 @@ function CustomersScreen() {
     };
 
     const handleDelete = (id: string, name: string) => {
-        Alert.alert(
-            "Delete Customer",
-            `Are you sure you want to delete ${name}? This action cannot be undone.`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => deleteCustomer(id)
-                }
-            ]
-        );
+        confirm({
+            title: "Delete Customer",
+            message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+            confirmText: "Delete",
+            type: "danger",
+            onConfirm: () => deleteCustomer(id)
+        });
     };
 
     const renderRightActions = (id: string, name: string) => {

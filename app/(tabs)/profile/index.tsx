@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Constants from 'expo-constants';
-import { View, ScrollView, Image, Pressable, Linking, Alert, RefreshControl } from 'react-native';
+import { View, ScrollView, Image, Pressable, Linking, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown, DocumentText } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -12,6 +13,7 @@ import { Button } from '../../../components/ui/Button';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
+    const { confirm } = useConfirm();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
 
@@ -27,14 +29,13 @@ export default function Profile() {
     }, []);
 
     const handleLogout = () => {
-        Alert.alert(
-            'Log Out',
-            'Are you sure you want to log out? You will need to sign in again to access your account.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Log Out', style: 'destructive', onPress: logout }
-            ]
-        );
+        confirm({
+            title: 'Log Out',
+            message: 'Are you sure you want to log out? You will need to sign in again to access your account.',
+            confirmText: 'Log Out',
+            type: 'danger',
+            onConfirm: logout
+        });
     };
 
     return (

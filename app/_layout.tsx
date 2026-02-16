@@ -161,6 +161,7 @@ function RootLayoutNav() {
 }
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ConfirmProvider } from '../contexts/ConfirmContext';
 
 export default function RootLayout() {
     // const [loaded, error] = useFonts({
@@ -194,12 +195,14 @@ export default function RootLayout() {
             <SafeAreaProvider>
                 <DatabaseProvider database={database}>
                     <AuthProvider>
-                        <SafeAreaView style={{ flex: 1 }}>
-                            <OfflineBanner />
-                            <RootLayoutNavWithLoading />
-                            <StatusBar style="auto" translucent={true} />
-                            <Toast config={toastConfig} />
-                        </SafeAreaView>
+                        <ConfirmProvider>
+                            <SafeAreaView style={{ flex: 1 }}>
+                                <OfflineBanner />
+                                <RootLayoutNavWithLoading />
+                                <StatusBar style="auto" translucent={true} />
+                                <Toast config={toastConfig} />
+                            </SafeAreaView>
+                        </ConfirmProvider>
                     </AuthProvider>
                 </DatabaseProvider>
             </SafeAreaProvider>

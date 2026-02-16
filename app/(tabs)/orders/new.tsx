@@ -131,10 +131,18 @@ export default function NewOrder() {
     };
 
     const pickImage = async (type: 'fabric' | 'style') => {
+        if (!isOnline) {
+            Toast.show({
+                type: 'info',
+                text1: 'Offline Mode',
+                text2: 'Image upload is disabled while offline'
+            });
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [4, 3],
             quality: 1,
         });
 
@@ -186,10 +194,9 @@ export default function NewOrder() {
 
                     {/* Header Input */}
                     <View className="mb-6">
-                        <Typography variant="h2" weight="bold" color="gray" className="mb-2 text-center opacity-40">Enter dress type</Typography>
                         <TextInput
                             className="text-center text-3xl font-bold text-dark"
-                            placeholder="e.g. Kaftan"
+                            placeholder="Enter dress type"
                             placeholderTextColor="#E5E7EB"
                             value={dressType}
                             onChangeText={setDressType}
@@ -246,13 +253,13 @@ export default function NewOrder() {
                             </Surface>
 
                             <Pressable onPress={() => pickImage('style')}>
-                                <Surface variant="white" className="h-24 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
+                                <Surface variant="white" className={`h-24 items-center justify-center border-2 border-dashed ${!isOnline ? 'border-gray-200 bg-gray-50' : 'border-blue-200'} overflow-hidden relative`} rounded="3xl">
                                     {styleImage ? (
                                         <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
                                     ) : (
                                         <>
-                                            <Add size={20} color="#3B82F6" className="mb-1" />
-                                            <Typography variant="caption" color="gray" weight="bold">Design image</Typography>
+                                            <Add size={20} color={!isOnline ? "#9CA3AF" : "#3B82F6"} className="mb-1" />
+                                            <Typography variant="caption" color="gray" weight="bold">{!isOnline ? "Unavailable offline" : "Design image"}</Typography>
                                         </>
                                     )}
                                 </Surface>
@@ -262,15 +269,15 @@ export default function NewOrder() {
                         {/* Right Column: Images and Notes */}
                         <View className="flex-1 gap-4">
                             <Pressable onPress={() => pickImage('fabric')} className="h-44">
-                                <Surface variant="white" className="flex-1 items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden relative" rounded="3xl">
+                                <Surface variant="white" className={`flex-1 items-center justify-center border-2 border-dashed ${!isOnline ? 'border-gray-200 bg-gray-50' : 'border-blue-200'} overflow-hidden relative`} rounded="3xl">
                                     {fabricImage ? (
                                         <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
                                     ) : (
                                         <>
-                                            <View className="w-10 h-10 bg-blue-50 rounded-xl items-center justify-center mb-2">
-                                                <Add size={20} color="#3B82F6" />
+                                            <View className={`w-10 h-10 ${!isOnline ? 'bg-gray-100' : 'bg-blue-50'} rounded-xl items-center justify-center mb-2`}>
+                                                <Add size={20} color={!isOnline ? "#9CA3AF" : "#3B82F6"} />
                                             </View>
-                                            <Typography variant="caption" color="gray" weight="bold">Fabric image</Typography>
+                                            <Typography variant="caption" color="gray" weight="bold">{!isOnline ? "Unavailable offline" : "Fabric image"}</Typography>
                                         </>
                                     )}
                                 </Surface>

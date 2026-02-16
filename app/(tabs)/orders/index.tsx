@@ -25,7 +25,7 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 ];
 
 import { Swipeable } from 'react-native-gesture-handler';
-import { Alert } from 'react-native';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import { ProgressSquare } from '../../../components/ui/ProgressSquare';
 
 export default function Orders() {
@@ -36,6 +36,7 @@ export default function Orders() {
     const { orders, loading, refresh, deleteOrder, updateOrderStatus } = useOrders();
     const router = useRouter();
     const { sync: performSync } = useSync();
+    const { confirm } = useConfirm();
 
     const getProgressColors = (order: any) => {
         if (order.status === 'DELIVERED') return '#16a34a'; // Green
@@ -82,18 +83,13 @@ export default function Orders() {
     }, [refresh]);
 
     const handleDelete = (id: string, name: string) => {
-        Alert.alert(
-            "Delete Order",
-            `Are you sure you want to delete the order "${name}"? This action cannot be undone.`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => deleteOrder(id)
-                }
-            ]
-        );
+        confirm({
+            title: "Delete Order",
+            message: `Are you sure you want to delete the order "${name}"? This action cannot be undone.`,
+            confirmText: "Delete",
+            type: "danger",
+            onConfirm: () => deleteOrder(id)
+        });
     };
 
     const handleToggleStatus = async (id: string, currentStatus: string) => {

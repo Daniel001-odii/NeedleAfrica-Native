@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, Alert, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle, ShoppingCart } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
@@ -8,6 +9,7 @@ import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
 import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
@@ -18,6 +20,7 @@ export default function CustomerDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const { user } = useAuth();
+    const { confirm } = useConfirm();
     const { customers, updateCustomer, deleteCustomer } = useCustomers();
     const { sync: performSync } = useSync();
     const { measurements, loading: loadingMeasurements } = useCustomerMeasurements(id as string);
@@ -89,40 +92,35 @@ export default function CustomerDetail() {
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Customer',
-            'Are you sure you want to delete this customer? This will also remove all their measurements and orders.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            // OPTIMISTIC DELETE: Remove locally and navigate back immediately
-                            deleteCustomer(id as string);
+        confirm({
+            title: 'Delete Customer',
+            message: 'Are you sure you want to delete this customer? This will also remove all their measurements and orders.',
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    // OPTIMISTIC DELETE: Remove locally and navigate back immediately
+                    deleteCustomer(id as string);
 
-                            router.back();
+                    router.back();
 
-                            Toast.show({
-                                type: 'success',
-                                text1: 'Deleted',
-                                text2: 'Removed from device'
-                            });
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Deleted',
+                        text2: 'Removed from device'
+                    });
 
-                            // Trigger sync in background
-                            performSync().catch(console.error);
-                        } catch (error) {
-                            Toast.show({
-                                type: 'error',
-                                text1: 'Delete Failed',
-                                text2: 'Could not remove customer'
-                            });
-                        }
-                    }
+                    // Trigger sync in background
+                    performSync().catch(console.error);
+                } catch (error) {
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Delete Failed',
+                        text2: 'Could not remove customer'
+                    });
                 }
-            ]
-        );
+            }
+        });
     };
 
     const initials = (fullName || '??')
@@ -164,29 +162,73 @@ export default function CustomerDetail() {
                     {!isEditing ? (
                         <>
                             {/* View Mode: Profile Header Card */}
-                            <Surface variant="lavender" className="p-8 items-center mb-8" rounded="3xl">
-                                <Surface variant="white" className="w-24 h-24 items-center justify-center mb-4 shadow-sm" rounded="full">
-                                    <Typography variant="h2" weight="bold" className="text-brand-primary">
+                            <Surface variant="lavender" className="p-6 items-center mb-4" rounded="3xl">
+                                <Surface variant="white" className="w-16 h-16 items-center justify-center mb-3 shadow-sm" rounded="full">
+                                    <Typography variant="h3" weight="bold" className="text-brand-primary">
                                         {initials}
                                     </Typography>
                                 </Surface>
-                                <Typography variant="h2" weight="bold" className="mb-1">{customer?.fullName}</Typography>
-                                <Typography variant="body" color="gray" className="capitalize">{customer?.gender || 'Unknown gender'}</Typography>
+                                <Typography variant="h3" weight="bold" className="mb-0.5">{customer?.fullName}</Typography>
+                                <Typography variant="small" color="gray" className="capitalize">{customer?.gender || 'Unknown gender'}</Typography>
                             </Surface>
 
                             {/* Quick Actions */}
-                            <View className="flex-row gap-4 mb-8">
-                                <Surface variant="muted" className="flex-1 p-4 items-center" rounded="2xl" hasBorder>
-                                    <IconButton icon={<Call size={24} color="#6366f1" variant="Bulk" />} variant="white" className="mb-2" />
+                            <View className="flex-row gap-3 mb-6">
+                                <Surface variant="muted" className="flex-1 p-3 items-center" rounded="2xl" hasBorder>
+                                    <IconButton
+                                        icon={<Call size={20} color="#6366f1" variant="Bulk" />}
+                                        variant="white"
+                                        className="mb-2"
+                                        onPress={() => {
+                                            if (customer?.phoneNumber) {
+                                                Linking.openURL(`tel:${customer.phoneNumber}`).catch(() => {
+                                                    confirm({
+                                                        title: 'Error',
+                                                        message: 'Could not open dialer',
+                                                        confirmText: 'OK',
+                                                        onConfirm: () => { }
+                                                    });
+                                                });
+                                            } else {
+                                                Toast.show({
+                                                    type: 'info',
+                                                    text1: 'Missing Contact',
+                                                    text2: 'No phone number provided for this customer'
+                                                });
+                                            }
+                                        }}
+                                    />
                                     <Typography variant="small" weight="bold">Call</Typography>
                                 </Surface>
-                                <Surface variant="muted" className="flex-1 p-4 items-center" rounded="2xl" hasBorder>
-                                    <IconButton icon={<Message size={24} color="#6366f1" variant="Bulk" />} variant="white" className="mb-2" />
+                                <Surface variant="muted" className="flex-1 p-3 items-center" rounded="2xl" hasBorder>
+                                    <IconButton
+                                        icon={<Message size={20} color="#6366f1" variant="Bulk" />}
+                                        variant="white"
+                                        className="mb-2"
+                                        onPress={() => {
+                                            if (customer?.phoneNumber) {
+                                                Linking.openURL(`sms:${customer.phoneNumber}`).catch(() => {
+                                                    confirm({
+                                                        title: 'Error',
+                                                        message: 'Could not open messaging app',
+                                                        confirmText: 'OK',
+                                                        onConfirm: () => { }
+                                                    });
+                                                });
+                                            } else {
+                                                Toast.show({
+                                                    type: 'info',
+                                                    text1: 'Missing Contact',
+                                                    text2: 'No phone number provided for this customer'
+                                                });
+                                            }
+                                        }}
+                                    />
                                     <Typography variant="small" weight="bold">Message</Typography>
                                 </Surface>
-                                <Surface variant="muted" className="flex-1 p-4 items-center" rounded="2xl" hasBorder>
+                                <Surface variant="muted" className="flex-1 p-3 items-center" rounded="2xl" hasBorder>
                                     <IconButton
-                                        icon={<Trash size={24} color="#EF4444" variant="Bulk" />}
+                                        icon={<Trash size={20} color="#EF4444" variant="Bulk" />}
                                         variant="white"
                                         className="mb-2"
                                         onPress={handleDelete}
@@ -196,11 +238,11 @@ export default function CustomerDetail() {
                             </View>
 
                             {/* Info Sections */}
-                            <View className="gap-6">
+                            <View className="gap-4">
                                 <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-3 uppercase ml-1">Contact Details</Typography>
-                                    <Surface variant="white" className="p-4 border border-gray-100" rounded="2xl">
-                                        <View className="flex-row items-center mb-4">
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1">Contact Details</Typography>
+                                    <Surface variant="white" className="p-3 border border-gray-100" rounded="2xl">
+                                        <View className="flex-row items-center mb-3">
                                             <Call size={20} color="#9CA3AF" variant="Linear" />
                                             <View className="ml-4">
                                                 <Typography variant="caption" color="gray">Phone Number</Typography>
@@ -218,14 +260,14 @@ export default function CustomerDetail() {
                                 </View>
 
                                 <View>
-                                    <View className="flex-row justify-between items-center mb-3 ml-1">
+                                    <View className="flex-row justify-between items-center mb-2 ml-1">
                                         <Typography variant="caption" color="gray" weight="bold" className="uppercase">Measurements</Typography>
                                         <Pressable onPress={() => router.push('/measurement-templates')}>
-                                            <Typography variant="small" color="primary" weight="bold">Manage Templates</Typography>
+                                            <Typography variant="small" color="primary" weight="bold">Templates</Typography>
                                         </Pressable>
                                     </View>
 
-                                    <View className="flex-row gap-3 mb-4">
+                                    <View className="flex-row gap-3 mb-2">
                                         <Button
                                             variant="secondary"
                                             className="flex-1 h-12 bg-gray-100 rounded-2xl border-0"
@@ -274,9 +316,9 @@ export default function CustomerDetail() {
                                 </View>
 
                                 <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-3 uppercase ml-1">Notes</Typography>
-                                    <Surface variant="muted" className="p-5 border border-gray-50 min-h-[120px]" rounded="2xl">
-                                        <View className="flex-row mb-3">
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1">Notes</Typography>
+                                    <Surface variant="muted" className="p-4 border border-gray-50 min-h-[80px]" rounded="2xl">
+                                        <View className="flex-row mb-2">
                                             <InfoCircle size={20} color="#9CA3AF" variant="Bulk" />
                                             <Typography variant="body" weight="medium" className="ml-2 text-gray-400">Notes Overview</Typography>
                                         </View>
@@ -287,10 +329,10 @@ export default function CustomerDetail() {
                                 </View>
 
                                 {/* Create Order Button */}
-                                <View className="mt-4">
+                                <View className="mt-2">
                                     <Button
                                         onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
-                                        className="h-16 rounded-full bg-dark"
+                                        className="h-14 rounded-full bg-dark"
                                         textClassName="text-white"
                                     >
                                         <View className="flex-row items-center justify-center">

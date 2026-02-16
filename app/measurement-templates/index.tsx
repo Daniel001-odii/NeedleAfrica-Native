@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, Pressable, Alert } from 'react-native';
+import { View, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
@@ -8,24 +8,21 @@ import { IconButton } from '../../components/ui/IconButton';
 import { ArrowLeft, Add, Trash, DocumentText } from 'iconsax-react-native';
 import { useMeasurementTemplates, MeasurementTemplate } from '../../hooks/useMeasurementTemplates';
 import { Swipeable } from 'react-native-gesture-handler';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 export default function MeasurementTemplatesScreen() {
     const router = useRouter();
     const { templates, loading, deleteTemplate } = useMeasurementTemplates();
+    const { confirm } = useConfirm();
 
     const handleDelete = (id: string, name: string) => {
-        Alert.alert(
-            "Delete Template",
-            `Are you sure you want to delete "${name}"?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => deleteTemplate(id)
-                }
-            ]
-        );
+        confirm({
+            title: "Delete Template",
+            message: `Are you sure you want to delete "${name}"?`,
+            confirmText: "Delete",
+            type: "danger",
+            onConfirm: () => deleteTemplate(id)
+        });
     };
 
     const renderRightActions = (item: MeasurementTemplate) => {

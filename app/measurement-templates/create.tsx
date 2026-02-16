@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
@@ -12,11 +12,13 @@ import { useResourceLimits } from '../../hooks/useResourceLimits';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useSync } from '../../hooks/useSync';
 import { ResourceLimitModal } from '../../components/ResourceLimitModal';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 export default function CreateTemplateScreen() {
     const router = useRouter();
     const { addTemplate } = useMeasurementTemplates();
     const { canCreate } = useResourceLimits();
+    const { confirm } = useConfirm();
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const [name, setName] = useState('');
@@ -50,13 +52,23 @@ export default function CreateTemplateScreen() {
 
     const handleSave = async () => {
         if (!name.trim()) {
-            Alert.alert('Error', 'Please enter a template name');
+            confirm({
+                title: 'Error',
+                message: 'Please enter a template name',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
         const validFields = fields.filter(f => f.trim().length > 0);
         if (validFields.length === 0) {
-            Alert.alert('Error', 'Please add at least one field');
+            confirm({
+                title: 'Error',
+                message: 'Please add at least one field',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -79,7 +91,12 @@ export default function CreateTemplateScreen() {
             router.back();
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to save template');
+            confirm({
+                title: 'Error',
+                message: 'Failed to save template',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setSubmitting(false);
         }

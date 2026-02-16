@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, ScrollView, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
+import { View, ScrollView, Pressable, ActivityIndicator, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, DocumentDownload, ExportCurve, Printer, Trash } from 'iconsax-react-native';
@@ -13,12 +13,14 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuth } from '../../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../../../contexts/ConfirmContext';
 
 export default function InvoiceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const database = useDatabase();
     const { user } = useAuth();
+    const { confirm } = useConfirm();
 
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [customer, setCustomer] = useState<any>(null);
@@ -43,7 +45,12 @@ export default function InvoiceDetailScreen() {
                 }
             } catch (error) {
                 console.error(error);
-                Alert.alert('Error', 'Failed to load invoice details');
+                confirm({
+                    title: 'Error',
+                    message: 'Failed to load invoice details',
+                    confirmText: 'OK',
+                    onConfirm: () => { }
+                });
             } finally {
                 setLoading(false);
             }
@@ -161,7 +168,12 @@ export default function InvoiceDetailScreen() {
             });
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to print invoice');
+            confirm({
+                title: 'Error',
+                message: 'Failed to print invoice',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setIsExporting(false);
         }
@@ -174,37 +186,47 @@ export default function InvoiceDetailScreen() {
             if (await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(uri);
             } else {
-                Alert.alert('Error', 'Sharing is not available on this device');
+                confirm({
+                    title: 'Error',
+                    message: 'Sharing is not available on this device',
+                    confirmText: 'OK',
+                    onConfirm: () => { }
+                });
             }
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to share invoice');
+            confirm({
+                title: 'Error',
+                message: 'Failed to share invoice',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setIsExporting(false);
         }
     };
 
     const handleDelete = async () => {
-        Alert.alert(
-            'Delete Invoice',
-            'Are you sure you want to delete this invoice?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await invoice?.softDelete();
-                            Toast.show({ type: 'success', text1: 'Invoice deleted' });
-                            router.back();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete invoice');
-                        }
-                    }
+        confirm({
+            title: 'Delete Invoice',
+            message: 'Are you sure you want to delete this invoice?',
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await invoice?.softDelete();
+                    Toast.show({ type: 'success', text1: 'Invoice deleted' });
+                    router.back();
+                } catch (error) {
+                    confirm({
+                        title: 'Error',
+                        message: 'Failed to delete invoice',
+                        confirmText: 'OK',
+                        onConfirm: () => { }
+                    });
                 }
-            ]
-        );
+            }
+        });
     };
 
     if (loading) {

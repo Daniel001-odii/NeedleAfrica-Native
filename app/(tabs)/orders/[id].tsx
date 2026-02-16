@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TextInput, Alert, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { Button } from '../../../components/ui/Button';
 import { useOrders } from '../../../hooks/useOrders';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { uploadOrderImages } from '../../../services/ImageUploadService';
 import Toast from 'react-native-toast-message';
@@ -23,6 +24,7 @@ export default function OrderDetail() {
     const { orders, updateOrder, updateOrderStatus, deleteOrder } = useOrders();
     const { customers } = useCustomers();
     const { sync: performSync } = useSync();
+    const { confirm } = useConfirm();
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -111,34 +113,28 @@ export default function OrderDetail() {
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Order',
-            'Are you sure you want to delete this order?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteOrder(id as string);
-                            router.back();
-                            Toast.show({ type: 'success', text1: 'Deleted', text2: 'Removed from device' });
-                            performSync().catch(console.error);
-                        } catch (error) {
-                            Toast.show({ type: 'error', text1: 'Delete Failed', text2: 'Could not remove order' });
-                        }
-                    }
+        confirm({
+            title: 'Delete Order',
+            message: 'Are you sure you want to delete this order?',
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await deleteOrder(id as string);
+                    router.back();
+                    Toast.show({ type: 'success', text1: 'Deleted', text2: 'Removed from device' });
+                    performSync().catch(console.error);
+                } catch (error) {
+                    Toast.show({ type: 'error', text1: 'Delete Failed', text2: 'Could not remove order' });
                 }
-            ]
-        );
+            }
+        });
     };
 
     const pickImage = async (type: 'fabric' | 'style') => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [4, 3],
             quality: 1,
         });
 

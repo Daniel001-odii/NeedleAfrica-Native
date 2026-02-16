@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, User, Box, SearchNormal1, TickCircle } from 'iconsax-react-native';
@@ -16,6 +16,7 @@ import { useSubscription } from '../../../../hooks/useSubscription';
 import { useSync } from '../../../../hooks/useSync';
 import { ResourceLimitModal } from '../../../../components/ResourceLimitModal';
 import Toast from 'react-native-toast-message';
+import { useConfirm } from '../../../../contexts/ConfirmContext';
 
 export default function CreateInvoiceScreen() {
     const router = useRouter();
@@ -27,6 +28,7 @@ export default function CreateInvoiceScreen() {
     const { canCreate } = useResourceLimits();
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
+    const { confirm } = useConfirm();
 
     const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
     const [selectedOrderId, setSelectedOrderId] = useState('');
@@ -62,7 +64,12 @@ export default function CreateInvoiceScreen() {
 
     const handleCreate = async () => {
         if (!selectedCustomerId || !selectedOrderId) {
-            Alert.alert('Error', 'Please select both a customer and an order');
+            confirm({
+                title: 'Error',
+                message: 'Please select both a customer and an order',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -95,7 +102,12 @@ export default function CreateInvoiceScreen() {
             router.navigate(`/(tabs)/orders/invoices/`);
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Failed to create invoice');
+            confirm({
+                title: 'Error',
+                message: 'Failed to create invoice',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         } finally {
             setSubmitting(false);
         }

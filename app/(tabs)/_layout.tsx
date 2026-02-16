@@ -92,21 +92,15 @@ export default function TabLayout() {
                         title: 'Profile',
                         tabBarIcon: ({ color, focused }) => (
                             user?.profilePicture ? (
-                                <View style={{
-                                    borderWidth: focused ? 2 : 0,
-                                    borderColor: color,
-                                    borderRadius: 12,
-                                    padding: 1
-                                }}>
-                                    <Image
-                                        source={{ uri: user.profilePicture }}
-                                        style={{
-                                            width: 24,
-                                            height: 24,
-                                            borderRadius: 11
-                                        }}
-                                    />
-                                </View>
+                                <Image
+                                    source={{ uri: user.profilePicture }}
+                                    style={{
+                                        width: 26,
+                                        height: 26,
+                                        borderRadius: 13,
+                                        opacity: focused ? 1 : 0.7
+                                    }}
+                                />
                             ) : (
                                 <User size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
                             )

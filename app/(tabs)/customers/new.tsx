@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Pressable, Text } from 'react-native';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
@@ -13,6 +13,7 @@ import { Button } from '../../../components/ui/Button';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 
 export default function NewCustomer() {
     const [fullName, setFullName] = useState('');
@@ -34,12 +35,18 @@ export default function NewCustomer() {
     const { addCustomer } = useCustomers();
     const { sync: performSync, isOnline } = useSync();
     const { canCreate } = useResourceLimits();
+    const { confirm } = useConfirm();
     const { isFree } = useSubscription();
     const router = useRouter();
 
     const handleSubmit = async () => {
         if (!fullName.trim()) {
-            Alert.alert('Error', 'Full name is required');
+            confirm({
+                title: 'Error',
+                message: 'Full name is required',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
             return;
         }
 
@@ -74,7 +81,12 @@ export default function NewCustomer() {
                 text2: 'Customer created locally'
             });
         } catch (error) {
-            Alert.alert('Error', 'Failed to save customer');
+            confirm({
+                title: 'Error',
+                message: 'Failed to save customer',
+                confirmText: 'OK',
+                onConfirm: () => { }
+            });
         }
     };
 
