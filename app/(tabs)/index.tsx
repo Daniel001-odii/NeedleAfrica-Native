@@ -101,15 +101,15 @@ export default function Home() {
                 ) : (
                     <>
                         {/* Daily Activity Card */}
-                        <Surface variant="lavender" className={`p-6 mb-8 relative overflow-hidden ${isDark ? 'opacity-80' : ''}`} rounded="3xl">
+                        <Surface variant="lavender" className={`p-6 mb-8 relative overflow-hidden ${isDark ? '' : ''}`} rounded="3xl">
                             <View className="z-10 w-2/3">
-                                <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Your Workshop Dashboard</Typography>
+                                <Typography variant="h2" weight="bold" className={`mb-1 leading-tight ${isDark ? 'text-black':''}`}>Your Workshop Dashboard</Typography>
                                 <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
 
                                 <View className="flex-row items-center">
-                                    <View className={`flex-row items-center border border-brand-primary/20 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} px-3 py-1.5 rounded-full`}>
+                                    <View className={`flex-row items-center border border-brand-primary/20 ${isDark ? 'bg-purple-950' : 'bg-white/50'} px-3 py-1.5 rounded-full`}>
                                         <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
-                                        <Typography variant="small" weight="bold" className="text-brand-primary">
+                                        <Typography variant="small" weight="bold" className={`${isDark ? 'text-white' : 'text-brand-primary'}`}>
                                             {stats.pendingCount} Ongoing Projects
                                         </Typography>
                                     </View>
@@ -156,9 +156,9 @@ export default function Home() {
                         <View className="flex-row gap-4 mb-8">
                             {/* Left Column */}
                             <View className="flex-1 gap-4">
-                                <Surface variant="peach" className={`p-4 h-40 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
+                                <Surface variant="peach" className={`p-4 h-40 justify-between`} rounded="3xl">
                                     <View className="flex-row justify-between items-start">
-                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/10' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Box size={18} color="#EA580C" variant="Bulk" />
                                         </View>
                                         <Surface variant="white" className="px-2 py-0.5" rounded="full">
@@ -167,19 +167,19 @@ export default function Home() {
                                     </View>
                                     <View>
                                         <View className="flex-row items-end">
-                                            <Typography variant="h1" weight="bold" className="leading-none">{stats.pendingCount}</Typography>
+                                            <Typography variant="h1" weight="bold" className={`leading-none ${isDark ? 'text-black':''}`}>{stats.pendingCount}</Typography>
                                             <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-2">Active</Typography>
                                         </View>
                                         <View className="mt-1.5 flex-row items-center">
                                             <View className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-2" />
-                                            <Typography variant="small" color="gray" className="text-[10px]">{stats.dueSoon} due this week</Typography>
+                                            <Typography variant="small" color="gray" className={`text-[10px] text-black`}>{stats.dueSoon} due this week</Typography>
                                         </View>
                                     </View>
                                 </Surface>
 
-                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
+                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? '' : ''}`} rounded="3xl">
                                     <View className="flex-row items-center justify-between">
-                                        <View className={`w-8 h-8 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center rounded-xl`}>
+                                        <View className={`w-8 h-8 ${isDark ? 'bg-dark-800/10' : 'bg-white'} items-center justify-center rounded-xl`}>
                                             <Wallet size={16} color="#dc2626" variant="Bulk" />
                                         </View>
                                         <Typography variant="small" weight="bold" color="red" className="text-[10px] uppercase">Owed</Typography>
@@ -190,10 +190,10 @@ export default function Home() {
                                     </View>
                                 </Surface>
 
-                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
+                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? '' : ''}`} rounded="3xl">
                                     <Pressable onPress={() => router.push('/(tabs)/customers/')} className="flex-1 justify-between">
                                         <View className="flex-row items-center justify-between">
-                                            <View className={`w-8 h-8 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center rounded-xl`}>
+                                            <View className={`w-8 h-8 ${isDark ? 'bg-dark-800/10' : 'bg-white'} items-center justify-center rounded-xl`}>
                                                 <People size={16} color="black" variant="Bulk" />
                                             </View>
                                             <Typography variant="small" weight="bold" color="gray" className="text-[10px] uppercase">Clients</Typography>
@@ -208,22 +208,22 @@ export default function Home() {
 
                             {/* Right Column */}
                             <View className="flex-1 gap-4">
-                                <Surface variant="blue" className={`p-4 h-48 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
+                                <Surface variant="blue" className={`p-4 h-48 justify-between ${isDark ? '' : ''}`} rounded="3xl">
                                     <View className="flex-row items-center justify-between">
-                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/10' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Wallet size={18} color="#3B82F6" variant="Bulk" />
                                         </View>
                                         <Typography variant="small" weight="bold" className="text-blue-700 text-[10px] uppercase">Earnings</Typography>
                                     </View>
                                     <View>
-                                        <Typography variant="h2" weight="bold" className="text-2xl">{formatCurrency(stats.revenue)}</Typography>
+                                        <Typography variant="h2" weight="bold" className={`text-2xl ${isDark ? 'text-black' : 'text-white'}`}>{formatCurrency(stats.revenue)}</Typography>
                                         <Typography variant="small" color="gray" weight="bold" className="text-[10px]">This Week</Typography>
                                     </View>
                                 </Surface>
 
-                                <Surface variant="green" className={`p-4 flex-1 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
+                                <Surface variant="green" className={`p-4 flex-1 justify-between ${isDark ? '' : ''}`} rounded="3xl">
                                     <View className="flex-row justify-between items-start">
-                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/10' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Timer1 size={18} color="#15803d" variant="Bulk" />
                                         </View>
                                         {stats.nextDeadline && (
@@ -235,10 +235,10 @@ export default function Home() {
                                     <View>
                                         {stats.nextDeadline ? (
                                             <>
-                                                <Typography variant="small" weight="bold" className="leading-tight mb-1" numberOfLines={2}>
+                                                <Typography variant="small" weight="bold" className={`leading-tight mb-1 ${isDark ? 'text-black':''} `} numberOfLines={2}>
                                                     {stats.nextDeadline.styleName}
                                                 </Typography>
-                                                <Typography variant="small" color="gray" className="text-[10px]">
+                                                <Typography variant="small" color="gray" className={`text-[10px] ${isDark ? 'text-black':''}`}>
                                                     Due {new Date(stats.nextDeadline.deliveryDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </Typography>
                                             </>
@@ -303,12 +303,14 @@ function EmptyStateHome({ router }: { router: any }) {
 }
 
 function QuickAccessItem({ icon, label, bg, onPress }: any) {
+    const { isDark } = useTheme();
+
     return (
         <Pressable className="items-center" onPress={onPress}>
             <View className={`w-14 h-14 ${bg} rounded-3xl items-center justify-center mb-2 border-2 border-gray-500/20`}>
                 {icon}
             </View>
-            <Typography variant="caption" weight="bold" className="text-dark">{label}</Typography>
+            <Typography variant="caption" weight="bold" className={`${ isDark? 'text-white':'isDark'}`}>{label}</Typography>
         </Pressable>
     );
 }

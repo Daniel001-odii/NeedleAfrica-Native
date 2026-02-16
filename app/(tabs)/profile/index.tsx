@@ -216,7 +216,7 @@ interface ProfileItemProps {
 function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-blue-50', badgeColor = 'bg-blue-600' }: ProfileItemProps) {
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
-            <Surface variant="white" className="p-4 bg-muted/50" rounded="2xl" hasBorder>
+            <Surface variant="white" className="p-4 bg-muted/10" rounded="2xl" hasBorder>
                 <View className="flex-row items-center">
                     <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${iconBgColor}`}>
                         {icon}

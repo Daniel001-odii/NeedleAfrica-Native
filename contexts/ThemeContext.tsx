@@ -3,6 +3,7 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
 
+
 type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
@@ -18,6 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemColorScheme = useColorScheme();
     const { user } = useAuth();
     const [theme, setThemeState] = useState<Theme>('system');
+       
 
     // Initialize theme from user profile or fallback to system
     useEffect(() => {
