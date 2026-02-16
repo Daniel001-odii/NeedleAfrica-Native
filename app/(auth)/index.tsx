@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ImageBackground, TouchableOpacity, Image } from 'react-native';
+import { View, ImageBackground, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
@@ -81,12 +81,18 @@ export default function Welcome() {
                             disabled={isLoading}
                             className="h-14 rounded-full bg-white/10 border border-white/20 flex-row items-center justify-center opacity-90 active:bg-white/20"
                         >
-                            <Image
-                                source={require('../../assets/images/google_logo.png')}
-                                className="w-5 h-5 mr-3"
-                                resizeMode="contain"
-                            />
-                            <Typography color="white" weight="semibold">Continue with Google</Typography>
+                            {isLoading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <>
+                                    <Image
+                                        source={require('../../assets/images/google_logo.png')}
+                                        className="w-5 h-5 mr-3"
+                                        resizeMode="contain"
+                                    />
+                                    <Typography color="white" weight="semibold">Continue with Google</Typography>
+                                </>
+                            )}
                         </TouchableOpacity>
                     </View>
 
