@@ -86,7 +86,11 @@ export default function Preferences() {
                 <Typography variant="h3" weight="bold" className="ml-2">Preferences</Typography>
             </View>
 
-            <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerClassName="p-6 pb-20"
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
 
                 {/* Section: Notifications */}
                 <View className="mb-10">

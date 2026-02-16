@@ -190,7 +190,11 @@ export default function NewOrder() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
-                <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    contentContainerClassName="p-6 pb-20"
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
 
                     {/* Header Input */}
                     <View className="mb-6">

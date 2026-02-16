@@ -227,60 +227,70 @@ export default function PersonalInformation() {
                 onRequestClose={() => setShowDeleteModal(false)}
             >
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     className="flex-1"
                 >
-                    <View className="flex-1 bg-black/50 justify-end">
-                        <View className="bg-white rounded-t-3xl p-6 pb-10">
-                            <View className="flex-row justify-between items-center mb-6">
-                                <View className="flex-row items-center">
-                                    <Warning2 size={28} color="#EF4444" variant="Bulk" />
-                                    <Typography variant="h3" weight="bold" color="red" className="ml-2">Delete Account</Typography>
-                                </View>
-                                <TouchableOpacity onPress={() => setShowDeleteModal(false)}>
-                                    <CloseCircle size={28} color="#6B7280" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-                                <Typography variant="body" weight="bold" color="red" className="mb-2">Warning: This action cannot be undone</Typography>
-                                <Typography variant="small" color="gray" className="leading-5">
-                                    Deleting your account will permanently remove:
-                                </Typography>
-                                <View className="mt-3 ml-1">
-                                    <Typography variant="small" color="gray" className="mb-1">• All your customer records</Typography>
-                                    <Typography variant="small" color="gray" className="mb-1">• All order history and measurements</Typography>
-                                    <Typography variant="small" color="gray" className="mb-1">• All invoices and payment data</Typography>
-                                    <Typography variant="small" color="gray">• Your account and profile information</Typography>
-                                </View>
-                            </View>
-
-                            <Typography variant="body" weight="semibold" className="mb-3">
-                                To confirm deletion, type <Typography variant="body" weight="bold" className="text-red-600">DELETE</Typography> below:
-                            </Typography>
-                            <Surface variant="white" rounded="2xl" className="px-4 h-16 justify-center border border-gray-200 mb-6">
-                                <TextInput
-                                    className="font-semibold text-dark flex-1"
-                                    placeholder="Type DELETE to confirm"
-                                    placeholderTextColor="#9CA3AF"
-                                    value={deleteConfirmationText}
-                                    onChangeText={setDeleteConfirmationText}
-                                    autoCapitalize="characters"
-                                    autoCorrect={false}
-                                />
-                            </Surface>
-
-                            <Button
-                                onPress={confirmDeleteAccount}
-                                isLoading={isDeleting}
-                                disabled={deleteConfirmationText !== 'DELETE'}
-                                className={`h-16 rounded-full ${deleteConfirmationText === 'DELETE' ? 'bg-red-600' : 'bg-gray-300'}`}
-                                textClassName="text-white"
+                    <Pressable
+                        className="flex-1 bg-black/50 justify-end"
+                        onPress={() => setShowDeleteModal(false)}
+                    >
+                        <Pressable className="bg-white rounded-t-3xl max-h-[90%]">
+                            <ScrollView
+                                className="p-6 pb-10"
+                                bounces={false}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
                             >
-                                Permanently Delete My Account
-                            </Button>
-                        </View>
-                    </View>
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <View className="flex-row items-center">
+                                        <Warning2 size={28} color="#EF4444" variant="Bulk" />
+                                        <Typography variant="h3" weight="bold" color="red" className="ml-2">Delete Account</Typography>
+                                    </View>
+                                    <TouchableOpacity onPress={() => setShowDeleteModal(false)}>
+                                        <CloseCircle size={28} color="#6B7280" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+                                    <Typography variant="body" weight="bold" color="red" className="mb-2">Warning: This action cannot be undone</Typography>
+                                    <Typography variant="small" color="gray" className="leading-5">
+                                        Deleting your account will permanently remove:
+                                    </Typography>
+                                    <View className="mt-3 ml-1">
+                                        <Typography variant="small" color="gray" className="mb-1">• All your customer records</Typography>
+                                        <Typography variant="small" color="gray" className="mb-1">• All order history and measurements</Typography>
+                                        <Typography variant="small" color="gray" className="mb-1">• All invoices and payment data</Typography>
+                                        <Typography variant="small" color="gray">• Your account and profile information</Typography>
+                                    </View>
+                                </View>
+
+                                <Typography variant="body" weight="semibold" className="mb-3">
+                                    To confirm deletion, type <Typography variant="body" weight="bold" className="text-red-600">DELETE</Typography> below:
+                                </Typography>
+                                <Surface variant="white" rounded="2xl" className="px-4 h-16 justify-center border border-gray-200 mb-6">
+                                    <TextInput
+                                        className="font-semibold text-dark flex-1"
+                                        placeholder="Type DELETE to confirm"
+                                        placeholderTextColor="#9CA3AF"
+                                        value={deleteConfirmationText}
+                                        onChangeText={setDeleteConfirmationText}
+                                        autoCapitalize="characters"
+                                        autoCorrect={false}
+                                    />
+                                </Surface>
+
+                                <Button
+                                    onPress={confirmDeleteAccount}
+                                    isLoading={isDeleting}
+                                    disabled={deleteConfirmationText !== 'DELETE'}
+                                    className={`h-16 rounded-full ${deleteConfirmationText === 'DELETE' ? 'bg-red-600' : 'bg-gray-300'}`}
+                                    textClassName="text-white"
+                                >
+                                    Permanently Delete My Account
+                                </Button>
+                            </ScrollView>
+                        </Pressable>
+                    </Pressable>
                 </KeyboardAvoidingView>
             </Modal>
         </View>

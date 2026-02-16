@@ -110,6 +110,7 @@ export default function NewCustomer() {
                 <ScrollView
                     contentContainerClassName="p-6 pb-20"
                     showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                 >
                     <Typography variant="body" weight="bold" className="mb-6">Customer Details</Typography>
 
