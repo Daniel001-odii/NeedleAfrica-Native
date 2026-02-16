@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
 import { twMerge } from 'tailwind-merge';
+// import { useTheme } from '../../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface TypographyProps extends TextProps {
     variant?: 'h1' | 'h2' | 'h3' | 'subtitle' | 'body' | 'caption' | 'small';
@@ -19,6 +21,8 @@ export function Typography({
     style,
     ...props
 }: TypographyProps) {
+    const { isDark } = useTheme();
+
     const variants = {
         h1: 'text-4xl',
         h2: 'text-2xl',
@@ -30,8 +34,8 @@ export function Typography({
     };
 
     const colors = {
-        black: 'text-dark',
-        gray: 'text-gray-500',
+        black: isDark ? 'text-text-dark' : 'text-text-default',
+        gray: isDark ? 'text-text-muted-dark' : 'text-text-muted',
         white: 'text-white',
         primary: 'text-brand-primary',
         red: 'text-red-500',

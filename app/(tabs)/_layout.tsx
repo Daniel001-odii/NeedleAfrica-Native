@@ -4,10 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, User, Notepad, People, Calendar, MagicStar } from 'iconsax-react-native';
 import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
     const { user } = useAuth();
+    const { isDark } = useTheme();
 
     return (
         <View className="flex-1">
@@ -15,12 +17,13 @@ export default function TabLayout() {
             <Tabs
                 screenOptions={{
                     headerShown: false,
-                    tabBarActiveTintColor: '#1C1C1E',
-                    tabBarInactiveTintColor: '#9CA3AF',
+                    tabBarActiveTintColor: isDark ? '#FFFFFF' : '#1C1C1E',
+                    tabBarInactiveTintColor: isDark ? '#9CA3AF' : '#9CA3AF',
 
                     tabBarStyle: {
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
                         borderTopWidth: 1,
+                        borderTopColor: isDark ? '#374151' : '#E5E7EB',
                         height: 60 + (insets.bottom > 10 ? insets.bottom - 30 : insets.bottom), // dynamic height
                         paddingTop: 6,
                         paddingBottom: insets.bottom > 10 ? insets.bottom - 30 : insets.bottom, // safe area aware

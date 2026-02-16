@@ -8,6 +8,7 @@ import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle, DocumentText } 
 import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
+import { useTheme } from '../../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 
 const TABS = ['All', 'Pending', 'Delivered'] as const;
@@ -37,6 +38,7 @@ export default function Orders() {
     const router = useRouter();
     const { sync: performSync } = useSync();
     const { confirm } = useConfirm();
+    const { isDark } = useTheme();
 
     const getProgressColors = (order: any) => {
         if (order.status === 'DELIVERED') return '#16a34a'; // Green
@@ -162,24 +164,24 @@ export default function Orders() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
             <View className="flex-1">
                 <View className="p-6 pb-0">
                     <View className="flex-row justify-between items-center mb-6">
                         <Typography variant="h2" weight="bold">Orders</Typography>
                         <View className="flex-row gap-2">
                             <Pressable
-                                className="h-10 bg-muted rounded-full items-center justify-center flex-row gap-2 px-3"
+                                className={`h-10 rounded-full items-center justify-center flex-row gap-2 px-3 ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
                                 onPress={() => router.push('/(tabs)/orders/invoices/')}
                             >
-                                <DocumentText size={20} color="black" />
+                                <DocumentText size={20} color={isDark ? "white" : "black"} />
                                 <Typography variant="body" weight="bold">Invoices</Typography>
                             </Pressable>
                             <Pressable
-                                className="w-10 h-10 bg-muted rounded-full items-center justify-center"
+                                className={`w-10 h-10 rounded-full items-center justify-center ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
                                 onPress={() => setShowSortModal(true)}
                             >
-                                <FilterSearch size={20} color="black" />
+                                <FilterSearch size={20} color={isDark ? "white" : "black"} />
                             </Pressable>
                             <IconButton
                                 icon={<Add size={24} color="white" />}
@@ -207,7 +209,7 @@ export default function Orders() {
                                     onPress={() => setActiveTab(tab)}
                                     className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border ${isActive
                                         ? 'bg-dark border-dark'
-                                        : 'bg-white border-gray-100'
+                                        : isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100'
                                         }`}
                                 >
                                     <Typography
@@ -217,7 +219,7 @@ export default function Orders() {
                                     >
                                         {tab}
                                     </Typography>
-                                    <View className={`ml-2 px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-muted'}`}>
+                                    <View className={`ml-2 px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20' : (isDark ? 'bg-surface-muted-dark' : 'bg-muted')}`}>
                                         <Typography
                                             variant="small"
                                             weight="bold"
@@ -235,7 +237,7 @@ export default function Orders() {
 
                 {loading ? (
                     <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator color="black" />
+                        <ActivityIndicator color={isDark ? "white" : "black"} />
                     </View>
                 ) : (
                     <FlatList
@@ -255,8 +257,9 @@ export default function Orders() {
                                 <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
                                     <Surface
                                         variant="white"
-                                        className="p-4 mb-3 border border-gray-100 flex-row items-center"
+                                        className={`p-4 mb-3 flex-row items-center ${isDark ? 'border-border-dark' : 'border-gray-100'}`}
                                         rounded="2xl"
+                                        hasBorder
                                     >
                                         <View className="relative mr-5 w-[54px] h-[54px] items-center justify-center">
                                             <View className="absolute">
@@ -361,7 +364,7 @@ export default function Orders() {
                     className="flex-1 bg-black/50 justify-end"
                     onPress={() => setShowSortModal(false)}
                 >
-                    <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
+                    <Pressable onPress={() => { }} className={`${isDark ? 'bg-surface-dark' : 'bg-white'} rounded-t-3xl p-6`}>
                         <View className="flex-row justify-between items-center mb-6">
                             <Typography variant="h3" weight="bold">Sort Orders By</Typography>
                             <IconButton
@@ -378,7 +381,7 @@ export default function Orders() {
                                         setSortBy(option.key);
                                         setShowSortModal(false);
                                     }}
-                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? 'bg-lavender' : 'bg-gray-50'}`}
+                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? (isDark ? 'bg-dark-700' : 'bg-lavender') : (isDark ? 'bg-dark-800' : 'bg-gray-50')}`}
                                 >
                                     <Typography
                                         weight={sortBy === option.key ? 'bold' : 'medium'}

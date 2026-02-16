@@ -21,6 +21,7 @@ interface User {
     reminderDays?: string;
     measurementUnit?: 'cm' | 'inch';
     currency?: string;
+    theme?: 'light' | 'dark' | 'system';
     pushTokens?: string[];
     // Subscription fields
     subscriptionPlan?: 'FREE' | 'PRO' | 'STUDIO_AI';

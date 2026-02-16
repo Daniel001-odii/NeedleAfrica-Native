@@ -10,12 +10,14 @@ import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
     const { confirm } = useConfirm();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
+    const { isDark } = useTheme();
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -39,7 +41,7 @@ export default function Profile() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
                 <View className="mb-8">
@@ -56,7 +58,7 @@ export default function Profile() {
                             className="w-20 h-20 rounded-full mr-5"
                         />
                     ) : (
-                        <View className="w-20 h-20 items-center justify-center mr-5 bg-black rounded-full">
+                        <View className={`w-20 h-20 items-center justify-center mr-5 ${isDark ? 'bg-dark-700' : 'bg-black'} rounded-full`}>
                             <Typography variant="h1" weight="bold" className="text-white">
                                 {(user?.username || 'J')[0].toUpperCase()}
                                 {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}

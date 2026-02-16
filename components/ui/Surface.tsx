@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ViewProps } from 'react-native';
 import { twMerge } from 'tailwind-merge';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SurfaceProps extends ViewProps {
     variant?: 'white' | 'lavender' | 'peach' | 'blue' | 'green' | 'muted' | 'dark';
@@ -18,13 +19,15 @@ export function Surface({
     hasBorder = false,
     ...props
 }: SurfaceProps) {
+    const { isDark } = useTheme();
+
     const variants = {
-        white: 'bg-white',
+        white: isDark ? 'bg-surface-dark' : 'bg-surface-default',
         lavender: 'bg-soft-lavender',
         peach: 'bg-soft-peach',
         blue: 'bg-soft-blue',
         green: 'bg-soft-green',
-        muted: 'bg-muted',
+        muted: isDark ? 'bg-surface-muted-dark' : 'bg-surface-muted',
         dark: 'bg-dark',
     };
 
@@ -45,7 +48,7 @@ export function Surface({
                 variants[variant],
                 roundedMap[rounded],
                 hasShadow && '',
-                hasBorder && 'border border-gray-100',
+                hasBorder && (isDark ? 'border border-border-dark' : 'border border-border-default'),
                 className
             )}
             {...props}

@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
@@ -163,6 +164,29 @@ function RootLayoutNav() {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConfirmProvider } from '../contexts/ConfirmContext';
 
+function RootLayoutWithTheme() {
+    return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+                <DatabaseProvider database={database}>
+                    <AuthProvider>
+                        <ThemeProvider>
+                            <ConfirmProvider>
+                                <SafeAreaView style={{ flex: 1 }}>
+                                    <OfflineBanner />
+                                    <RootLayoutNavWithLoading />
+                                    <StatusBar style="auto" translucent={true} />
+                                    <Toast config={toastConfig} />
+                                </SafeAreaView>
+                            </ConfirmProvider>
+                        </ThemeProvider>
+                    </AuthProvider>
+                </DatabaseProvider>
+            </SafeAreaProvider>
+        </GestureHandlerRootView>
+    );
+}
+
 export default function RootLayout() {
     // const [loaded, error] = useFonts({
     //     'Playfair-Regular': PlayfairDisplay_400Regular,
@@ -190,22 +214,5 @@ export default function RootLayout() {
         return null;
     }
 
-    return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-                <DatabaseProvider database={database}>
-                    <AuthProvider>
-                        <ConfirmProvider>
-                            <SafeAreaView style={{ flex: 1 }}>
-                                <OfflineBanner />
-                                <RootLayoutNavWithLoading />
-                                <StatusBar style="auto" translucent={true} />
-                                <Toast config={toastConfig} />
-                            </SafeAreaView>
-                        </ConfirmProvider>
-                    </AuthProvider>
-                </DatabaseProvider>
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
-    );
+    return <RootLayoutWithTheme />;
 }

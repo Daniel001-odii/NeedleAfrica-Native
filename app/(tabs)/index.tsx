@@ -10,6 +10,7 @@ import { IconButton } from '../../components/ui/IconButton';
 import { useSync } from '../../hooks/useSync';
 import { useOrders } from '../../hooks/useOrders';
 import { useCustomers } from '../../hooks/useCustomers';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function Home() {
     const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function Home() {
     const { isSyncing, sync: performSync } = useSync();
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
+    const { isDark } = useTheme();
 
     const onRefresh = useCallback(async () => {
         await performSync();
@@ -80,7 +82,7 @@ export default function Home() {
     const isNewUser = !ordersLoading && !customersLoading && orders.length === 0 && customers.length === 0;
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
             <ScrollView
                 contentContainerClassName="p-6 pb-12"
                 showsVerticalScrollIndicator={false}
@@ -99,13 +101,13 @@ export default function Home() {
                 ) : (
                     <>
                         {/* Daily Activity Card */}
-                        <Surface variant="lavender" className="p-6 mb-8 relative overflow-hidden" rounded="3xl">
+                        <Surface variant="lavender" className={`p-6 mb-8 relative overflow-hidden ${isDark ? 'opacity-80' : ''}`} rounded="3xl">
                             <View className="z-10 w-2/3">
                                 <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Your Workshop Dashboard</Typography>
                                 <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
 
                                 <View className="flex-row items-center">
-                                    <View className="flex-row items-center border border-brand-primary/20 bg-white/50 px-3 py-1.5 rounded-full">
+                                    <View className={`flex-row items-center border border-brand-primary/20 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} px-3 py-1.5 rounded-full`}>
                                         <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
                                         <Typography variant="small" weight="bold" className="text-brand-primary">
                                             {stats.pendingCount} Ongoing Projects
@@ -154,9 +156,9 @@ export default function Home() {
                         <View className="flex-row gap-4 mb-8">
                             {/* Left Column */}
                             <View className="flex-1 gap-4">
-                                <Surface variant="peach" className="p-4 h-40 justify-between" rounded="3xl">
+                                <Surface variant="peach" className={`p-4 h-40 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
                                     <View className="flex-row justify-between items-start">
-                                        <View className="w-9 h-9 bg-white/50 rounded-full items-center justify-center">
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Box size={18} color="#EA580C" variant="Bulk" />
                                         </View>
                                         <Surface variant="white" className="px-2 py-0.5" rounded="full">
@@ -175,9 +177,9 @@ export default function Home() {
                                     </View>
                                 </Surface>
 
-                                <Surface variant="muted" className="p-4 h-28 justify-between" rounded="3xl">
+                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
                                     <View className="flex-row items-center justify-between">
-                                        <View className="w-8 h-8 bg-white items-center justify-center rounded-xl">
+                                        <View className={`w-8 h-8 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center rounded-xl`}>
                                             <Wallet size={16} color="#dc2626" variant="Bulk" />
                                         </View>
                                         <Typography variant="small" weight="bold" color="red" className="text-[10px] uppercase">Owed</Typography>
@@ -188,10 +190,10 @@ export default function Home() {
                                     </View>
                                 </Surface>
 
-                                <Surface variant="muted" className="p-4 h-28 justify-between" rounded="3xl">
+                                <Surface variant="muted" className={`p-4 h-28 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
                                     <Pressable onPress={() => router.push('/(tabs)/customers/')} className="flex-1 justify-between">
                                         <View className="flex-row items-center justify-between">
-                                            <View className="w-8 h-8 bg-white items-center justify-center rounded-xl">
+                                            <View className={`w-8 h-8 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center rounded-xl`}>
                                                 <People size={16} color="black" variant="Bulk" />
                                             </View>
                                             <Typography variant="small" weight="bold" color="gray" className="text-[10px] uppercase">Clients</Typography>
@@ -206,9 +208,9 @@ export default function Home() {
 
                             {/* Right Column */}
                             <View className="flex-1 gap-4">
-                                <Surface variant="blue" className="p-4 h-48 justify-between" rounded="3xl">
+                                <Surface variant="blue" className={`p-4 h-48 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
                                     <View className="flex-row items-center justify-between">
-                                        <View className="w-9 h-9 bg-white/50 rounded-full items-center justify-center">
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Wallet size={18} color="#3B82F6" variant="Bulk" />
                                         </View>
                                         <Typography variant="small" weight="bold" className="text-blue-700 text-[10px] uppercase">Earnings</Typography>
@@ -219,9 +221,9 @@ export default function Home() {
                                     </View>
                                 </Surface>
 
-                                <Surface variant="green" className="p-4 flex-1 justify-between" rounded="3xl">
+                                <Surface variant="green" className={`p-4 flex-1 justify-between ${isDark ? 'opacity-75' : ''}`} rounded="3xl">
                                     <View className="flex-row justify-between items-start">
-                                        <View className="w-9 h-9 bg-white/50 rounded-full items-center justify-center">
+                                        <View className={`w-9 h-9 ${isDark ? 'bg-dark-800/50' : 'bg-white/50'} rounded-full items-center justify-center`}>
                                             <Timer1 size={18} color="#15803d" variant="Bulk" />
                                         </View>
                                         {stats.nextDeadline && (
@@ -255,10 +257,12 @@ export default function Home() {
 }
 
 function EmptyStateHome({ router }: { router: any }) {
+    const { isDark } = useTheme();
+    
     return (
         <View className="py-10">
             <Surface variant="muted" className="p-8 items-center mb-10" rounded="3xl">
-                <View className="w-20 h-20 bg-white items-center justify-center mb-6 shadow-sm rounded-full">
+                <View className={`w-20 h-20 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center mb-6 shadow-sm rounded-full`}>
                     <MagicStar size={40} color="#7c3aed" variant="Bulk" />
                 </View>
                 <Typography variant="h2" weight="bold" className="text-center mb-2">Welcome to Needle Africa</Typography>
@@ -269,7 +273,7 @@ function EmptyStateHome({ router }: { router: any }) {
 
             <View className="gap-4">
                 <Pressable onPress={() => router.push('/(tabs)/customers/new')}>
-                    <Surface variant="white" className="p-5 flex-row items-center border border-gray-100" rounded="2xl">
+                    <Surface variant="white" className={`p-5 flex-row items-center ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
                         <View className="w-12 h-12 bg-accent-peach items-center justify-center rounded-xl mr-4">
                             <People size={24} color="black" variant="Bulk" />
                         </View>
@@ -282,7 +286,7 @@ function EmptyStateHome({ router }: { router: any }) {
                 </Pressable>
 
                 <Pressable onPress={() => router.push('/(tabs)/orders/new')}>
-                    <Surface variant="white" className="p-5 flex-row items-center border border-gray-100" rounded="2xl">
+                    <Surface variant="white" className={`p-5 flex-row items-center ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
                         <View className="w-12 h-12 bg-accent-lavender items-center justify-center rounded-xl mr-4">
                             <Box size={24} color="black" variant="Bulk" />
                         </View>

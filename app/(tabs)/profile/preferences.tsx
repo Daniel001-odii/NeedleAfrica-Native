@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle, Moon, Sun } from 'iconsax-react-native';
 import * as Notifications from 'expo-notifications';
 import { CURRENCIES, Currency } from '../../../constants/currencies';
 import { Typography } from '../../../components/ui/Typography';
@@ -10,6 +10,7 @@ import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import axiosInstance from '../../../lib/axios';
 import Toast from 'react-native-toast-message';
 
@@ -18,6 +19,7 @@ import { NotificationService } from '../../../services/NotificationService';
 export default function Preferences() {
     const router = useRouter();
     const { user, updateProfile } = useAuth();
+    const { theme, setTheme, isDark } = useTheme();
     const [isSaving, setIsSaving] = useState(false);
 
     // Notification states
@@ -50,7 +52,8 @@ export default function Preferences() {
                 marketingTips,
                 reminderDays: showCustomInput ? customDays : reminderDay,
                 measurementUnit: unit,
-                currency
+                currency,
+                theme
             });
             Toast.show({
                 type: 'success',
@@ -74,11 +77,15 @@ export default function Preferences() {
         c.code.toLowerCase().includes(currencySearchQuery.toLowerCase())
     );
 
+    const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+        setTheme(newTheme);
+    };
+
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
+            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -91,6 +98,46 @@ export default function Preferences() {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
+
+                {/* Section: Appearance */}
+                <View className="mb-10">
+                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Appearance</Typography>
+
+                    <View className="mb-4">
+                        <Typography variant="body" weight="semibold" className="mb-4 ml-1">Theme</Typography>
+                        <Surface variant="muted" rounded="2xl" className="p-2">
+                            {['light', 'dark', 'system'].map((themeOption) => (
+                                <TouchableOpacity
+                                    key={themeOption}
+                                    onPress={() => handleThemeChange(themeOption as 'light' | 'dark' | 'system')}
+                                    className={`flex-row items-center justify-between p-3 rounded-xl ${
+                                        theme === themeOption 
+                                            ? isDark ? 'bg-dark-800' : 'bg-gray-100'
+                                            : ''
+                                    }`}
+                                >
+                                    <View className="flex-row items-center">
+                                        {themeOption === 'light' && <Sun size={20} color={isDark ? 'white' : 'black'} className="mr-3" />}
+                                        {themeOption === 'dark' && <Moon size={20} color={isDark ? 'white' : 'black'} className="mr-3" />}
+                                        {themeOption === 'system' && (
+                                            <View className="mr-3">
+                                                {isDark ? <Moon size={20} color="white" /> : <Sun size={20} color="black" />}
+                                            </View>
+                                        )}
+                                        <Typography weight="medium">
+                                            {themeOption === 'system' ? 'System Default' : themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
+                                        </Typography>
+                                    </View>
+                                    {theme === themeOption && (
+                                        <View className={`w-5 h-5 rounded-full border-2 ${isDark ? 'border-white' : 'border-dark'} items-center justify-center`}>
+                                            <View className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`} />
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </Surface>
+                    </View>
+                </View>
 
                 {/* Section: Notifications */}
                 <View className="mb-10">
@@ -301,8 +348,10 @@ interface PreferenceToggleProps {
 }
 
 function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: PreferenceToggleProps) {
+    const { isDark } = useTheme();
+    
     return (
-        <Surface variant="white" className="p-4 mb-4 border border-gray-50" rounded="2xl">
+        <Surface variant="white" className={`p-4 mb-4 ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="2xl" hasBorder>
             <View className="flex-row items-center">
                 <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
                     {icon}

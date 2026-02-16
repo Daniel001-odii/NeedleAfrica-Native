@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, ActivityIndicator } from 'react-native';
 import { twMerge } from 'tailwind-merge';
 import { Typography } from './Typography';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ButtonProps extends React.ComponentProps<typeof TouchableOpacity> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -22,13 +23,14 @@ export function Button({
     disabled,
     ...props
 }: ButtonProps) {
+    const { isDark } = useTheme();
 
     const baseStyles = "rounded-lg items-center justify-center flex-row shadow-sm active:translate-y-1";
 
     const variants = {
-        primary: "bg-peach border-2 border-black",
-        secondary: "bg-lavender border-2 border-black",
-        outline: "bg-white border-2 border-black",
+        primary: isDark ? "bg-brand-primary border-2 border-brand-primary" : "bg-peach border-2 border-black",
+        secondary: isDark ? "bg-dark-700 border-2 border-dark-600" : "bg-lavender border-2 border-black",
+        outline: isDark ? "bg-transparent border-2 border-text-dark" : "bg-white border-2 border-black",
         ghost: "bg-transparent border-0 shadow-none"
     };
 
@@ -38,6 +40,13 @@ export function Button({
         lg: "h-14 px-8"
     };
 
+    const textColors = {
+        primary: "text-white",
+        secondary: isDark ? "text-white" : "text-black",
+        outline: isDark ? "text-text-dark" : "text-black",
+        ghost: isDark ? "text-text-dark" : "text-black"
+    };
+
     return (
         <TouchableOpacity
             className={twMerge(baseStyles, variants[variant], sizes[size], disabled && "opacity-50", className)}
@@ -45,13 +54,13 @@ export function Button({
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={isDark ? "white" : "black"} />
             ) : (
                 typeof children === 'string' ? (
                     <Typography
                         weight="bold"
                         variant={size === 'lg' ? 'subtitle' : 'body'}
-                        className={twMerge("text-black", textClassName)}
+                        className={twMerge(textColors[variant], textClassName)}
                         family="grotesk"
                     >
                         {children}

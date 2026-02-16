@@ -8,6 +8,7 @@ import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -30,6 +31,7 @@ function CustomersScreen() {
     const { customers, loading, seedCustomers, refresh, deleteCustomer } = useCustomers(search);
     const { confirm } = useConfirm();
     const router = useRouter();
+    const { isDark } = useTheme();
 
     const sortedCustomers = useMemo(() => {
         const sorted = [...customers];
@@ -85,19 +87,19 @@ function CustomersScreen() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
             <View className="p-6 pb-0">
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
                     <Typography variant="h2" weight="bold">Customers</Typography>
                     <View className="flex-row gap-2">
                         <IconButton
-                            icon={<FilterSearch size={20} color="black" />}
+                            icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
                             variant="ghost"
                             onPress={() => setShowSortModal(true)}
                         />
                         <IconButton
-                            icon={<Refresh size={20} color="black" />}
+                            icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
                             variant="ghost"
                             onPress={onRefresh}
                         />
@@ -113,7 +115,7 @@ function CustomersScreen() {
                 <Surface variant="muted" className="flex-row items-center px-4 h-14 mb-6" rounded="2xl" hasBorder>
                     <SearchNormal size={20} color="#9CA3AF" />
                     <TextInput
-                        className="flex-1 ml-3 text-base text-dark font-semibold"
+                        className={`flex-1 ml-3 text-base font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
                         placeholder="Search for a customer..."
                         placeholderTextColor="#9CA3AF"
                         value={search}
@@ -140,7 +142,7 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <Surface variant="white" className="flex-row items-center p-5 mb-2 border border-gray-100" rounded="3xl" hasShadow>
+                            <Surface variant="white" className={`flex-row items-center p-5 mb-2 ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="3xl" hasShadow hasBorder>
                                 <Surface variant="lavender" className="w-12 h-12 items-center justify-center mr-4" rounded="full">
                                     <Typography weight="bold" className="text-brand-primary">
                                         {(item.fullName || 'C').charAt(0).toUpperCase()}
@@ -203,7 +205,7 @@ function CustomersScreen() {
                     className="flex-1 bg-black/50 justify-end"
                     onPress={() => setShowSortModal(false)}
                 >
-                    <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
+                    <Pressable onPress={() => { }} className={`${isDark ? 'bg-surface-dark' : 'bg-white'} rounded-t-3xl p-6`}>
                         <View className="flex-row justify-between items-center mb-6">
                             <Typography variant="h3" weight="bold">Sort By</Typography>
                             <IconButton
@@ -220,7 +222,7 @@ function CustomersScreen() {
                                         setSortBy(option.key);
                                         setShowSortModal(false);
                                     }}
-                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? 'bg-lavender' : 'bg-gray-50'}`}
+                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? (isDark ? 'bg-dark-700' : 'bg-lavender') : (isDark ? 'bg-dark-800' : 'bg-gray-50')}`}
                                 >
                                     <Typography
                                         weight={sortBy === option.key ? 'bold' : 'medium'}
