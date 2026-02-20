@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, CloseSquare } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -17,6 +17,7 @@ export default function Home() {
     const { isSyncing, sync: performSync } = useSync();
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
+    const [showDashboardCard, setShowDashboardCard] = React.useState(true);
 
     const onRefresh = useCallback(async () => {
         await performSync();
@@ -99,24 +100,29 @@ export default function Home() {
                 ) : (
                     <>
                         {/* Daily Activity Card */}
-                        <Surface variant="lavender" className="p-6 mb-8 relative overflow-hidden" rounded="3xl">
-                            <View className="z-10 w-2/3">
-                                <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Your Workshop Dashboard</Typography>
-                                <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
+                        {showDashboardCard && (
+                            <Surface variant="lavender" className="p-6 mb-8 relative overflow-hidden" rounded="3xl">
+                                <Pressable onPress={() => setShowDashboardCard(false)} className="absolute right-4 top-4 z-20 p-2">
+                                    <CloseSquare size={24} color="#7c3aed" variant="Bulk" />
+                                </Pressable>
+                                <View className="z-10 w-2/3">
+                                    <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Your Workshop Dashboard</Typography>
+                                    <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
 
-                                <View className="flex-row items-center">
-                                    <View className="flex-row items-center border border-brand-primary/20 bg-white/50 px-3 py-1.5 rounded-full">
-                                        <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
-                                        <Typography variant="small" weight="bold" className="text-brand-primary">
-                                            {stats.pendingCount} Ongoing Projects
-                                        </Typography>
+                                    <View className="flex-row items-center">
+                                        <View className="flex-row items-center border border-brand-primary/20 bg-white/50 px-3 py-1.5 rounded-full">
+                                            <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
+                                            <Typography variant="small" weight="bold" className="text-brand-primary">
+                                                {stats.pendingCount} Ongoing Projects
+                                            </Typography>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                            <View className="absolute -right-4 -bottom-4 opacity-20">
-                                <Box size={140} color="#7c3aed" variant="Bulk" />
-                            </View>
-                        </Surface>
+                                <View className="absolute -right-4 -bottom-4 opacity-20">
+                                    <Box size={140} color="#7c3aed" variant="Bulk" />
+                                </View>
+                            </Surface>
+                        )}
 
                         {/* Quick Access */}
                         <View className="mb-8">
