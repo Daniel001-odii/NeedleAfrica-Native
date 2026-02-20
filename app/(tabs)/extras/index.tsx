@@ -49,7 +49,7 @@ export default function Extras() {
                         {/* Featured Image */}
                         <Image
                             source={{ uri: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&fit=crop' }}
-                            className="absolute -right-12 -top-2 w-48 h-full opacity-40"
+                            className="absolute -right-12 -top-2 w-48 h-full opacity-40 rounded-3xl"
                             style={{ transform: [{ rotate: '15deg' }] }}
                         />
                     </Surface>
