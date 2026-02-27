@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 
 // Use localhost for Android emulator (10.0.2.2) or local IP, 
 // or the production URL if available.
@@ -22,6 +23,20 @@ axiosInstance.interceptors.request.use(
         return config;
     },
     (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor to handle token invalidation
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            // Token is invalid or expired, clear auth data and redirect to login
+            await SecureStore.deleteItemAsync('auth_token');
+            await SecureStore.deleteItemAsync('user_data');
+            router.replace('/(auth)/login');
+        }
         return Promise.reject(error);
     }
 );

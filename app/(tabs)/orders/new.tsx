@@ -54,6 +54,28 @@ export default function NewOrder() {
     const [styleImage, setStyleImage] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
+    // Helper function to format number with commas
+    const formatNumberWithCommas = (value: string): string => {
+        // Remove all non-digit characters
+        const cleanValue = value.replace(/\D/g, '');
+        // Format with commas
+        return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    // Helper function to handle amount input with formatting and character limit
+    const handleAmountInput = (value: string, setter: (value: string) => void, maxLength: number = 9) => {
+        // Remove commas and non-digit characters for processing
+        const cleanValue = value.replace(/\D/g, '');
+        
+        // Limit to maxLength characters
+        const limitedValue = cleanValue.slice(0, maxLength);
+        
+        // Format with commas for display
+        const formattedValue = formatNumberWithCommas(limitedValue);
+        
+        setter(formattedValue);
+    };
+
     React.useEffect(() => {
         if (customerId && customers.length > 0) {
             const preSelected = customers.find(c => c.id === customerId);
@@ -102,8 +124,8 @@ export default function NewOrder() {
             await addOrder({
                 customerId: selectedCustomer.id,
                 styleName: dressType,
-                amount: parseInt(price) || 0,
-                amountPaid: parseInt(amountPaid) || 0,
+                amount: parseInt(price.replace(/,/g, '')) || 0,
+                amountPaid: parseInt(amountPaid.replace(/,/g, '')) || 0,
                 status: 'PENDING',
                 notes: notes,
                 deliveryDate: dueDate,
@@ -236,7 +258,8 @@ export default function NewOrder() {
                                         placeholderTextColor="#9CA3AF"
                                         keyboardType="numeric"
                                         value={price}
-                                        onChangeText={setPrice}
+                                        onChangeText={(value) => handleAmountInput(value, setPrice, 9)}
+                                        maxLength={12}
                                     />
                                 </View>
                             </Surface>
@@ -251,7 +274,8 @@ export default function NewOrder() {
                                         placeholderTextColor="#9CA3AF"
                                         keyboardType="numeric"
                                         value={amountPaid}
-                                        onChangeText={setAmountPaid}
+                                        onChangeText={(value) => handleAmountInput(value, setAmountPaid, 9)}
+                                        maxLength={12}
                                     />
                                 </View>
                             </Surface>
