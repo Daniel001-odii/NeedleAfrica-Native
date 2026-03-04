@@ -45,7 +45,7 @@ class SyncService {
   async getLastSyncedAt(): Promise<number> {
     try {
       const lastSynced = await AsyncStorage.getItem('lastSyncedAt');
-      return lastSynced ? parseInt(lastSynced, 30) : 0;
+      return lastSynced ? parseInt(lastSynced, 10) : 0;
     } catch (error) {
       console.error('Error getting last synced timestamp:', error);
       return 0;
