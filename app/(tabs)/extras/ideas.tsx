@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
+import { IconButton } from '../../../components/ui/IconButton';
 
 const { width } = Dimensions.get('window');
 
@@ -28,10 +29,13 @@ export default function ClothIdeas() {
 
     return (
         <View className="flex-1 bg-white">
-            <View className="flex-row items-center p-4 border-b border-gray-100">
-                <TouchableOpacity onPress={() => router.back()} className="mr-4 p-2 bg-gray-50 rounded-full">
-                    <ArrowLeft size={24} color="black" />
-                </TouchableOpacity>
+            <View className="flex-row items-center p-4 border-gray-100">
+                <IconButton
+                    icon={<ArrowLeft size={20} color="black" />}
+                    onPress={() => router.back()}
+                    variant="ghost"
+                    className="-ml-2"
+                />
                 <Typography variant="h3" weight="bold">Cloth Ideas</Typography>
             </View>
 

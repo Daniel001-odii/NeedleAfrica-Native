@@ -10,12 +10,19 @@ import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useRevenueCat } from '../../../hooks/useRevenueCat';
+import { SubscriptionModal } from '../../../components/SubscriptionModal';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
+    // const { isPro, subscriptionStatus } = useRevenueCat();
     const { confirm } = useConfirm();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
+    const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+
+    const userIsPro = user?.subscriptionPlan === 'PRO' && user?.subscriptionStatus === 'ACTIVE';
+    const planType = user?.currentPlanCode || 'monthly';
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -42,10 +49,10 @@ export default function Profile() {
         <View className="flex-1 bg-white">
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
-                <View className="mb-8">
+                {/* <View className="mb-8">
                     <Typography variant="h1" weight="bold">Profile</Typography>
                     <Typography variant="body" color="gray">Manage your account</Typography>
-                </View>
+                </View> */}
 
                 {/* User Card */}
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
@@ -111,22 +118,22 @@ export default function Profile() {
                             title="Preferences"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                         />
-                        <ProfileItem
+                        {/*  <ProfileItem
                             icon={<Gallery size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
                             title="Lookbook"
                             subtitle="Showcase your work as a digital catalogue"
                             badge="Coming Soon"
                             badgeColor="bg-gray-500"
-                        />
+                        /> */}
                         <ProfileItem
                             icon={<Crown size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
                             title="Subscription"
                             subtitle="Manage your plan & billing"
-                            badge={user?.subscriptionPlan === 'PRO' ? 'Pro' : user?.subscriptionPlan === 'STUDIO_AI' ? 'Studio AI' : 'Free Plan'}
-                            badgeColor={user?.subscriptionPlan === 'PRO' ? 'bg-yellow-500' : user?.subscriptionPlan === 'STUDIO_AI' ? 'bg-purple-600' : 'bg-blue-600'}
-                            onPress={() => router.push('/(tabs)/profile/subscription')}
+                            badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : 'Free Plan'}
+                            badgeColor={userIsPro ? 'bg-yellow-500' : 'bg-blue-600'}
+                            onPress={() => setIsSubscriptionModalVisible(true)}
                         />
                     </View>
                 </View>
@@ -197,6 +204,11 @@ export default function Profile() {
                 </View>
 
             </ScrollView >
+
+            <SubscriptionModal
+                visible={isSubscriptionModalVisible}
+                onClose={() => setIsSubscriptionModalVisible(false)}
+            />
         </View >
     );
 }

@@ -9,6 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AppState, NativeModules, View } from 'react-native';
 import { useSync } from '../hooks/useSync';
 import { NotificationService } from '../services/NotificationService';
+import { revenueCatService } from '../services/RevenueCatService';
 import * as Notifications from 'expo-notifications';
 // import {
 //     useFonts,
@@ -27,6 +28,9 @@ import * as Notifications from 'expo-notifications';
 //     SpaceGrotesk_700Bold
 // } from '@expo-google-fonts/space-grotesk';
 import "../global.css";
+
+import { PostHogProvider } from 'posthog-react-native'
+import { posthog } from '../posthogConfig';
 
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
@@ -92,21 +96,44 @@ function RootLayoutNav() {
         if (!user) return;
 
         // Sync every 30 seconds
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             console.log('Performing periodic background sync...');
-            sync().catch(console.error);
+            try {
+                await sync();
+                const orders = await database.get('orders').query().fetch();
+                await NotificationService.refreshAllReminders(orders, user);
+            } catch (e) {
+                console.error(e);
+            }
         }, 30 * 1000);
 
         // Sync on app foreground
-        const subscription = AppState.addEventListener('change', nextAppState => {
+        const subscription = AppState.addEventListener('change', async nextAppState => {
             if (nextAppState === 'active') {
                 console.log('App returned to foreground, performing sync...');
                 sync().catch(console.error);
+
+                // Refresh subscription status
+                try {
+                    await revenueCatService.getCustomerInfo();
+                } catch (rcError) {
+                    console.error('Failed to refresh subscription status on foreground:', rcError);
+                }
             }
         });
 
-        // Initial sync on mount if logged in
-        sync().catch(console.error);
+        // Initial sync and reminder refresh on mount if logged in
+        const initializeReminders = async () => {
+            try {
+                await sync();
+                const orders = await database.get('orders').query().fetch();
+                await NotificationService.refreshAllReminders(orders, user);
+            } catch (e) {
+                console.error('Failed to init reminders:', e);
+            }
+        };
+
+        initializeReminders();
 
         return () => {
             clearInterval(interval);
@@ -186,26 +213,42 @@ export default function RootLayout() {
         }
     }, [fontsReady]);
 
+    // Initialize RevenueCat on app start
+    useEffect(() => {
+        const initializeRevenueCat = async () => {
+            try {
+                await revenueCatService.initialize();
+                console.log('RevenueCat initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize RevenueCat:', error);
+            }
+        };
+
+        initializeRevenueCat();
+    }, []);
+
     if (!fontsReady) {
         return null;
     }
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-                <DatabaseProvider database={database}>
-                    <AuthProvider>
-                        <ConfirmProvider>
-                            <SafeAreaView style={{ flex: 1 }}>
-                                <OfflineBanner />
-                                <RootLayoutNavWithLoading />
-                                <StatusBar style="auto" translucent={true} />
-                                <Toast config={toastConfig} />
-                            </SafeAreaView>
-                        </ConfirmProvider>
-                    </AuthProvider>
-                </DatabaseProvider>
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
+        <PostHogProvider client={posthog}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <SafeAreaProvider>
+                    <DatabaseProvider database={database}>
+                        <AuthProvider>
+                            <ConfirmProvider>
+                                <View style={{ flex: 1 }}>
+                                    <OfflineBanner />
+                                    <RootLayoutNavWithLoading />
+                                    <StatusBar style="auto" translucent={true} />
+                                    <Toast config={toastConfig} />
+                                </View>
+                            </ConfirmProvider>
+                        </AuthProvider>
+                    </DatabaseProvider>
+                </SafeAreaProvider>
+            </GestureHandlerRootView>
+        </PostHogProvider>
     );
 }

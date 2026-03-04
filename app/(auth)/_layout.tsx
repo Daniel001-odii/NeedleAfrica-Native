@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 export default function AuthLayout() {
     return (

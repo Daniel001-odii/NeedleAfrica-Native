@@ -84,7 +84,7 @@ export function useSubscription(): UseSubscriptionReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await subscriptionService.verifyTransaction(reference);
+      const result = await subscriptionService.verify(reference);
       // Refresh both subscription status and user data
       await Promise.all([refreshStatus(), refreshUser()]);
       return result;

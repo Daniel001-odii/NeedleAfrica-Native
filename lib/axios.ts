@@ -4,8 +4,8 @@ import { router } from 'expo-router';
 
 // Use localhost for Android emulator (10.0.2.2) or local IP, 
 // or the production URL if available.
-// const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://needle-africa-api.vercel.app/api';
-const API_URL = 'https://needle-africa-api.vercel.app/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://needle-africa-api.vercel.app/api';
+// const API_URL = 'https://needle-africa-api.vercel.app/api';
 
 const axiosInstance = axios.create({
     baseURL: API_URL,

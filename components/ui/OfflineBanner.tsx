@@ -4,9 +4,12 @@ import NetInfo from '@react-native-community/netinfo';
 import { Typography } from './Typography';
 import { CloudCross } from 'iconsax-react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export function OfflineBanner() {
     const [isOffline, setIsOffline] = useState(false);
-    const [animation] = useState(new Animated.Value(-100)); // Start off-screen
+    const [animation] = useState(new Animated.Value(-200)); // Start off-screen
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
@@ -29,7 +32,7 @@ export function OfflineBanner() {
             style={{
                 transform: [{ translateY: animation }],
                 position: 'absolute',
-                top: 40,
+                top: insets.top + 10,
                 left: 0,
                 right: 0,
                 zIndex: 9999,

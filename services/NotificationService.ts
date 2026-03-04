@@ -76,34 +76,95 @@ export class NotificationService {
         // 1. Cancel any existing reminders for this order to avoid duplicates
         await this.cancelOrderReminders(orderId);
 
-        if (reminderDays <= 0) return;
+        if (reminderDays < 0) return;
 
-        // 2. Calculate trigger time
+        // 2. Calculate initial trigger time
         const triggerDate = new Date(deliveryDate);
-        triggerDate.setDate(triggerDate.getDate() - reminderDays);
-        triggerDate.setHours(9, 0, 0, 0); // Remind at 9:00 AM
+        if (reminderDays > 0) {
+            triggerDate.setDate(triggerDate.getDate() - reminderDays);
+            triggerDate.setHours(9, 0, 0, 0); // Start at 9:00 AM on the reminder day
+        }
 
-        // Don't schedule if date is in the past
-        if (triggerDate.getTime() < Date.now()) return;
+        const now = Date.now();
 
+        // 3. Logic: If still far in future, schedule just the first one
+        // If within or past the reminder window, schedule the 2-hour pestering reminders
+        if (triggerDate.getTime() > now) {
+            // Future reminder: Schedule just one
+            await this.scheduleSingle(orderId, customerName, triggerDate, deliveryDate, 0);
+            console.log(`Scheduled future single reminder for order ${orderId} at ${triggerDate.toLocaleString()}`);
+            return;
+        }
+
+        // 4. Past or Current reminder: Schedule pestering loop (every 2 hours)
+        // Schedule next 10 occurrences to cover ~20 hours
+        const remindersCount = 10;
+        const intervalMs = 2 * 60 * 60 * 1000;
+
+        for (let i = 0; i < remindersCount; i++) {
+            // Find the next 2-hour slot relative to 'now' or 'triggerDate'
+            // Using 'now' but aligned to the 2-hour interval from triggerDate
+            const offset = Math.ceil((now - triggerDate.getTime()) / intervalMs);
+            const nextSlotIndex = Math.max(0, offset + i);
+            const currentTrigger = new Date(triggerDate.getTime() + (nextSlotIndex * intervalMs));
+
+            await this.scheduleSingle(orderId, customerName, currentTrigger, deliveryDate, nextSlotIndex);
+        }
+
+        console.log(`Scheduled pestering for order ${orderId} starting from ${now}`);
+    }
+
+    private static async scheduleSingle(
+        orderId: string,
+        customerName: string,
+        trigger: Date,
+        deliveryDate: Date,
+        index: number
+    ) {
         try {
-            console.log(`Scheduling local notification for order ${orderId} at ${triggerDate.toLocaleString()}`);
-            const id = await Notifications.scheduleNotificationAsync({
+            const isOverdue = trigger > deliveryDate;
+            const title = isOverdue ? "Overdue Delivery! ⚠️" : "Upcoming Delivery 🧵";
+            const body = isOverdue
+                ? `Order for ${customerName} is PAST DUE. Please complete it.`
+                : `Order for ${customerName} is due soon. Check details.`;
+
+            await Notifications.scheduleNotificationAsync({
                 content: {
-                    title: "Upcoming Delivery 🧵",
-                    body: `Order for ${customerName} is due in ${reminderDays} day(s).`,
-                    data: { orderId },
+                    title,
+                    body,
+                    data: { orderId, index },
                     sound: true,
+                    priority: Notifications.AndroidNotificationPriority.MAX,
                 },
                 trigger: {
                     type: Notifications.SchedulableTriggerInputTypes.DATE,
-                    date: triggerDate,
+                    date: trigger,
                 },
             });
-            console.log(`Successfully scheduled reminder for order ${orderId}, ID: ${id}`);
-            return id;
         } catch (e) {
-            console.error("Failed to schedule notification. Error details:", JSON.stringify(e, null, 2));
+            console.error(`Failed to schedule single reminder for order ${orderId}:`, e);
+        }
+    }
+
+    static async refreshAllReminders(orders: any[], user: any) {
+        console.log(`Refreshing local reminders for ${orders.length} orders...`);
+        const activeStatuses = ['PENDING', 'DELIVERING', 'READY'];
+
+        for (const order of orders) {
+            if (activeStatuses.includes(order.status) && order.deliveryDate) {
+                const customer = await order.customer?.fetch();
+                const reminderDays = parseInt((!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays);
+
+                await this.scheduleDeliveryReminder(
+                    order.id,
+                    customer?.fullName || 'Customer',
+                    order.deliveryDate,
+                    isNaN(reminderDays) ? 1 : reminderDays
+                );
+            } else {
+                // Cancel if no longer active
+                await this.cancelOrderReminders(order.id);
+            }
         }
     }
 
@@ -114,9 +175,9 @@ export class NotificationService {
                 const data = notification.content.data;
                 if (data && data.orderId === orderId) {
                     await Notifications.cancelScheduledNotificationAsync(notification.identifier);
-                    console.log(`Cancelled reminder for order ${orderId}`);
                 }
             }
+            console.log(`Cancelled all reminders for order ${orderId}`);
         } catch (e) {
             console.error("Failed to cancel notifications:", e);
         }

@@ -167,7 +167,7 @@ export default function Login() {
                                 className="w-6 h-6 mr-3"
                                 resizeMode="contain"
                             />
-                            <Typography weight="bold" color="dark">Continue with Google</Typography>
+                            <Typography weight="bold" color="black">Continue with Google</Typography>
                         </TouchableOpacity>
 
                         <View className="flex-row justify-center items-center pb-10">

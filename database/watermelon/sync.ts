@@ -20,7 +20,7 @@ export async function sync() {
             }
 
             const { changes, timestamp } = response.data;
-            console.log('[Sync] Raw changes from server:', JSON.stringify(changes, null, 2));
+            // console.log('[Sync] Raw changes from server:', JSON.stringify(changes, null, 2));
 
             // Clean up the changes object to ensure it matches WatermelonDB's expectations
             // The backend might return nulls or missing fields, so we normalize here.
