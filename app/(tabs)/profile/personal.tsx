@@ -10,11 +10,13 @@ import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../contexts/ConfirmContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function PersonalInformation() {
     const { user, updateProfile, deleteAccount, isLoading: isAuthLoading } = useAuth();
     const router = useRouter();
     const { confirm } = useConfirm();
+    const { isDark } = useTheme();
 
     const [username, setUsername] = useState(user?.username || '');
     const [businessName, setBusinessName] = useState(user?.businessName || '');
@@ -106,10 +108,10 @@ export default function PersonalInformation() {
     };
 
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -124,8 +126,8 @@ export default function PersonalInformation() {
                         {/* <Sms size={18} color="#6B7280" variant="Bulk" /> */}
                         {/* <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">EMAIL ADDRESS</Typography> */}
                     </View>
-                    <Surface variant="white" rounded="2xl" className=" justify-center border-gray-100">
-                        <Typography variant="body" weight="semibold" className="text-dark">
+                    <Surface variant="white" rounded="2xl" className={`p-4 justify-center ${!isDark ? 'border border-gray-100' : ''}`}>
+                        <Typography variant="body" weight="semibold">
                             {user?.email || 'No email set'}
                         </Typography>
                     </Surface>
@@ -204,9 +206,9 @@ export default function PersonalInformation() {
                     <Typography variant="caption" color="red" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Danger Zone</Typography>
                     <Pressable
                         onPress={handleDeleteAccount}
-                        className="flex-row items-center p-5 bg-red-50 rounded-3xl border border-red-100"
+                        className={`flex-row items-center p-5 rounded-3xl border ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'}`}
                     >
-                        <View className="w-12 h-12 items-center justify-center bg-white rounded-2xl mr-4">
+                        <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 ${isDark ? 'bg-red-500/20' : 'bg-white'}`}>
                             <Trash size={20} color="#EF4444" variant="Bulk" />
                         </View>
                         <View className="flex-1">
@@ -234,7 +236,7 @@ export default function PersonalInformation() {
                         className="flex-1 bg-black/50 justify-end"
                         onPress={() => setShowDeleteModal(false)}
                     >
-                        <Pressable className="bg-white rounded-t-3xl max-h-[90%]">
+                        <Pressable className={`rounded-t-3xl max-h-[90%] ${isDark ? 'bg-dark-800' : 'bg-white'}`}>
                             <ScrollView
                                 className="p-6 pb-10"
                                 bounces={false}
@@ -247,7 +249,7 @@ export default function PersonalInformation() {
                                         <Typography variant="h3" weight="bold" color="red" className="ml-2">Delete Account</Typography>
                                     </View>
                                     <TouchableOpacity onPress={() => setShowDeleteModal(false)}>
-                                        <CloseCircle size={28} color="#6B7280" />
+                                        <CloseCircle size={28} color={isDark ? "#9CA3AF" : "#6B7280"} />
                                     </TouchableOpacity>
                                 </View>
 
@@ -267,9 +269,9 @@ export default function PersonalInformation() {
                                 <Typography variant="body" weight="semibold" className="mb-3">
                                     To confirm deletion, type <Typography variant="body" weight="bold" className="text-red-600">DELETE</Typography> below:
                                 </Typography>
-                                <Surface variant="white" rounded="2xl" className="px-4 h-16 justify-center border border-gray-200 mb-6">
+                                <Surface variant="white" rounded="2xl" className={`px-4 h-16 justify-center border ${isDark ? 'border-border-dark' : 'border-gray-200'} mb-6`}>
                                     <TextInput
-                                        className="font-semibold text-dark flex-1"
+                                        className={`font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                                         placeholder="Type DELETE to confirm"
                                         placeholderTextColor="#9CA3AF"
                                         value={deleteConfirmationText}
@@ -310,15 +312,16 @@ interface InputGroupProps {
 }
 
 function InputGroup({ label, value, onChangeText, icon, placeholder, keyboardType, autoCapitalize, multiline, editable = true }: InputGroupProps) {
+    const { isDark } = useTheme();
     return (
         <View className="mb-6">
             <View className="flex-row items-center mb-2 ml-1">
                 {icon}
                 <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">{label}</Typography>
             </View>
-            <Surface variant="muted" rounded="2xl" className={`px-4 border border-gray-100 ${multiline ? 'py-4 min-h-[100px]' : 'h-16 justify-center'}`}>
+            <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} ${multiline ? 'py-4 min-h-[100px]' : 'h-16 justify-center'}`}>
                 <TextInput
-                    className="font-semibold text-dark flex-1"
+                    className={`font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                     placeholder={placeholder}
                     placeholderTextColor="#9CA3AF"
                     value={value}

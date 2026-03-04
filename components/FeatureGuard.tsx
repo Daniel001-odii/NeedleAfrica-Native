@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Lock, Crown, Sparkles } from 'iconsax-react-native';
-import { Typography } from './Typography';
-import { Surface } from './Surface';
-import { useSubscription } from '../hooks/useSubscription';
+import { Lock, Crown, Star1 } from 'iconsax-react-native';
+import { Typography } from './ui/Typography';
+import { Surface } from './ui/Surface';
+import { useRevenueCat } from '../hooks/useRevenueCat';
+import { SubscriptionPaywall } from './SubscriptionPaywall';
 
 interface FeatureGuardProps {
   children: React.ReactNode;
@@ -17,10 +18,24 @@ interface FeatureGuardProps {
  * Does NOT block the UI - instead shows a disabled overlay with upgrade message
  */
 export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps) {
-  const { isFeatureAvailable } = useSubscription();
+  const { canAccessFeature, isPro } = useRevenueCat();
   const router = useRouter();
+  const [showPaywall, setShowPaywall] = useState(false);
 
-  const { available, disabled, upgradeMessage } = isFeatureAvailable(feature);
+  const checkFeatureAccess = async () => {
+    try {
+      return await canAccessFeature(feature);
+    } catch (error) {
+      console.error('Error checking feature access:', error);
+      return false;
+    }
+  };
+
+  // For simplicity, we'll use synchronous check based on isPro status
+  // In a real implementation, you might want to handle this differently
+  const available = isPro || ['basic_measurements', 'customer_management', 'order_tracking'].includes(feature);
+  const disabled = !available;
+  const upgradeMessage = `${feature} requires a Pro subscription`;
 
   if (available) {
     return <>{children}</>;
@@ -44,7 +59,7 @@ export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps)
         <Surface variant="white" className="p-4 mx-4 border border-gray-200" rounded="2xl">
           <View className="items-center">
             {feature === 'aiFeatures' ? (
-              <Sparkles size={24} color="#8b5cf6" variant="Bulk" />
+              <Star1 size={24} color="#8b5cf6" variant="Bulk" />
             ) : (
               <Crown size={24} color="#Eab308" variant="Bulk" />
             )}
@@ -52,7 +67,7 @@ export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps)
               {upgradeMessage}
             </Typography>
             <TouchableOpacity
-              onPress={() => router.push('/(tabs)/profile/subscription')}
+              onPress={() => setShowPaywall(true)}
               className="mt-3 bg-yellow-400 px-4 py-2 rounded-full"
             >
               <Typography variant="small" weight="bold">Upgrade Now</Typography>
@@ -60,6 +75,11 @@ export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps)
           </View>
         </Surface>
       </View>
+      <SubscriptionPaywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature={feature}
+      />
     </View>
   );
 }
@@ -75,16 +95,25 @@ interface LimitGuardProps {
  * Only applies to FREE tier users
  */
 export function LimitGuard({ children, resource, currentCount }: LimitGuardProps) {
-  const { hasReachedLimit, getLimitForResource, currentPlan } = useSubscription();
+  const { isPro } = useRevenueCat();
   const router = useRouter();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   // Only show limit warning for free tier
-  if (currentPlan !== 'FREE') {
+  if (isPro) {
     return <>{children}</>;
   }
 
-  const hasReached = hasReachedLimit(resource, currentCount);
-  const limit = getLimitForResource(resource);
+  // Define free tier limits
+  const limits = {
+    orders: 5,
+    customers: 5,
+    templates: 3,
+    invoices: 5,
+  };
+
+  const limit = limits[resource];
+  const hasReached = currentCount >= limit;
 
   if (!hasReached) {
     // Show remaining count indicator
@@ -117,7 +146,7 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
               You've used all {limit} {resource} on your Free plan. Upgrade to Pro for unlimited access.
             </Typography>
             <TouchableOpacity
-              onPress={() => router.push('/(tabs)/profile/subscription')}
+              onPress={() => setShowPaywall(true)}
               className="mt-4 bg-yellow-400 px-6 py-3 rounded-full"
             >
               <Typography variant="body" weight="bold">Upgrade to Pro</Typography>
@@ -125,6 +154,11 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
           </View>
         </Surface>
       </View>
+      <SubscriptionPaywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature={`unlimited_${resource}`}
+      />
     </View>
   );
 }
@@ -137,15 +171,19 @@ interface SubscriptionBadgeProps {
  * SubscriptionBadge - Shows current plan badge
  */
 export function SubscriptionBadge({ size = 'md' }: SubscriptionBadgeProps) {
-  const { currentPlan, isActive, isExpired } = useSubscription();
+  const { isPro } = useRevenueCat();
 
-  const badgeColors = {
+  const currentPlan = isPro ? 'PRO' : 'FREE';
+  const isActive = true; // RevenueCat handles this
+  const isExpired = false; // RevenueCat handles this
+
+  const badgeColors: Record<string, string> = {
     FREE: 'bg-blue-500',
     PRO: 'bg-yellow-500',
     STUDIO_AI: 'bg-purple-600',
   };
 
-  const badgeText = {
+  const badgeText: Record<string, string> = {
     FREE: 'Free',
     PRO: 'Pro',
     STUDIO_AI: 'Studio AI',

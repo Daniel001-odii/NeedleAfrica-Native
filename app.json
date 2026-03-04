@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "NeedleAfrica",
+    "name": "NeedleX",
     "slug": "needleafrica-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -74,7 +74,8 @@
       ],
       "expo-font",
       "@react-native-community/datetimepicker",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-localization"
     ],
     "extra": {
       "eas": {
@@ -86,6 +87,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/98abe4c7-3401-411c-bdf7-8ce4adb0f761"
-    }
+    },
+    "owner": "daniel_odii"
   }
 }

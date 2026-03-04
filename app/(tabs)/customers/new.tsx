@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable, Text } from 'react-native';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
@@ -10,12 +10,13 @@ import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
 import { useConfirm } from '../../../contexts/ConfirmContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function NewCustomer() {
+    const { isDark } = useTheme();
     const [fullName, setFullName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [gender, setGender] = useState('female');
@@ -61,8 +62,9 @@ export default function NewCustomer() {
         }
 
         try {
+            setIsSubmitting(true);
             // OPTIMISTIC UPDATE: Write to local DB and redirect immediately
-            addCustomer({
+            await addCustomer({
                 fullName,
                 phoneNumber,
                 gender,
@@ -87,15 +89,17 @@ export default function NewCustomer() {
                 confirmText: 'OK',
                 onConfirm: () => { }
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
             {/* Header */}
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
+            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -117,14 +121,14 @@ export default function NewCustomer() {
                     {/* Name Input */}
                     <View className="mb-6">
                         <View className="flex-row items-center mb-2 ml-1">
-                            <User size={16} color="#6B7280" variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2">FULL NAME *</Typography>
+                            <User size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
+                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Full Name *</Typography>
                         </View>
-                        <Surface variant="muted" rounded="2xl" className="p-1 px-4 border border-gray-100">
+                        <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
                             <TextInput
-                                className="h-14 font-semibold text-dark"
+                                className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="E.g. Jane Doe"
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
                                 value={fullName}
                                 onChangeText={setFullName}
                             />
@@ -134,14 +138,14 @@ export default function NewCustomer() {
                     {/* Phone Input */}
                     <View className="mb-6">
                         <View className="flex-row items-center mb-2 ml-1">
-                            <Call size={16} color="#6B7280" variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2">PHONE NUMBER</Typography>
+                            <Call size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
+                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Phone Number</Typography>
                         </View>
-                        <Surface variant="muted" rounded="2xl" className="p-1 px-4 border border-gray-100">
+                        <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
                             <TextInput
-                                className="h-14 font-semibold text-dark"
+                                className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="E.g. 08012345678"
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
                                 value={phoneNumber}
                                 onChangeText={setPhoneNumber}
                                 keyboardType="phone-pad"
@@ -165,14 +169,14 @@ export default function NewCustomer() {
                                         key={g}
                                         onPress={() => setGender(g)}
                                         className={`flex-row items-center px-6 py-3 rounded-full mr-3 border ${isActive
-                                            ? 'bg-dark border-dark'
-                                            : 'bg-white border-gray-100'
+                                            ? (isDark ? 'bg-gray-100 border-white' : 'bg-dark border-dark')
+                                            : (isDark ? 'bg-dark-800 border-border-dark' : 'bg-blue-100 border-blue-100')
                                             }`}
                                     >
                                         <Typography
                                             variant="small"
                                             weight={isActive ? 'bold' : 'medium'}
-                                            color={isActive ? 'white' : 'gray'}
+                                            color={isActive ? (isDark ? 'dark' : 'white') : 'gray'}
                                             className="capitalize"
                                         >
                                             {g}
@@ -186,14 +190,14 @@ export default function NewCustomer() {
                     {/* Notes Input */}
                     <View className="mb-10">
                         <View className="flex-row items-center mb-2 ml-1">
-                            <InfoCircle size={16} color="#6B7280" variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2">MEASUREMENTS & NOTES</Typography>
+                            <InfoCircle size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
+                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Measurements & Notes</Typography>
                         </View>
-                        <Surface variant="muted" rounded="2xl" className="p-4 border border-gray-100 min-h-[140px]">
+                        <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} min-h-[140px]`}>
                             <TextInput
-                                className="font-medium text-dark flex-1"
+                                className={`font-medium flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="Add measurements or style preferences..."
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
                                 value={notes}
                                 onChangeText={setNotes}
                                 multiline
@@ -206,14 +210,12 @@ export default function NewCustomer() {
                     <Button
                         onPress={handleSubmit}
                         isLoading={isSubmitting}
-                        className="h-16 rounded-full bg-dark border-0 shadow-lg"
-                        textClassName="text-white text-lg"
+                        className={`h-16 rounded-full border-0 shadow-lg ${isDark ? 'bg-white shadow-white/10' : 'bg-dark shadow-dark/10'}`}
+                        textClassName={isDark ? "text-black text-lg" : "text-white text-lg"}
                     >
                         Create Customer
                     </Button>
                 </ScrollView>
-
-
             </KeyboardAvoidingView>
 
             <ResourceLimitModal

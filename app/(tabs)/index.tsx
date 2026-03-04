@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, CloseSquare } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -19,6 +19,7 @@ export default function Home() {
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
     const { isDark } = useTheme();
+    const [showDashboardCard, setShowDashboardCard] = React.useState(true);
 
     const onRefresh = useCallback(async () => {
         await performSync();
@@ -82,7 +83,7 @@ export default function Home() {
     const isNewUser = !ordersLoading && !customersLoading && orders.length === 0 && customers.length === 0;
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
             <ScrollView
                 contentContainerClassName="p-6 pb-12"
                 showsVerticalScrollIndicator={false}
@@ -101,24 +102,29 @@ export default function Home() {
                 ) : (
                     <>
                         {/* Daily Activity Card */}
-                        <Surface variant="lavender" className={`p-6 mb-8 relative overflow-hidden ${isDark ? '' : ''}`} rounded="3xl">
-                            <View className="z-10 w-2/3">
-                                <Typography variant="h2" weight="bold" className={`mb-1 leading-tight ${isDark ? 'text-black':''}`}>Your Workshop Dashboard</Typography>
-                                <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
+                        {showDashboardCard && (
+                            <Surface variant="lavender" className="p-6 mb-8 relative overflow-hidden" rounded="3xl">
+                                <Pressable onPress={() => setShowDashboardCard(false)} className="absolute right-4 top-4 z-20 p-2">
+                                    <CloseSquare size={24} color="#7c3aed" variant="Bulk" />
+                                </Pressable>
+                                <View className="z-10 w-2/3">
+                                    <Typography variant="h2" weight="bold" className="mb-1 leading-tight">Your Workshop Dashboard</Typography>
+                                    <Typography variant="caption" color="gray" className="mb-4">Live updates for your business</Typography>
 
-                                <View className="flex-row items-center">
-                                    <View className={`flex-row items-center border border-brand-primary/20 ${isDark ? 'bg-purple-950' : 'bg-white/50'} px-3 py-1.5 rounded-full`}>
-                                        <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
-                                        <Typography variant="small" weight="bold" className={`${isDark ? 'text-white' : 'text-brand-primary'}`}>
-                                            {stats.pendingCount} Ongoing Projects
-                                        </Typography>
+                                    <View className="flex-row items-center">
+                                        <View className="flex-row items-center border border-brand-primary/20 bg-white/50 px-3 py-1.5 rounded-full">
+                                            <Box size={14} color="#7c3aed" variant="Bold" className="mr-2" />
+                                            <Typography variant="small" weight="bold" className="text-brand-primary">
+                                                {stats.pendingCount} Ongoing Projects
+                                            </Typography>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                            <View className="absolute -right-4 -bottom-4 opacity-20">
-                                <Box size={140} color="#7c3aed" variant="Bulk" />
-                            </View>
-                        </Surface>
+                                <View className="absolute -right-4 -bottom-4 opacity-20">
+                                    <Box size={140} color="#7c3aed" variant="Bulk" />
+                                </View>
+                            </Surface>
+                        )}
 
                         {/* Quick Access */}
                         <View className="mb-8">
@@ -167,7 +173,7 @@ export default function Home() {
                                     </View>
                                     <View>
                                         <View className="flex-row items-end">
-                                            <Typography variant="h1" weight="bold" className={`leading-none ${isDark ? 'text-black':''}`}>{stats.pendingCount}</Typography>
+                                            <Typography variant="h1" weight="bold" className={`leading-none ${isDark ? 'text-black' : ''}`}>{stats.pendingCount}</Typography>
                                             <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-2">Active</Typography>
                                         </View>
                                         <View className="mt-1.5 flex-row items-center">
@@ -235,10 +241,10 @@ export default function Home() {
                                     <View>
                                         {stats.nextDeadline ? (
                                             <>
-                                                <Typography variant="small" weight="bold" className={`leading-tight mb-1 ${isDark ? 'text-black':''} `} numberOfLines={2}>
+                                                <Typography variant="small" weight="bold" className={`leading-tight mb-1 ${isDark ? 'text-black' : ''} `} numberOfLines={2}>
                                                     {stats.nextDeadline.styleName}
                                                 </Typography>
-                                                <Typography variant="small" color="gray" className={`text-[10px] ${isDark ? 'text-black':''}`}>
+                                                <Typography variant="small" color="gray" className={`text-[10px] ${isDark ? 'text-black' : ''}`}>
                                                     Due {new Date(stats.nextDeadline.deliveryDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </Typography>
                                             </>
@@ -258,20 +264,22 @@ export default function Home() {
 
 function EmptyStateHome({ router }: { router: any }) {
     const { isDark } = useTheme();
-    
+
     return (
         <View className="py-10">
-            <Surface variant="muted" className="p-8 items-center mb-10" rounded="3xl">
-                <View className={`w-20 h-20 ${isDark ? 'bg-dark-800' : 'bg-white'} items-center justify-center mb-6 shadow-sm rounded-full`}>
+            {/* <Surface variant="muted" className="p-8 items-center mb-10" rounded="3xl"> */}
+            <View className="items-center">
+                <View className="w-20 h-20 bg-white items-center justify-center mb-6 rounded-full">
                     <MagicStar size={40} color="#7c3aed" variant="Bulk" />
                 </View>
                 <Typography variant="h2" weight="bold" className="text-center mb-2">Welcome to Needle Africa</Typography>
                 <Typography variant="body" color="gray" className="text-center px-4 leading-relaxed">
                     Your digital tailoring workspace is ready. Let's start by adding your first client or creating an order.
                 </Typography>
-            </Surface>
+            </View>
+            {/* </Surface> */}
 
-            <View className="gap-4">
+            <View className="gap-4 mt-12">
                 <Pressable onPress={() => router.push('/(tabs)/customers/new')}>
                     <Surface variant="white" className={`p-5 flex-row items-center ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
                         <View className="w-12 h-12 bg-accent-peach items-center justify-center rounded-xl mr-4">
@@ -310,7 +318,7 @@ function QuickAccessItem({ icon, label, bg, onPress }: any) {
             <View className={`w-14 h-14 ${bg} rounded-3xl items-center justify-center mb-2 border-2 border-gray-500/20`}>
                 {icon}
             </View>
-            <Typography variant="caption" weight="bold" className={`${ isDark? 'text-white':'isDark'}`}>{label}</Typography>
+            <Typography variant="caption" weight="bold" className={`${isDark ? 'text-white' : 'isDark'}`}>{label}</Typography>
         </Pressable>
     );
 }

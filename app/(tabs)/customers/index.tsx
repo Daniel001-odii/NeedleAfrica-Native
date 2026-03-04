@@ -128,7 +128,7 @@ function CustomersScreen() {
             <FlatList
                 data={sortedCustomers}
                 keyExtractor={item => item.id}
-                contentContainerClassName="p-6 pt-0 pb-16 gap-3"
+                contentContainerClassName="p-6 pt-0 pb-16 gap-5"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -142,7 +142,7 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <Surface variant="white" className={`flex-row items-center p-5 mb-2 ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="3xl" hasShadow hasBorder>
+                            <Surface variant="white" className="flex-row items-center py-2" rounded="3xl" hasShadow>
                                 <Surface variant="lavender" className="w-12 h-12 items-center justify-center mr-4" rounded="full">
                                     <Typography weight="bold" className="text-brand-primary">
                                         {(item.fullName || 'C').charAt(0).toUpperCase()}
@@ -182,7 +182,7 @@ function CustomersScreen() {
                                 <View className="flex-row gap-3 mt-8">
                                     <Button
                                         onPress={() => router.push('/(tabs)/customers/new')}
-                                        className="bg-muted px-6 rounded-full h-12"
+                                        className={`h-16 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}
                                         variant="ghost"
                                     >
                                         Add New

@@ -8,10 +8,12 @@ import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
 import { useInvoices } from '../../../../hooks/useInvoices';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 
 export default function InvoicesScreen() {
     const router = useRouter();
     const { user } = useAuth();
+    const { isDark } = useTheme();
     const { invoices, loading, refresh } = useInvoices();
     const [refreshing, setRefreshing] = useState(false);
 
@@ -22,11 +24,11 @@ export default function InvoicesScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton
-                        icon={<ArrowLeft size={20} color="black" />}
+                        icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
                         onPress={() => router.back()}
                         variant="ghost"
                         className="-ml-2"
@@ -34,15 +36,15 @@ export default function InvoicesScreen() {
                     <Typography variant="h3" weight="bold" className="ml-2">Invoices</Typography>
                 </View>
                 <IconButton
-                    icon={<Add size={24} color="white" />}
-                    variant="dark"
+                    icon={<Add size={24} color={isDark ? "black" : "white"} />}
+                    variant={isDark ? "white" : "dark"}
                     onPress={() => router.push('/(tabs)/orders/invoices/new')}
                 />
             </View>
 
             {loading ? (
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator color="black" />
+                    <ActivityIndicator color={isDark ? "white" : "black"} />
                 </View>
             ) : (
                 <FlatList
@@ -50,13 +52,23 @@ export default function InvoicesScreen() {
                     keyExtractor={(item) => item.id}
                     contentContainerClassName="p-6 pb-32"
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={isDark ? "white" : "black"}
+                            colors={isDark ? ["white"] : ["black"]}
+                        />
                     }
                     renderItem={({ item: invoice }) => (
                         <Pressable onPress={() => router.push(`/(tabs)/orders/invoices/${invoice.id}`)}>
-                            <Surface variant="white" className="p-4 mb-3 border border-gray-100 flex-row items-center" rounded="2xl" hasBorder>
-                                <Surface variant="lavender" className="w-12 h-12 items-center justify-center mr-4" rounded="xl">
-                                    <DocumentText size={24} color="black" variant="Bulk" />
+                            <Surface
+                                variant="white"
+                                className={`p-4 mb-3 border ${isDark ? 'border-border-dark' : 'border-gray-100'} flex-row items-center`}
+                                rounded="2xl"
+                                hasBorder
+                            >
+                                <Surface variant={isDark ? "dark" : "lavender"} className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-dark-700' : ''}`} rounded="xl">
+                                    <DocumentText size={24} color={isDark ? "white" : "black"} variant="Bulk" />
                                 </Surface>
                                 <View className="flex-1">
                                     <View className="flex-row justify-between items-center mb-1">

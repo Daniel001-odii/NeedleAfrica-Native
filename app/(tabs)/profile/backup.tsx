@@ -9,10 +9,12 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useSync } from '../../../hooks/useSync';
 import Toast from 'react-native-toast-message';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function BackupData() {
     const router = useRouter();
     const { sync: performSync, isSyncing, lastSyncedAt, lastSyncError, isOnline } = useSync();
+    const { isDark } = useTheme();
 
     const formatDate = (timestamp: number | null) => {
         if (!timestamp) return 'Never';
@@ -53,10 +55,10 @@ export default function BackupData() {
     };
 
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -66,8 +68,8 @@ export default function BackupData() {
 
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false}>
                 <View className="items-center my-10">
-                    <Surface variant="blue" className="w-24 h-24 items-center justify-center mb-6" rounded="3xl">
-                        <CloudChange size={48} color="#3b82f6" variant="Bulk" />
+                    <Surface variant={isDark ? "dark" : "blue"} className={`w-24 h-24 items-center justify-center mb-6 ${isDark ? 'border border-border-dark' : ''}`} rounded="3xl">
+                        <CloudChange size={48} color={isDark ? "white" : "#3b82f6"} variant="Bulk" />
                     </Surface>
                     <Typography variant="h2" weight="bold" className="text-center mb-2">Cloud Backup</Typography>
                     <Typography variant="body" color="gray" className="text-center px-4">
@@ -75,7 +77,7 @@ export default function BackupData() {
                     </Typography>
                 </View>
 
-                <Surface variant="muted" className="p-6 mb-8 border border-gray-50" rounded="3xl">
+                <Surface variant="muted" className={`p-6 mb-8 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="3xl">
                     <View className="flex-row items-center justify-between mb-4">
                         <View>
                             <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Status</Typography>
@@ -89,7 +91,7 @@ export default function BackupData() {
                             <TickCircle size={24} color="#10B981" variant="Bold" />
                         )}
                     </View>
-                    <View className="h-[1px] bg-gray-200 mb-4" />
+                    <View className={`h-[1px] mb-4 ${isDark ? 'bg-border-dark' : 'bg-gray-200'}`} />
                     <View>
                         <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Last Backup</Typography>
                         <Typography variant="body" weight="semibold" className="mt-1">{formatDate(lastSyncedAt)}</Typography>
@@ -97,8 +99,8 @@ export default function BackupData() {
                 </Surface>
 
                 <View className="gap-4 mb-10">
-                    <Surface variant="white" className="p-4 border border-gray-50 flex-row items-center" rounded="2xl" hasBorder>
-                        <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
+                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-50'} flex-row items-center`} rounded="2xl" hasBorder>
+                        <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
                             <ShieldTick size={20} color="#3b82f6" variant="Bulk" />
                         </View>
                         <View className="flex-1">
@@ -107,8 +109,8 @@ export default function BackupData() {
                         </View>
                     </Surface>
 
-                    <Surface variant="white" className="p-4 border border-gray-50 flex-row items-center" rounded="2xl" hasBorder>
-                        <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
+                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-50'} flex-row items-center`} rounded="2xl" hasBorder>
+                        <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
                             <Refresh size={20} color="#3B82F6" variant="Bulk" />
                         </View>
                         <View className="flex-1">

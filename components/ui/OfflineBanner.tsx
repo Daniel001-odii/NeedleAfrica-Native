@@ -4,9 +4,12 @@ import NetInfo from '@react-native-community/netinfo';
 import { Typography } from './Typography';
 import { CloudCross } from 'iconsax-react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export function OfflineBanner() {
     const [isOffline, setIsOffline] = useState(false);
-    const [animation] = useState(new Animated.Value(-100)); // Start off-screen
+    const [animation] = useState(new Animated.Value(-200)); // Start off-screen
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
@@ -29,16 +32,17 @@ export function OfflineBanner() {
             style={{
                 transform: [{ translateY: animation }],
                 position: 'absolute',
-                top: 40,
+                top: -25,
                 left: 0,
                 right: 0,
                 zIndex: 9999,
+                paddingTop: insets.top,
+                backgroundColor: '#F59E0B', // Amber 500
             }}
         >
-            <View className="bg-red-500 px-4 py-2 flex-row items-center justify-center shadow-md">
-                <CloudCross size={16} color="white" variant="Bold" />
-                <Typography variant="small" weight="bold" color="white" className="ml-2">
-                    You are currently offline. Changes will sync when back online.
+            <View className="px-4 py-3 flex-row items-center justify-center shadow-lg">
+                <Typography variant="small" weight="bold" color="white" className="text-center">
+                    📍 you're offline some features maybe limited
                 </Typography>
             </View>
         </Animated.View>

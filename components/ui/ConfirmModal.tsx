@@ -74,7 +74,7 @@ export function ConfirmModal({
                             <Button
                                 onPress={onCancel}
                                 variant="secondary"
-                                className="flex-1 h-12 bg-gray-50 border-0 rounded-2xl"
+                                className="flex-1 h-12 bg-gray-100 border-0 rounded-full shadow-none"
                                 textClassName="text-gray-500 font-bold"
                             >
                                 {cancelText}
@@ -84,7 +84,7 @@ export function ConfirmModal({
                                     onConfirm();
                                     onCancel();
                                 }}
-                                className={`flex-1 h-12 rounded-2xl ${type === 'danger' ? 'bg-red-500' : 'bg-dark'}`}
+                                className={`flex-1 h-12 rounded-full shadow-none border-0 ${type === 'danger' ? 'bg-red-500' : 'bg-dark'}`}
                                 textClassName="text-white font-bold"
                             >
                                 {confirmText}

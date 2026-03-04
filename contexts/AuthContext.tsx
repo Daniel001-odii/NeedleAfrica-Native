@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import axiosInstance from '../lib/axios';
 import { NotificationService } from '../services/NotificationService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { revenueCatService } from '../services/RevenueCatService';
 
 interface User {
     id: string;
@@ -59,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkUser();
 
         GoogleSignin.configure({
-            webClientId: '818250734262-nj9ef9hbi560dkusujg5eta6l1bolrqr.apps.googleusercontent.com',
-            iosClientId: '818250734262-na9hqkuq758b6id6gab1ohonot5qram9.apps.googleusercontent.com', // Optional for iOS if using Firebase
+            webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+            iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID, // Optional for iOS if using Firebase
             offlineAccess: true,
         });
     }, []);
@@ -71,9 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userData = await SecureStore.getItemAsync('user_data');
 
             if (token && userData) {
-                setUser(JSON.parse(userData));
+                const parsedUser = JSON.parse(userData);
+                setUser(parsedUser);
                 // Re-register push token on start to ensure it's up to date
                 registerPushToken();
+
+                // Set RevenueCat user ID for returning users
+                try {
+                    revenueCatService.setUserId(parsedUser.id);
+                } catch (rcError) {
+                    console.error('Failed to set RevenueCat user ID on mount:', rcError);
+                }
             }
         } catch (e) {
             console.error(e);
@@ -108,6 +117,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsNewUser(!!isNew);
             setUser(userData);
             registerPushToken();
+
+            // Initialize RevenueCat with user ID
+            try {
+                await revenueCatService.setUserId(userData.id);
+            } catch (rcError) {
+                console.error('Failed to set RevenueCat user ID:', rcError);
+            }
         } catch (error: any) {
             console.error('Google Sign-In Error:', error);
             const errorMsg = error.response?.data?.message || error.message || 'Google Sign-In failed';
@@ -132,6 +148,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsNewUser(false);
             setUser(userData);
             registerPushToken();
+
+            // Initialize RevenueCat with user ID
+            try {
+                await revenueCatService.setUserId(userData.id);
+            } catch (rcError) {
+                console.error('Failed to set RevenueCat user ID:', rcError);
+            }
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Sign in failed';
             console.log('Sign in error details:', error.response?.data || error.message);
@@ -158,6 +181,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsNewUser(true);
             setUser(userData);
             registerPushToken();
+
+            // Initialize RevenueCat with user ID
+            try {
+                await revenueCatService.setUserId(userData.id);
+            } catch (rcError) {
+                console.error('Failed to set RevenueCat user ID:', rcError);
+            }
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Sign up failed';
             console.log('Sign up error details:', error.response?.data || error.message);
@@ -268,6 +298,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logout = async () => {
+        // Logout from RevenueCat first
+        try {
+            await revenueCatService.logout();
+        } catch (rcError) {
+            console.error('Failed to logout from RevenueCat:', rcError);
+        }
+
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('user_data');
         setIsNewUser(false);

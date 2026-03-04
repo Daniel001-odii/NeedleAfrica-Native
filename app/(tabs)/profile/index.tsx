@@ -10,14 +10,21 @@ import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { useRevenueCat } from '../../../hooks/useRevenueCat';
+import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
+    // const { isPro, subscriptionStatus } = useRevenueCat();
     const { confirm } = useConfirm();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
     const { isDark } = useTheme();
+    const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+
+    const userIsPro = user?.subscriptionPlan === 'PRO' && user?.subscriptionStatus === 'ACTIVE';
+    const planType = user?.currentPlanCode || 'monthly';
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -44,10 +51,10 @@ export default function Profile() {
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
             <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
-                <View className="mb-8">
+                {/* <View className="mb-8">
                     <Typography variant="h1" weight="bold">Profile</Typography>
                     <Typography variant="body" color="gray">Manage your account</Typography>
-                </View>
+                </View> */}
 
                 {/* User Card */}
                 {/* <Surface variant="lavender" className="flex-row items-center p-6 mb-6" rounded="3xl"> */}
@@ -100,7 +107,7 @@ export default function Profile() {
                 {/* Account Section */}
                 <View className="mb-10">
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Account</Typography>
-                    <View className="gap-4">
+                    <View className="gap-1">
                         <ProfileItem
                             icon={<User size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
@@ -113,22 +120,22 @@ export default function Profile() {
                             title="Preferences"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                         />
-                        <ProfileItem
+                        {/*  <ProfileItem
                             icon={<Gallery size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
                             title="Lookbook"
                             subtitle="Showcase your work as a digital catalogue"
                             badge="Coming Soon"
                             badgeColor="bg-gray-500"
-                        />
+                        /> */}
                         <ProfileItem
                             icon={<Crown size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
                             title="Subscription"
                             subtitle="Manage your plan & billing"
-                            badge={user?.subscriptionPlan === 'PRO' ? 'Pro' : user?.subscriptionPlan === 'STUDIO_AI' ? 'Studio AI' : 'Free Plan'}
-                            badgeColor={user?.subscriptionPlan === 'PRO' ? 'bg-yellow-500' : user?.subscriptionPlan === 'STUDIO_AI' ? 'bg-purple-600' : 'bg-blue-600'}
-                            onPress={() => router.push('/(tabs)/profile/subscription')}
+                            badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : 'Free Plan'}
+                            badgeColor={userIsPro ? 'bg-yellow-500' : 'bg-blue-600'}
+                            onPress={() => setIsSubscriptionModalVisible(true)}
                         />
                     </View>
                 </View>
@@ -136,7 +143,7 @@ export default function Profile() {
                 {/* Data & Security Section */}
                 <View className="mb-10">
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Data & Security</Typography>
-                    <View className="gap-4">
+                    <View className="gap-1">
                         <ProfileItem
                             icon={<CloudChange size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
@@ -158,7 +165,7 @@ export default function Profile() {
                 {/* Support Section */}
                 <View className="mb-12">
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Support</Typography>
-                    <View className="gap-4">
+                    <View className="gap-1">
                         <ProfileItem
                             icon={<MessageQuestion size={20} color="#3b82f6" variant="Bulk" />}
                             iconBgColor="bg-blue-50"
@@ -199,6 +206,11 @@ export default function Profile() {
                 </View>
 
             </ScrollView >
+
+            <SubscriptionModal
+                visible={isSubscriptionModalVisible}
+                onClose={() => setIsSubscriptionModalVisible(false)}
+            />
         </View >
     );
 }
@@ -216,7 +228,7 @@ interface ProfileItemProps {
 function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-blue-50', badgeColor = 'bg-blue-600' }: ProfileItemProps) {
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
-            <Surface variant="white" className="p-4 bg-muted/10" rounded="2xl" hasBorder>
+            <Surface variant="white" className="p-4 bg-muted/10" rounded="2xl">
                 <View className="flex-row items-center">
                     <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${iconBgColor}`}>
                         {icon}

@@ -14,6 +14,7 @@ import * as Sharing from 'expo-sharing';
 import { useAuth } from '../../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../../contexts/ConfirmContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 
 export default function InvoiceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function InvoiceDetailScreen() {
     const database = useDatabase();
     const { user } = useAuth();
     const { confirm } = useConfirm();
+    const { isDark } = useTheme();
 
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [customer, setCustomer] = useState<any>(null);
@@ -231,15 +233,15 @@ export default function InvoiceDetailScreen() {
 
     if (loading) {
         return (
-            <View className="flex-1 bg-white items-center justify-center">
-                <ActivityIndicator color="black" />
+            <View className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+                <ActivityIndicator color={isDark ? "white" : "black"} />
             </View>
         );
     }
 
     if (!invoice) {
         return (
-            <View className="flex-1 bg-white items-center justify-center">
+            <View className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
                 <Typography>Invoice not found</Typography>
                 <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
             </View>
@@ -247,10 +249,10 @@ export default function InvoiceDetailScreen() {
     }
 
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -265,56 +267,56 @@ export default function InvoiceDetailScreen() {
             </View>
 
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
-                {/* Paper Preview */}
-                <Surface variant="white" className="p-8 mb-8 shadow-xl min-h-[500px]" rounded="none" hasBorder>
+                {/* Paper Preview - Keeping it white for realism but adding border for dark mode */}
+                <Surface variant="white" className={`p-8 mb-8 shadow-xl min-h-[500px] bg-white ${isDark ? 'border border-border-dark' : ''}`} rounded="none" hasBorder>
                     <View className="flex-row justify-between mb-10">
                         <View>
-                            <Typography variant="h3" weight="bold" color="primary">{user?.businessName}</Typography>
+                            <Typography variant="h3" weight="bold" color="black" className="text-[#4F46E5]">{user?.businessName}</Typography>
                             <Typography variant="small" color="gray">{user?.email}</Typography>
                         </View>
                         <View className="items-end">
                             <Typography variant="caption" color="gray" weight="bold" className="uppercase">Date</Typography>
-                            <Typography weight="bold">{new Date(invoice.createdAt || 0).toLocaleDateString()}</Typography>
+                            <Typography weight="bold" color="black">{new Date(invoice.createdAt || 0).toLocaleDateString()}</Typography>
                         </View>
                     </View>
 
                     <View className="flex-row justify-between mb-10">
                         <View>
                             <Typography variant="caption" color="gray" weight="bold" className="uppercase">Invoice No.</Typography>
-                            <Typography weight="bold">{invoice.invoiceNumber}</Typography>
+                            <Typography weight="bold" color="black">{invoice.invoiceNumber}</Typography>
                         </View>
                         <View className="items-end">
                             <Typography variant="caption" color="gray" weight="bold" className="uppercase">Billed To</Typography>
-                            <Typography weight="bold">{customer?.fullName}</Typography>
+                            <Typography weight="bold" color="black">{customer?.fullName}</Typography>
                             <Typography variant="small" color="gray">{customer?.phoneNumber}</Typography>
                         </View>
                     </View>
 
                     <View className="border-b border-gray-100 pb-4 mb-6">
                         <View className="flex-row justify-between mb-2">
-                            <Typography weight="bold">Description</Typography>
-                            <Typography weight="bold">Amount</Typography>
+                            <Typography weight="bold" color="black">Description</Typography>
+                            <Typography weight="bold" color="black">Amount</Typography>
                         </View>
                         <View className="flex-row justify-between">
                             <View>
-                                <Typography variant="body" weight="semibold">{order?.styleName}</Typography>
+                                <Typography variant="body" weight="semibold" color="black">{order?.styleName}</Typography>
                                 <Typography variant="caption" color="gray">Custom tailoring</Typography>
                             </View>
-                            <Typography weight="bold" variant="body">
+                            <Typography weight="bold" variant="body" color="black">
                                 {invoice.currency} {(invoice.amount || 0).toLocaleString()}
                             </Typography>
                         </View>
                     </View>
 
                     <View className="items-end">
-                        <Surface variant="muted" className="p-4 w-48" rounded="xl">
+                        <Surface variant="muted" className="p-4 w-48 bg-gray-50" rounded="xl">
                             <View className="flex-row justify-between mb-2">
                                 <Typography variant="small" color="gray">Subtotal</Typography>
-                                <Typography variant="small" weight="bold">{(invoice.amount || 0).toLocaleString()}</Typography>
+                                <Typography variant="small" weight="bold" color="black">{(invoice.amount || 0).toLocaleString()}</Typography>
                             </View>
                             <View className="flex-row justify-between border-t border-gray-200 pt-2">
-                                <Typography variant="body" weight="bold">Total</Typography>
-                                <Typography variant="body" weight="bold">{invoice.currency} {(invoice.amount || 0).toLocaleString()}</Typography>
+                                <Typography variant="body" weight="bold" color="black">Total</Typography>
+                                <Typography variant="body" weight="bold" color="black">{invoice.currency} {(invoice.amount || 0).toLocaleString()}</Typography>
                             </View>
                         </Surface>
                     </View>
@@ -331,21 +333,21 @@ export default function InvoiceDetailScreen() {
                     <Button
                         onPress={handlePrint}
                         isLoading={isExporting}
-                        className="flex-1 h-16 rounded-full bg-dark"
+                        className={`flex-1 h-16 rounded-full border-0 shadow-lg ${isDark ? 'bg-white' : 'bg-black'}`}
                     >
                         <View className="flex-row items-center">
-                            <Printer size={20} color="white" className="mr-3" />
-                            <Typography weight="bold" color="white">Print / PDF</Typography>
+                            <Printer size={20} color={isDark ? "black" : "white"} className="mr-3" />
+                            <Typography weight="bold" color={isDark ? "black" : "white"}>Print / PDF</Typography>
                         </View>
                     </Button>
                     <Button
                         onPress={handleShare}
                         isLoading={isExporting}
-                        className="flex-1 h-16 rounded-full border-2 border-dark bg-white"
+                        className={`flex-1 h-16 rounded-full border-2 ${isDark ? 'border-border-dark bg-dark-800' : 'border-black bg-white'}`}
                     >
                         <View className="flex-row items-center">
-                            <ExportCurve size={20} color="black" className="mr-3" />
-                            <Typography weight="bold" color="black">Share</Typography>
+                            <ExportCurve size={20} color={isDark ? "white" : "black"} className="mr-3" />
+                            <Typography weight="bold" color={isDark ? "white" : "black"}>Share</Typography>
                         </View>
                     </Button>
                 </View>

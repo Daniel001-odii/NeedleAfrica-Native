@@ -1,6 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AppState, NativeModules, View } from 'react-native';
 import { useSync } from '../hooks/useSync';
 import { NotificationService } from '../services/NotificationService';
+import { revenueCatService } from '../services/RevenueCatService';
 import * as Notifications from 'expo-notifications';
 // import {
 //     useFonts,
@@ -28,6 +29,9 @@ import * as Notifications from 'expo-notifications';
 //     SpaceGrotesk_700Bold
 // } from '@expo-google-fonts/space-grotesk';
 import "../global.css";
+
+import { PostHogProvider } from 'posthog-react-native'
+import { posthog } from '../posthogConfig';
 
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
@@ -55,6 +59,7 @@ function RootLayoutNavWithLoading() {
 function RootLayoutNav() {
     const { user, isLoading, isNewUser } = useAuth();
     const { sync } = useSync();
+    const { isDark } = useTheme();
     const segments = useSegments();
     const router = useRouter();
 
@@ -93,21 +98,44 @@ function RootLayoutNav() {
         if (!user) return;
 
         // Sync every 30 seconds
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             console.log('Performing periodic background sync...');
-            sync().catch(console.error);
+            try {
+                await sync();
+                const orders = await database.get('orders').query().fetch();
+                await NotificationService.refreshAllReminders(orders, user);
+            } catch (e) {
+                console.error(e);
+            }
         }, 30 * 1000);
 
         // Sync on app foreground
-        const subscription = AppState.addEventListener('change', nextAppState => {
+        const subscription = AppState.addEventListener('change', async nextAppState => {
             if (nextAppState === 'active') {
                 console.log('App returned to foreground, performing sync...');
                 sync().catch(console.error);
+
+                // Refresh subscription status
+                try {
+                    await revenueCatService.getCustomerInfo();
+                } catch (rcError) {
+                    console.error('Failed to refresh subscription status on foreground:', rcError);
+                }
             }
         });
 
-        // Initial sync on mount if logged in
-        sync().catch(console.error);
+        // Initial sync and reminder refresh on mount if logged in
+        const initializeReminders = async () => {
+            try {
+                await sync();
+                const orders = await database.get('orders').query().fetch();
+                await NotificationService.refreshAllReminders(orders, user);
+            } catch (e) {
+                console.error('Failed to init reminders:', e);
+            }
+        };
+
+        initializeReminders();
 
         return () => {
             clearInterval(interval);
@@ -151,7 +179,7 @@ function RootLayoutNav() {
         <Stack
             screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: 'white' },
+                contentStyle: { backgroundColor: isDark ? '#000000' : 'white' },
             }}
         >
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -164,45 +192,20 @@ function RootLayoutNav() {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConfirmProvider } from '../contexts/ConfirmContext';
 
-function RootLayoutWithTheme() {
+function ThemeAwareRoot() {
+    const { isDark } = useTheme();
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-                <DatabaseProvider database={database}>
-                    <AuthProvider>
-                        <ThemeProvider>
-                            <ConfirmProvider>
-                                <SafeAreaView style={{ flex: 1 }}>
-                                    <OfflineBanner />
-                                    <RootLayoutNavWithLoading />
-                                    <StatusBar style="auto" translucent={true} />
-                                    <Toast config={toastConfig} />
-                                </SafeAreaView>
-                            </ConfirmProvider>
-                        </ThemeProvider>
-                    </AuthProvider>
-                </DatabaseProvider>
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
+        <View style={{ flex: 1, backgroundColor: isDark ? '#000000' : 'white' }}>
+            <OfflineBanner />
+            <RootLayoutNavWithLoading />
+            <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
+            <Toast config={toastConfig} />
+        </View>
     );
 }
 
 export default function RootLayout() {
-    // const [loaded, error] = useFonts({
-    //     'Playfair-Regular': PlayfairDisplay_400Regular,
-    //     'Playfair-Medium': PlayfairDisplay_500Medium,
-    //     'Playfair-SemiBold': PlayfairDisplay_600SemiBold,
-    //     'Playfair-Bold': PlayfairDisplay_700Bold,
-    //     'Playfair-ExtraBold': PlayfairDisplay_800ExtraBold,
-    //     'Playfair-Black': PlayfairDisplay_900Black,
-    //     'Grotesk-Light': SpaceGrotesk_300Light,
-    //     'Grotesk-Regular': SpaceGrotesk_400Regular,
-    //     'Grotesk-Medium': SpaceGrotesk_500Medium,
-    //     'Grotesk-SemiBold': SpaceGrotesk_600SemiBold,
-    //     'Grotesk-Bold': SpaceGrotesk_700Bold,
-    // });
-
-    const fontsReady = true; // loaded || error;
+    const fontsReady = true;
 
     useEffect(() => {
         if (fontsReady) {
@@ -210,9 +213,39 @@ export default function RootLayout() {
         }
     }, [fontsReady]);
 
+    // Initialize RevenueCat on app start
+    useEffect(() => {
+        const initializeRevenueCat = async () => {
+            try {
+                await revenueCatService.initialize();
+                console.log('RevenueCat initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize RevenueCat:', error);
+            }
+        };
+
+        initializeRevenueCat();
+    }, []);
+
     if (!fontsReady) {
         return null;
     }
 
-    return <RootLayoutWithTheme />;
+    return (
+        <PostHogProvider client={posthog}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <SafeAreaProvider>
+                    <DatabaseProvider database={database}>
+                        <AuthProvider>
+                            <ThemeProvider>
+                                <ConfirmProvider>
+                                    <ThemeAwareRoot />
+                                </ConfirmProvider>
+                            </ThemeProvider>
+                        </AuthProvider>
+                    </DatabaseProvider>
+                </SafeAreaProvider>
+            </GestureHandlerRootView>
+        </PostHogProvider>
+    );
 }

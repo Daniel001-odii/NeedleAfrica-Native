@@ -15,6 +15,7 @@ import axiosInstance from '../../../lib/axios';
 import Toast from 'react-native-toast-message';
 
 import { NotificationService } from '../../../services/NotificationService';
+import Svg, { Path } from 'react-native-svg';
 
 export default function Preferences() {
     const router = useRouter();
@@ -105,37 +106,47 @@ export default function Preferences() {
 
                     <View className="mb-4">
                         <Typography variant="body" weight="semibold" className="mb-4 ml-1">Theme</Typography>
-                        <Surface variant="muted" rounded="2xl" className="p-2">
-                            {['light', 'dark', 'system'].map((themeOption) => (
-                                <TouchableOpacity
-                                    key={themeOption}
-                                    onPress={() => handleThemeChange(themeOption as 'light' | 'dark' | 'system')}
-                                    className={`flex-row items-center justify-between p-3 rounded-xl ${
-                                        theme === themeOption 
-                                            ? isDark ? 'bg-dark-800' : 'bg-gray-100'
-                                            : ''
-                                    }`}
-                                >
-                                    <View className="flex-row items-center">
-                                        {themeOption === 'light' && <Sun size={20} color={isDark ? 'white' : 'black'} className="mr-3" />}
-                                        {themeOption === 'dark' && <Moon size={20} color={isDark ? 'white' : 'black'} className="mr-3" />}
-                                        {themeOption === 'system' && (
-                                            <View className="mr-3">
-                                                {isDark ? <Moon size={20} color="white" /> : <Sun size={20} color="black" />}
+                        <View className="flex-row gap-3">
+                            {['light', 'dark', 'system'].map((themeOption) => {
+                                const isSelected = theme === themeOption;
+                                return (
+                                    <TouchableOpacity
+                                        key={themeOption}
+                                        onPress={() => handleThemeChange(themeOption as 'light' | 'dark' | 'system')}
+                                        activeOpacity={0.7}
+                                        className="flex-1"
+                                    >
+                                        <Surface
+                                            variant={isSelected ? 'white' : 'muted'}
+                                            rounded="3xl"
+                                            className={`items-center justify-center py-6 border-2 ${isSelected
+                                                ? 'border-brand-primary'
+                                                : isDark ? 'border-transparent' : 'border-transparent'
+                                                }`}
+                                        >
+                                            <View className={`w-12 h-12 rounded-2xl items-center justify-center mb-3 ${isSelected ? 'bg-brand-primary' : isDark ? 'bg-dark-700' : 'bg-white'}`}>
+                                                {themeOption === 'light' && <Sun size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
+                                                {themeOption === 'dark' && <Moon size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
+                                                {themeOption === 'system' && <MagicStar size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
                                             </View>
-                                        )}
-                                        <Typography weight="medium">
-                                            {themeOption === 'system' ? 'System Default' : themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
-                                        </Typography>
-                                    </View>
-                                    {theme === themeOption && (
-                                        <View className={`w-5 h-5 rounded-full border-2 ${isDark ? 'border-white' : 'border-dark'} items-center justify-center`}>
-                                            <View className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`} />
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-                            ))}
-                        </Surface>
+                                            <Typography
+                                                variant="small"
+                                                weight={isSelected ? 'bold' : 'medium'}
+                                                className={isSelected ? (isDark ? 'text-white' : 'text-brand-primary') : 'text-gray-500'}
+                                            >
+                                                {themeOption === 'system' ? 'System' : themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
+                                            </Typography>
+
+                                            {isSelected && (
+                                                <View className="absolute top-2 right-2">
+                                                    <TickCircle size={18} color={isDark ? '#FFFFFF' : '#6366f1'} variant="Bold" />
+                                                </View>
+                                            )}
+                                        </Surface>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
                     </View>
                 </View>
 
@@ -182,26 +193,32 @@ export default function Preferences() {
                                     setReminderDay(day);
                                     setShowCustomInput(false);
                                 }}
-                                className={`px-6 py-3 rounded-full border ${reminderDay === day && !showCustomInput ? 'bg-dark border-dark' : 'bg-white border-gray-100'}`}
+                                className={`px-6 py-3 rounded-full border ${reminderDay === day && !showCustomInput
+                                    ? 'bg-brand-primary border-brand-primary'
+                                    : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
+                                    }`}
                             >
-                                <Typography weight="bold" color={(reminderDay === day && !showCustomInput) ? 'white' : 'black'}>
+                                <Typography weight="bold" color={(reminderDay === day && !showCustomInput) ? 'white' : (isDark ? 'gray' : 'black')}>
                                     {day} Day{day !== '1' ? 's' : ''}
                                 </Typography>
                             </TouchableOpacity>
                         ))}
                         <TouchableOpacity
                             onPress={() => setShowCustomInput(true)}
-                            className={`px-6 py-3 rounded-full border flex-row items-center ${showCustomInput ? 'bg-dark border-dark' : 'bg-white border-gray-100'}`}
+                            className={`px-6 py-3 rounded-full border flex-row items-center ${showCustomInput
+                                ? 'bg-brand-primary border-brand-primary'
+                                : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
+                                }`}
                         >
-                            <Add size={16} color={showCustomInput ? 'white' : 'black'} className="mr-2" />
-                            <Typography weight="bold" color={showCustomInput ? 'white' : 'black'}>Custom</Typography>
+                            <Add size={16} color={showCustomInput ? 'white' : (isDark ? '#9CA3AF' : 'black')} className="mr-2" />
+                            <Typography weight="bold" color={showCustomInput ? 'white' : (isDark ? 'gray' : 'black')}>Custom</Typography>
                         </TouchableOpacity>
                     </View>
 
                     {showCustomInput && (
-                        <Surface variant="muted" rounded="2xl" className="mt-4 px-4 h-16 border border-gray-100 justify-center">
+                        <Surface variant="muted" rounded="2xl" className={`mt-4 px-4 h-16 border ${isDark ? 'border-border-dark' : 'border-gray-100'} justify-center`}>
                             <TextInput
-                                className="font-semibold text-dark flex-1"
+                                className={`font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="Enter custom days (e.g. 5)"
                                 placeholderTextColor="#9CA3AF"
                                 value={customDays}
@@ -222,7 +239,7 @@ export default function Preferences() {
                             onPress={() => setUnit(unit === 'cm' ? 'inch' : 'cm')}
                             className="active:opacity-90"
                         >
-                            <Surface variant="white" className="p-4 border border-gray-50 flex-row items-center" rounded="2xl">
+                            <Surface variant="white" className="p-4 border border-gray-50/20 flex-row items-center" rounded="2xl">
                                 <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
                                     <Ruler size={20} color="#3b82f6" variant="Bulk" />
                                 </View>
@@ -245,7 +262,7 @@ export default function Preferences() {
                     <View>
                         <Typography variant="body" weight="semibold" className="mb-4 ml-1">Currency</Typography>
                         <Pressable onPress={() => setIsCurrencyModalVisible(true)}>
-                            <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-100">
+                            <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-50/20">
                                 <Coin1 size={20} color="#3b82f6" variant="Bulk" />
                                 <Typography weight="bold" className="ml-3 flex-1">
                                     {selectedCurrency.name} ({selectedCurrency.symbol})
@@ -267,11 +284,18 @@ export default function Preferences() {
                         <Surface variant="white" className="h-[80%] rounded-t-[40px] p-6 pb-12" rounded="none">
                             <View className="flex-row items-center justify-between mb-6">
                                 <Typography variant="h2" weight="bold">Select Currency</Typography>
-                                <IconButton
-                                    icon={<CloseCircle size={24} color="black" />}
-                                    onPress={() => setIsCurrencyModalVisible(false)}
-                                    variant="ghost"
-                                />
+                                <TouchableOpacity onPress={() => setIsCurrencyModalVisible(false)} className="p-2">
+                                    <Svg width="24" height="24" viewBox="0 0 24 24">
+                                        <Path
+                                            fill="none"
+                                            stroke={isDark ? "white" : "black"}
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="1.5"
+                                            d="M18 6L6 18m12 0L6 6"
+                                        />
+                                    </Svg>
+                                </TouchableOpacity>
                             </View>
 
                             <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-14 mb-6 border border-gray-100">
@@ -303,7 +327,7 @@ export default function Preferences() {
                                             className={`p-4 flex-row items-center border ${currency === item.code ? 'border-dark' : 'border-transparent'}`}
                                             rounded="2xl"
                                         >
-                                            <View className="w-10 h-10 items-center justify-center bg-white rounded-xl mr-4 shadow-sm">
+                                            <View className="w-10 h-10 items-center justify-center bg-white/50 rounded-xl mr-4 shadow-sm">
                                                 <Typography weight="bold" variant="subtitle">{item.symbol}</Typography>
                                             </View>
                                             <View className="flex-1">
@@ -349,7 +373,7 @@ interface PreferenceToggleProps {
 
 function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: PreferenceToggleProps) {
     const { isDark } = useTheme();
-    
+
     return (
         <Surface variant="white" className={`p-4 mb-4 ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="2xl" hasBorder>
             <View className="flex-row items-center">

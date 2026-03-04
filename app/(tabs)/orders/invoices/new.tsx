@@ -17,10 +17,12 @@ import { useSync } from '../../../../hooks/useSync';
 import { ResourceLimitModal } from '../../../../components/ResourceLimitModal';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../../contexts/ConfirmContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 
 export default function CreateInvoiceScreen() {
     const router = useRouter();
     const { user } = useAuth();
+    const { isDark } = useTheme();
     const { customerId: initialCustomerId } = useLocalSearchParams<{ customerId: string }>();
     const { customers, loading: loadingCustomers } = useCustomers();
     const { orders, loading: loadingOrders } = useOrders();
@@ -116,10 +118,10 @@ export default function CreateInvoiceScreen() {
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
     return (
-        <View className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-50">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -133,11 +135,12 @@ export default function CreateInvoiceScreen() {
 
                 {!selectedCustomerId ? (
                     <View className="mb-8">
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-14 mb-4 border border-gray-100">
-                            <SearchNormal1 size={18} color="#6B7280" />
+                        <Surface variant="muted" rounded="2xl" className={`flex-row items-center px-4 h-14 mb-4 border ${isDark ? 'border-border-dark bg-surface-muted-dark' : 'border-gray-100'}`}>
+                            <SearchNormal1 size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
                             <TextInput
-                                className="ml-3 flex-1 font-semibold text-dark"
+                                className={`ml-3 flex-1 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="Search customers..."
+                                placeholderTextColor="#9CA3AF"
                                 value={searchQuery}
                                 onChangeText={setSearchQuery}
                             />
@@ -145,8 +148,8 @@ export default function CreateInvoiceScreen() {
                         <View className="gap-3">
                             {filteredCustomers.slice(0, 5).map(customer => (
                                 <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
-                                    <Surface variant="white" className="p-4 border border-gray-100 flex-row items-center" rounded="2xl" hasBorder>
-                                        <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4">
+                                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} flex-row items-center`} rounded="2xl" hasBorder>
+                                        <View className={`w-10 h-10 ${isDark ? 'bg-indigo-600' : 'bg-blue-500'} rounded-full items-center justify-center mr-4`}>
                                             <Typography weight="bold" color="white">{(customer.fullName || 'C')[0].toUpperCase()}</Typography>
                                         </View>
                                         <Typography weight="bold">{customer.fullName}</Typography>
@@ -156,10 +159,10 @@ export default function CreateInvoiceScreen() {
                         </View>
                     </View>
                 ) : (
-                    <Surface variant="lavender" className="p-4 mb-8 flex-row items-center justify-between" rounded="2xl">
+                    <Surface variant={isDark ? "dark" : "lavender"} className={`p-4 mb-8 flex-row items-center justify-between border ${isDark ? 'border-indigo-500/30' : 'border-transparent'}`} rounded="2xl">
                         <View className="flex-row items-center">
-                            <View className="w-10 h-10 bg-white rounded-full items-center justify-center mr-4">
-                                <User size={20} color="black" variant="Bulk" />
+                            <View className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-white/10' : 'bg-white'}`}>
+                                <User size={20} color={isDark ? "white" : "black"} variant="Bulk" />
                             </View>
                             <View>
                                 <Typography weight="bold">{selectedCustomer?.fullName}</Typography>
@@ -179,9 +182,9 @@ export default function CreateInvoiceScreen() {
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">2. Select Order</Typography>
                         {loadingOrders ? (
-                            <ActivityIndicator color="black" />
+                            <ActivityIndicator color={isDark ? "white" : "black"} />
                         ) : customerOrders.length === 0 ? (
-                            <Surface variant="muted" className="p-6 items-center" rounded="2xl" hasBorder>
+                            <Surface variant="muted" className={`p-6 items-center ${isDark ? 'bg-surface-muted-dark' : ''}`} rounded="2xl" hasBorder>
                                 <Typography variant="small" color="gray">No active orders found for this customer.</Typography>
                             </Surface>
                         ) : (
@@ -190,12 +193,12 @@ export default function CreateInvoiceScreen() {
                                     <Pressable key={order.id} onPress={() => setSelectedOrderId(order.id)}>
                                         <Surface
                                             variant="white"
-                                            className={`p-4 border ${selectedOrderId === order.id ? 'border-[#4F46E5]' : 'border-gray-100'} flex-row items-center`}
+                                            className={`p-4 border ${selectedOrderId === order.id ? (isDark ? 'border-indigo-500' : 'border-[#4F46E5]') : (isDark ? 'border-border-dark' : 'border-gray-100')} flex-row items-center`}
                                             rounded="2xl"
                                             hasBorder
                                         >
-                                            <View className={`w-10 h-10 ${selectedOrderId === order.id ? 'bg-[#4F46E5]' : 'bg-gray-100'} rounded-full items-center justify-center mr-4`}>
-                                                <Box size={20} color={selectedOrderId === order.id ? 'white' : 'black'} variant="Bulk" />
+                                            <View className={`w-10 h-10 ${selectedOrderId === order.id ? (isDark ? 'bg-indigo-600' : 'bg-[#4F46E5]') : (isDark ? 'bg-dark-800' : 'bg-gray-100')} rounded-full items-center justify-center mr-4`}>
+                                                <Box size={20} color={selectedOrderId === order.id ? 'white' : (isDark ? '#9CA3AF' : 'black')} variant="Bulk" />
                                             </View>
                                             <View className="flex-1">
                                                 <Typography weight="bold">{order.styleName}</Typography>
@@ -203,7 +206,7 @@ export default function CreateInvoiceScreen() {
                                                     {user?.currency || 'NGN'} {(order.amount || 0).toLocaleString()}
                                                 </Typography>
                                             </View>
-                                            {selectedOrderId === order.id && <TickCircle size={24} color="#4F46E5" variant="Bold" />}
+                                            {selectedOrderId === order.id && <TickCircle size={24} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bold" />}
                                         </Surface>
                                     </Pressable>
                                 ))}
@@ -216,10 +219,11 @@ export default function CreateInvoiceScreen() {
                 {selectedOrderId && (
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">3. Invoice Details</Typography>
-                        <Surface variant="muted" rounded="2xl" className="p-4 border border-gray-100 min-h-[100px]">
+                        <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark bg-surface-muted-dark' : 'border-gray-100'} min-h-[100px]`}>
                             <TextInput
-                                className="font-medium text-dark flex-1"
+                                className={`font-medium flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                                 placeholder="Add notes to the invoice (optional)..."
+                                placeholderTextColor="#9CA3AF"
                                 value={notes}
                                 onChangeText={setNotes}
                                 multiline
@@ -233,9 +237,15 @@ export default function CreateInvoiceScreen() {
                     onPress={handleCreate}
                     isLoading={submitting}
                     disabled={!selectedCustomerId || !selectedOrderId}
-                    className={`h-16 rounded-full mt-4 ${(!selectedCustomerId || !selectedOrderId) ? 'bg-gray-800' : 'bg-dark'}`}
+                    className={`h-16 rounded-full mt-4 border-0 ${(!selectedCustomerId || !selectedOrderId) ? (isDark ? 'bg-gray-800' : 'bg-gray-200') : (isDark ? 'bg-white' : 'bg-black')}`}
                 >
-                    <Typography weight="bold" color="white">Generate Invoice</Typography>
+                    <Typography
+                        weight="bold"
+                        color={(!selectedCustomerId || !selectedOrderId) ? "gray" : (isDark ? "white" : "white")}
+                        className={(!selectedCustomerId || !selectedOrderId) ? "" : (isDark ? "text-black" : "text-white")}
+                    >
+                        Generate Invoice
+                    </Typography>
                 </Button>
             </ScrollView>
 

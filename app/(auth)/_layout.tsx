@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 export default function AuthLayout() {
     return (
@@ -9,6 +11,7 @@ export default function AuthLayout() {
                 <Stack.Screen name="login" />
                 <Stack.Screen name="sign-up" />
                 <Stack.Screen name="forgot-password" />
+                <Stack.Screen name="reset-password" />
             </Stack>
         </AuthProvider>
     );
