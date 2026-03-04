@@ -263,17 +263,19 @@ export default function Home() {
 function EmptyStateHome({ router }: { router: any }) {
     return (
         <View className="py-10">
-            <Surface variant="muted" className="p-8 items-center mb-10" rounded="3xl">
-                <View className="w-20 h-20 bg-white items-center justify-center mb-6 shadow-sm rounded-full">
+            {/* <Surface variant="muted" className="p-8 items-center mb-10" rounded="3xl"> */}
+            <View className="items-center">
+                <View className="w-20 h-20 bg-white items-center justify-center mb-6 rounded-full">
                     <MagicStar size={40} color="#7c3aed" variant="Bulk" />
                 </View>
                 <Typography variant="h2" weight="bold" className="text-center mb-2">Welcome to Needle Africa</Typography>
                 <Typography variant="body" color="gray" className="text-center px-4 leading-relaxed">
                     Your digital tailoring workspace is ready. Let's start by adding your first client or creating an order.
                 </Typography>
-            </Surface>
+            </View>
+            {/* </Surface> */}
 
-            <View className="gap-4">
+            <View className="gap-4 mt-12">
                 <Pressable onPress={() => router.push('/(tabs)/customers/new')}>
                     <Surface variant="white" className="p-5 flex-row items-center border border-gray-100" rounded="2xl">
                         <View className="w-12 h-12 bg-accent-peach items-center justify-center rounded-xl mr-4">

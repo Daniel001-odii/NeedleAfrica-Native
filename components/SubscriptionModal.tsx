@@ -49,6 +49,15 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         }
     }, [visible]);
 
+    useEffect(() => {
+        if (visible && isPro && subscriptionStatus?.planType) {
+            const planType = subscriptionStatus.planType.toUpperCase();
+            if (planType === 'MONTHLY' || planType === 'YEARLY') {
+                setSelectedPlanType(planType as 'MONTHLY' | 'YEARLY');
+            }
+        }
+    }, [visible, isPro, subscriptionStatus]);
+
     const loadPackages = async () => {
         try {
             setLoadingPackages(true);
@@ -128,6 +137,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 await showManageSubscriptions();
             } catch (error) {
                 console.error('Failed to show manage subscriptions:', error);
+                Toast.show({
+                    type: 'info',
+                    text1: 'Manage Subscription',
+                    text2: 'If you subscribed via bank transfer, please contact support to manage your plan.'
+                });
             }
             return;
         }
@@ -171,7 +185,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             presentationStyle="fullScreen"
             onRequestClose={onClose}
         >
-            <View style={{ flex: 1, backgroundColor: '#000' }}>
+            <ScrollView style={{ flex: 1, backgroundColor: '#000' }}>
                 <ImageBackground
                     source={require('../assets/images/tailor_auth_bg.png')}
                     style={{ flex: 1 }}
@@ -201,9 +215,16 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     </Svg>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity onPress={handleRestore} className="p-2">
-                                    <Typography variant="body" weight="bold" color="white" className="opacity-80">Restore</Typography>
-                                </TouchableOpacity>
+                                <View className="flex-row items-center">
+                                    {isPro && (
+                                        <View className="bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30 mr-3">
+                                            <Typography variant="small" weight="bold" className="text-indigo-400">PRO MEMBER</Typography>
+                                        </View>
+                                    )}
+                                    <TouchableOpacity onPress={handleRestore} className="p-2">
+                                        <Typography variant="body" weight="bold" color="white" className="opacity-80">Restore</Typography>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
 
                             <View
@@ -218,7 +239,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                         </View>
                                     </View>
                                     <Typography variant="subtitle" color="white" className="text-center opacity-90 mt-2">
-                                        Unlock the most powerful tailoring assistant
+                                        {isPro ? 'You have full access to all premium features' : 'Unlock the most powerful tailoring assistant'}
                                     </Typography>
                                 </View>
 
@@ -239,7 +260,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                 </View>
 
                                 {/* Tab Selector */}
-                                {!loadingPackages && packages.length > 1 && (
+                                {!loadingPackages && packages.length > 1 && !isPro && (
                                     <View className="flex-row bg-white/10 rounded-full p-1 mb-5">
                                         <TouchableOpacity
                                             onPress={() => setSelectedPlanType('MONTHLY')}
@@ -328,16 +349,22 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
                                 {/* Current Plan Indicator for Pro Users */}
                                 {isPro && (
-                                    <View className="items-center mt-2 mb-2">
-                                        <Typography variant="small" color="white" className="opacity-60">
-                                            Currently on {subscriptionStatus?.productId?.includes('yearly') ? 'Pro Yearly' : 'Pro Monthly'}
+                                    <View>
+                                        {/* <Crown size={24} color="#6366f1" variant="Bold" /> */}
+                                        <Typography variant="body" color="white" className="text-center">
+                                            You are currently on the <Typography variant="body" weight="bold" color="white">{subscriptionStatus?.planType === 'yearly' ? 'Yearly' : 'Monthly'}</Typography> plan
                                         </Typography>
+                                        {subscriptionStatus?.expiryDate && (
+                                            <Typography variant="small" color="white" className="opacity-60 text-center">
+                                                Renews on {subscriptionStatus.expiryDate.toLocaleDateString()}
+                                            </Typography>
+                                        )}
                                     </View>
                                 )}
                             </View>
 
                             {/* Action Button Section */}
-                            <View className="px-6 pb-8">
+                            <View className="px-6 pb-8 mt-4">
                                 <TouchableOpacity
                                     activeOpacity={0.8}
                                     onPress={handlePurchase}
@@ -363,7 +390,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                         </SafeAreaView>
                     </LinearGradient>
                 </ImageBackground>
-            </View>
+            </ScrollView>
         </Modal>
     );
 };

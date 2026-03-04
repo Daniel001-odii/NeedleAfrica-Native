@@ -23,7 +23,7 @@ export default function Extras() {
         <View className="flex-1 bg-white">
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
                 {/* Header */}
-                <View className="flex-row justify-between items-center mb-8">
+                {/*  <View className="flex-row justify-between items-center mb-8">
                     <Typography variant="h2" weight="bold">Extras</Typography>
                     <Surface variant="lavender" className="px-4 py-2" rounded="full">
                         <View className="flex-row items-center">
@@ -32,7 +32,7 @@ export default function Extras() {
                         </View>
                     </Surface>
                 </View>
-
+ */}
                 {/* Hero Feature: Generate Invoice */}
                 <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/orders/invoices/new')}>
                     <Surface variant="lavender" className="p-6 mb-8 relative overflow-hidden" rounded="3xl">

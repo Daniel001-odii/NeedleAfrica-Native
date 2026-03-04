@@ -32,7 +32,7 @@ export function OfflineBanner() {
             style={{
                 transform: [{ translateY: animation }],
                 position: 'absolute',
-                top: insets.top + 10,
+                top: insets.top + 0,
                 left: 0,
                 right: 0,
                 zIndex: 9999,

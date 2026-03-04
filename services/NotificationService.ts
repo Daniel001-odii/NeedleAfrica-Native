@@ -2,6 +2,8 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { Q } from '@nozbe/watermelondb';
+
 
 // Configure how notifications should be handled when the app is in foreground
 Notifications.setNotificationHandler({
@@ -151,19 +153,36 @@ export class NotificationService {
         const activeStatuses = ['PENDING', 'DELIVERING', 'READY'];
 
         for (const order of orders) {
-            if (activeStatuses.includes(order.status) && order.deliveryDate) {
-                const customer = await order.customer?.fetch();
-                const reminderDays = parseInt((!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays);
+            try {
+                if (activeStatuses.includes(order.status) && order.deliveryDate) {
+                    // Safe fetch: query by ID instead of using relation.fetch()
+                    // which throws Diagnostic Error if record is missing in some versions/states
+                    const customerId = order.customerId;
+                    let customer = null;
 
-                await this.scheduleDeliveryReminder(
-                    order.id,
-                    customer?.fullName || 'Customer',
-                    order.deliveryDate,
-                    isNaN(reminderDays) ? 1 : reminderDays
-                );
-            } else {
-                // Cancel if no longer active
-                await this.cancelOrderReminders(order.id);
+                    if (customerId) {
+                        const customers = await order.collections.get('customers')
+                            .query(Q.where('id', customerId))
+                            .fetch();
+                        customer = customers.length > 0 ? customers[0] : null;
+                    }
+
+                    const reminderDays = parseInt((!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays);
+
+                    await this.scheduleDeliveryReminder(
+                        order.id,
+                        customer?.fullName || 'Customer',
+                        order.deliveryDate,
+                        isNaN(reminderDays) ? 1 : reminderDays
+                    );
+                } else {
+                    // Cancel if no longer active
+                    await this.cancelOrderReminders(order.id);
+                }
+            } catch (e) {
+                console.error(`Error processing reminders for order ${order.id}:`, e);
+                // Optionally cancel reminders for problematic orders to be safe
+                await this.cancelOrderReminders(order.id).catch(() => { });
             }
         }
     }

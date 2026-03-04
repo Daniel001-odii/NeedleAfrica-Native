@@ -1,16 +1,130 @@
-import React from 'react';
-import { View, ImageBackground, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Image, ActivityIndicator, Dimensions, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../contexts/AuthContext';
+import Animated, {
+    useSharedValue,
+    useAnimatedScrollHandler,
+    useAnimatedStyle,
+    interpolate,
+    Extrapolation,
+    SharedValue
+} from 'react-native-reanimated';
+
+const { width } = Dimensions.get('window');
+const ITEM_WIDTH = width * 0.8;
+const ITEM_SPACING = (width - ITEM_WIDTH) / 2;
+
+const SLIDES = [
+    {
+        id: '1',
+        image: require('../../assets/images/onboarding_1.png'),
+        title: 'Organize Your Workshop',
+        description: 'Track every order and measurement with ease.'
+    },
+    {
+        id: '2',
+        image: require('../../assets/images/onboarding_2.png'),
+        title: 'Design with Precision',
+        description: 'Store client preferences and design sketches in one place.'
+    },
+    {
+        id: '3',
+        image: require('../../assets/images/onboarding_3.png'),
+        title: 'Grow Your Business',
+        description: 'Focus on your craft while we handle the management.'
+    }
+];
+
+function CarouselItem({ item, index, scrollX }: { item: any, index: number, scrollX: SharedValue<number> }) {
+    const animatedStyle = useAnimatedStyle(() => {
+        const inputRange = [
+            (index - 1) * ITEM_WIDTH,
+            index * ITEM_WIDTH,
+            (index + 1) * ITEM_WIDTH,
+        ];
+
+        const scale = interpolate(
+            scrollX.value,
+            inputRange,
+            [0.85, 1, 0.85],
+            Extrapolation.CLAMP
+        );
+
+        const translateY = interpolate(
+            scrollX.value,
+            inputRange,
+            [40, 0, 40],
+            Extrapolation.CLAMP
+        );
+
+        const rotate = interpolate(
+            scrollX.value,
+            inputRange,
+            [12, 0, -12],
+            Extrapolation.CLAMP
+        );
+
+        const opacity = interpolate(
+            scrollX.value,
+            inputRange,
+            [0.5, 1, 0.5],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            transform: [
+                { scale },
+                { rotate: `${rotate}deg` },
+                { translateY }
+            ],
+            opacity,
+            zIndex: interpolate(
+                scrollX.value,
+                inputRange,
+                [1, 10, 1],
+                Extrapolation.CLAMP
+            )
+        };
+    });
+
+    return (
+        <View style={{ width: ITEM_WIDTH, alignItems: 'center', justifyContent: 'center' }}>
+            <Animated.View
+                style={[
+                    {
+                        width: ITEM_WIDTH,
+                        height: ITEM_WIDTH * 1.1,
+                        borderRadius: 32,
+                        overflow: 'hidden',
+                        backgroundColor: 'white',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 20,
+                        elevation: 10,
+                    },
+                    animatedStyle
+                ]}
+            >
+                <Image
+                    source={item.image}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                />
+            </Animated.View>
+        </View>
+    );
+}
 
 export default function Welcome() {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
+
     const router = useRouter();
-    const insets = useSafeAreaInsets();
     const { signInWithGoogle, isLoading } = useAuth();
 
     const handleGoogleSignIn = async () => {
@@ -33,78 +147,184 @@ export default function Welcome() {
         }
     };
 
+    const scrollX = useSharedValue(0);
+
+    const onScroll = useAnimatedScrollHandler((event) => {
+        scrollX.value = event.contentOffset.x;
+    });
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            let nextIndex = currentIndex + 1;
+            if (nextIndex >= SLIDES.length) {
+                nextIndex = 0;
+            }
+
+            flatListRef.current?.scrollToIndex({
+                index: nextIndex,
+                animated: true,
+                viewPosition: 0.5 // Centers the item
+            });
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [currentIndex]);
+
+    const animatedTextContainerStyle = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(
+                scrollX.value % ITEM_WIDTH,
+                [0, ITEM_WIDTH / 4, ITEM_WIDTH * 3 / 4, ITEM_WIDTH],
+                [1, 0, 0, 1],
+                Extrapolation.CLAMP
+            )
+        };
+    });
+
+    const activeIndex = useSharedValue(0);
+    const onMomentumScrollEnd = (event: any) => {
+        activeIndex.value = Math.round(event.nativeEvent.contentOffset.x / ITEM_WIDTH);
+    };
+
     return (
-        <View style={{ flex: 1 }}>
-            <ImageBackground
-                source={require('../../assets/images/tailor_auth_bg.png')}
-                style={{ flex: 1 }}
-                resizeMode="cover"
-            >
-                <LinearGradient
-                    colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
-                    style={{
-                        flex: 1,
-                        paddingHorizontal: 32,
-                        paddingTop: insets.top,
-                        paddingBottom: insets.bottom + 24,
-                        justifyContent: 'flex-end'
+        <View className="flex-1 bg-muted">
+            {/* Carousel Section */}
+            <View style={{ height: ITEM_WIDTH * 1.25, marginTop: 100 }}>
+                <Animated.FlatList
+                    ref={flatListRef}
+                    data={SLIDES}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item, index }) => (
+                        <CarouselItem item={item} index={index} scrollX={scrollX} />
+                    )}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    snapToInterval={ITEM_WIDTH}
+                    snapToAlignment="center"
+                    decelerationRate="fast"
+                    onScroll={onScroll}
+                    onMomentumScrollEnd={(event) => {
+                        const index = Math.round(event.nativeEvent.contentOffset.x / ITEM_WIDTH);
+                        setCurrentIndex(index);
                     }}
-                >
-                    {/* Content */}
-                    <View style={{ marginBottom: 40 }}>
-                        <Typography variant="h1" weight="bold" color="white" className="text-5xl text-center leading-[45px]">
-                            Your Workshop. Fully Organized.
-                        </Typography>
-                    </View>
+                    scrollEventThrottle={16}
+                    getItemLayout={(_, index) => ({
+                        length: ITEM_WIDTH,
+                        offset: ITEM_WIDTH * index,
+                        index,
+                    })}
+                    onScrollToIndexFailed={(info) => {
+                        const wait = new Promise(resolve => setTimeout(resolve, 500));
+                        wait.then(() => {
+                            flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+                        });
+                    }}
+                    contentContainerStyle={{
+                        paddingHorizontal: ITEM_SPACING,
+                        alignItems: 'center'
+                    }}
+                />
+            </View>
 
-                    {/* Actions */}
-                    <View className="gap-4">
-                        <Button
-                            onPress={() => router.push('/(auth)/sign-up')}
-                            className="bg-white h-16 rounded-full border-0 active:bg-gray-100"
-                            textClassName="text-dark text-lg font-bold"
-                        >
-                            Get started
-                        </Button>
+            {/* Pagination Dots */}
+            <View className="flex-row justify-center mt-2">
+                {SLIDES.map((_, index) => {
+                    const dotStyle = useAnimatedStyle(() => {
+                        const inputRange = [
+                            (index - 1) * ITEM_WIDTH,
+                            index * ITEM_WIDTH,
+                            (index + 1) * ITEM_WIDTH,
+                        ];
 
-                        <TouchableOpacity
-                            onPress={() => router.push('/(auth)/login')}
-                            className="h-16 rounded-full items-center justify-center bg-white/20 border border-white/30 backdrop-blur-md"
-                        >
-                            <Typography weight="bold" color="white" variant="subtitle">
-                                I already have an account
-                            </Typography>
-                        </TouchableOpacity>
+                        const opacity = interpolate(
+                            scrollX.value,
+                            inputRange,
+                            [0.3, 1, 0.3],
+                            Extrapolation.CLAMP
+                        );
 
-                        <TouchableOpacity
-                            onPress={handleGoogleSignIn}
-                            disabled={isLoading}
-                            className="h-14 rounded-full bg-white/10 border border-white/20 flex-row items-center justify-center opacity-90 active:bg-white/20"
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="white" />
-                            ) : (
-                                <>
-                                    <Image
-                                        source={require('../../assets/images/google_logo.png')}
-                                        className="w-5 h-5 mr-3"
-                                        resizeMode="contain"
-                                    />
-                                    <Typography color="white" weight="semibold">Continue with Google</Typography>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                        const scale = interpolate(
+                            scrollX.value,
+                            inputRange,
+                            [0.8, 1.2, 0.8],
+                            Extrapolation.CLAMP
+                        );
 
-                    {/* Footer Links */}
-                    <View className="mt-8 items-center">
-                        <Typography color="white" variant="small" className="opacity-60 text-center">
-                            By proceeding to use NeedleAfrica, you agree to our {'\n'}
-                            <Typography variant="small" weight="bold" color="white" className="underline">Terms of use</Typography> and acknowledge <Typography color="white" variant="small" weight="bold" className="underline">Privacy policy</Typography>
-                        </Typography>
-                    </View>
-                </LinearGradient>
-            </ImageBackground>
+                        return {
+                            opacity,
+                            transform: [{ scale }]
+                        };
+                    });
+
+                    return (
+                        <Animated.View
+                            key={index}
+                            style={[
+                                {
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 4,
+                                    backgroundColor: '#000',
+                                    marginHorizontal: 4,
+                                },
+                                dotStyle
+                            ]}
+                        />
+                    );
+                })}
+            </View>
+
+            {/* Content */}
+            <Animated.View style={[animatedTextContainerStyle, { paddingHorizontal: 40, justifyContent: 'center', flex: 1, marginTop: -60 }]}>
+                <View style={{ marginBottom: 10 }}>
+                    <Typography variant="h1" weight="bold" className="text-4xl text-center leading-[42px]">
+                        {SLIDES[currentIndex].title}
+                    </Typography>
+                    <Typography variant="body" color="gray" className="text-center text-lg px-2">
+                        {SLIDES[currentIndex].description}
+                    </Typography>
+                </View>
+            </Animated.View>
+
+            {/* Actions & Footer Section */}
+            <View className="px-10 pb-12 -mt-20">
+                {/* Actions */}
+                <View className="gap-4">
+                    <Button
+                        onPress={() => router.push('/(auth)/login')}
+                        className="bg-dark h-16 rounded-full border-0"
+                        textClassName="text-white text-lg font-bold"
+                    >
+                        Get started
+                    </Button>
+                    <TouchableOpacity
+                        onPress={handleGoogleSignIn}
+                        disabled={isLoading}
+                        className="h-14 rounded-full bg-gray-100 border border-gray-300 flex-row items-center justify-center active:bg-gray-300"
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="black" />
+                        ) : (
+                            <>
+                                <Image
+                                    source={require('../../assets/images/google_logo.png')}
+                                    className="w-5 h-5 mr-3"
+                                    resizeMode="contain"
+                                />
+                                <Typography color="black" weight="semibold">Continue with Google</Typography>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                {/* Footer Links */}
+                <View className="mt-8 items-center">
+                    <Typography color="gray" variant="small" className="opacity-60 text-center">
+                        By proceeding to use NeedleAfrica, you agree to our {'\n'}
+                        <Typography variant="small" weight="bold" color="primary" className="underline">Terms of use</Typography> and acknowledge <Typography color="primary" variant="small" weight="bold" className="underline">Privacy policy</Typography>
+                    </Typography>
+                </View>
+            </View>
         </View>
     );
 }

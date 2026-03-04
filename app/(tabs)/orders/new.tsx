@@ -19,6 +19,7 @@ import { Modal, FlatList } from 'react-native';
 import { SearchNormal1, CloseCircle as CloseCircleIcon, User } from 'iconsax-react-native';
 import { uploadOrderImages } from '../../../services/ImageUploadService';
 import Toast from 'react-native-toast-message';
+import Svg, { Path } from 'react-native-svg';
 
 export default function NewOrder() {
     const router = useRouter();
@@ -66,13 +67,13 @@ export default function NewOrder() {
     const handleAmountInput = (value: string, setter: (value: string) => void, maxLength: number = 9) => {
         // Remove commas and non-digit characters for processing
         const cleanValue = value.replace(/\D/g, '');
-        
+
         // Limit to maxLength characters
         const limitedValue = cleanValue.slice(0, maxLength);
-        
+
         // Format with commas for display
         const formattedValue = formatNumberWithCommas(limitedValue);
-        
+
         setter(formattedValue);
     };
 
@@ -360,11 +361,19 @@ export default function NewOrder() {
                     <Surface variant="white" className="h-[85%] rounded-t-[40px] p-6 pb-12" rounded="none">
                         <View className="flex-row items-center justify-between mb-6">
                             <Typography variant="h2" weight="bold">Select Client</Typography>
-                            <IconButton
-                                icon={<CloseCircleIcon size={24} color="black" />}
-                                onPress={() => setShowCustomerModal(false)}
-                                variant="ghost"
-                            />
+
+                            <TouchableOpacity onPress={() => setShowCustomerModal(false)} className="p-2">
+                                <Svg width="24" height="24" viewBox="0 0 24 24">
+                                    <Path
+                                        fill="none"
+                                        stroke="black"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="1.5"
+                                        d="M18 6L6 18m12 0L6 6"
+                                    />
+                                </Svg>
+                            </TouchableOpacity>
                         </View>
 
                         <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-14 mb-6 border border-gray-100">

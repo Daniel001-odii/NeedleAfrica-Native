@@ -69,118 +69,103 @@ export default function Login() {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <ImageBackground
-                source={require('../../assets/images/tailor_auth_bg.png')}
-                style={{ flex: 1 }}
-                resizeMode="cover"
+        <View className="flex-1 bg-muted p-12">
+            <View style={{ paddingVertical: 16 }}>
+                <IconButton
+                    icon={<ArrowLeft size={24} color="black" />}
+                    onPress={() => router.back()}
+                    className="bg-muted border-0"
+                />
+            </View>
+
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingVertical: 40 }}
             >
-                <LinearGradient
-                    colors={['rgba(255,255,255,0.85)', 'rgba(255,255,255,0.95)', '#ffffff']}
-                    style={{
-                        flex: 1,
-                        paddingHorizontal: 32,
-                        paddingTop: insets.top,
-                        paddingBottom: insets.bottom
-                    }}
-                >
-                    <View style={{ paddingVertical: 16 }}>
-                        <IconButton
-                            icon={<ArrowLeft size={24} color="black" />}
-                            onPress={() => router.back()}
-                            className="bg-muted border-0"
-                        />
+                <View className="mb-10">
+                    <Typography variant="h1" weight="bold" className="mb-2">Welcome Back</Typography>
+                    <Typography color="gray" variant="subtitle">Sign in to manage your workshop</Typography>
+                </View>
+
+                <View className="mb-8">
+                    <View className="mb-6">
+                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Email Address</Typography>
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                            <Sms size={20} color="#6B7280" variant="Bulk" />
+                            <TextInput
+                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                placeholder="your@email.com"
+                                placeholderTextColor="#9CA3AF"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </Surface>
                     </View>
 
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingVertical: 40 }}
-                    >
-                        <View className="mb-10">
-                            <Typography variant="h1" weight="bold" className="mb-2">Welcome Back</Typography>
-                            <Typography color="gray" variant="subtitle">Sign in to manage your workshop</Typography>
-                        </View>
-
-                        <View className="mb-8">
-                            <View className="mb-6">
-                                <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Email Address</Typography>
-                                <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-100">
-                                    <Sms size={20} color="#6B7280" variant="Bulk" />
-                                    <TextInput
-                                        className="flex-1 ml-3 h-full font-semibold text-dark"
-                                        placeholder="your@email.com"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                    />
-                                </Surface>
-                            </View>
-
-                            <View className="mb-2">
-                                <View className="flex flex-row justify-between mb-2">
-                                    <Typography variant="caption" weight="bold" color="gray" className=" uppercase">Password</Typography>
-                                    <Link href="/(auth)/forgot-password" asChild>
-                                        <TouchableOpacity className="self-end">
-                                            <Typography variant="body" weight="bold" color="primary">Forgot password?</Typography>
-                                        </TouchableOpacity>
-                                    </Link>
-                                </View>
-                                <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-100">
-                                    <Lock size={20} color="#6B7280" variant="Bulk" />
-                                    <TextInput
-                                        className="flex-1 ml-3 h-full font-semibold text-dark"
-                                        placeholder="Your password"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        secureTextEntry={!showPassword}
-                                    />
-                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                        {showPassword ? (
-                                            <EyeSlash size={20} color="#6B7280" />
-                                        ) : (
-                                            <Eye size={20} color="#6B7280" />
-                                        )}
-                                    </TouchableOpacity>
-                                </Surface>
-                            </View>
-                        </View>
-
-                        <Button
-                            onPress={handleLogin}
-                            isLoading={isLoading}
-                            className="h-16 rounded-full bg-dark border-0 shadow-lg mb-4"
-                            textClassName="text-white text-lg font-bold"
-                        >
-                            Sign In
-                        </Button>
-
-                        <TouchableOpacity
-                            onPress={handleGoogleSignIn}
-                            disabled={isLoading}
-                            className="h-16 rounded-full bg-white border border-gray-100 flex-row items-center justify-center shadow-sm mb-8 active:bg-gray-50"
-                        >
-                            <Image
-                                source={require('../../assets/images/google_logo.png')}
-                                className="w-6 h-6 mr-3"
-                                resizeMode="contain"
-                            />
-                            <Typography weight="bold" color="black">Continue with Google</Typography>
-                        </TouchableOpacity>
-
-                        <View className="flex-row justify-center items-center pb-10">
-                            <Typography color="gray">Don't have an account? </Typography>
-                            <Link href="/(auth)/sign-up" asChild>
-                                <TouchableOpacity>
-                                    <Typography weight="bold" color="primary">Sign up</Typography>
+                    <View className="mb-2">
+                        <View className="flex flex-row justify-between mb-2">
+                            <Typography variant="caption" weight="bold" color="gray" className=" uppercase">Password</Typography>
+                            <Link href="/(auth)/forgot-password" asChild>
+                                <TouchableOpacity className="self-end">
+                                    <Typography variant="body" weight="bold" color="primary">Forgot password?</Typography>
                                 </TouchableOpacity>
                             </Link>
                         </View>
-                    </ScrollView>
-                </LinearGradient>
-            </ImageBackground>
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                            <Lock size={20} color="#6B7280" variant="Bulk" />
+                            <TextInput
+                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                placeholder="Your password"
+                                placeholderTextColor="#9CA3AF"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                {showPassword ? (
+                                    <EyeSlash size={20} color="#6B7280" />
+                                ) : (
+                                    <Eye size={20} color="#6B7280" />
+                                )}
+                            </TouchableOpacity>
+                        </Surface>
+                    </View>
+                </View>
+
+                <Button
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                    isLoading={isLoading}
+                    className="h-16 rounded-full bg-dark border-0 mb-4"
+                    textClassName="text-white text-lg font-bold"
+                >
+                    Sign In
+                </Button>
+
+                <TouchableOpacity
+                    onPress={handleGoogleSignIn}
+                    disabled={isLoading}
+                    className="h-16 rounded-full bg-white border border-gray-200 flex-row items-center justify-center mb-8 bg-gray-200 active:bg-gray-200"
+                >
+                    <Image
+                        source={require('../../assets/images/google_logo.png')}
+                        className="w-6 h-6 mr-3"
+                        resizeMode="contain"
+                    />
+                    <Typography weight="bold" color="black">Continue with Google</Typography>
+                </TouchableOpacity>
+
+                <View className="flex-row justify-center items-center pb-10">
+                    <Typography color="gray">Don't have an account? </Typography>
+                    <Link href="/(auth)/sign-up" asChild>
+                        <TouchableOpacity>
+                            <Typography weight="bold" color="primary">Sign up</Typography>
+                        </TouchableOpacity>
+                    </Link>
+                </View>
+            </ScrollView>
         </View>
     );
 }

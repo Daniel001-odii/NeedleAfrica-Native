@@ -202,13 +202,36 @@ export const useRevenueCat = (): UseRevenueCatReturn => {
     customerInfo,
     isLoading,
     error,
-    isPro: customerInfo?.isPro ?? false,
-    subscriptionStatus: customerInfo?.subscriptionStatus ?? null,
+    isPro: user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI',
+    subscriptionStatus: (user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI')
+      ? {
+        isActive: true,
+        productId: user.currentPlanCode || (customerInfo?.subscriptionStatus?.productId || 'monthly'),
+        planType: user.currentPlanCode?.includes('yearly') ? 'yearly' : (customerInfo?.subscriptionStatus?.planType || 'monthly'),
+        willRenew: customerInfo?.subscriptionStatus?.willRenew ?? true,
+        expiryDate: user.subscriptionExpiry ? new Date(user.subscriptionExpiry) : (customerInfo?.subscriptionStatus?.expiryDate || null)
+      }
+      : (customerInfo?.subscriptionStatus ?? null),
     refreshCustomerInfo,
     purchasePackage,
     restorePurchases,
     showManageSubscriptions,
-    canAccessFeature,
-    getSubscriptionStatusForDisplay,
+    canAccessFeature: async (feature: string) => {
+      const isProUser = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+      // Basic features available to all users
+      const basicFeatures = ['basic_measurements', 'customer_management', 'order_tracking'];
+      if (basicFeatures.includes(feature)) return true;
+
+      return isProUser;
+    },
+    getSubscriptionStatusForDisplay: async () => {
+      const isProUser = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+      return {
+        plan: isProUser ? 'PRO' : 'FREE',
+        status: user?.subscriptionStatus === 'ACTIVE' ? 'ACTIVE' : (user?.subscriptionStatus === 'EXPIRED' ? 'EXPIRED' : 'CANCELLED'),
+        expiryDate: user?.subscriptionExpiry ? new Date(user.subscriptionExpiry) : null,
+        willRenew: true, // Default to true if active in DB
+      };
+    },
   };
 };
