@@ -59,8 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkUser();
 
         GoogleSignin.configure({
-            webClientId: '818250734262-nj9ef9hbi560dkusujg5eta6l1bolrqr.apps.googleusercontent.com',
-            iosClientId: '818250734262-na9hqkuq758b6id6gab1ohonot5qram9.apps.googleusercontent.com', // Optional for iOS if using Firebase
+            webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+            iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID, // Optional for iOS if using Firebase
             offlineAccess: true,
         });
     }, []);

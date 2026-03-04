@@ -14,8 +14,8 @@ import { subscriptionService } from './subscriptionService';
 
 // RevenueCat configuration
 const REVENUECAT_API_KEY = Platform.select({
-  ios: 'test_sexoiKVvIUczqwYIDMcBTzzSLqO',
-  android: 'test_sexoiKVvIUczqwYIDMcBTzzSLqO',
+  ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
 });
 
 // Entitlement identifiers
