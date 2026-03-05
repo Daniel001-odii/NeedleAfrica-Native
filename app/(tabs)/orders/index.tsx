@@ -9,6 +9,8 @@ import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import Toast from 'react-native-toast-message';
 
 const TABS = ['All', 'Pending', 'Delivered'] as const;
@@ -39,6 +41,11 @@ export default function Orders() {
     const { sync: performSync } = useSync();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
+    const { user } = useAuth();
+    const { getLimitStatus } = useResourceLimits();
+
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+    const orderLimit = getLimitStatus('orders');
 
     const getProgressColors = (order: any) => {
         if (order.status === 'DELIVERED') return '#16a34a'; // Green
@@ -168,7 +175,16 @@ export default function Orders() {
             <View className="flex-1">
                 <View className="p-6 pb-0">
                     <View className="flex-row justify-between items-center mb-6">
-                        <Typography variant="h2" weight="bold">Orders</Typography>
+                        <View className="flex-row items-center">
+                            <Typography variant="h2" weight="bold">Orders</Typography>
+                            {!isPro && (
+                                <View className={`ml-3 px-2 py-0.5 rounded-lg ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
+                                    <Typography variant="small" weight="bold" className={isDark ? 'text-indigo-400' : 'text-indigo-600'}>
+                                        {orderLimit.current}/{orderLimit.limit}
+                                    </Typography>
+                                </View>
+                            )}
+                        </View>
                         <View className="flex-row gap-2">
                             <Pressable
                                 className={`h-10 rounded-full items-center justify-center flex-row gap-2 px-3 ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
@@ -177,15 +193,14 @@ export default function Orders() {
                                 <DocumentText size={20} color={isDark ? "white" : "black"} />
                                 <Typography variant="body" weight="bold">Invoices</Typography>
                             </Pressable>
-                            <Pressable
-                                className={`w-10 h-10 rounded-full items-center justify-center ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
-                                onPress={() => setShowSortModal(true)}
-                            >
-                                <FilterSearch size={20} color={isDark ? "white" : "black"} />
-                            </Pressable>
                             <IconButton
-                                icon={<Add size={24} color="white" />}
-                                variant="dark"
+                                icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
+                                variant="glass"
+                                onPress={() => setShowSortModal(true)}
+                            />
+                            <IconButton
+                                icon={<Add size={24} color={isDark ? "white" : "black"} />}
+                                variant="glass"
                                 onPress={() => router.push('/(tabs)/orders/new')}
                             />
                         </View>
@@ -257,7 +272,7 @@ export default function Orders() {
                                 <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
                                     <Surface
                                         variant="white"
-                                        className={`p-4 mb-3 flex-row items-center ${isDark ? 'border-border-dark' : 'border-gray-100'}`}
+                                        className={`p-4 mb-3 flex-row items-center ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`}
                                         rounded="2xl"
                                         hasBorder
                                     >
@@ -269,12 +284,12 @@ export default function Orders() {
                                                     strokeWidth={2.5}
                                                     borderRadius={14}
                                                     color={getProgressColors(order)}
-                                                    backgroundColor="#F3F4F6"
+                                                    backgroundColor={isDark ? '#1F2937' : '#F3F4F6'}
                                                 />
                                             </View>
                                             <Surface
                                                 variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
-                                                className="w-11 h-11 items-center justify-center overflow-hidden"
+                                                className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) && isDark ? 'bg-dark-800' : ''}`}
                                                 rounded="xl"
                                             >
                                                 {(order.fabricImage || order.styleImage) ? (
@@ -283,7 +298,7 @@ export default function Orders() {
                                                         className="w-full h-full"
                                                     />
                                                 ) : (
-                                                    <Box size={18} color="black" variant="Bulk" />
+                                                    <Box size={18} color={isDark ? "white" : "black"} variant="Bulk" />
                                                 )}
                                             </Surface>
                                         </View>
@@ -294,7 +309,7 @@ export default function Orders() {
                                                 <View className="items-end">
                                                     <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
                                                     {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
-                                                        <View className="bg-red-50 px-1.5 py-0.5 rounded mt-0.5">
+                                                        <View className={`${isDark ? 'bg-red-900/20' : 'bg-red-50'} px-1.5 py-0.5 rounded mt-0.5`}>
                                                             <Typography variant="small" color="red" weight="bold" className="text-[9px]">
                                                                 OWING: {formatCurrency(order.balance || 0)}
                                                             </Typography>
@@ -309,15 +324,15 @@ export default function Orders() {
                                                         {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
                                                     </Typography>
                                                 </View>
-                                                <Surface
-                                                    variant={order.status === 'DELIVERED' ? 'green' : 'peach'}
-                                                    className="px-3 py-1"
-                                                    rounded="full"
+                                                <View
+                                                    className={`px-3 py-1 rounded-full ${order.status === 'DELIVERED'
+                                                        ? (isDark ? 'bg-green-900/20' : 'bg-soft-green')
+                                                        : (isDark ? 'bg-orange-900/20' : 'bg-soft-peach')}`}
                                                 >
-                                                    <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-700' : 'text-orange-700'}>
+                                                    <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-600' : (isDark ? 'text-orange-400' : 'text-orange-700')}>
                                                         {order.status}
                                                     </Typography>
-                                                </Surface>
+                                                </View>
                                             </View>
                                         </View>
                                     </Surface>

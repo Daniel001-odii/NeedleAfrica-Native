@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
+import { colorScheme } from 'nativewind';
 
 
 type Theme = 'light' | 'dark' | 'system';
@@ -11,6 +12,7 @@ interface ThemeContextType {
     isDark: boolean;
     setTheme: (theme: Theme) => void;
     resolvedTheme: 'light' | 'dark';
+    isHydrated: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -19,19 +21,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemColorScheme = useColorScheme();
     const { user } = useAuth();
     const [theme, setThemeState] = useState<Theme>('system');
-       
+    const [isHydrated, setIsHydrated] = useState(false);
+
 
     // Initialize theme from user profile or fallback to system
     useEffect(() => {
-        if (user?.theme) {
-            setThemeState(user.theme);
-        } else {
-            loadThemePreference();
-        }
+        const initTheme = async () => {
+            if (user?.theme) {
+                setThemeState(user.theme);
+                setIsHydrated(true);
+            } else {
+                await loadThemePreference();
+            }
+        };
+        initTheme();
     }, [user?.theme]);
 
     const resolvedTheme = theme === 'system' ? (systemColorScheme || 'light') : theme;
     const isDark = resolvedTheme === 'dark';
+
+    // Sync with NativeWind
+    useEffect(() => {
+        colorScheme.set(resolvedTheme);
+    }, [resolvedTheme]);
 
     const loadThemePreference = async () => {
         try {
@@ -41,6 +53,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to load theme preference:', error);
+        } finally {
+            setIsHydrated(true);
         }
     };
 
@@ -54,7 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, isDark, setTheme, resolvedTheme }}>
+        <ThemeContext.Provider value={{ theme, isDark, setTheme, resolvedTheme, isHydrated }}>
             {children}
         </ThemeContext.Provider>
     );

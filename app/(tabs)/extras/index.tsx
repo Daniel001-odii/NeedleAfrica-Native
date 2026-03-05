@@ -99,14 +99,14 @@ export default function Extras() {
                         icon={<Colorfilter size={20} color={isDark ? "white" : "black"} />}
                         title="Pantone"
                         subtitle="Explore seasonal color palettes and pairings"
-                        onPress={() => router.push('/(tabs)/extras/ideas' as any)}
+                        onPress={() => router.push('/(tabs)/extras/pantone')}
                     />
-                    <DiscoveryItem
+                    {/*  <DiscoveryItem
                         icon={<PenTool size={20} color={isDark ? "white" : "black"} />}
                         title="Embroidery"
                         subtitle="Inspiring patterns and stitching techniques"
-                        onPress={() => router.push('/(tabs)/extras/ideas' as any)}
-                    />
+                        onPress={() => router.push('/(tabs)/extras/embroidery')}
+                    /> */}
                 </View>
 
             </ScrollView>

@@ -4,6 +4,7 @@ import { Crown, CloseCircle, Warning2, InfoCircle } from 'iconsax-react-native';
 import { Typography } from './ui/Typography';
 import { Button } from './ui/Button';
 import { Surface } from './ui/Surface';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
 
@@ -28,6 +29,8 @@ export function ResourceLimitModal({
   limit,
   isOffline,
 }: ResourceLimitModalProps) {
+  const { isDark } = useTheme();
+
   if (!visible) return null;
 
   const percentage = Math.min((currentCount / limit) * 100, 100);
@@ -48,7 +51,7 @@ export function ResourceLimitModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/50 justify-end">
-        <Surface variant="white" className="rounded-t-3xl p-6 pb-10">
+        <View className={`rounded-t-3xl p-6 pb-10 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
             <View className="flex-row items-center">
@@ -58,12 +61,12 @@ export function ResourceLimitModal({
               </Typography>
             </View>
             <TouchableOpacity onPress={onClose}>
-              <CloseCircle size={28} color="#6B7280" />
+              <CloseCircle size={28} color={isDark ? '#9CA3AF' : '#6B7280'} />
             </TouchableOpacity>
           </View>
 
           {/* Progress Section */}
-          <Surface variant="white" className="p-4 mb-6 border border-gray-100" rounded="2xl">
+          <View className={`p-4 mb-6 rounded-2xl border ${isDark ? 'bg-red-900/10 border-red-500/20' : 'bg-white border-gray-100'}`}>
             <View className="flex-row justify-between items-center mb-2">
               <Typography variant="body" weight="bold">
                 {resourceLabel} Usage
@@ -74,7 +77,7 @@ export function ResourceLimitModal({
             </View>
 
             {/* Progress bar */}
-            <View className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <View className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-dark-700' : 'bg-gray-200'}`}>
               <View
                 className={`h-full ${progressColor} rounded-full`}
                 style={{ width: `${percentage}%` }}
@@ -86,10 +89,10 @@ export function ResourceLimitModal({
                 ? `You've reached your free tier limit for ${resourceLabel}.`
                 : `You're approaching your free tier limit for ${resourceLabel}.`}
             </Typography>
-          </Surface>
+          </View>
 
           {/* Upgrade CTA */}
-          <Surface variant="white" className="p-4 mb-6 bg-yellow-50 border border-yellow-200" rounded="2xl">
+          <View className={`p-4 mb-6 rounded-2xl border ${isDark ? 'bg-yellow-900/15 border-yellow-500/20' : 'bg-yellow-50 border-yellow-200'}`}>
             <View className="flex-row items-start">
               <Crown size={24} color="#EAB308" variant="Bulk" />
               <View className="ml-3 flex-1">
@@ -101,22 +104,7 @@ export function ResourceLimitModal({
                 </Typography>
               </View>
             </View>
-          </Surface>
-
-          {/* Offline Notice - Commented out: Removed "will sync when online" option
-          {isOffline && (
-            <Surface variant="white" className="p-4 mb-6 bg-blue-50 border border-blue-200" rounded="2xl">
-              <View className="flex-row items-start">
-                <InfoCircle size={20} color="#3B82F6" variant="Bulk" />
-                <View className="ml-2 flex-1">
-                  <Typography variant="small" color="gray">
-                    You're currently offline. You can continue creating this {resourceLabel.slice(0, -1)}, but it will only sync to the server when you're back online. If you're over your limit when you sync, you'll need to upgrade.
-                  </Typography>
-                </View>
-              </View>
-            </Surface>
-          )}
-          */}
+          </View>
 
           {/* Actions */}
           <Button
@@ -132,20 +120,6 @@ export function ResourceLimitModal({
             </View>
           </Button>
 
-          {/* Continue Anyway button - Commented out: Removed "will sync when online" option
-          {isOffline && (
-            <Button
-              onPress={onContinueAnyway}
-              variant="outline"
-              className="h-14 rounded-full mt-3"
-            >
-              <Typography variant="body" weight="medium">
-                Continue Anyway - Will Sync When Online
-              </Typography>
-            </Button>
-          )}
-          */}
-
           <Button
             onPress={onClose}
             variant="ghost"
@@ -155,7 +129,7 @@ export function ResourceLimitModal({
               Cancel
             </Typography>
           </Button>
-        </Surface>
+        </View>
       </View>
     </Modal>
   );

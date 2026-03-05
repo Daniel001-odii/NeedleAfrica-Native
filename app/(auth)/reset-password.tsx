@@ -7,6 +7,7 @@ import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 
 export default function ResetPassword() {
@@ -15,6 +16,7 @@ export default function ResetPassword() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const { resetPassword, isLoading } = useAuth();
+    const { isDark } = useTheme();
     const router = useRouter();
 
     const handleReset = async () => {
@@ -45,12 +47,12 @@ export default function ResetPassword() {
     };
 
     return (
-        <View className="flex-1 bg-muted p-12">
+        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
-                    icon={<ArrowLeft size={24} color="black" />}
+                    icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted border-0"
+                    className="bg-muted dark:bg-muted-dark border-0"
                 />
             </View>
 
@@ -68,10 +70,10 @@ export default function ResetPassword() {
                 <View className="mb-8">
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">4-Digit OTP</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Keyboard size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="1234"
                                 placeholderTextColor="#9CA3AF"
                                 value={otp}
@@ -84,10 +86,10 @@ export default function ResetPassword() {
 
                     <View className="mb-2">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">New Password</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Lock size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="New password"
                                 placeholderTextColor="#9CA3AF"
                                 value={password}
@@ -108,8 +110,8 @@ export default function ResetPassword() {
                 <Button
                     onPress={handleReset}
                     isLoading={isLoading}
-                    className="h-16 rounded-full bg-dark border-0 mb-4"
-                    textClassName="text-white text-lg font-bold"
+                    className="h-16 rounded-full bg-dark dark:bg-white border-0 mb-4"
+                    textClassName="text-white dark:text-black text-lg font-bold"
                 >
                     Reset Password
                 </Button>

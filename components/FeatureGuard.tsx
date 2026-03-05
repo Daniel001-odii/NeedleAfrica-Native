@@ -6,6 +6,7 @@ import { Typography } from './ui/Typography';
 import { Surface } from './ui/Surface';
 import { useRevenueCat } from '../hooks/useRevenueCat';
 import { SubscriptionPaywall } from './SubscriptionPaywall';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface FeatureGuardProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps)
   const { canAccessFeature, isPro } = useRevenueCat();
   const router = useRouter();
   const [showPaywall, setShowPaywall] = useState(false);
+  const { isDark } = useTheme();
 
   const checkFeatureAccess = async () => {
     try {
@@ -56,7 +58,7 @@ export function FeatureGuard({ children, feature, fallback }: FeatureGuardProps)
 
       {/* Upgrade overlay */}
       <View className="absolute inset-0 items-center justify-center">
-        <Surface variant="white" className="p-4 mx-4 border border-gray-200" rounded="2xl">
+        <Surface variant="white" className={`p-4 mx-4 border ${isDark ? 'border-dark-700' : 'border-gray-200'}`} rounded="2xl">
           <View className="items-center">
             {feature === 'aiFeatures' ? (
               <Star1 size={24} color="#8b5cf6" variant="Bulk" />
@@ -98,6 +100,7 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
   const { isPro } = useRevenueCat();
   const router = useRouter();
   const [showPaywall, setShowPaywall] = useState(false);
+  const { isDark } = useTheme();
 
   // Only show limit warning for free tier
   if (isPro) {
@@ -136,7 +139,7 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
         {children}
       </View>
       <View className="absolute inset-0 items-center justify-center">
-        <Surface variant="white" className="p-6 mx-4 border border-red-200 bg-red-50" rounded="2xl">
+        <View className={`p-6 mx-4 rounded-2xl border ${isDark ? 'bg-red-900/15 border-red-500/20' : 'bg-red-50 border-red-200'}`}>
           <View className="items-center">
             <Lock size={32} color="#EF4444" variant="Bulk" />
             <Typography variant="body" weight="bold" color="red" className="mt-3 text-center">
@@ -152,7 +155,7 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
               <Typography variant="body" weight="bold">Upgrade to Pro</Typography>
             </TouchableOpacity>
           </View>
-        </Surface>
+        </View>
       </View>
       <SubscriptionPaywall
         visible={showPaywall}
@@ -216,10 +219,12 @@ interface UpgradePromptProps {
 export function UpgradePrompt({ feature, requiredPlan }: UpgradePromptProps) {
   const router = useRouter();
 
+  const { isDark } = useTheme();
+
   return (
     <Pressable
       onPress={() => router.push('/(tabs)/profile/subscription')}
-      className="flex-row items-center bg-yellow-50 border border-yellow-200 px-4 py-3 rounded-xl"
+      className={`flex-row items-center px-4 py-3 rounded-xl border ${isDark ? 'bg-yellow-900/15 border-yellow-500/20' : 'bg-yellow-50 border-yellow-200'}`}
     >
       <Crown size={20} color="#Eab308" variant="Bulk" />
       <Typography variant="small" className="ml-2 flex-1">

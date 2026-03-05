@@ -28,27 +28,27 @@ export default function BackupData() {
         });
     };
 
-    const handleBackup = async () => {
+    const handleBackup = async (full = false) => {
         if (!isOnline) {
             Toast.show({
                 type: 'error',
                 text1: 'Offline',
-                text2: 'Please connect to the internet to backup'
+                text2: 'Please connect to the internet to ' + (full ? 'sync' : 'backup')
             });
             return;
         }
 
         try {
-            await performSync();
+            await performSync({ full });
             Toast.show({
                 type: 'success',
-                text1: 'Backup complete',
-                text2: 'Your data is now safe in the cloud'
+                text1: full ? 'Fresh Sync complete' : 'Backup complete',
+                text2: full ? 'Your local records have been updated from the cloud' : 'Your data is now safe in the cloud'
             });
         } catch (error) {
             Toast.show({
                 type: 'error',
-                text1: 'Backup failed',
+                text1: full ? 'Sync failed' : 'Backup failed',
                 text2: 'Could not reach the server'
             });
         }
@@ -121,12 +121,26 @@ export default function BackupData() {
                 </View>
 
                 <Button
-                    onPress={handleBackup}
+                    onPress={() => handleBackup(false)}
                     isLoading={isSyncing}
                     className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
                     textClassName="text-white"
                 >
                     {isSyncing ? 'Backing up...' : 'Backup Now'}
+                </Button>
+
+                <Button
+                    onPress={() => handleBackup(true)}
+                    isLoading={isSyncing}
+                    variant="ghost"
+                    className="h-12 rounded-full mt-2"
+                >
+                    <View className="flex-row items-center">
+                        <Refresh size={16} color={isDark ? '#9CA3AF' : '#6B7280'} className="mr-2" />
+                        <Typography variant="small" color="gray">
+                            Reset & Full Sync from Cloud
+                        </Typography>
+                    </View>
                 </Button>
             </ScrollView>
         </View>

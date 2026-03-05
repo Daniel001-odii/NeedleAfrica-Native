@@ -109,28 +109,17 @@ export default function Profile() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Account</Typography>
                     <View className="gap-1">
                         <ProfileItem
-                            icon={<User size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<User size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Personal Information"
                             onPress={() => router.push('/(tabs)/profile/personal')}
                         />
                         <ProfileItem
-                            icon={<Setting2 size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<Setting2 size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Preferences"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                         />
-                        {/*  <ProfileItem
-                            icon={<Gallery size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
-                            title="Lookbook"
-                            subtitle="Showcase your work as a digital catalogue"
-                            badge="Coming Soon"
-                            badgeColor="bg-gray-500"
-                        /> */}
                         <ProfileItem
-                            icon={<Crown size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<Crown size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Subscription"
                             subtitle="Manage your plan & billing"
                             badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : 'Free Plan'}
@@ -145,20 +134,11 @@ export default function Profile() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Data & Security</Typography>
                     <View className="gap-1">
                         <ProfileItem
-                            icon={<CloudChange size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<CloudChange size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Backup Data"
                             subtitle="Securely sync your workshop data to cloud"
                             onPress={() => router.push('/(tabs)/profile/backup')}
                         />
-                        {/* <ProfileItem
-                            icon={<DocumentDownload size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
-                            title="Download Your Data"
-                            subtitle="Get a copy of all your records"
-                            badge="Coming Soon"
-                            badgeColor="bg-gray-500"
-                        /> */}
                     </View>
                 </View>
 
@@ -167,21 +147,18 @@ export default function Profile() {
                     <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Support</Typography>
                     <View className="gap-1">
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                         />
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Send Feedback"
                             subtitle="Help us improve NeedleAfrica"
                             onPress={() => Linking.openURL('mailto:support@needleafrica.com?subject=Feedback for NeedleAfrica')}
                         />
                         <ProfileItem
-                            icon={<DocumentText size={20} color="#3b82f6" variant="Bulk" />}
-                            iconBgColor="bg-blue-50"
+                            icon={<DocumentText size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Privacy Policy"
                             subtitle="View our privacy policy"
                             onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}
@@ -192,7 +169,7 @@ export default function Profile() {
                 {/* Logout Action */}
                 <Pressable
                     onPress={handleLogout}
-                    className="h-16 rounded-full text-white border-blue-500 bg-blue-500/10 flex-row shadow-none items-center justify-center gap-3 active:bg-blue-500/50 active:text-white"
+                    className="h-16 rounded-full border-blue-500 bg-blue-500/10 flex-row items-center justify-center gap-3 active:bg-blue-500/20"
                 >
                     <Logout size={20} color="#3b82f6" />
                     <Typography weight="bold" className="text-blue-500">Log Out</Typography>
@@ -225,12 +202,13 @@ interface ProfileItemProps {
     badgeColor?: string;
 }
 
-function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-blue-50', badgeColor = 'bg-blue-600' }: ProfileItemProps) {
+function ProfileItem({ icon, title, subtitle, badge, onPress, badgeColor = 'bg-blue-600' }: ProfileItemProps) {
+    const { isDark } = useTheme();
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
-            <Surface variant="white" className="p-4 bg-muted/10" rounded="2xl">
+            <Surface variant="white" className={`p-4 border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-muted border-gray-50'}`} rounded="2xl" hasBorder={isDark}>
                 <View className="flex-row items-center">
-                    <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${iconBgColor}`}>
+                    <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${isDark ? 'bg-indigo-900/20' : 'bg-blue-50'}`}>
                         {icon}
                     </View>
                     <View className="flex-1">
@@ -244,7 +222,7 @@ function ProfileItem({ icon, title, subtitle, badge, onPress, iconBgColor = 'bg-
                             )}
                         </View>
                         {subtitle && (
-                            <Typography variant="small" color="gray" className="mt-1 pr-6 leading-tight max-w-[80%]">
+                            <Typography variant="small" color="gray" className={`mt-1 pr-6 leading-tight max-w-[90%] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {subtitle}
                             </Typography>
                         )}

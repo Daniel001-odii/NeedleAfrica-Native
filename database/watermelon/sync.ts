@@ -2,11 +2,19 @@ import { synchronize } from '@nozbe/watermelondb/sync';
 import { database } from './index';
 import axiosInstance from '../../lib/axios';
 
-export async function sync() {
+export async function sync(fullSync = false) {
+    if (fullSync) {
+        console.log('[Sync] Performing full sync - resetting local pull timestamp');
+        // Manually reset the last pulled at timestamp in Watermelon's internal state
+        // This forces pullChanges to receive lastPulledAt = null
+        await database.adapter.setLocal('__watermelon_last_pulled_at', '0');
+    }
+
     await synchronize({
         database,
         pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
             console.log('[Sync] Pulling changes since:', lastPulledAt);
+            // If fullSync was requested, lastPulledAt will effectively be 0
             const response = await axiosInstance.get('/sync', {
                 params: {
                     last_pulled_at: lastPulledAt || 0,

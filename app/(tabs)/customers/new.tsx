@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
@@ -155,36 +155,32 @@ export default function NewCustomer() {
 
                     {/* Gender Selection */}
                     <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-3 uppercase">Gender</Typography>
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            className="flex-row"
-                            contentContainerClassName="pr-6"
-                        >
+                        <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-4 uppercase tracking-widest">Gender</Typography>
+                        <View className="flex-row flex-wrap gap-3">
                             {['female', 'male', 'other'].map((g) => {
                                 const isActive = gender === g;
                                 return (
-                                    <Pressable
+                                    <TouchableOpacity
                                         key={g}
                                         onPress={() => setGender(g)}
-                                        className={`flex-row items-center px-6 py-3 rounded-full mr-3 border ${isActive
-                                            ? (isDark ? 'bg-gray-100 border-white' : 'bg-dark border-dark')
-                                            : (isDark ? 'bg-dark-800 border-border-dark' : 'bg-blue-100 border-blue-100')
+                                        activeOpacity={0.7}
+                                        className={`px-8 py-3 rounded-full border ${isActive
+                                            ? 'bg-brand-primary border-brand-primary'
+                                            : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
                                             }`}
                                     >
                                         <Typography
                                             variant="small"
-                                            weight={isActive ? 'bold' : 'medium'}
-                                            color={isActive ? (isDark ? 'dark' : 'white') : 'gray'}
+                                            weight="bold"
+                                            color={isActive ? 'white' : (isDark ? 'gray' : 'black')}
                                             className="capitalize"
                                         >
                                             {g}
                                         </Typography>
-                                    </Pressable>
+                                    </TouchableOpacity>
                                 );
                             })}
-                        </ScrollView>
+                        </View>
                     </View>
 
                     {/* Notes Input */}

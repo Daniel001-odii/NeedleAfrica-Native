@@ -166,7 +166,7 @@ export default function Welcome() {
             flatListRef.current?.scrollToIndex({
                 index: nextIndex,
                 animated: true,
-                viewPosition: 0.5 // Centers the item
+                viewPosition: 0 // Centers the item
             });
         }, 4000);
 
@@ -190,7 +190,7 @@ export default function Welcome() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-muted'}`}>
+        <View className="flex-1 bg-muted dark:bg-background-dark">
             {/* Carousel Section */}
             <View style={{ height: ITEM_WIDTH * 1.25, marginTop: 100 }}>
                 <Animated.FlatList
@@ -267,7 +267,7 @@ export default function Welcome() {
                                     width: 8,
                                     height: 8,
                                     borderRadius: 4,
-                                    backgroundColor: isDark ? '#FFFFFF' : '#000',
+                                    backgroundColor: isDark ? '#FFFFFF' : '#000000',
                                     marginHorizontal: 4,
                                 },
                                 dotStyle
@@ -295,18 +295,18 @@ export default function Welcome() {
                 <View className="gap-4">
                     <Button
                         onPress={() => router.push('/(auth)/login')}
-                        className="bg-dark h-16 rounded-full border-0"
-                        textClassName="text-white text-lg font-bold"
+                        className="bg-dark dark:bg-white h-16 rounded-full border-0"
+                        textClassName="text-white dark:text-black text-lg font-bold"
                     >
                         Get started
                     </Button>
                     <TouchableOpacity
                         onPress={handleGoogleSignIn}
                         disabled={isLoading}
-                        className={`h-14 rounded-full ${isDark ? 'bg-dark-800 border-dark-700' : 'bg-gray-100 border-gray-300'} border flex-row items-center justify-center active:bg-gray-300`}
+                        className="h-14 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 flex-row items-center justify-center active:opacity-70"
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="black" />
+                            <ActivityIndicator color={isDark ? "white" : "black"} />
                         ) : (
                             <>
                                 <Image
@@ -314,7 +314,7 @@ export default function Welcome() {
                                     className="w-5 h-5 mr-3"
                                     resizeMode="contain"
                                 />
-                                <Typography color="black" weight="semibold">Continue with Google</Typography>
+                                <Typography color={isDark ? "white" : "black"} weight="semibold">Continue with Google</Typography>
                             </>
                         )}
                     </TouchableOpacity>

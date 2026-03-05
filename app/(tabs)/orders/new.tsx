@@ -360,7 +360,7 @@ export default function NewOrder() {
                 onRequestClose={() => setShowCustomerModal(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <Surface variant="white" className={`h-[85%] rounded-t-[40px] p-6 pb-12 ${isDark ? 'border-t border-border-dark' : ''}`} rounded="none">
+                    <Surface variant="white" className={`h-[85%] rounded-t-[40px] p-6 pb-12 ${isDark ? 'border-t border-border-dark bg-background-dark' : 'bg-white'}`} rounded="none">
                         <View className="flex-row items-center justify-between mb-6">
                             <Typography variant="h2" weight="bold">Select Client</Typography>
 
@@ -404,18 +404,18 @@ export default function NewOrder() {
                                 >
                                     <Surface
                                         variant={selectedCustomer?.id === item.id ? 'white' : 'muted'}
-                                        className={`p-4 flex-row items-center border ${selectedCustomer?.id === item.id ? (isDark ? 'border-indigo-400' : 'border-black') : 'border-transparent'}`}
+                                        className={`p-4 flex-row items-center border ${selectedCustomer?.id === item.id ? (isDark ? 'border-indigo-400' : 'border-black/10') : 'border-transparent'}`}
                                         rounded="2xl"
                                     >
-                                        <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 shadow-sm ${isDark ? 'bg-dark-800' : 'bg-white'}`}>
-                                            <User size={20} color={isDark ? "white" : "black"} variant="Bulk" />
+                                        <View className={`w-12 h-12 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-dark-800' : 'bg-indigo-500'}`}>
+                                            <Typography variant="h2" weight="bold" color="white">{item?.fullName?.charAt(0).toUpperCase()}</Typography>
                                         </View>
                                         <View className="flex-1">
                                             <Typography weight="bold">{item.fullName}</Typography>
                                             <Typography variant="small" color="gray">{item.phoneNumber || 'No phone'}</Typography>
                                         </View>
                                         {selectedCustomer?.id === item.id && (
-                                            <TickCircle size={24} color={isDark ? "#818CF8" : "black"} variant="Bold" />
+                                            <TickCircle size={24} color={"#818CF8"} variant="Bold" />
                                         )}
                                     </Surface>
                                 </Pressable>

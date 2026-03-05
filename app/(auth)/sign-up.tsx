@@ -7,6 +7,7 @@ import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
+import { useTheme } from '../../contexts/ThemeContext';
 
 import Toast from 'react-native-toast-message';
 
@@ -17,6 +18,7 @@ export default function SignUp() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const { signUp, signInWithGoogle, isLoading } = useAuth();
+    const { isDark } = useTheme();
     const router = useRouter();
 
     const handleGoogleSignIn = async () => {
@@ -66,12 +68,12 @@ export default function SignUp() {
     };
 
     return (
-        <View className="flex-1 bg-muted p-12">
+        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
-                    icon={<ArrowLeft size={24} color="black" />}
+                    icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted border-0"
+                    className="bg-muted dark:bg-muted-dark border-0"
                 />
             </View>
 
@@ -87,10 +89,10 @@ export default function SignUp() {
                 <View className="mb-8">
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Full Name</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <User size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="Jane Doe"
                                 placeholderTextColor="#9CA3AF"
                                 value={name}
@@ -100,10 +102,10 @@ export default function SignUp() {
                     </View>
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Business Name</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Shop size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="Needle Africa Tailors"
                                 placeholderTextColor="#9CA3AF"
                                 value={businessName}
@@ -114,10 +116,10 @@ export default function SignUp() {
 
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Email Address</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Sms size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="your@email.com"
                                 placeholderTextColor="#9CA3AF"
                                 value={email}
@@ -130,10 +132,10 @@ export default function SignUp() {
 
                     <View className="mb-2">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Password</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Lock size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark"
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                                 placeholder="Create a password"
                                 placeholderTextColor="#9CA3AF"
                                 value={password}
@@ -154,8 +156,8 @@ export default function SignUp() {
                 <Button
                     onPress={handleSignUp}
                     isLoading={isLoading}
-                    className="h-16 rounded-full bg-dark border-0 mb-4"
-                    textClassName="text-white text-lg font-bold"
+                    className="h-16 rounded-full bg-blue-500 border-0 mb-4"
+                    textClassName="text-white dark:text-black text-lg font-bold"
                 >
                     Get Started
                 </Button>
@@ -163,14 +165,14 @@ export default function SignUp() {
                 <TouchableOpacity
                     onPress={handleGoogleSignIn}
                     disabled={isLoading}
-                    className="h-16 rounded-full bg-white border border-gray-200 flex-row items-center justify-center mb-8 bg-gray-200 active:bg-gray-200"
+                    className={`h-16 rounded-full ${isDark ? 'bg-gray-700' : 'bg-muted'} flex-row items-center justify-center mb-8 active:opacity-70`}
                 >
                     <Image
                         source={require('../../assets/images/google_logo.png')}
                         className="w-6 h-6 mr-3"
                         resizeMode="contain"
                     />
-                    <Typography weight="bold" color="black">Continue with Google</Typography>
+                    <Typography weight="bold" color={isDark ? "white" : "black"}>Continue with Google</Typography>
                 </TouchableOpacity>
 
                 <View className="flex-row justify-center items-center pb-10">

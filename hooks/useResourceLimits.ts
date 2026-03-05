@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { database } from '../database/watermelon';
 import { Q } from '@nozbe/watermelondb';
+import { useAuth } from '../contexts/AuthContext';
 
 type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
 
@@ -44,61 +45,67 @@ const LIMITS: Record<ResourceType, number> = {
 };
 
 export function useResourceLimits(): UseResourceLimitsReturn {
+  const { user } = useAuth();
   const [counts, setCounts] = useState<ResourceCounts>({
     orders: 0,
     customers: 0,
     templates: 0,
     invoices: 0,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const refreshCounts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Count orders (not deleted)
-      const orders = await database
-        .get('orders')
-        .query(Q.where('deleted_at', null))
-        .fetchCount();
+  // Helper to create a query for a resource
+  const getResourceQuery = useCallback((resource: ResourceType) => {
+    if (!user) return null;
 
-      // Count customers (not deleted)
-      const customers = await database
-        .get('customers')
-        .query(Q.where('deleted_at', null))
-        .fetchCount();
+    const tableName = resource === 'templates' ? 'measurement_templates' : resource;
 
-      // Count measurement templates (not deleted)
-      const templates = await database
-        .get('measurement_templates')
-        .query(Q.where('deleted_at', null))
-        .fetchCount();
+    return database
+      .get(tableName)
+      .query(
+        Q.where('user_id', user.id),
+        Q.where('deleted_at', Q.eq(null))
+      );
+  }, [user]);
 
-      // Count invoices (orders with amount > 0, as a proxy)
-      const invoices = await database
-        .get('orders')
-        .query(
-          Q.where('deleted_at', null),
-          Q.where('amount', Q.gt(0))
-        )
-        .fetchCount();
-
-      setCounts({
-        orders,
-        customers,
-        templates,
-        invoices,
-      });
-    } catch (error) {
-      console.error('Failed to fetch resource counts:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Initial fetch
   useEffect(() => {
-    refreshCounts();
-  }, [refreshCounts]);
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Setup observers for all resources
+    const resources: ResourceType[] = ['orders', 'customers', 'templates', 'invoices'];
+    const subscriptions: any[] = [];
+
+    const handleCountChange = (resource: ResourceType, count: number) => {
+      setCounts(prev => ({ ...prev, [resource]: count }));
+    };
+
+    resources.forEach(resource => {
+      const query = getResourceQuery(resource);
+      if (query) {
+        const subscription = query.observeCount().subscribe(count => {
+          handleCountChange(resource, count);
+        });
+        subscriptions.push(subscription);
+      }
+    });
+
+    setIsLoading(false);
+
+    return () => {
+      subscriptions.forEach(sub => sub.unsubscribe());
+    };
+  }, [user, getResourceQuery]);
+
+  // Keep refreshCounts for manual triggers if needed, though observers handle most cases
+  const refreshCounts = useCallback(async () => {
+    if (!user) return;
+    // Handled by observers, but we can do a manual fetch if needed
+  }, [user]);
 
   const canCreate = useCallback((resource: ResourceType) => {
     const current = counts[resource];
@@ -156,3 +163,4 @@ export function useResourceLimits(): UseResourceLimitsReturn {
     anyResourceAtLimit,
   };
 }
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,6 +42,15 @@ export default function OrderDetail() {
     const [fabricImage, setFabricImage] = useState<string | null>(null);
     const [styleImage, setStyleImage] = useState<string | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+
+    // Full screen image view
+    const [viewerVisible, setViewerVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<{ uri: string, label: string } | null>(null);
+
+    const openViewer = (uri: string, label: string) => {
+        setSelectedImage({ uri, label });
+        setViewerVisible(true);
+    };
 
     useEffect(() => {
         if (order) {
@@ -251,16 +260,19 @@ export default function OrderDetail() {
                             </View>
 
                             {/* Payment Balance Card */}
-                            <Surface variant={(order.balance || 0) > 0 ? 'peach' : 'green'} className={`p-5 mb-6 border ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="3xl">
+                            <View className={`p-5 mb-6 rounded-3xl border ${(order.balance || 0) > 0
+                                ? (isDark ? 'bg-orange-900/10 border-orange-500/20' : 'bg-soft-peach border-orange-100')
+                                : (isDark ? 'bg-green-900/10 border-green-500/20' : 'bg-soft-green border-green-100')
+                                }`}>
                                 <View className="flex-row justify-between items-center mb-4">
                                     <View>
                                         <Typography variant="caption" weight="bold" color="gray" className="uppercase opacity-60">Payment Status</Typography>
-                                        <Typography variant="h3" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-primary') : 'text-green-600'}>
+                                        <Typography variant="h3" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
                                             {(order.balance || 0) > 0 ? 'Balance Owing' : 'Fully Paid'}
                                         </Typography>
                                     </View>
-                                    <View className={`${isDark ? 'bg-black/20' : 'bg-white/50'} px-3 py-1 rounded-full`}>
-                                        <Typography variant="small" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-primary') : 'text-green-600'}>
+                                    <View className={`${isDark ? 'bg-white/10' : 'bg-white/50'} px-3 py-1 rounded-full`}>
+                                        <Typography variant="small" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
                                             ₦{order.amountPaid?.toLocaleString() || '0'} Paid
                                         </Typography>
                                     </View>
@@ -268,42 +280,54 @@ export default function OrderDetail() {
 
                                 <View className={`${isDark ? 'bg-white/10' : 'bg-gray-200'} h-2 rounded-full overflow-hidden mb-4`}>
                                     <View
-                                        className={`h-full ${(order.balance || 0) > 0 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                        className={`h-full ${(order.balance || 0) > 0 ? (isDark ? 'bg-orange-400' : 'bg-orange-500') : 'bg-green-500'}`}
                                         style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
                                     />
                                 </View>
 
                                 <View className="flex-row justify-between">
                                     <Typography variant="caption" color="gray">Balance to pay</Typography>
-                                    <Typography variant="body" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-primary') : 'text-green-600'}>
+                                    <Typography variant="body" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
                                         ₦{order.balance?.toLocaleString() || '0'}
                                     </Typography>
                                 </View>
-                            </Surface>
+                            </View>
 
                             {/* Reference Images */}
                             <Typography variant="caption" weight="bold" color="gray" className="mb-3 uppercase ml-1">References</Typography>
                             <View className="flex-row gap-4 mb-8 h-48">
-                                <Surface variant="muted" className={`flex-1 overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
-                                    {fabricImage ? (
-                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <Typography variant="caption" color="gray">No Fabric Photo</Typography>
-                                    )}
-                                    <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
-                                        <Typography variant="small" weight="bold">Fabric</Typography>
-                                    </View>
-                                </Surface>
-                                <Surface variant="muted" className={`flex-1 overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
-                                    {styleImage ? (
-                                        <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <Typography variant="caption" color="gray">No Style Photo</Typography>
-                                    )}
-                                    <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
-                                        <Typography variant="small" weight="bold">Style</Typography>
-                                    </View>
-                                </Surface>
+                                <Pressable
+                                    className="flex-1"
+                                    onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
+                                    disabled={!fabricImage}
+                                >
+                                    <Surface variant="muted" className={`overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
+                                        {fabricImage ? (
+                                            <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                        ) : (
+                                            <Typography variant="caption" color="gray">No Fabric Photo</Typography>
+                                        )}
+                                        <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
+                                            <Typography variant="small" weight="bold">Fabric</Typography>
+                                        </View>
+                                    </Surface>
+                                </Pressable>
+                                <Pressable
+                                    className="flex-1"
+                                    onPress={() => styleImage && openViewer(styleImage, 'Style')}
+                                    disabled={!styleImage}
+                                >
+                                    <Surface variant="muted" className={`overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
+                                        {styleImage ? (
+                                            <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                        ) : (
+                                            <Typography variant="caption" color="gray">No Style Photo</Typography>
+                                        )}
+                                        <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
+                                            <Typography variant="small" weight="bold">Style</Typography>
+                                        </View>
+                                    </Surface>
+                                </Pressable>
                             </View>
 
                             {/* Notes */}
@@ -459,6 +483,34 @@ export default function OrderDetail() {
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* Image Viewer Modal */}
+            <Modal
+                visible={viewerVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setViewerVisible(false)}
+            >
+                <View className="flex-1 bg-black justify-center items-center">
+                    <SafeAreaView className="absolute top-0 left-0 right-0 z-10 p-6 flex-row justify-between items-center">
+                        <Typography variant="body" weight="bold" color="white">{selectedImage?.label}</Typography>
+                        <TouchableOpacity
+                            onPress={() => setViewerVisible(false)}
+                            className="bg-white/10 p-2 rounded-full"
+                        >
+                            <CloseCircle size={28} color="white" />
+                        </TouchableOpacity>
+                    </SafeAreaView>
+
+                    {selectedImage?.uri && (
+                        <Image
+                            source={{ uri: selectedImage.uri }}
+                            className="w-full h-full"
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
+            </Modal>
         </View>
     );
 }

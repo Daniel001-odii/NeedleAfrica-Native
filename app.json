@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "platforms": [
       "ios",
@@ -14,7 +14,7 @@
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -47,7 +47,7 @@
           "backgroundColor": "#ffffff",
           "dark": {
             "image": "./assets/icon.png",
-            "backgroundColor": "#FFFFFF"
+            "backgroundColor": "#000000"
           }
         }
       ],

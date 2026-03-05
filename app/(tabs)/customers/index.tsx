@@ -13,6 +13,8 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Trash } from 'iconsax-react-native';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useResourceLimits } from '../../../hooks/useResourceLimits';
 
 type SortOption = 'recent' | 'oldest' | 'a-z' | 'z-a';
 
@@ -32,6 +34,11 @@ function CustomersScreen() {
     const { confirm } = useConfirm();
     const router = useRouter();
     const { isDark } = useTheme();
+    const { user } = useAuth();
+    const { getLimitStatus } = useResourceLimits();
+
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+    const customerLimit = getLimitStatus('customers');
 
     const sortedCustomers = useMemo(() => {
         const sorted = [...customers];
@@ -76,7 +83,7 @@ function CustomersScreen() {
             <View className="pl-4 mb-2 justify-center">
                 <Pressable
                     onPress={() => handleDelete(id, name)}
-                    className="text-red-500 justify-center items-center w-16 h-16 rounded-3xl shadow-sm shadow-red-200"
+                    className="text-red-500 justify-center items-center w-16 h-16 rounded-3xl shadow-red-200"
                 >
                     <Trash size={24} color="red" variant="Bold" />
                 </Pressable>
@@ -91,7 +98,16 @@ function CustomersScreen() {
             <View className="p-6 pb-0">
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
-                    <Typography variant="h2" weight="bold">Customers</Typography>
+                    <View className="flex-row items-center">
+                        <Typography variant="h2" weight="bold">Customers</Typography>
+                        {!isPro && (
+                            <View className={`ml-3 px-2 py-0.5 rounded-lg ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
+                                <Typography variant="small" weight="bold" className={isDark ? 'text-indigo-400' : 'text-indigo-600'}>
+                                    {customerLimit.current}/{customerLimit.limit}
+                                </Typography>
+                            </View>
+                        )}
+                    </View>
                     <View className="flex-row gap-2">
                         <IconButton
                             icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
@@ -104,8 +120,8 @@ function CustomersScreen() {
                             onPress={onRefresh}
                         />
                         <IconButton
-                            icon={<Add size={24} color="white" />}
-                            variant="dark"
+                            icon={<Add size={24} color={isDark ? "white" : "black"} />}
+                            variant="glass"
                             onPress={() => router.push('/(tabs)/customers/new')}
                         />
                     </View>
@@ -128,7 +144,7 @@ function CustomersScreen() {
             <FlatList
                 data={sortedCustomers}
                 keyExtractor={item => item.id}
-                contentContainerClassName="p-6 pt-0 pb-16 gap-5"
+                contentContainerClassName="p-6 pt-0 pb-16 gap-2"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -142,9 +158,15 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <Surface variant="white" className="flex-row items-center py-2" rounded="3xl" hasShadow>
-                                <Surface variant="lavender" className="w-12 h-12 items-center justify-center mr-4" rounded="full">
-                                    <Typography weight="bold" className="text-brand-primary">
+                            <Surface
+                                variant="white"
+                                className={`flex-row items-center p-3 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-transparent'}`}
+                                rounded="3xl"
+                                hasShadow={!isDark}
+                                hasBorder={isDark}
+                            >
+                                <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
+                                    <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
                                         {(item.fullName || 'C').charAt(0).toUpperCase()}
                                         {(item.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
                                     </Typography>

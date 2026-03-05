@@ -8,12 +8,14 @@ import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 import Svg, { Path } from 'react-native-svg';
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
     const { forgotPassword, isLoading } = useAuth();
+    const { isDark } = useTheme();
     const router = useRouter();
 
     const handleReset = async () => {
@@ -47,12 +49,12 @@ export default function ForgotPassword() {
     };
 
     return (
-        <View className="flex-1 bg-muted p-12">
+        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
-                    icon={<ArrowLeft size={24} color="black" />}
+                    icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted border-0"
+                    className="bg-muted dark:bg-muted-dark border-0"
                 />
             </View>
 
@@ -70,10 +72,10 @@ export default function ForgotPassword() {
 
                 <View className="mb-10">
                     <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Email Address</Typography>
-                    <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 bg-gray-200">
+                    <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                         <Sms size={20} color="#6B7280" variant="Bulk" />
                         <TextInput
-                            className="flex-1 ml-3 h-full font-semibold text-dark"
+                            className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
                             placeholder="your@email.com"
                             placeholderTextColor="#9CA3AF"
                             value={email}
@@ -87,8 +89,8 @@ export default function ForgotPassword() {
                 <Button
                     onPress={handleReset}
                     isLoading={isLoading}
-                    className="h-16 rounded-full bg-dark border-0 mb-4"
-                    textClassName="text-white text-lg font-bold"
+                    className="h-16 rounded-full bg-dark dark:bg-white border-0 mb-4"
+                    textClassName="text-white dark:text-black text-lg font-bold"
                 >
                     Send OTP Code
                 </Button>

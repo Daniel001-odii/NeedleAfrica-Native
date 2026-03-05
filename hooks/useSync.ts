@@ -2,22 +2,31 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { sync } from '../database/watermelon/sync';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../contexts/AuthContext';
 
 export function useSync() {
+    const { user } = useAuth();
     // Use a flag to prevent concurrent sync calls
     const [isSyncing, setIsSyncing] = useState(false);
     const [lastSyncError, setLastSyncError] = useState<Error | null>(null);
     const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
     const [isOnline, setIsOnline] = useState(true);
 
+    const syncKey = user ? `lastSyncedAt_${user.id}` : null;
+
     // Ref to track if a sync is currently running globally in this hook instance
-    // Or better, a shared state. Using a ref for immediate check.
     const syncInProgress = useRef(false);
 
     useEffect(() => {
-        // Load last synced time
-        AsyncStorage.getItem('lastSyncedAt').then(value => {
-            if (value) setLastSyncedAt(parseInt(value, 10));
+        if (!syncKey) return;
+
+        // Load last synced time for this specific user
+        AsyncStorage.getItem(syncKey).then(value => {
+            if (value) {
+                setLastSyncedAt(parseInt(value, 10));
+            } else {
+                setLastSyncedAt(null);
+            }
         });
 
         // Monitor network state
@@ -26,9 +35,11 @@ export function useSync() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [syncKey]);
 
-    const performSync = useCallback(async () => {
+    const performSync = useCallback(async (options: { full?: boolean } = {}) => {
+        if (!user) return;
+
         if (syncInProgress.current) {
             console.log('[Sync] Synchronization already in progress, skipping...');
             return;
@@ -38,9 +49,12 @@ export function useSync() {
         setIsSyncing(true);
         setLastSyncError(null);
         try {
-            await sync();
+            await sync(options.full);
+
             const timestamp = Date.now();
-            await AsyncStorage.setItem('lastSyncedAt', timestamp.toString());
+            if (syncKey) {
+                await AsyncStorage.setItem(syncKey, timestamp.toString());
+            }
             setLastSyncedAt(timestamp);
         } catch (error: any) {
             // Check if it's the specific WatermelonDB concurrent sync error
@@ -55,7 +69,7 @@ export function useSync() {
             syncInProgress.current = false;
             setIsSyncing(false);
         }
-    }, []);
+    }, [user, syncKey]);
 
     return {
         isSyncing,
@@ -65,3 +79,4 @@ export function useSync() {
         sync: performSync,
     };
 }
+

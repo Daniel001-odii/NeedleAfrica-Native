@@ -143,6 +143,17 @@ function RootLayoutNav() {
         };
     }, [user, sync]);
 
+    // 3. Early Hider Effect: Ensure native splash is hidden once JS is ready
+    useEffect(() => {
+        if (!isLoading) {
+            // Give the app a moment to render the first frame
+            const timer = setTimeout(() => {
+                SplashScreen.hideAsync().catch(() => { });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading]);
+
     // 3. Notification listeners
     useEffect(() => {
         const notificationListener = NotificationService.addNotificationReceivedListener(notification => {
@@ -161,19 +172,14 @@ function RootLayoutNav() {
     }, []);
 
     // 4. Loading & Redirection state handling
-    // Prevent rendering anything while we are potentially redirecting on startup
-    // This helps avoid showing the index/welcome page briefly before the useEffect redirect kicks in
+    // Only show full-screen loading when the initial auth state is unknown
     if (isLoading) return <LoadingScreen />;
 
-    // For existing users who are logged in, if they are still on the root or auth group, show loading while redirect clears
-    if (user && !isNewUser && (!segments[0] || segments[0] === '(auth)' || segments[0] === 'onboarding')) {
-        return <LoadingScreen />;
-    }
+    // For better reliability, we avoid returning LoadingScreen for intermediate redirect states
+    // within RootLayoutNav, and instead handle the "nothing to show" state via route-level checks
+    // if necessary. However, the current stack will render the appropriate screen which
+    // will then immediately trigger the redirect in the useEffect above.
 
-    // For logged out users, if they are on a protected route, show loading while redirect to auth kicks in
-    if (!user && (segments[0] === '(tabs)' || segments[0] === 'measurements' || segments[0] === 'measurement-templates' || segments[0] === 'invoices')) {
-        return <LoadingScreen />;
-    }
 
     return (
         <Stack
@@ -207,11 +213,9 @@ function ThemeAwareRoot() {
 export default function RootLayout() {
     const fontsReady = true;
 
-    useEffect(() => {
-        if (fontsReady) {
-            SplashScreen.hideAsync();
-        }
-    }, [fontsReady]);
+    // Splash screen is hidden manually in app/loading.tsx to ensure a smooth transition
+    // from native splash to custom React splash.
+
 
     // Initialize RevenueCat on app start
     useEffect(() => {
