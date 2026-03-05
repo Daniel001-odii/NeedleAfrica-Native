@@ -111,12 +111,12 @@ function CustomersScreen() {
                     <View className="flex-row gap-2">
                         <IconButton
                             icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
-                            variant="ghost"
+                            variant="glass"
                             onPress={() => setShowSortModal(true)}
                         />
                         <IconButton
                             icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
-                            variant="ghost"
+                            variant="glass"
                             onPress={onRefresh}
                         />
                         <IconButton

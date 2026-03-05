@@ -248,8 +248,9 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     {[
                                         "Unlimited customers",
                                         "Unlimited orders",
-                                        "Create custom measurement templates",
-                                        "Customizable invoices with logo and signature",
+                                        "Unlimited measurement templates",
+                                        "Unlimited Customizable invoices",
+                                        "Free access to extra tools",
                                         'Early access to new features'
                                     ].map((feature, idx) => (
                                         <View key={idx} className="flex-row items-center mb-2">

@@ -169,10 +169,10 @@ export default function Profile() {
                 {/* Logout Action */}
                 <Pressable
                     onPress={handleLogout}
-                    className="h-16 rounded-full border-blue-500 bg-blue-500/10 flex-row items-center justify-center gap-3 active:bg-blue-500/20"
+                    className="h-16 rounded-full border-red-500 bg-red-500/30 flex-row items-center justify-center gap-3 active:bg-blue-500/20"
                 >
-                    <Logout size={20} color="#3b82f6" />
-                    <Typography weight="bold" className="text-blue-500">Log Out</Typography>
+                    <Logout size={20} color="#f63b3bff" />
+                    <Typography weight="bold" className="text-red-500">Log Out</Typography>
                 </Pressable>
 
                 {/* App Version */}

@@ -123,14 +123,14 @@ export default function Home() {
                     <>
                         {/* Balance Section */}
                         <View className="mb-8">
-                            <View className={`rounded-3xl overflow-hidden ${isDark ? 'bg-emerald-900/30 border border-emerald-500/20' : 'bg-emerald-900'}`} style={{ padding: 20 }}>
+                            <View className={`rounded-3xl overflow-hidden ${isDark ? 'bg-blue-900/20 border border-blue-500/20' : 'bg-blue-500 shadow-xl shadow-blue-100'}`} style={{ padding: 20 }}>
                                 {/* Header Row: Label + Eye Toggle */}
                                 <View className="flex-row items-center justify-between mb-3">
                                     <View className="flex-row items-center">
-                                        <View className="w-6 h-6 rounded-full bg-green-500/20 items-center justify-center mr-2">
-                                            <MoneyRecive size={12} color="#22C55E" variant="Bold" />
+                                        <View className={`w-6 h-6 rounded-full ${isDark ? 'bg-blue-400/20' : 'bg-white/20'} items-center justify-center mr-2`}>
+                                            <MoneyRecive size={12} color={isDark ? "#60A5FA" : "#E0F2FE"} variant="Bold" />
                                         </View>
-                                        <Typography variant="small" weight="medium" color="white" className="opacity-60">Total Earned</Typography>
+                                        <Typography variant="small" weight="medium" color="white" className="opacity-80">Total Earned</Typography>
                                     </View>
                                     <Pressable
                                         onPress={() => setBalanceVisible(!balanceVisible)}
@@ -138,36 +138,36 @@ export default function Home() {
                                         className="p-1"
                                     >
                                         {balanceVisible ? (
-                                            <Eye size={18} color="rgba(255,255,255,0.5)" variant="Bulk" />
+                                            <Eye size={18} color="rgba(255,255,255,0.7)" variant="Bulk" />
                                         ) : (
-                                            <EyeSlash size={18} color="rgba(255,255,255,0.5)" variant="Bulk" />
+                                            <EyeSlash size={18} color="rgba(255,255,255,0.7)" variant="Bulk" />
                                         )}
                                     </Pressable>
                                 </View>
 
                                 {/* Amount */}
-                                <Typography variant="h2" weight="bold" color="white" className="text-2xl mb-3">
+                                <Typography variant="h2" weight="bold" color="white" className="text-3xl mb-3 tracking-tight">
                                     {balanceVisible ? formatCurrency(stats.totalEarned) : '\u2022\u2022\u2022\u2022\u2022\u2022'}
                                 </Typography>
 
                                 {/* Divider */}
-                                <View className="h-px bg-white/10 mb-3" />
+                                <View className="h-px bg-white/10 mb-4" />
 
                                 {/* Bottom Row: Outstanding + Pending Count */}
                                 <View className="flex-row items-center justify-between">
                                     <View>
                                         <View className="flex-row items-center mb-0.5">
-                                            <View className="w-4 h-4 rounded-full bg-red-500/20 items-center justify-center mr-1.5">
-                                                <MoneySend size={9} color="#EF4444" variant="Bold" />
+                                            <View className="w-4 h-4 rounded-full bg-red-400/20 items-center justify-center mr-1.5">
+                                                <MoneySend size={9} color="#FECACA" variant="Bold" />
                                             </View>
-                                            <Typography variant="small" weight="medium" color="white" className="opacity-50 text-[11px]">Outstanding</Typography>
+                                            <Typography variant="small" weight="medium" color="white" className="opacity-70 text-[11px]">Outstanding</Typography>
                                         </View>
-                                        <Typography variant="body" weight="bold" color="white">
+                                        <Typography variant="body" weight="bold" color="white" className="text-lg">
                                             {balanceVisible ? formatCurrency(stats.totalDebt) : '\u2022\u2022\u2022\u2022\u2022\u2022'}
                                         </Typography>
                                     </View>
-                                    <View className="bg-white/10 px-3 py-1.5 rounded-2xl">
-                                        <Typography variant="small" weight="bold" color="white" className="text-[11px] opacity-70">
+                                    <View className="bg-white/10 px-4 py-2 rounded-2xl">
+                                        <Typography variant="small" weight="bold" color="white" className="text-[11px]">
                                             {stats.pendingCount} Ongoing
                                         </Typography>
                                     </View>
