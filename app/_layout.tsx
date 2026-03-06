@@ -77,17 +77,17 @@ function RootLayoutNav() {
 
         if (!user && !inAuthGroup && !inOnboarding) {
             // Not logged in: redirect to login
-            router.replace('/(auth)');
+            setTimeout(() => router.replace('/(auth)'), 0);
         } else if (user) {
             // Logged in
             if (isNewUser) {
                 // New user: go to onboarding
                 if (!inOnboarding) {
-                    router.replace('/onboarding');
+                    setTimeout(() => router.replace('/onboarding'), 0);
                 }
             } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices) {
                 // Existing user not in a valid protected route (like measurements): go to main app
-                router.replace('/(tabs)');
+                setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
     }, [user, isLoading, segments, isNewUser]);

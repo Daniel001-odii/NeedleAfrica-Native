@@ -17,7 +17,7 @@ export default function SignUp() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signUp, signInWithGoogle, isLoading } = useAuth();
+    const { signUp, signInWithGoogle, isActionLoading } = useAuth();
     const { isDark } = useTheme();
     const router = useRouter();
 
@@ -29,7 +29,7 @@ export default function SignUp() {
                 text1: 'Success',
                 text2: 'Logged in with Google'
             });
-            router.replace('/(tabs)');
+            router.replace('/onboarding');
         } catch (error: any) {
             if (error.code !== 'ASYNC_OP_IN_PROGRESS') {
                 Toast.show({
@@ -57,6 +57,7 @@ export default function SignUp() {
                 text1: 'Account Created',
                 text2: 'Welcome to Needle Africa!'
             });
+            router.replace('/onboarding');
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -68,12 +69,12 @@ export default function SignUp() {
     };
 
     return (
-        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
+        <View className="flex-1 bg-muted dark:bg-background-dark p-6">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
                     icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted dark:bg-muted-dark border-0"
+                    className="bg-muted dark:bg-background-dark border-0"
                 />
             </View>
 
@@ -155,7 +156,7 @@ export default function SignUp() {
 
                 <Button
                     onPress={handleSignUp}
-                    isLoading={isLoading}
+                    isLoading={isActionLoading}
                     className="h-16 rounded-full bg-blue-500 border-0 mb-4"
                     textClassName="text-white dark:text-black text-lg font-bold"
                 >
@@ -164,7 +165,7 @@ export default function SignUp() {
 
                 <TouchableOpacity
                     onPress={handleGoogleSignIn}
-                    disabled={isLoading}
+                    disabled={isActionLoading}
                     className={`h-16 rounded-full ${isDark ? 'bg-gray-700' : 'bg-muted'} flex-row items-center justify-center mb-8 active:opacity-70`}
                 >
                     <Image

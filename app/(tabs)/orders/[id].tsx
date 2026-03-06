@@ -16,6 +16,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { uploadOrderImages } from '../../../services/ImageUploadService';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { CURRENCIES } from '../../../constants/currencies';
 
 const isLocalUri = (uri: string | null) => uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
@@ -27,6 +29,10 @@ export default function OrderDetail() {
     const { sync: performSync } = useSync();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
+    const { user } = useAuth();
+
+    const currency = user?.currency || 'NGN';
+    const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -255,7 +261,7 @@ export default function OrderDetail() {
                                         <Money size={16} color={isDark ? "white" : "black"} className="mr-2" />
                                         <Typography variant="small" weight="bold">Total Price</Typography>
                                     </View>
-                                    <Typography variant="h3" weight="bold">₦{order.amount?.toLocaleString() || '0'}</Typography>
+                                    <Typography variant="h3" weight="bold">{currencySymbol}{order.amount?.toLocaleString() || '0'}</Typography>
                                 </Surface>
                             </View>
 
@@ -273,7 +279,7 @@ export default function OrderDetail() {
                                     </View>
                                     <View className={`${isDark ? 'bg-white/10' : 'bg-white/50'} px-3 py-1 rounded-full`}>
                                         <Typography variant="small" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
-                                            ₦{order.amountPaid?.toLocaleString() || '0'} Paid
+                                            {currencySymbol}{order.amountPaid?.toLocaleString() || '0'} Paid
                                         </Typography>
                                     </View>
                                 </View>
@@ -288,7 +294,7 @@ export default function OrderDetail() {
                                 <View className="flex-row justify-between">
                                     <Typography variant="caption" color="gray">Balance to pay</Typography>
                                     <Typography variant="body" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
-                                        ₦{order.balance?.toLocaleString() || '0'}
+                                        {currencySymbol}{order.balance?.toLocaleString() || '0'}
                                     </Typography>
                                 </View>
                             </View>
@@ -402,7 +408,7 @@ export default function OrderDetail() {
                             </View>
 
                             <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount (₦)</Typography>
+                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount ({currencySymbol})</Typography>
                                 <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
                                     <TextInput
                                         className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
@@ -416,7 +422,7 @@ export default function OrderDetail() {
                             </View>
 
                             <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount Paid (₦)</Typography>
+                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount Paid ({currencySymbol})</Typography>
                                 <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
                                     <TextInput
                                         className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}

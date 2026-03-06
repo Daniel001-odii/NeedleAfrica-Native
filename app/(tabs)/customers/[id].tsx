@@ -15,6 +15,7 @@ import { useSync } from '../../../hooks/useSync';
 import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
 import { Add } from 'iconsax-react-native';
 import Toast from 'react-native-toast-message';
+import { useState, useEffect } from 'react';
 
 export default function CustomerDetail() {
     const { id } = useLocalSearchParams();
@@ -132,11 +133,11 @@ export default function CustomerDetail() {
         .slice(0, 2);
 
     return (
-        <View className="flex-1 bg-white">
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
             {/* Header */}
-            <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-50">
+            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color="black" />}
+                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
                     onPress={() => isEditing ? setIsEditing(false) : router.back()}
                     variant="ghost"
                     className="-ml-2"
@@ -145,7 +146,7 @@ export default function CustomerDetail() {
                     {isEditing ? 'Edit Profile' : 'Customer Profile'}
                 </Typography>
                 <IconButton
-                    icon={isEditing ? <CloseCircle size={20} color="#EF4444" /> : <Edit2 size={20} color="black" />}
+                    icon={isEditing ? <CloseCircle size={20} color="#EF4444" /> : <Edit2 size={20} color={isDark ? "white" : "black"} />}
                     onPress={() => setIsEditing(!isEditing)}
                     variant="ghost"
                     className="-mr-2"

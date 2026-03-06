@@ -92,9 +92,9 @@ export default function Home() {
     }, [orders, customers]);
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-NG', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'NGN',
+            currency: user?.currency || 'NGN',
             minimumFractionDigits: 0
         }).format(amount);
     };

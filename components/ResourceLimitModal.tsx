@@ -5,6 +5,8 @@ import { Typography } from './ui/Typography';
 import { Button } from './ui/Button';
 import { Surface } from './ui/Surface';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { CURRENCIES } from '../constants/currencies';
 
 type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
 
@@ -30,6 +32,10 @@ export function ResourceLimitModal({
   isOffline,
 }: ResourceLimitModalProps) {
   const { isDark } = useTheme();
+  const { user } = useAuth();
+
+  const currency = user?.currency || 'NGN';
+  const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
   if (!visible) return null;
 
@@ -100,7 +106,7 @@ export function ResourceLimitModal({
                   Upgrade to Pro
                 </Typography>
                 <Typography variant="small" color="gray">
-                  Get unlimited {resourceLabel} and unlock all premium features for just ₦2,500/month.
+                  Get unlimited {resourceLabel} and unlock all premium features for just {currencySymbol}2,500/month.
                 </Typography>
               </View>
             </View>

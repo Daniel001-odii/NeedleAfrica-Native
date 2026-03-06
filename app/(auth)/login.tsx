@@ -17,7 +17,7 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signIn, signInWithGoogle, isLoading } = useAuth();
+    const { signIn, signInWithGoogle, isActionLoading, isNewUser } = useAuth();
     const { isDark } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -30,7 +30,8 @@ export default function Login() {
                 text1: 'Success',
                 text2: 'Logged in with Google'
             });
-            router.replace('/(tabs)');
+            // Force push
+            router.replace(isNewUser ? '/onboarding' : '/(tabs)');
         } catch (error: any) {
             if (error.code !== 'ASYNC_OP_IN_PROGRESS') {
                 Toast.show({
@@ -58,8 +59,8 @@ export default function Login() {
                 text1: 'Success',
                 text2: 'Logged in successfully'
             });
-            // Explicitly redirect to tabs
-            router.replace('/(tabs)');
+            // Force push
+            router.replace(isNewUser ? '/onboarding' : '/(tabs)');
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -71,12 +72,12 @@ export default function Login() {
     };
 
     return (
-        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
+        <View className="flex-1 bg-muted dark:bg-background-dark p-6">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
                     icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted dark:bg-muted-dark border-0"
+                    className="bg-muted dark:bg-background-dark border-0"
                 />
             </View>
 
@@ -138,8 +139,8 @@ export default function Login() {
 
                 <Button
                     onPress={handleLogin}
-                    disabled={isLoading}
-                    isLoading={isLoading}
+                    disabled={isActionLoading}
+                    isLoading={isActionLoading}
                     className="h-16 rounded-full bg-blue-500 !dark:bg-white border-0 mb-4"
                     textClassName="text-white dark:text-black text-lg font-bold"
                 >
@@ -148,7 +149,7 @@ export default function Login() {
 
                 <TouchableOpacity
                     onPress={handleGoogleSignIn}
-                    disabled={isLoading}
+                    disabled={isActionLoading}
                     className={`h-16 rounded-full ${isDark ? 'bg-gray-700' : 'bg-muted'} flex-row items-center justify-center mb-8 active:opacity-70`}
                 >
                     <Image

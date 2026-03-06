@@ -353,7 +353,7 @@ export default function Preferences() {
                 <Button
                     onPress={handleSave}
                     isLoading={isSaving}
-                    className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
+                    className="h-16 rounded-full bg-blue-600 border-0"
                     textClassName="text-white"
                 >
                     Save Preferences

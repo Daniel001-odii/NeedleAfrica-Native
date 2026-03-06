@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signInWithGoogle = async () => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             await GoogleSignin.hasPlayServices();
             const userInfo = await GoogleSignin.signIn();
@@ -129,12 +129,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const errorMsg = error.response?.data?.message || error.message || 'Google Sign-In failed';
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
     const signIn = async (email: string, password: string) => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             const response = await axiosInstance.post('/auth/login', { email, password });
             const { status, token, user: userData, message } = response.data;
@@ -160,12 +160,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Sign in error details:', error.response?.data || error.message);
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 
     const signUp = async (email: string, password: string, username: string, businessName: string) => {
-        setIsLoading(true);
+        setIsActionLoading(true);
         try {
             const response = await axiosInstance.post('/auth/register', { email, password, username, businessName });
             const { status, token, user: userData, message } = response.data;
@@ -193,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Sign up error details:', error.response?.data || error.message);
             throw new Error(errorMsg);
         } finally {
-            setIsLoading(false);
+            setIsActionLoading(false);
         }
     };
 

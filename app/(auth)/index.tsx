@@ -128,7 +128,7 @@ export default function Welcome() {
     const flatListRef = useRef<FlatList>(null);
 
     const router = useRouter();
-    const { signInWithGoogle, isLoading } = useAuth();
+    const { signInWithGoogle, isActionLoading, isNewUser } = useAuth();
 
     const handleGoogleSignIn = async () => {
         try {
@@ -138,7 +138,8 @@ export default function Welcome() {
                 text1: 'Success',
                 text2: 'Logged in with Google'
             });
-            router.replace('/(tabs)');
+            // Force push
+            router.replace(isNewUser ? '/onboarding' : '/(tabs)');
         } catch (error: any) {
             if (error.code !== 'ASYNC_OP_IN_PROGRESS') {
                 Toast.show({
@@ -192,7 +193,7 @@ export default function Welcome() {
     return (
         <View className="flex-1 bg-muted dark:bg-background-dark">
             {/* Carousel Section */}
-            <View style={{ height: ITEM_WIDTH * 1.25, marginTop: 100 }}>
+            <View style={{ height: ITEM_WIDTH * 1.25, marginTop: 80 }}>
                 <Animated.FlatList
                     ref={flatListRef}
                     data={SLIDES}
@@ -278,7 +279,7 @@ export default function Welcome() {
             </View>
 
             {/* Content */}
-            <Animated.View style={[animatedTextContainerStyle, { paddingHorizontal: 40, justifyContent: 'center', flex: 1, marginTop: -60 }]}>
+            <Animated.View style={[animatedTextContainerStyle, { paddingHorizontal: 20, justifyContent: 'center', flex: 1, marginTop: -100 }]}>
                 <View style={{ marginBottom: 10 }}>
                     <Typography variant="h1" weight="bold" className="text-4xl text-center leading-[42px]">
                         {SLIDES[currentIndex].title}
@@ -302,10 +303,10 @@ export default function Welcome() {
                     </Button>
                     <TouchableOpacity
                         onPress={handleGoogleSignIn}
-                        disabled={isLoading}
+                        disabled={isActionLoading}
                         className="h-14 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 flex-row items-center justify-center active:opacity-70"
                     >
-                        {isLoading ? (
+                        {isActionLoading ? (
                             <ActivityIndicator color={isDark ? "white" : "black"} />
                         ) : (
                             <>

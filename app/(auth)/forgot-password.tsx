@@ -49,12 +49,12 @@ export default function ForgotPassword() {
     };
 
     return (
-        <View className="flex-1 bg-muted dark:bg-muted-dark p-12">
+        <View className="flex-1 bg-muted dark:bg-background-dark p-6">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
                     icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
-                    className="bg-muted dark:bg-muted-dark border-0"
+                    className="bg-muted dark:bg-background-dark border-0"
                 />
             </View>
 

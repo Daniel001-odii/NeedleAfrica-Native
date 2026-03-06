@@ -22,7 +22,7 @@ export function Surface({
     const { isDark } = useTheme();
 
     const variants = {
-        white: isDark ? 'bg-surface-dark' : 'bg-surface-default',
+        white: isDark ? 'bg-surface-dark' : 'bg-surface',
         lavender: 'bg-soft-lavender',
         peach: 'bg-soft-peach',
         blue: 'bg-soft-blue',
@@ -48,7 +48,7 @@ export function Surface({
                 variants[variant],
                 roundedMap[rounded],
                 hasShadow && '',
-                hasBorder && (isDark ? 'border border-border-dark' : 'border border-border-default'),
+                hasBorder && (isDark ? 'border border-border-dark' : 'border border-border'),
                 className
             )}
             {...props}

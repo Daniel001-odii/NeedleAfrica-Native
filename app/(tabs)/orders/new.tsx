@@ -21,6 +21,8 @@ import { uploadOrderImages } from '../../../services/ImageUploadService';
 import Toast from 'react-native-toast-message';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { CURRENCIES } from '../../../constants/currencies';
 
 export default function NewOrder() {
     const router = useRouter();
@@ -30,6 +32,10 @@ export default function NewOrder() {
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { isDark } = useTheme();
+    const { user } = useAuth();
+    const currency = user?.currency || 'NGN';
+    const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
+
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
@@ -254,7 +260,7 @@ export default function NewOrder() {
                             <Surface variant="muted" className={`p-4 h-24 justify-center border ${isDark ? 'border-border-dark bg-surface-muted-dark' : 'border-transparent'}`} rounded="3xl">
                                 <Typography variant="caption" weight="bold" color="gray" className="mb-1 text-center uppercase text-[10px]">Total Price</Typography>
                                 <View className="flex-row items-center justify-center">
-                                    <Typography variant="h3" color="gray" className="mr-1">₦</Typography>
+                                    <Typography variant="h3" color="gray" className="mr-1">{currencySymbol}</Typography>
                                     <TextInput
                                         className={`font-bold text-xl min-w-[60px] text-center ${isDark ? 'text-white' : 'text-dark'}`}
                                         placeholder="0"
@@ -270,7 +276,7 @@ export default function NewOrder() {
                             <Surface variant="green" className={`p-4 h-24 justify-center ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50'}`} rounded="3xl">
                                 <Typography variant="caption" weight="bold" color="gray" className="mb-1 text-center uppercase text-[10px]">Initial Deposit</Typography>
                                 <View className="flex-row items-center justify-center">
-                                    <Typography variant="h3" color="gray" className="mr-1">₦</Typography>
+                                    <Typography variant="h3" color="gray" className="mr-1">{currencySymbol}</Typography>
                                     <TextInput
                                         className={`font-bold text-xl min-w-[60px] text-center ${isDark ? 'text-white' : 'text-dark'}`}
                                         placeholder="0"
