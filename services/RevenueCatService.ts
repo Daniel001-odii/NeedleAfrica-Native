@@ -11,6 +11,7 @@ import Purchases, {
   PURCHASE_TYPE,
 } from 'react-native-purchases';
 import { subscriptionService } from './subscriptionService';
+import { posthog } from '../posthogConfig';
 
 // RevenueCat configuration
 const REVENUECAT_API_KEY = Platform.select({
@@ -179,6 +180,15 @@ class RevenueCatService {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       console.log('RevenueCat purchase successful:', customerInfo);
 
+      // Track purchase event in PostHog
+      posthog.capture('subscription_purchased', {
+        package_id: packageToPurchase.identifier,
+        product_id: packageToPurchase.product.identifier,
+        price: packageToPurchase.product.price,
+        currency: packageToPurchase.product.currencyCode,
+        is_pro: true,
+      });
+
       const subscriptionStatus = this.extractSubscriptionStatus(customerInfo);
       const isPro = this.isProSubscriber(customerInfo);
 
@@ -230,6 +240,13 @@ class RevenueCatService {
       const customerInfo = await Purchases.restorePurchases();
       const subscriptionStatus = this.extractSubscriptionStatus(customerInfo);
       const isPro = this.isProSubscriber(customerInfo);
+
+      // Track restore attempt in PostHog
+      posthog.capture('subscription_restored', {
+        is_pro: isPro,
+        plan_type: subscriptionStatus.planType,
+        will_renew: subscriptionStatus.willRenew,
+      });
 
       // Sync with backend if user is Pro
       if (isPro) {

@@ -12,7 +12,8 @@ import {
     InfoCircle,
     TrendUp,
     Colorfilter,
-    PenTool
+    PenTool,
+    ArrowRight2
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -57,7 +58,6 @@ export default function Extras() {
                         title="Virtual Try-on"
                         description="Mock designs on models"
                         variant="blue"
-                        comingSoon
                         infoText="Upload a photo of your client to see how the design looks on them before you start sewing. Save time and get immediate visual feedback."
                     />
                     <FeatureCard
@@ -65,7 +65,6 @@ export default function Extras() {
                         title="Fabric Scanner"
                         description="Identify materials"
                         variant="peach"
-                        comingSoon
                         infoText="Use your camera to scan fabrics. Our AI will help identify the material type, care instructions, and suggest suitable styles for it."
                     />
                     <FeatureCard
@@ -73,7 +72,6 @@ export default function Extras() {
                         title="Receipt Gen"
                         description="Auto-create receipts"
                         variant="green"
-                        comingSoon
                         infoText="Automatically generate professional digital receipts for your customers after their payments are confirmed."
                     />
                     <FeatureCard
@@ -81,14 +79,13 @@ export default function Extras() {
                         title="Customize"
                         description="Personalize receipts"
                         variant="lavender"
-                        comingSoon
                         infoText="Customize your receipts with your shop's logo, branding colors, and unique layout arrangements."
                     />
                 </View>
 
                 {/* More Features List */}
                 <Typography variant="subtitle" weight="bold" className="mb-4">Discovery</Typography>
-                <View className="gap-2">
+                <View className="gap-10">
                     <DiscoveryItem
                         icon={<TrendUp size={20} color={isDark ? "white" : "black"} />}
                         title="Tag Walk"
@@ -158,7 +155,7 @@ function DiscoveryItem({ icon, title, subtitle, onPress }: { icon: React.ReactNo
     const { isDark } = useTheme();
     return (
         <TouchableOpacity
-            className={`flex-row items-center p-4 rounded-2xl border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'bg-muted border-gray-100'}`}
+            className={`flex-row items-center`}
             onPress={onPress}
         >
             <View className={`w-10 h-10 ${isDark ? 'bg-dark-800' : 'bg-white'} rounded-xl items-center justify-center mr-4`}>
@@ -168,7 +165,7 @@ function DiscoveryItem({ icon, title, subtitle, onPress }: { icon: React.ReactNo
                 <Typography variant="body" weight="bold">{title}</Typography>
                 <Typography variant="small" color="gray">{subtitle}</Typography>
             </View>
-            <ArrowRight size={18} color="#9CA3AF" />
+            <ArrowRight2 size={18} color="#9CA3AF" />
         </TouchableOpacity>
     );
 }

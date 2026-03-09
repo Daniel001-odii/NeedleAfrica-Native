@@ -1,7 +1,7 @@
 import { View, ScrollView, TextInput, Pressable, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle, ShoppingCart } from 'iconsax-react-native';
+import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle, ShoppingCart, Box } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
@@ -13,6 +13,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
 import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
+import { useOrders } from '../../../hooks/useOrders';
 import { Add } from 'iconsax-react-native';
 import Toast from 'react-native-toast-message';
 import { useState, useEffect } from 'react';
@@ -26,6 +27,7 @@ export default function CustomerDetail() {
     const { customers, updateCustomer, deleteCustomer } = useCustomers();
     const { sync: performSync } = useSync();
     const { measurements, loading: loadingMeasurements } = useCustomerMeasurements(id as string);
+    const { orders, loading: loadingOrders } = useOrders(id as string);
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -176,10 +178,10 @@ export default function CustomerDetail() {
 
                             {/* Quick Actions */}
                             <View className="flex-row gap-3 mb-6">
-                                <Surface variant="muted" className={`flex-1 p-3 items-center ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
+                                <View className={`flex-1 p-3 items-center`}>
                                     <IconButton
                                         icon={<Call size={20} color={isDark ? "#818CF8" : "#6366f1"} variant="Bulk" />}
-                                        variant={isDark ? "dark" : "white"}
+                                        variant="glass"
                                         className="mb-2"
                                         onPress={() => {
                                             if (customer?.phoneNumber) {
@@ -201,11 +203,11 @@ export default function CustomerDetail() {
                                         }}
                                     />
                                     <Typography variant="small" weight="bold">Call</Typography>
-                                </Surface>
-                                <Surface variant="muted" className={`flex-1 p-3 items-center ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
+                                </View>
+                                <View className={`flex-1 p-3 items-center`}>
                                     <IconButton
                                         icon={<Message size={20} color={isDark ? "#818CF8" : "#6366f1"} variant="Bulk" />}
-                                        variant={isDark ? "dark" : "white"}
+                                        variant="glass"
                                         className="mb-2"
                                         onPress={() => {
                                             if (customer?.phoneNumber) {
@@ -227,16 +229,16 @@ export default function CustomerDetail() {
                                         }}
                                     />
                                     <Typography variant="small" weight="bold">Message</Typography>
-                                </Surface>
-                                <Surface variant="muted" className={`flex-1 p-3 items-center ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
+                                </View>
+                                <View className={`flex-1 p-3 items-center`}>
                                     <IconButton
                                         icon={<Trash size={20} color="#EF4444" variant="Bulk" />}
-                                        variant={isDark ? "dark" : "white"}
+                                        variant="glass"
                                         className="mb-2"
                                         onPress={handleDelete}
                                     />
                                     <Typography variant="small" weight="bold" className="text-red-500">Delete</Typography>
-                                </Surface>
+                                </View>
                             </View>
 
                             {/* Info Sections */}
@@ -309,6 +311,53 @@ export default function CustomerDetail() {
                                                                     </Typography>
                                                                 </View>
                                                             ))}
+                                                        </View>
+                                                    </Surface>
+                                                </Pressable>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+
+                                {/* Customer Orders Section */}
+                                <View>
+                                    <View className="flex-row justify-between items-center mb-2 ml-1">
+                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">Recent Orders</Typography>
+                                    </View>
+
+                                    {loadingOrders ? (
+                                        <Typography color="gray" className="text-center py-4">Loading orders...</Typography>
+                                    ) : orders.length === 0 ? (
+                                        <Surface variant="muted" className={`p-6 items-center justify-center border border-dashed ${isDark ? 'bg-surface-muted-dark border-gray-700' : 'border-gray-300'}`} rounded="2xl">
+                                            <Typography color="gray" variant="small" className="text-center mb-2">No orders created yet.</Typography>
+                                            <Typography color="gray" variant="small" className="text-center">Create an order to track their outfits.</Typography>
+                                        </Surface>
+                                    ) : (
+                                        <View className="gap-3">
+                                            {orders.map(order => (
+                                                <Pressable key={order.id} onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
+                                                    <Surface variant="white" className={`p-4 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl">
+                                                        <View className="flex-row justify-between items-center mb-2">
+                                                            <View className="flex-row items-center flex-1">
+                                                                <Surface variant={isDark ? "muted" : "lavender"} className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-surface-muted-dark' : ''}`}>
+                                                                    <Box size={20} color={isDark ? "white" : "#4F46E5"} variant="Bulk" />
+                                                                </Surface>
+                                                                <View>
+                                                                    <Typography variant="body" weight="bold">{order.styleName}</Typography>
+                                                                    <Typography variant="caption" color="gray">
+                                                                        {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
+                                                                    </Typography>
+                                                                </View>
+                                                            </View>
+                                                            <View
+                                                                className={`px-3 py-1 rounded-full ${order.status === 'DELIVERED'
+                                                                    ? (isDark ? 'bg-green-900/20' : 'bg-soft-green')
+                                                                    : (isDark ? 'bg-orange-900/20' : 'bg-soft-peach')}`}
+                                                            >
+                                                                <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-600' : (isDark ? 'text-orange-400' : 'text-orange-700')}>
+                                                                    {order.status}
+                                                                </Typography>
+                                                            </View>
                                                         </View>
                                                     </Surface>
                                                 </Pressable>

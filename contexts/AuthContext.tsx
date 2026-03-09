@@ -5,6 +5,7 @@ import axiosInstance from '../lib/axios';
 import { NotificationService } from '../services/NotificationService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { revenueCatService } from '../services/RevenueCatService';
+import { posthog } from '../posthogConfig';
 
 interface User {
     id: string;
@@ -21,9 +22,12 @@ interface User {
     marketingTips?: boolean;
     reminderDays?: string;
     measurementUnit?: 'cm' | 'inch';
-    currency?: string;
     theme?: 'light' | 'dark' | 'system';
     pushTokens?: string[];
+    country?: string;
+    noOfEmployees?: string;
+    joinedFrom?: string;
+    currency?: string;
     // Subscription fields
     subscriptionPlan?: 'FREE' | 'PRO' | 'STUDIO_AI';
     subscriptionStatus?: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' | 'UNPAID' | 'EXPIRED';
@@ -77,6 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Re-register push token on start to ensure it's up to date
                 registerPushToken();
 
+                // PostHog Identity
+                posthog.identify(parsedUser.id, {
+                    email: parsedUser.email,
+                    username: parsedUser.username,
+                    businessName: parsedUser.businessName
+                });
+
                 // Set RevenueCat user ID for returning users
                 try {
                     revenueCatService.setUserId(parsedUser.id);
@@ -118,6 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(userData);
             registerPushToken();
 
+            // PostHog Identity & Capture
+            posthog.identify(userData.id, {
+                email: userData.email,
+                username: userData.username,
+                method: 'google'
+            });
+            posthog.capture('user_login', { method: 'google', isNewUser: !!isNew });
+
             // Initialize RevenueCat with user ID
             try {
                 await revenueCatService.setUserId(userData.id);
@@ -148,6 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsNewUser(false);
             setUser(userData);
             registerPushToken();
+
+            // PostHog Identity & Capture
+            posthog.identify(userData.id, {
+                email: userData.email,
+                username: userData.username,
+                method: 'email'
+            });
+            posthog.capture('user_login', { method: 'email' });
 
             // Initialize RevenueCat with user ID
             try {
@@ -181,6 +208,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsNewUser(true);
             setUser(userData);
             registerPushToken();
+
+            // PostHog Identity & Capture
+            posthog.identify(userData.id, {
+                email: userData.email,
+                username: userData.username,
+                businessName: userData.businessName
+            });
+            posthog.capture('user_signup', { method: 'email' });
 
             // Initialize RevenueCat with user ID
             try {
@@ -309,6 +344,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await SecureStore.deleteItemAsync('user_data');
         setIsNewUser(false);
         setUser(null);
+        posthog.reset();
         router.replace('/(auth)/login');
     };
 

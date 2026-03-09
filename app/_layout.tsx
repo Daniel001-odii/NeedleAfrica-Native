@@ -5,9 +5,9 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppState, NativeModules, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, NativeModules, Platform, View, StyleSheet } from 'react-native';
 import { useSync } from '../hooks/useSync';
 import { NotificationService } from '../services/NotificationService';
 import { revenueCatService } from '../services/RevenueCatService';
@@ -31,12 +31,12 @@ import * as Notifications from 'expo-notifications';
 import "../global.css";
 
 import { PostHogProvider } from 'posthog-react-native'
-import { posthog } from '../posthogConfig';
 
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
 import { OfflineBanner } from '../components/ui/OfflineBanner';
+import { OTAUpdateModal } from '../components/ui/OTAUpdateModal';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
 
@@ -58,6 +58,7 @@ function RootLayoutNavWithLoading() {
 
 function RootLayoutNav() {
     const { user, isLoading, isNewUser } = useAuth();
+    const [isNavReady, setIsNavReady] = useState(false);
     const { sync } = useSync();
     const { isDark } = useTheme();
     const segments = useSegments();
@@ -149,7 +150,8 @@ function RootLayoutNav() {
             // Give the app a moment to render the first frame
             const timer = setTimeout(() => {
                 SplashScreen.hideAsync().catch(() => { });
-            }, 500);
+                setIsNavReady(true);
+            }, 600);
             return () => clearTimeout(timer);
         }
     }, [isLoading]);
@@ -173,25 +175,25 @@ function RootLayoutNav() {
 
     // 4. Loading & Redirection state handling
     // Only show full-screen loading when the initial auth state is unknown
-    if (isLoading) return <LoadingScreen />;
-
-    // For better reliability, we avoid returning LoadingScreen for intermediate redirect states
-    // within RootLayoutNav, and instead handle the "nothing to show" state via route-level checks
-    // if necessary. However, the current stack will render the appropriate screen which
-    // will then immediately trigger the redirect in the useEffect above.
-
-
     return (
-        <Stack
-            screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: isDark ? '#000000' : 'white' },
-            }}
-        >
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-        </Stack>
+        <View style={{ flex: 1 }}>
+            <Stack
+                screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: isDark ? '#000000' : 'white' },
+                }}
+            >
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+            </Stack>
+            {(!isNavReady) && (
+                <View style={[StyleSheet.absoluteFill, { zIndex: 99999 }]}>
+                    <LoadingScreen />
+                </View>
+            )}
+        </View>
     );
 }
 
@@ -206,6 +208,7 @@ function ThemeAwareRoot() {
             <RootLayoutNavWithLoading />
             <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
             <Toast config={toastConfig} />
+            <OTAUpdateModal testMode={false} />
         </View>
     );
 }
@@ -236,19 +239,37 @@ export default function RootLayout() {
     }
 
     return (
-        <PostHogProvider client={posthog}>
+        <PostHogProvider
+            apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+            debug={true}
+            options={{
+                host: "https://us.i.posthog.com",
+                enableSessionReplay: true,
+                sessionReplayConfig: {
+                    maskAllTextInputs: true,
+                    maskAllImages: false,
+                    captureLog: true,
+                    captureNetworkTelemetry: true,
+                },
+            }}>
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <SafeAreaProvider>
-                    <DatabaseProvider database={database}>
-                        <AuthProvider>
-                            <ThemeProvider>
-                                <ConfirmProvider>
-                                    <ThemeAwareRoot />
-                                </ConfirmProvider>
-                            </ThemeProvider>
-                        </AuthProvider>
-                    </DatabaseProvider>
-                </SafeAreaProvider>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'android' ? -100 : 0} // Adjust 24 to match your header/nav height
+                    style={{ flex: 1 }}
+                >
+                    <SafeAreaProvider>
+                        <DatabaseProvider database={database}>
+                            <AuthProvider>
+                                <ThemeProvider>
+                                    <ConfirmProvider>
+                                        <ThemeAwareRoot />
+                                    </ConfirmProvider>
+                                </ThemeProvider>
+                            </AuthProvider>
+                        </DatabaseProvider>
+                    </SafeAreaProvider>
+                </KeyboardAvoidingView>
             </GestureHandlerRootView>
         </PostHogProvider>
     );

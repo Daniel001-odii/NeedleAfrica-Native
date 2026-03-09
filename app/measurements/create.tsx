@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, TextInput, ScrollView, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
@@ -22,6 +23,7 @@ export default function CreateMeasurementScreen() {
     const { customers, loading: loadingCustomers } = useCustomers();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
+    const posthog = usePostHog();
 
     const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
     const { addMeasurement } = useCustomerMeasurements(selectedCustomerId);
@@ -96,6 +98,13 @@ export default function CreateMeasurementScreen() {
         setSubmitting(true);
         try {
             await addMeasurement(title, values);
+
+            // Track measurement capture
+            posthog.capture('measurement_captured', {
+                template_name: selectedTemplate?.name || 'Manual',
+                field_count: Object.keys(values).length,
+                unit: unit
+            });
             Toast.show({
                 type: 'success',
                 text1: 'Success',

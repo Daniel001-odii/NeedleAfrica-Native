@@ -7,9 +7,9 @@ export default function LoadingScreen() {
     const { isDark, isHydrated } = useTheme();
     const systemColorScheme = useColorScheme();
 
-    // Fallback to system theme immediately while waiting for context hydration
-    // to prevent the white flash if the app is dark but context isn't ready.
-    const effectiveIsDark = isHydrated ? isDark : (systemColorScheme === 'dark');
+    // Fallback to light mode immediately while waiting for context hydration
+    // to match the app's default theme setting.
+    const effectiveIsDark = isHydrated ? isDark : false;
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.9)).current;

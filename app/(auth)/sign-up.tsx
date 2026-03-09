@@ -52,6 +52,7 @@ export default function SignUp() {
         }
         try {
             await signUp(email, password, name, businessName);
+
             Toast.show({
                 type: 'success',
                 text1: 'Account Created',

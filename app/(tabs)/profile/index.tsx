@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { View, ScrollView, Image, Pressable, Linking, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown, DocumentText } from 'iconsax-react-native';
+import { Setting2, ArrowRight, User, Gallery, MessageQuestion, Logout, DocumentDownload, CloudChange, ShieldSecurity, Crown, DocumentText, ArrowRight2 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Surface } from '../../../components/ui/Surface';
@@ -49,7 +49,7 @@ export default function Profile() {
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
-            <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
+            <ScrollView contentContainerClassName="p-8 pb-12" showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
                 {/* Header */}
                 {/* <View className="mb-8">
                     <Typography variant="h1" weight="bold">Profile</Typography>
@@ -206,29 +206,27 @@ function ProfileItem({ icon, title, subtitle, badge, onPress, badgeColor = 'bg-b
     const { isDark } = useTheme();
     return (
         <Pressable className="active:opacity-75" onPress={onPress}>
-            <Surface variant="white" className={`p-4 border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-muted border-gray-50'}`} rounded="2xl" hasBorder={isDark}>
-                <View className="flex-row items-center">
-                    <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${isDark ? 'bg-indigo-900/20' : 'bg-blue-50'}`}>
-                        {icon}
-                    </View>
-                    <View className="flex-1">
-                        <View className="flex-row items-center justify-between">
-                            <Typography variant="body" weight="bold">{title}</Typography>
-                            {!badge && <ArrowRight size={18} color="#9CA3AF" />}
-                            {badge && (
-                                <View className={`${badgeColor} px-3 py-1 rounded-full`}>
-                                    <Typography variant="small" color="white" weight="bold" className="text-[10px] uppercase">{badge}</Typography>
-                                </View>
-                            )}
-                        </View>
-                        {subtitle && (
-                            <Typography variant="small" color="gray" className={`mt-1 pr-6 leading-tight max-w-[90%] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {subtitle}
-                            </Typography>
+            <View className="flex-row items-center py-3">
+                <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 border-2 border-black/5 ${isDark ? 'bg-indigo-900/20' : 'bg-blue-50'}`}>
+                    {icon}
+                </View>
+                <View className="flex-1">
+                    <View className="flex-row items-center justify-between">
+                        <Typography variant="body" weight="bold">{title}</Typography>
+                        {!badge && <ArrowRight2 size={18} color="#9CA3AF" />}
+                        {badge && (
+                            <View className={`${badgeColor} px-3 py-1 rounded-full`}>
+                                <Typography variant="small" color="white" weight="bold" className="text-[10px] uppercase">{badge}</Typography>
+                            </View>
                         )}
                     </View>
+                    {subtitle && (
+                        <Typography variant="small" color="gray" className={`mt-1 pr-6 leading-tight max-w-[90%] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {subtitle}
+                        </Typography>
+                    )}
                 </View>
-            </Surface>
+            </View>
         </Pressable>
     );
 }

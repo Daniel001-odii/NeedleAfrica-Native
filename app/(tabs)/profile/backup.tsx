@@ -98,8 +98,8 @@ export default function BackupData() {
                     </View>
                 </Surface>
 
-                <View className="gap-4 mb-10">
-                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-50'} flex-row items-center`} rounded="2xl" hasBorder>
+                <View className="flex flex-col gap-4 mb-10">
+                    <View className={`flex-row items-center`}>
                         <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
                             <ShieldTick size={20} color="#3b82f6" variant="Bulk" />
                         </View>
@@ -107,9 +107,9 @@ export default function BackupData() {
                             <Typography weight="bold">Secure Storage</Typography>
                             <Typography variant="small" color="gray">End-to-end encrypted backup</Typography>
                         </View>
-                    </Surface>
+                    </View>
 
-                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-50'} flex-row items-center`} rounded="2xl" hasBorder>
+                    <View className={`flex-row items-center mt-6`}>
                         <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
                             <Refresh size={20} color="#3B82F6" variant="Bulk" />
                         </View>
@@ -117,7 +117,7 @@ export default function BackupData() {
                             <Typography weight="bold">Auto Sync</Typography>
                             <Typography variant="small" color="gray">Syncs whenever you're online</Typography>
                         </View>
-                    </Surface>
+                    </View>
                 </View>
 
                 <Button

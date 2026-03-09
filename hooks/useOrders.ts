@@ -27,8 +27,23 @@ export function useOrders(customerId?: string) {
             query = query.extend(Q.where('customer_id', customerId));
         }
 
-        const subscription = query.observe().subscribe(data => {
-            setOrders(data);
+        const subscription = query.observe().subscribe(async (data) => {
+            // Enhance orders with customer data
+            const enhancedOrders = await Promise.all(data.map(async (order) => {
+                try {
+                    const customer = await order.customer?.fetch();
+                    return Object.assign(Object.create(order), {
+                        customerFullName: customer?.fullName || 'Unknown Customer'
+                    });
+                } catch (e) {
+                    return Object.assign(Object.create(order), {
+                        customerFullName: 'Unknown Customer'
+                    });
+                }
+            }));
+
+            // @ts-ignore - we are adding a dynamic property not in the WatermelonDB model type
+            setOrders(enhancedOrders);
             setLoading(false);
         });
 

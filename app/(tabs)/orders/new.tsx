@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2 } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -33,6 +34,7 @@ export default function NewOrder() {
     const { isOnline } = useSync();
     const { isDark } = useTheme();
     const { user } = useAuth();
+    const posthog = usePostHog();
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
@@ -140,6 +142,16 @@ export default function NewOrder() {
                 deliveryDate: dueDate,
                 fabricImage: uploadedImages.fabricImage || undefined,
                 styleImage: uploadedImages.styleImage || undefined,
+            });
+
+            // Track order creation
+            posthog.capture('order_created', {
+                dress_type: dressType,
+                amount: parseInt(price.replace(/,/g, '')) || 0,
+                deposit: parseInt(amountPaid.replace(/,/g, '')) || 0,
+                has_fabric_image: !!fabricImage,
+                has_style_image: !!styleImage,
+                has_notes: !!notes
             });
 
             Toast.show({ type: 'success', text1: 'Order created!' });

@@ -144,7 +144,7 @@ function CustomersScreen() {
             <FlatList
                 data={sortedCustomers}
                 keyExtractor={item => item.id}
-                contentContainerClassName="p-6 pt-0 pb-16 gap-2"
+                contentContainerClassName="p-6 pt-0 pb-16 gap-4"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -158,12 +158,8 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <Surface
-                                variant="white"
-                                className={`flex-row items-center p-3 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-transparent'}`}
-                                rounded="3xl"
-                                hasShadow={!isDark}
-                                hasBorder={isDark}
+                            <View
+                                className={`flex-row items-center py-3`}
                             >
                                 <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
                                     <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
@@ -184,7 +180,7 @@ function CustomersScreen() {
                                         />
                                     )}
                                 </View>
-                            </Surface>
+                            </View>
                         </Pressable>
                     </Swipeable>
                 )}

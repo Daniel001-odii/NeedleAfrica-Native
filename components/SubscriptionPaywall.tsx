@@ -15,6 +15,7 @@ import { revenueCatService } from '../services/RevenueCatService';
 import { PurchasesPackage } from 'react-native-purchases';
 import Toast from 'react-native-toast-message';
 import { Surface } from './ui/Surface';
+import { usePostHog } from 'posthog-react-native';
 
 interface SubscriptionPaywallProps {
   visible: boolean;
@@ -35,6 +36,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
     purchasePackage,
     restorePurchases,
   } = useRevenueCat();
+  const posthog = usePostHog();
 
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
@@ -43,6 +45,11 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
   useEffect(() => {
     if (visible) {
       loadPackages();
+
+      // Track when user opens the subscription paywall
+      posthog.capture('subscription_attempted', {
+        source_feature: feature || 'manual_upgrade',
+      });
     }
   }, [visible]);
 

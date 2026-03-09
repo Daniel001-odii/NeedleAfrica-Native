@@ -270,11 +270,8 @@ export default function Orders() {
                                 rightThreshold={40}
                             >
                                 <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                    <Surface
-                                        variant="white"
-                                        className={`p-4 mb-3 flex-row items-center ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`}
-                                        rounded="2xl"
-                                        hasBorder
+                                    <View
+                                        className={`py-4 mb-3 flex-row items-center`}
                                     >
                                         <View className="relative mr-5 w-[54px] h-[54px] items-center justify-center">
                                             <View className="absolute">
@@ -305,7 +302,10 @@ export default function Orders() {
 
                                         <View className="flex-1">
                                             <View className="flex-row justify-between items-start mb-1">
-                                                <Typography variant="body" weight="bold">{order.styleName}</Typography>
+                                                <View>
+                                                    <Typography variant="body" weight="bold">{order.styleName}</Typography>
+                                                    <Typography variant="small" color="gray" className="mt-0.5">{(order as any).customerFullName}</Typography>
+                                                </View>
                                                 <View className="items-end">
                                                     <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
                                                     {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
@@ -335,7 +335,7 @@ export default function Orders() {
                                                 </View>
                                             </View>
                                         </View>
-                                    </Surface>
+                                    </View>
                                 </Pressable>
                             </Swipeable>
                         )

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import { useSubscription } from '../../../hooks/useSubscription';
@@ -39,6 +40,7 @@ export default function NewCustomer() {
     const { confirm } = useConfirm();
     const { isFree } = useSubscription();
     const router = useRouter();
+    const posthog = usePostHog();
 
     const handleSubmit = async () => {
         if (!fullName.trim()) {
@@ -69,6 +71,13 @@ export default function NewCustomer() {
                 phoneNumber,
                 gender,
                 notes
+            });
+
+            // Track customer creation
+            posthog.capture('customer_created', {
+                gender,
+                has_phone: !!phoneNumber,
+                has_notes: !!notes
             });
 
             // Trigger sync in background (fire and forget)
@@ -187,7 +196,7 @@ export default function NewCustomer() {
                     <View className="mb-10">
                         <View className="flex-row items-center mb-2 ml-1">
                             <InfoCircle size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Measurements & Notes</Typography>
+                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Additional Notes</Typography>
                         </View>
                         <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} min-h-[140px]`}>
                             <TextInput

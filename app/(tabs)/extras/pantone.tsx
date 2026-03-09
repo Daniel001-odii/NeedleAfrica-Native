@@ -70,10 +70,43 @@ export default function PantoneScreen() {
     const { isDark } = useTheme();
     const [currentPalette, setCurrentPalette] = useState<Palette>(PRESET_PALETTES[0]);
     const [fadeAnim] = useState(new Animated.Value(0));
+    const [pulseAnim] = useState(new Animated.Value(1));
 
     useEffect(() => {
         animateIn();
     }, [currentPalette]);
+
+    useEffect(() => {
+        const animation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, {
+                    toValue: 1.15,
+                    duration: 600,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(pulseAnim, {
+                    toValue: 1,
+                    duration: 600,
+                    useNativeDriver: true,
+                }),
+                Animated.delay(100)
+            ])
+        );
+
+        animation.start();
+
+        const timer = setTimeout(() => {
+            animation.stop();
+            // Ensure button scale settles back precisely to 1
+            Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        }, 5000);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     const animateIn = () => {
         fadeAnim.setValue(0);
@@ -118,17 +151,19 @@ export default function PantoneScreen() {
                     />
                     <Typography variant="h3" weight="bold" className="ml-2">Pantone</Typography>
                 </View>
-                <IconButton
-                    icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
-                    onPress={generateNewPalette}
-                    variant="glass"
-                />
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                    <IconButton
+                        icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
+                        onPress={generateNewPalette}
+                        variant="glass"
+                    />
+                </Animated.View>
             </View>
 
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
                 {/* Hero Palette Display */}
                 <Animated.View style={{ opacity: fadeAnim }} className="mb-10">
-                    <Surface variant="white" className="p-4 shadow-xl mb-6 overflow-hidden" rounded="3xl">
+                    <Surface variant="white" className="shadow-xl mb-6 overflow-hidden" rounded="3xl">
                         <View className="flex-row h-80 rounded-2xl overflow-hidden">
                             {currentPalette.colors.map((color, index) => (
                                 <Pressable
@@ -159,13 +194,11 @@ export default function PantoneScreen() {
 
                 {/* Color List */}
                 <Typography variant="subtitle" weight="bold" className="mb-4 uppercase tracking-widest text-[10px] text-gray-400">Color Spectrum</Typography>
-                <View className="gap-4">
+                <View className="gap-1">
                     {currentPalette.colors.map((color, index) => (
-                        <Surface
+                        <View
                             key={index}
-                            variant="white"
-                            className={`p-4 flex-row items-center justify-between border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-50'}`}
-                            rounded="2xl"
+                            className={`py-4 flex-row items-center justify-between`}
                         >
                             <View className="flex-row items-center">
                                 <View style={{ backgroundColor: color.hex }} className="w-12 h-12 rounded-xl mr-4 border border-black/5" />
@@ -180,7 +213,7 @@ export default function PantoneScreen() {
                             >
                                 <Copy size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
                             </Pressable>
-                        </Surface>
+                        </View>
                     ))}
                 </View>
 
@@ -197,7 +230,7 @@ export default function PantoneScreen() {
             </ScrollView>
 
             {/* Bottom Trigger */}
-            <View className="absolute bottom-10 left-6 right-6">
+            {/*  <View className="absolute bottom-10 left-6 right-6">
                 <Button
                     onPress={generateNewPalette}
                     className={`h-16 rounded-full shadow-lg bg-blue-500 border-none`}
@@ -207,7 +240,7 @@ export default function PantoneScreen() {
                         <Typography weight="bold" color="white">Generate Palette</Typography>
                     </View>
                 </Button>
-            </View>
+            </View> */}
         </View>
     );
 }

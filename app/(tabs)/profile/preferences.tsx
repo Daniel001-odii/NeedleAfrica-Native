@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle, Moon, Sun } from 'iconsax-react-native';
+import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle, Moon, Sun, ArrowLeft2 } from 'iconsax-react-native';
 import * as Notifications from 'expo-notifications';
 import { CURRENCIES, Currency } from '../../../constants/currencies';
 import { Typography } from '../../../components/ui/Typography';
@@ -239,7 +239,7 @@ export default function Preferences() {
                             onPress={() => setUnit(unit === 'cm' ? 'inch' : 'cm')}
                             className="active:opacity-90"
                         >
-                            <Surface variant="white" className="p-4 border border-gray-50/20 flex-row items-center" rounded="2xl">
+                            <View className="flex-row items-center">
                                 <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
                                     <Ruler size={20} color="#3b82f6" variant="Bulk" />
                                 </View>
@@ -255,20 +255,20 @@ export default function Preferences() {
                                         <Typography variant="small" weight="bold" color={unit === 'inch' ? 'white' : 'gray'}>IN</Typography>
                                     </View>
                                 </View>
-                            </Surface>
+                            </View>
                         </Pressable>
                     </View>
 
-                    <View>
+                    <View className="mt-6">
                         <Typography variant="body" weight="semibold" className="mb-4 ml-1">Currency</Typography>
                         <Pressable onPress={() => setIsCurrencyModalVisible(true)}>
-                            <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16 border border-gray-50/20">
+                            <View className="flex-row items-center h-16">
                                 <Coin1 size={20} color="#3b82f6" variant="Bulk" />
                                 <Typography weight="bold" className="ml-3 flex-1">
                                     {selectedCurrency.name} ({selectedCurrency.symbol})
                                 </Typography>
-                                <ArrowLeft size={18} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                            </Surface>
+                                <ArrowLeft2 size={18} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+                            </View>
                         </Pressable>
                     </View>
                 </View>
@@ -375,22 +375,22 @@ function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: Prefe
     const { isDark } = useTheme();
 
     return (
-        <Surface variant="white" className={`p-4 mb-4 ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="2xl" hasBorder>
-            <View className="flex-row items-center">
-                <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
-                    {icon}
-                </View>
-                <View className="flex-1">
-                    <Typography variant="body" weight="bold">{title}</Typography>
-                    <Typography variant="small" color="gray">{subtitle}</Typography>
-                </View>
-                <Switch
-                    value={value}
-                    onValueChange={onValueChange}
-                    trackColor={{ false: '#F4F4F4', true: '#3b82f6' }}
-                    thumbColor="#FFFFFF"
-                />
+        // <Surface variant="white" className={`p-4 mb-4 ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="2xl" hasBorder>
+        <View className="flex-row items-center py-4">
+            <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
+                {icon}
             </View>
-        </Surface>
+            <View className="flex-1">
+                <Typography variant="body" weight="bold">{title}</Typography>
+                <Typography variant="small" color="gray">{subtitle}</Typography>
+            </View>
+            <Switch
+                value={value}
+                onValueChange={onValueChange}
+                trackColor={{ false: '#F4F4F4', true: '#3b82f6' }}
+                thumbColor="#FFFFFF"
+            />
+        </View>
+        // </Surface>
     );
 }

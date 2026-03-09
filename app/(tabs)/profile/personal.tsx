@@ -11,6 +11,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import CountryPicker, { Country, getAllCountries } from 'react-native-country-picker-modal';
+import PhoneInput from 'react-phone-number-input/react-native-input';
 
 export default function PersonalInformation() {
     const { user, updateProfile, deleteAccount, isLoading: isAuthLoading } = useAuth();
@@ -23,6 +25,9 @@ export default function PersonalInformation() {
     const [email, setEmail] = useState(user?.email || '');
     const [phone, setPhone] = useState(user?.phoneNumber || '');
     const [address, setAddress] = useState(user?.address || '');
+    const [country, setCountry] = useState(user?.country || 'Nigeria');
+    const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
+    const [noOfEmployees, setNoOfEmployees] = useState(user?.noOfEmployees || '1-5');
     const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
@@ -35,6 +40,18 @@ export default function PersonalInformation() {
             setEmail(user.email || '');
             setPhone(user.phoneNumber || '');
             setAddress(user.address || '');
+            if (user.country) {
+                setCountry(user.country);
+                // Resolve country code from name for the picker
+                getAllCountries('emoji' as any).then(countries => {
+                    const found = countries.find(c =>
+                        (typeof c.name === 'string' && c.name === user.country) ||
+                        (typeof c.name === 'object' && (c.name as any).common === user.country)
+                    );
+                    if (found) setCountryCode(found.cca2);
+                }).catch(() => { });
+            }
+            if (user.noOfEmployees) setNoOfEmployees(user.noOfEmployees);
         }
     }, [user]);
 
@@ -54,7 +71,9 @@ export default function PersonalInformation() {
                 username,
                 businessName,
                 phoneNumber: phone,
-                address
+                address,
+                country,
+                noOfEmployees
             });
             Toast.show({
                 type: 'success',
@@ -174,14 +193,26 @@ export default function PersonalInformation() {
 
                     <View className="h-6" />
 
-                    <InputGroup
-                        label="PHONE (WHATSAPP PREFERRED)"
-                        value={phone}
-                        onChangeText={setPhone}
-                        icon={<Call size={18} color="#6B7280" variant="Bulk" />}
-                        placeholder="+234 800 000 0000"
-                        keyboardType="phone-pad"
-                    />
+                    <View className="mb-6">
+                        <View className="flex-row items-center mb-2 ml-1">
+                            <Call size={18} color="#6B7280" variant="Bulk" />
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">PHONE (WHATSAPP PREFERRED)</Typography>
+                        </View>
+                        <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
+                            <PhoneInput
+                                style={{ flex: 1 }}
+                                textComponent={TextInput}
+                                textProps={{
+                                    placeholder: "+234 800 000 0000",
+                                    placeholderTextColor: "#9CA3AF",
+                                    className: `font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`
+                                }}
+                                defaultCountry="NG"
+                                value={phone}
+                                onChange={(val) => setPhone(val || '')}
+                            />
+                        </Surface>
+                    </View>
 
                     <InputGroup
                         label="WORKSHOP ADDRESS"
@@ -191,10 +222,63 @@ export default function PersonalInformation() {
                         placeholder="Where do you create?"
                         multiline
                     />
+
+                    {/* Country */}
+                    <View className="mb-6">
+                        <View className="flex-row items-center mb-2 ml-1">
+                            <Location size={18} color="#6B7280" variant="Bulk" />
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">COUNTRY - {country}</Typography>
+                        </View>
+                        <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
+                            <View className="flex-row items-center h-full">
+                                <CountryPicker
+                                    withFilter
+                                    withFlag
+                                    withCountryNameButton
+                                    withAlphaFilter
+                                    withCallingCode={false}
+                                    withEmoji
+                                    onSelect={(c: any) => {
+                                        setCountry(c.name as string);
+                                        setCountryCode(c.cca2);
+                                    }}
+                                    countryCode={countryCode}
+                                    theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
+                                    containerButtonStyle={{ height: '100%', justifyContent: 'center' }}
+                                />
+                                {(!countryCode) && (
+                                    <View style={{ position: 'absolute', left: 40, pointerEvents: 'none' }}>
+                                        <Typography weight="semibold" className="text-dark dark:text-white opacity-80">{country}</Typography>
+                                    </View>
+                                )}
+                            </View>
+                        </Surface>
+                    </View>
+
+                    {/* Employees */}
+                    <View className="mb-6">
+                        <View className="flex-row items-center mb-2 ml-1">
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">NUMBER OF EMPLOYEES</Typography>
+                        </View>
+                        <View className="flex-row flex-wrap mt-2">
+                            {['1-5', '6-20', '21-50', '50+'].map((range) => (
+                                <TouchableOpacity
+                                    key={range}
+                                    onPress={() => setNoOfEmployees(range)}
+                                    className={`px-5 py-3 rounded-full border mb-3 mr-2 ${noOfEmployees === range ? 'bg-blue-500 border-blue-500' : 'bg-transparent border-gray-300 dark:border-gray-700'}`}
+                                >
+                                    <Typography weight="semibold" className={noOfEmployees === range ? 'text-white' : 'text-gray-600 dark:text-gray-300'}>
+                                        {range}
+                                    </Typography>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
                     <Button
                         onPress={handleSave}
                         isLoading={isSaving}
-                        className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
+                        className="h-16 rounded-full bg-blue-600 border-0"
                         textClassName="text-white"
                     >
                         Save Changes
@@ -229,14 +313,15 @@ export default function PersonalInformation() {
                 onRequestClose={() => setShowDeleteModal(false)}
             >
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    className="flex-1"
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'android' ? -100 : 0} // Adjust 24 to match your header/nav height
+                    style={{ flex: 1 }}
                 >
                     <Pressable
                         className="flex-1 bg-black/50 justify-end"
                         onPress={() => setShowDeleteModal(false)}
                     >
-                        <Pressable className={`rounded-t-3xl max-h-[90%] ${isDark ? 'bg-dark-800' : 'bg-white'}`}>
+                        <Pressable className={`rounded-t-3xl max-h-[90%] ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
                             <ScrollView
                                 className="p-6 pb-10"
                                 bounces={false}
@@ -253,7 +338,7 @@ export default function PersonalInformation() {
                                     </TouchableOpacity>
                                 </View>
 
-                                <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+                                <View className={`rounded-2xl p-4 mb-6 border ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200'}`}>
                                     <Typography variant="body" weight="bold" color="red" className="mb-2">Warning: This action cannot be undone</Typography>
                                     <Typography variant="small" color="gray" className="leading-5">
                                         Deleting your account will permanently remove:
@@ -267,9 +352,9 @@ export default function PersonalInformation() {
                                 </View>
 
                                 <Typography variant="body" weight="semibold" className="mb-3">
-                                    To confirm deletion, type <Typography variant="body" weight="bold" className="text-red-600">DELETE</Typography> below:
+                                    To confirm deletion, type <Typography variant="body" weight="bold" color="red">DELETE</Typography> below:
                                 </Typography>
-                                <Surface variant="white" rounded="2xl" className={`px-4 h-16 justify-center border ${isDark ? 'border-border-dark' : 'border-gray-200'} mb-6`}>
+                                <Surface variant="muted" rounded="2xl" className={`px-4 h-16 justify-center border ${isDark ? 'border-border-dark' : 'border-gray-200'} mb-6`}>
                                     <TextInput
                                         className={`font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
                                         placeholder="Type DELETE to confirm"
