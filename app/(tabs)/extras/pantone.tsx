@@ -9,6 +9,7 @@ import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
+import { usePostHog } from 'posthog-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -68,6 +69,7 @@ const generateRandomHex = () => {
 export default function PantoneScreen() {
     const router = useRouter();
     const { isDark } = useTheme();
+    const posthog = usePostHog();
     const [currentPalette, setCurrentPalette] = useState<Palette>(PRESET_PALETTES[0]);
     const [fadeAnim] = useState(new Animated.Value(0));
     const [pulseAnim] = useState(new Animated.Value(1));
@@ -127,6 +129,12 @@ export default function PantoneScreen() {
             }))
         };
         setCurrentPalette(newPalette);
+
+        // Track pantone palette generation
+        posthog.capture('pantone_generated', {
+            palette_name: newPalette.name,
+            color_count: newPalette.colors.length,
+        });
     };
 
     const copyToClipboard = (hex: string) => {

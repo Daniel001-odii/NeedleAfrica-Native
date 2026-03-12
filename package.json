@@ -9,6 +9,16 @@
     "web": "expo start --web",
     "eas-build-pre-install": "npm config set legacy-peer-deps true"
   },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "@nozbe/watermelondb",
+          "@nozbe/simdjson"
+        ]
+      }
+    }
+  },
   "dependencies": {
     "@expo-google-fonts/playfair-display": "^0.4.2",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
@@ -17,9 +27,9 @@
     "@nozbe/with-observables": "^1.6.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
-    "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-community/netinfo": "11.4.1",
     "@react-native-google-signin/google-signin": "^16.1.1",
-    "@react-navigation/native": "^7.1.28",
+    "@react-navigation/native": "^7.1.8",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
     "babel-preset-expo": "~54.0.10",
@@ -61,7 +71,7 @@
     "react-native-purchases": "^9.10.5",
     "react-native-purchases-ui": "^9.10.5",
     "react-native-reanimated": "~4.1.1",
-    "react-native-safe-area-context": "^5.6.2",
+    "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
     "react-native-toast-message": "^2.3.3",
