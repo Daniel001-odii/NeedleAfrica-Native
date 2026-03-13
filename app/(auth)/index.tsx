@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, Image, ActivityIndicator, Dimensions, FlatList } from 'react-native';
+import { View, TouchableOpacity, Image, ActivityIndicator, Dimensions, FlatList, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
@@ -14,9 +14,10 @@ import Animated, {
     SharedValue
 } from 'react-native-reanimated';
 import { useTheme } from '../../contexts/ThemeContext';
+import { AppleSignInButton } from '../../components/auth/AppleSignInButton';
 
 const { width } = Dimensions.get('window');
-const ITEM_WIDTH = width * 0.8;
+const ITEM_WIDTH = width * 0.7; // Scaled down from 0.8
 const ITEM_SPACING = (width - ITEM_WIDTH) / 2;
 
 const SLIDES = [
@@ -52,35 +53,27 @@ function CarouselItem({ item, index, scrollX }: { item: any, index: number, scro
         const scale = interpolate(
             scrollX.value,
             inputRange,
-            [0.85, 1, 0.85],
+            [0.9, 1, 0.9], // Subtler scale
             Extrapolation.CLAMP
         );
 
         const translateY = interpolate(
             scrollX.value,
             inputRange,
-            [40, 0, 40],
-            Extrapolation.CLAMP
-        );
-
-        const rotate = interpolate(
-            scrollX.value,
-            inputRange,
-            [12, 0, -12],
+            [20, 0, 20], // Reduced vertical shift
             Extrapolation.CLAMP
         );
 
         const opacity = interpolate(
             scrollX.value,
             inputRange,
-            [0.5, 1, 0.5],
+            [0.6, 1, 0.6],
             Extrapolation.CLAMP
         );
 
         return {
             transform: [
                 { scale },
-                { rotate: `${rotate}deg` },
                 { translateY }
             ],
             opacity,
@@ -128,7 +121,7 @@ export default function Welcome() {
     const flatListRef = useRef<FlatList>(null);
 
     const router = useRouter();
-    const { signInWithGoogle, isActionLoading, isNewUser } = useAuth();
+    const { signInWithGoogle, signInWithApple, isActionLoading, isNewUser } = useAuth();
 
     const handleGoogleSignIn = async () => {
         try {
@@ -148,6 +141,24 @@ export default function Welcome() {
                     text2: error.message || 'Check your internet and try again'
                 });
             }
+        }
+    };
+
+    const handleAppleSignIn = async () => {
+        try {
+            await signInWithApple();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in with Apple'
+            });
+            router.replace(isNewUser ? '/onboarding' : '/(tabs)');
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Apple Sign-In Failed',
+                text2: error.message || 'Check your internet and try again'
+            });
         }
     };
 
@@ -193,7 +204,7 @@ export default function Welcome() {
     return (
         <View className="flex-1 bg-muted dark:bg-background-dark">
             {/* Carousel Section */}
-            <View style={{ height: ITEM_WIDTH * 1.25, marginTop: 80 }}>
+            <View style={{ height: ITEM_WIDTH * 1.15, marginTop: 60 }}>
                 <Animated.FlatList
                     ref={flatListRef}
                     data={SLIDES}
@@ -279,9 +290,9 @@ export default function Welcome() {
             </View>
 
             {/* Content */}
-            <Animated.View style={[animatedTextContainerStyle, { paddingHorizontal: 20, justifyContent: 'center', flex: 1, marginTop: -100 }]}>
+            <Animated.View style={[animatedTextContainerStyle, { paddingHorizontal: 20, justifyContent: 'center', flex: 1, marginTop: -40 }]}>
                 <View style={{ marginBottom: 10 }}>
-                    <Typography variant="h1" weight="bold" className="text-4xl text-center leading-[42px]">
+                    <Typography variant="h1" weight="bold" className="text-3xl text-center leading-[38px] mb-2 px-4">
                         {SLIDES[currentIndex].title}
                     </Typography>
                     <Typography variant="body" color="gray" className="text-center text-lg px-2">
@@ -291,9 +302,9 @@ export default function Welcome() {
             </Animated.View>
 
             {/* Actions & Footer Section */}
-            <View className="px-10 pb-12 -mt-20">
+            <View className="px-10 pb-12 mt-4">
                 {/* Actions */}
-                <View className="gap-4">
+                <View className="gap-3">
                     <Button
                         onPress={() => router.push('/(auth)/login')}
                         className="bg-dark dark:bg-white h-16 rounded-full border-0"
@@ -301,6 +312,12 @@ export default function Welcome() {
                     >
                         Get started
                     </Button>
+
+                    <AppleSignInButton 
+                        onPress={handleAppleSignIn}
+                        isLoading={isActionLoading}
+                    />
+
                     <TouchableOpacity
                         onPress={handleGoogleSignIn}
                         disabled={isActionLoading}

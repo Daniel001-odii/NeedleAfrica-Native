@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import axiosInstance from '../lib/axios';
 import { NotificationService } from '../services/NotificationService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import appleAuth from '@invertase/react-native-apple-authentication';
 import { revenueCatService } from '../services/RevenueCatService';
 import { posthog } from '../posthogConfig';
 
@@ -50,6 +51,7 @@ interface AuthContextType {
     completeOnboarding: () => void;
     refreshUser: () => Promise<void>;
     signInWithGoogle: () => Promise<void>;
+    signInWithApple: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -146,6 +148,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
             console.error('Google Sign-In Error:', error);
             const errorMsg = error.response?.data?.message || error.message || 'Google Sign-In failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const signInWithApple = async () => {
+        setIsActionLoading(true);
+        try {
+            // Start the sign-in request
+            const appleAuthRequestResponse = await appleAuth.performRequest({
+                requestedOperation: appleAuth.Operation.LOGIN,
+                requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+            });
+
+            // Ensure Apple Auth credential state is valid
+            const credentialState = await appleAuth.getCredentialStateForUser(appleAuthRequestResponse.user);
+
+            if (credentialState === appleAuth.State.AUTHORIZED) {
+                const { identityToken, user: appleUser } = appleAuthRequestResponse;
+
+                if (!identityToken) {
+                    throw new Error('No identity token received from Apple');
+                }
+
+                // Send to backend
+                const response = await axiosInstance.post('/auth/apple', {
+                    identityToken,
+                    user: appleUser // Contains name/email on first sign-in
+                });
+
+                const { status, token, user: userData, message, isNewUser: isNew } = response.data;
+
+                if (status === 'error') {
+                    throw new Error(message || 'Apple Login failed');
+                }
+
+                await SecureStore.setItemAsync('auth_token', token);
+                await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+                setIsNewUser(!!isNew);
+                setUser(userData);
+                registerPushToken();
+
+                // PostHog Identity & Capture
+                posthog.identify(userData.id, {
+                    email: userData.email,
+                    username: userData.username,
+                    method: 'apple'
+                });
+                posthog.capture('user_login', { method: 'apple', isNewUser: !!isNew });
+
+                // Initialize RevenueCat with user ID
+                try {
+                    await revenueCatService.setUserId(userData.id);
+                } catch (rcError) {
+                    console.error('Failed to set RevenueCat user ID:', rcError);
+                }
+            } else {
+                throw new Error('Apple Auth credential state is not authorized');
+            }
+        } catch (error: any) {
+            console.error('Apple Sign-In Error:', error);
+            if (error.code === appleAuth.Error.CANCELED) {
+                console.log('User canceled Apple Sign-in');
+                return; // Silence cancellation errors
+            }
+            const errorMsg = error.response?.data?.message || error.message || 'Apple Sign-In failed';
             throw new Error(errorMsg);
         } finally {
             setIsActionLoading(false);
@@ -349,7 +418,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple }}>
             {children}
         </AuthContext.Provider>
     );

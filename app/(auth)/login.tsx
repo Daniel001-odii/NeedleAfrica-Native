@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, ImageBackground, Image, ActivityIndicator, Platform } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sms, Lock, Eye, EyeSlash, ArrowLeft } from 'iconsax-react-native';
@@ -10,6 +10,7 @@ import { IconButton } from '../../components/ui/IconButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../contexts/ThemeContext';
+import { AppleSignInButton } from '../../components/auth/AppleSignInButton';
 
 import Toast from 'react-native-toast-message';
 
@@ -17,7 +18,7 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signIn, signInWithGoogle, isActionLoading, isNewUser } = useAuth();
+    const { signIn, signInWithGoogle, signInWithApple, isActionLoading, isNewUser } = useAuth();
     const { isDark } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -40,6 +41,24 @@ export default function Login() {
                     text2: error.message || 'Check your internet and try again'
                 });
             }
+        }
+    };
+
+    const handleAppleSignIn = async () => {
+        try {
+            await signInWithApple();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in with Apple'
+            });
+            router.replace(isNewUser ? '/onboarding' : '/(tabs)');
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Apple Sign-In Failed',
+                text2: error.message || 'Check your internet and try again'
+            });
         }
     };
 
@@ -147,10 +166,16 @@ export default function Login() {
                     Sign In
                 </Button>
 
+                <AppleSignInButton 
+                    onPress={handleAppleSignIn}
+                    isLoading={isActionLoading}
+                    className="mb-4"
+                />
+
                 <TouchableOpacity
                     onPress={handleGoogleSignIn}
                     disabled={isActionLoading}
-                    className={`h-16 rounded-full ${isDark ? 'bg-gray-700' : 'bg-muted'} flex-row items-center justify-center mb-8 active:opacity-70`}
+                    className="h-16 rounded-full bg-muted dark:bg-dark-200 flex-row items-center justify-center mb-8 active:opacity-70"
                 >
                     <Image
                         source={require('../../assets/images/google_logo.png')}

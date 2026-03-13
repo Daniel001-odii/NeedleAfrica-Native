@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft, Shop } from 'iconsax-react-native';
@@ -8,6 +8,7 @@ import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { useTheme } from '../../contexts/ThemeContext';
+import { AppleSignInButton } from '../../components/auth/AppleSignInButton';
 
 import Toast from 'react-native-toast-message';
 
@@ -17,7 +18,7 @@ export default function SignUp() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signUp, signInWithGoogle, isActionLoading } = useAuth();
+    const { signUp, signInWithGoogle, signInWithApple, isActionLoading } = useAuth();
     const { isDark } = useTheme();
     const router = useRouter();
 
@@ -38,6 +39,24 @@ export default function SignUp() {
                     text2: error.message || 'Check your internet and try again'
                 });
             }
+        }
+    };
+
+    const handleAppleSignIn = async () => {
+        try {
+            await signInWithApple();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Logged in with Apple'
+            });
+            router.replace('/onboarding');
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Apple Sign-In Failed',
+                text2: error.message || 'Check your internet and try again'
+            });
         }
     };
 
@@ -164,10 +183,16 @@ export default function SignUp() {
                     Get Started
                 </Button>
 
+                <AppleSignInButton 
+                    onPress={handleAppleSignIn}
+                    isLoading={isActionLoading}
+                    className="mb-4"
+                />
+
                 <TouchableOpacity
                     onPress={handleGoogleSignIn}
                     disabled={isActionLoading}
-                    className={`h-16 rounded-full ${isDark ? 'bg-gray-700' : 'bg-muted'} flex-row items-center justify-center mb-8 active:opacity-70`}
+                    className="h-16 rounded-full bg-muted dark:bg-dark-200 flex-row items-center justify-center mb-8 active:opacity-70"
                 >
                     <Image
                         source={require('../../assets/images/google_logo.png')}
