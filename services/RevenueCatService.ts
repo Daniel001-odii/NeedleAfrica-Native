@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import Purchases, {
   CustomerInfo,
   PurchasesPackage,
@@ -309,10 +309,28 @@ class RevenueCatService {
    */
   async showManageSubscriptions(): Promise<void> {
     try {
-      if (!this.isInitialized) {
-        await this.initialize();
+      if (Platform.OS === 'android') {
+        const packageName = 'com.needleafrica.app';
+        const url = `https://play.google.com/store/account/subscriptions?package=${packageName}`;
+        
+        try {
+          const canOpen = await Linking.canOpenURL(url);
+          if (canOpen) {
+            await Linking.openURL(url);
+            return;
+          }
+        } catch (linkError) {
+          console.error('Linking error:', linkError);
+        }
+        
+        // Fallback to general subscriptions page or SDK method
+        await Linking.openURL('https://play.google.com/store/account/subscriptions');
+      } else {
+        if (!this.isInitialized) {
+          await this.initialize();
+        }
+        await Purchases.showManageSubscriptions();
       }
-      await Purchases.showManageSubscriptions();
     } catch (error) {
       console.error('Failed to show manage subscriptions:', error);
       throw error;

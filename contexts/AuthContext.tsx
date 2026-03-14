@@ -163,50 +163,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
             });
 
-            // Ensure Apple Auth credential state is valid
-            const credentialState = await appleAuth.getCredentialStateForUser(appleAuthRequestResponse.user);
+            const { identityToken, user: appleUser } = appleAuthRequestResponse;
 
-            if (credentialState === appleAuth.State.AUTHORIZED) {
-                const { identityToken, user: appleUser } = appleAuthRequestResponse;
+            if (!identityToken) {
+                throw new Error('No identityToken received from Apple');
+            }
 
-                if (!identityToken) {
-                    throw new Error('No identity token received from Apple');
-                }
+            // Send to backend
+            const response = await axiosInstance.post('/auth/apple', {
+                identityToken,
+                user: appleUser // Contains name/email on first sign-in
+            });
 
-                // Send to backend
-                const response = await axiosInstance.post('/auth/apple', {
-                    identityToken,
-                    user: appleUser // Contains name/email on first sign-in
-                });
+            const { status, token, user: userData, message, isNewUser: isNew } = response.data;
 
-                const { status, token, user: userData, message, isNewUser: isNew } = response.data;
+            if (status === 'error') {
+                throw new Error(message || 'Apple Login failed');
+            }
 
-                if (status === 'error') {
-                    throw new Error(message || 'Apple Login failed');
-                }
+            await SecureStore.setItemAsync('auth_token', token);
+            await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            setIsNewUser(!!isNew);
+            setUser(userData);
+            registerPushToken();
 
-                await SecureStore.setItemAsync('auth_token', token);
-                await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
-                setIsNewUser(!!isNew);
-                setUser(userData);
-                registerPushToken();
+            // PostHog Identity & Capture
+            posthog.identify(userData.id, {
+                email: userData.email,
+                username: userData.username,
+                method: 'apple'
+            });
+            posthog.capture('user_login', { method: 'apple', isNewUser: !!isNew });
 
-                // PostHog Identity & Capture
-                posthog.identify(userData.id, {
-                    email: userData.email,
-                    username: userData.username,
-                    method: 'apple'
-                });
-                posthog.capture('user_login', { method: 'apple', isNewUser: !!isNew });
-
-                // Initialize RevenueCat with user ID
-                try {
-                    await revenueCatService.setUserId(userData.id);
-                } catch (rcError) {
-                    console.error('Failed to set RevenueCat user ID:', rcError);
-                }
-            } else {
-                throw new Error('Apple Auth credential state is not authorized');
+            // Initialize RevenueCat with user ID
+            try {
+                await revenueCatService.setUserId(userData.id);
+            } catch (rcError) {
+                console.error('Failed to set RevenueCat user ID:', rcError);
             }
         } catch (error: any) {
             console.error('Apple Sign-In Error:', error);

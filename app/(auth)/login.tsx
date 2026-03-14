@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { AppleSignInButton } from '../../components/auth/AppleSignInButton';
+import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 
 import Toast from 'react-native-toast-message';
 
@@ -172,18 +173,11 @@ export default function Login() {
                     className="mb-4"
                 />
 
-                <TouchableOpacity
+                <GoogleSignInButton 
                     onPress={handleGoogleSignIn}
-                    disabled={isActionLoading}
-                    className="h-16 rounded-full bg-muted dark:bg-dark-200 flex-row items-center justify-center mb-8 active:opacity-70"
-                >
-                    <Image
-                        source={require('../../assets/images/google_logo.png')}
-                        className="w-6 h-6 mr-3"
-                        resizeMode="contain"
-                    />
-                    <Typography weight="bold" color={isDark ? "white" : "black"}>Continue with Google</Typography>
-                </TouchableOpacity>
+                    isLoading={isActionLoading}
+                    className="mb-8"
+                />
 
                 <View className="flex-row justify-center items-center pb-10">
                     <Typography color="gray">Don't have an account? </Typography>
