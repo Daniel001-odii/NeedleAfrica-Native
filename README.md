@@ -172,7 +172,7 @@ NAfrica-API/                    # Backend API (sibling directory)
 4. **Environment setup**
    Create `.env` file:
    ```env
-   EXPO_PUBLIC_API_URL=http://your-api-url.com/api
+   ROOT_API_URL=http://your-api-url.com/api
    ```
 
 5. **Start the app**

@@ -176,10 +176,15 @@ export default function Profile() {
                 </Pressable>
 
                 {/* App Version */}
-                <View className="mt-8 items-center opacity-30">
-                    <Typography variant="small" color="gray">
-                        Version {Constants.expoConfig?.version || '1.0.0'}
+                <View className="mt-12 items-center opacity-40 py-8">
+                    <Typography variant="small" color="gray" className="mb-2">
+                        Version {Constants.expoConfig?.version || '1.0.0'} from
                     </Typography>
+                    <Image
+                        source={{ uri: "https://whatsell-git-main-daniel001odiis-projects.vercel.app/_nuxt/muna.eTG7Ant_.png" }}
+                        className="w-20 h-8"
+                        resizeMode="contain"
+                    />
                 </View>
 
             </ScrollView >

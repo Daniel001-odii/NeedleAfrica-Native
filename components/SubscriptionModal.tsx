@@ -7,6 +7,7 @@ import {
     Modal,
     ImageBackground,
     Dimensions,
+    Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -228,23 +229,23 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                             </View>
 
                             <View
-                                className="mt-12 px-6"
+                                className="mt-8 px-6"
                             >
                                 {/* Branding */}
-                                <View className="items-center mb-8">
+                                <View className="items-center mb-6">
                                     <View className="flex-row items-center">
-                                        <Typography variant="h1" weight="bold" color="white" className="text-4xl">NeedleX</Typography>
+                                        <Typography variant="h1" weight="bold" color="white" className="text-3xl">NeedleX</Typography>
                                         <View className="bg-indigo-500 rounded-lg px-2 py-0.5 ml-2 mt-1">
                                             <Typography variant="caption" weight="bold" color="white">PRO</Typography>
                                         </View>
                                     </View>
-                                    <Typography variant="subtitle" color="white" className="text-center opacity-90 mt-2">
+                                    <Typography variant="subtitle" color="white" className="text-center opacity-90 mt-1">
                                         {isPro ? 'You have full access to all premium features' : 'Unlock the most powerful tailoring assistant'}
                                     </Typography>
                                 </View>
 
                                 {/* Features List */}
-                                <View className="mb-4">
+                                <View className="mb-3">
                                     {[
                                         "Unlimited customers",
                                         "Unlimited orders",
@@ -253,8 +254,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                         "Free access to extra tools",
                                         'Early access to new features'
                                     ].map((feature, idx) => (
-                                        <View key={idx} className="flex-row items-center mb-2">
-                                            <TickCircle size={22} color="#6366f1" variant="Bold" />
+                                        <View key={idx} className="flex-row items-center mb-1.5">
+                                            <TickCircle size={20} color="#6366f1" variant="Bold" />
                                             <Typography variant="body" color="white" className="ml-3 font-medium">{feature}</Typography>
                                         </View>
                                     ))}
@@ -262,10 +263,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
                                 {/* Tab Selector */}
                                 {!loadingPackages && packages.length > 1 && !isPro && (
-                                    <View className="flex-row bg-white/10 rounded-full p-1 mb-5">
+                                    <View className="flex-row bg-white/10 rounded-full p-1 mb-4">
                                         <TouchableOpacity
                                             onPress={() => setSelectedPlanType('MONTHLY')}
-                                            className={`flex-1 py-3 items-center rounded-full ${selectedPlanType === 'MONTHLY' ? 'bg-indigo-500' : ''}`}
+                                            className={`flex-1 py-2.5 items-center rounded-full ${selectedPlanType === 'MONTHLY' ? 'bg-indigo-500' : ''}`}
                                         >
                                             <Typography
                                                 variant="body"
@@ -278,7 +279,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             onPress={() => setSelectedPlanType('YEARLY')}
-                                            className={`flex-1 py-3 items-center rounded-full ${selectedPlanType === 'YEARLY' ? 'bg-indigo-500' : ''}`}
+                                            className={`flex-1 py-2.5 items-center rounded-full ${selectedPlanType === 'YEARLY' ? 'bg-indigo-500' : ''}`}
                                         >
                                             <Typography
                                                 variant="body"
@@ -294,11 +295,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
                                 {/* Single Premium Plan Card */}
                                 {loadingPackages ? (
-                                    <ActivityIndicator size="large" color="#6366f1" className="mt-10" />
+                                    <ActivityIndicator size="large" color="#6366f1" className="mt-8" />
                                 ) : (
                                     activePackage && (
-                                        <View className="bg-white/5 rounded-[30px] p-6 border-white/10 mb-5">
-                                            <View className="flex-row justify-between items-start mb-2.5">
+                                        <View className="bg-white/5 rounded-[24px] p-5 border-white/10 mb-4">
+                                            <View className="flex-row justify-between items-start mb-2">
                                                 <View>
                                                     <Typography variant="h3" weight="bold" color="white">
                                                         {selectedPlanType === 'YEARLY' ? 'Yearly Access' : 'Monthly Access'}
@@ -317,10 +318,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                                     </View>
                                                 ) : (
                                                     <>
-                                                        <Typography variant="h1" weight="bold" color="white" className="py-2" style={{ fontSize: 42 }}>
+                                                        <Typography variant="h1" weight="bold" color="white" className="py-1" style={{ fontSize: 36 }}>
                                                             {activePackage.product.priceString}
                                                         </Typography>
-                                                        <Typography variant="body" color="white" className="opacity-60 ml-2 mb-2">
+                                                        <Typography variant="body" color="white" className="opacity-60 ml-2 mb-1.5">
                                                             / {selectedPlanType === 'YEARLY' ? 'year' : 'month'}
                                                         </Typography>
                                                     </>
@@ -330,7 +331,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                             {selectedPlanType === 'YEARLY' && (
                                                 <View className="flex-row gap-2.5">
                                                     <View className="bg-indigo-500 px-2.5 py-1 rounded-lg">
-                                                        <Typography variant="small" weight="bold" className="text-white text-[10px]">SAVE 40%</Typography>
+                                                        <Typography variant="small" weight="bold" className="text-white text-[10px]">SAVE 17%</Typography>
                                                     </View>
                                                     <View className="bg-white/10 px-2.5 py-1 rounded-lg flex-row items-center">
                                                         <Star1 size={14} color="white" variant="Bold" />
@@ -339,7 +340,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                                 </View>
                                             )}
 
-                                            <Typography variant="small" color="white" className="mt-4 opacity-40 italic">
+                                            <Typography variant="small" color="white" className="mt-3 opacity-40 italic">
                                                 {selectedPlanType === 'YEARLY'
                                                     ? `Total cost ${activePackage.product.priceString} billed annually.`
                                                     : 'Billed monthly. Cancel anytime.'}
@@ -364,13 +365,12 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                 )}
                             </View>
 
-                            {/* Action Button Section */}
-                            <View className="px-6 pb-8 mt-4">
+                            <View className="px-6 pb-6 mt-2">
                                 <TouchableOpacity
                                     activeOpacity={0.8}
                                     onPress={handlePurchase}
                                     disabled={isLoading || !activePackage}
-                                    className={`h-16 rounded-full items-center justify-center shadow-lg shadow-indigo-500/40 bg-indigo-500 ${(!activePackage || isLoading) ? 'opacity-50' : ''}`}
+                                    className={`h-14 rounded-full items-center justify-center shadow-lg shadow-indigo-500/40 bg-indigo-500 ${(!activePackage || isLoading) ? 'opacity-50' : ''}`}
                                 >
                                     {isLoading ? (
                                         <ActivityIndicator color="white" />
@@ -384,9 +384,19 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     )}
                                 </TouchableOpacity>
 
-                                <Typography variant="small" color="white" className="text-center opacity-40 mt-6 px-4 leading-4">
+                                <Typography variant="small" color="white" className="text-center opacity-40 mt-4 px-4 leading-4">
                                     The subscription will automatically renew unless it is canceled at least 24 hours before the end of the current period.
                                 </Typography>
+
+                                <View className="flex-row justify-center items-center gap-4 mt-4 opacity-60">
+                                    <TouchableOpacity onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}>
+                                        <Typography variant="small" color="white" className="underline">Privacy Policy</Typography>
+                                    </TouchableOpacity>
+                                    <View className="w-1 h-1 rounded-full bg-white/40" />
+                                    <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+                                        <Typography variant="small" color="white" className="underline">Terms of Use</Typography>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </SafeAreaView>
                     </LinearGradient>

@@ -7,6 +7,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import appleAuth from '@invertase/react-native-apple-authentication';
 import { revenueCatService } from '../services/RevenueCatService';
 import { posthog } from '../posthogConfig';
+import Constants from 'expo-constants';
 
 interface User {
     id: string;
@@ -66,8 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkUser();
 
         GoogleSignin.configure({
-            webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-            iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID, // Optional for iOS if using Firebase
+            webClientId: Constants.expoConfig?.extra?.googleWebClientId || process.env.EXPO_PUBLIC_WEB_ID,
+            iosClientId: Constants.expoConfig?.extra?.googleIosClientId || process.env.EXPO_PUBLIC_IOS_ID,
             offlineAccess: true,
         });
     }, []);
