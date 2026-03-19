@@ -120,11 +120,11 @@ export default function Preferences() {
                                             variant={isSelected ? 'white' : 'muted'}
                                             rounded="3xl"
                                             className={`items-center justify-center py-6 border-2 ${isSelected
-                                                ? 'border-brand-primary'
+                                                ? 'border-blue-500'
                                                 : isDark ? 'border-transparent' : 'border-transparent'
                                                 }`}
                                         >
-                                            <View className={`w-12 h-12 rounded-2xl items-center justify-center mb-3 ${isSelected ? 'bg-brand-primary' : isDark ? 'bg-dark-700' : 'bg-white'}`}>
+                                            <View className={`w-12 h-12 rounded-2xl items-center justify-center mb-3 ${isSelected ? 'bg-blue-500' : isDark ? 'bg-dark-700' : 'bg-white'}`}>
                                                 {themeOption === 'light' && <Sun size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
                                                 {themeOption === 'dark' && <Moon size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
                                                 {themeOption === 'system' && <MagicStar size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
@@ -132,14 +132,14 @@ export default function Preferences() {
                                             <Typography
                                                 variant="small"
                                                 weight={isSelected ? 'bold' : 'medium'}
-                                                className={isSelected ? (isDark ? 'text-white' : 'text-brand-primary') : 'text-gray-500'}
+                                                className={isSelected ? (isDark ? 'text-white' : 'text-blue-500') : 'text-gray-500'}
                                             >
                                                 {themeOption === 'system' ? 'System' : themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
                                             </Typography>
 
                                             {isSelected && (
                                                 <View className="absolute top-2 right-2">
-                                                    <TickCircle size={18} color={isDark ? '#FFFFFF' : '#6366f1'} variant="Bold" />
+                                                    <TickCircle size={18} color={isDark ? '#FFFFFF' : '#3B82F6'} variant="Bold" />
                                                 </View>
                                             )}
                                         </Surface>
@@ -194,7 +194,7 @@ export default function Preferences() {
                                     setShowCustomInput(false);
                                 }}
                                 className={`px-6 py-3 rounded-full border ${reminderDay === day && !showCustomInput
-                                    ? 'bg-brand-primary border-brand-primary'
+                                    ? 'bg-blue-500 border-blue-500'
                                     : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
                                     }`}
                             >
@@ -206,7 +206,7 @@ export default function Preferences() {
                         <TouchableOpacity
                             onPress={() => setShowCustomInput(true)}
                             className={`px-6 py-3 rounded-full border flex-row items-center ${showCustomInput
-                                ? 'bg-brand-primary border-brand-primary'
+                                ? 'bg-blue-500 border-blue-500'
                                 : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
                                 }`}
                         >
@@ -349,6 +349,35 @@ export default function Preferences() {
                         </Surface>
                     </View>
                 </Modal>
+
+                {/* Section: Test Notifications (Developer) */}
+                {/* <View className="mb-10">
+                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Testing Notifications</Typography>
+                    <View className="gap-3">
+                        <Button 
+                            variant="secondary"
+                            className={`h-14 rounded-2xl border-0 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}
+                            textClassName={isDark ? 'text-white' : 'text-dark'}
+                            onPress={() => {
+                                Toast.show({ type: 'info', text1: 'Morning Triggered', text2: 'Testing 8 AM logic' });
+                                NotificationService.testSmartReminders(true);
+                            }}
+                        >
+                            Test Morning Reminder (with pending)
+                        </Button>
+                        <Button 
+                            variant="secondary"
+                            className={`h-14 rounded-2xl border-0 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}
+                            textClassName={isDark ? 'text-white' : 'text-dark'}
+                            onPress={() => {
+                                Toast.show({ type: 'info', text1: 'Evening Triggered', text2: 'Testing 8 PM logic' });
+                                NotificationService.testSmartReminders(false);
+                            }}
+                        >
+                            Test Evening/Empty Reminder
+                        </Button>
+                    </View>
+                </View> */}
 
                 <Button
                     onPress={handleSave}

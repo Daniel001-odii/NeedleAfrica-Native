@@ -123,7 +123,7 @@ export default function BackupData() {
                 <Button
                     onPress={() => handleBackup(false)}
                     isLoading={isSyncing}
-                    className="h-16 rounded-full bg-blue-600 border-0 shadow-lg"
+                    className="h-16 rounded-full bg-blue-600 border-0 shadow-none"
                     textClassName="text-white"
                 >
                     {isSyncing ? 'Backing up...' : 'Backup Now'}
@@ -135,7 +135,7 @@ export default function BackupData() {
                     variant="ghost"
                     className="h-12 rounded-full mt-2"
                 >
-                    <View className="flex-row items-center">
+                    <View className="flex-row items-center gap-3">
                         <Refresh size={16} color={isDark ? '#9CA3AF' : '#6B7280'} className="mr-2" />
                         <Typography variant="small" color="gray">
                             Reset & Full Sync from Cloud

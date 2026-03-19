@@ -13,6 +13,7 @@ import { Button } from '../../../components/ui/Button';
 import { useRevenueCat } from '../../../hooks/useRevenueCat';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { useTheme } from '../../../contexts/ThemeContext';
+import Svg, { Path } from 'react-native-svg';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
@@ -62,11 +63,11 @@ export default function Profile() {
                     {user?.profilePicture ? (
                         <Image
                             source={{ uri: user.profilePicture }}
-                            className="w-20 h-20 rounded-full mr-5"
+                            className="w-16 h-16 rounded-full mr-5"
                         />
                     ) : (
-                        <View className={`w-20 h-20 items-center justify-center mr-5 ${isDark ? 'bg-dark-700' : 'bg-black'} rounded-full`}>
-                            <Typography variant="h1" weight="bold" className="text-white">
+                        <View className={`w-16 h-16 items-center justify-center mr-5 ${isDark ? 'bg-dark-700' : 'bg-black'} rounded-full`}>
+                            <Typography variant="h3" weight="bold" className="text-white">
                                 {(user?.username || 'J')[0].toUpperCase()}
                                 {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
                             </Typography>
@@ -75,12 +76,7 @@ export default function Profile() {
                     <View className="flex-1">
                         <Typography variant="h3" weight="bold">{user?.username || 'Jane Doe'}</Typography>
                         <Typography variant="caption" color="gray" className="mb-2">{user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>
-                        <View className="bg-blue-500/50 self-start px-3 py-1 rounded-full">
-                            <Typography variant="small" weight="bold">{user?.role || 'Tailor'}</Typography>
-                        </View>
                     </View>
-                    {/* <IconButton icon={<Setting2 size={20} color="black" />} variant="white" /> */}
-                    {/* </Surface> */}
                 </View>
 
                 {/* Stats Section */}
@@ -111,18 +107,20 @@ export default function Profile() {
                         <ProfileItem
                             icon={<User size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Personal Information"
+                            subtitle="Update your name, business & contact info"
                             onPress={() => router.push('/(tabs)/profile/personal')}
                         />
                         <ProfileItem
                             icon={<Setting2 size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Preferences"
+                            subtitle="App theme, notifications & currency"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                         />
                         <ProfileItem
                             icon={<Crown size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Subscription"
                             subtitle="Manage your plan & billing"
-                            badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : 'Free Plan'}
+                            badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : ''}
                             badgeColor={userIsPro ? 'bg-yellow-500' : 'bg-blue-600'}
                             onPress={() => setIsSubscriptionModalVisible(true)}
                         />
@@ -149,19 +147,32 @@ export default function Profile() {
                         <ProfileItem
                             icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
+                            subtitle="Get assistance or reach out to us"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                         />
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={
+                                <Svg width="20" height="20" color={isDark ? "#818CF8" : "#3b82f6"} viewBox="0 0 24 24">{/* Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ */}
+                                    <Path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12c0 1.6.376 3.112 1.043 4.453c.178.356.237.763.134 1.148l-.595 2.226a1.3 1.3 0 0 0 1.591 1.592l2.226-.596a1.63 1.63 0 0 1 1.149.133A9.96 9.96 0 0 0 12 22" opacity=".5" /><Path fill="currentColor" d="M7.825 12.85a.825.825 0 0 0 0 1.65h6.05a.825.825 0 0 0 0-1.65zm0-3.85a.825.825 0 0 0 0 1.65h8.8a.825.825 0 0 0 0-1.65z" />
+                                </Svg>}
                             title="Send Feedback"
-                            subtitle="Help us improve NeedleAfrica"
-                            onPress={() => Linking.openURL('mailto:support@needleafrica.com?subject=Feedback for NeedleAfrica')}
+                            subtitle="Help us improve NeedleX"
+                            onPress={() => Linking.openURL('mailto:hello@needleafrica.com?subject=Feedback for NeedleX')}
                         />
+                    </View>
+                </View>
+
+                {/* Community Section */}
+                <View className="mb-12">
+                    <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest">Community</Typography>
+                    <View className="gap-1">
                         <ProfileItem
-                            icon={<DocumentText size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
-                            title="Privacy Policy"
-                            subtitle="View our privacy policy"
-                            onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}
+                            icon={
+                                <Svg width="20" height="20" viewBox="0 0 24 24">{/* Icon from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE */}<Path fill="currentColor" d="M19.05 4.91A9.82 9.82 0 0 0 12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01m-7.01 15.24c-1.48 0-2.93-.4-4.2-1.15l-.3-.18l-3.12.82l.83-3.04l-.2-.31a8.26 8.26 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24c2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c.02 4.54-3.68 8.23-8.22 8.23m4.52-6.16c-.25-.12-1.47-.72-1.69-.81c-.23-.08-.39-.12-.56.12c-.17.25-.64.81-.78.97c-.14.17-.29.19-.54.06c-.25-.12-1.05-.39-1.99-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.14-.25-.02-.38.11-.51c.11-.11.25-.29.37-.43s.17-.25.25-.41c.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31c-.22.25-.86.85-.86 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74c.59.26 1.05.41 1.41.52c.59.19 1.13.16 1.56.1c.48-.07 1.47-.6 1.67-1.18c.21-.58.21-1.07.14-1.18s-.22-.16-.47-.28" /></Svg>
+                            }
+                            title="Join our Community"
+                            subtitle="Connect with other designers & tailors"
+                            onPress={() => Linking.openURL('https://chat.whatsapp.com/FTIvYiBIyfE4ZLniuOJWmL?mode=gi_t')}
                         />
                     </View>
                 </View>
@@ -176,15 +187,23 @@ export default function Profile() {
                 </Pressable>
 
                 {/* App Version */}
-                <View className="mt-12 items-center opacity-40 py-8">
-                    <Typography variant="small" color="gray" className="mb-2">
-                        Version {Constants.expoConfig?.version || '1.0.0'} from
-                    </Typography>
-                    <Image
-                        source={{ uri: "https://whatsell-git-main-daniel001odiis-projects.vercel.app/_nuxt/muna.eTG7Ant_.png" }}
-                        className="w-20 h-8"
-                        resizeMode="contain"
-                    />
+                <View className="mt-12 items-center py-8">
+                    <Pressable
+                        onPress={() => Linking.openURL('https://needleafrica.com/privacy-policy')}
+                        className="mb-4"
+                    >
+                        <Typography variant="small" color="primary" weight="bold" className="underline opacity-60">Privacy Policy</Typography>
+                    </Pressable>
+                    <View className="items-center opacity-40">
+                        <Typography variant="small" color="gray" className="mb-2">
+                            Version {Constants.expoConfig?.version || '1.0.0'} from
+                        </Typography>
+                        <Image
+                            source={{ uri: "https://whatsell-git-main-daniel001odiis-projects.vercel.app/_nuxt/muna.eTG7Ant_.png" }}
+                            className="w-20 h-8"
+                            resizeMode="contain"
+                        />
+                    </View>
                 </View>
 
             </ScrollView >

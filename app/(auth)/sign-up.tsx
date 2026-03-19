@@ -122,19 +122,6 @@ export default function SignUp() {
                             />
                         </Surface>
                     </View>
-                    <View className="mb-6">
-                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Business Name</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
-                            <Shop size={20} color="#6B7280" variant="Bulk" />
-                            <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
-                                placeholder="Needle Africa Tailors"
-                                placeholderTextColor="#9CA3AF"
-                                value={businessName}
-                                onChangeText={setBusinessName}
-                            />
-                        </Surface>
-                    </View>
 
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Email Address</Typography>
@@ -152,13 +139,29 @@ export default function SignUp() {
                         </Surface>
                     </View>
 
+                    <View className="mb-6">
+                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Business Name</Typography>
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
+                            <Shop size={20} color="#6B7280" variant="Bulk" />
+                            <TextInput
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
+                                placeholder="Your Business Name"
+                                placeholderTextColor="#9CA3AF"
+                                value={businessName}
+                                onChangeText={setBusinessName}
+                            />
+                        </Surface>
+                    </View>
+
+
+
                     <View className="mb-2">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Password</Typography>
                         <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Lock size={20} color="#6B7280" variant="Bulk" />
                             <TextInput
                                 className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
-                                placeholder="Create a password"
+                                placeholder="Create a strong password"
                                 placeholderTextColor="#9CA3AF"
                                 value={password}
                                 onChangeText={setPassword}
@@ -184,13 +187,13 @@ export default function SignUp() {
                     Get Started
                 </Button>
 
-                <AppleSignInButton 
+                <AppleSignInButton
                     onPress={handleAppleSignIn}
                     isLoading={isActionLoading}
                     className="mb-4"
                 />
 
-                <GoogleSignInButton 
+                <GoogleSignInButton
                     onPress={handleGoogleSignIn}
                     isLoading={isActionLoading}
                     className="mb-8"

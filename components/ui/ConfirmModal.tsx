@@ -46,7 +46,7 @@ export function ConfirmModal({
 
     return (
         <Modal
-            animationType="fade"
+            animationType="slide"
             transparent={true}
             visible={visible}
             onRequestClose={onCancel}
@@ -54,10 +54,11 @@ export function ConfirmModal({
             <TouchableOpacity
                 activeOpacity={1}
                 onPress={onCancel}
-                className="flex-1 bg-black/50 justify-center items-center px-6"
+                className="flex-1 bg-black/50 justify-end"
             >
                 <TouchableOpacity activeOpacity={1} className="w-full">
-                    <Surface variant="white" className="p-6 overflow-hidden" rounded="3xl">
+                    <Surface variant="white" className="p-8 pb-12 overflow-hidden m-2 mb-6 rounded-[30px]" rounded="none">
+                        {/* <View className="w-12 h-1.5 bg-gray-200 rounded-full self-center mb-8 opacity-50" /> */}
                         <View className="items-center mb-4">
                             {getIcon()}
                         </View>

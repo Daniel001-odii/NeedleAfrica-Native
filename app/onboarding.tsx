@@ -91,7 +91,7 @@ export default function Onboarding() {
                                             withCallingCode={false}
                                             withEmoji
                                             onSelect={(c) => setCountry(c)}
-                                            countryCode={country?.cca2 || 'US'}
+                                            countryCode={country?.cca2 as any}
                                             theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
                                             containerButtonStyle={{ height: '100%', justifyContent: 'center' }}
                                         />
@@ -156,9 +156,11 @@ export default function Onboarding() {
 
                     {/* Main Action */}
                     <Button
+
+                        disabled={isLoading || !country || !noOfEmployees || !joinedFrom}
                         onPress={handleGetStarted}
                         isLoading={isLoading}
-                        className="h-16 rounded-full bg-blue-500 border-0 mt-auto"
+                        className="h-16 rounded-full bg-blue-500 border-0 mt-auto shadow-none"
                         textClassName="text-white text-lg font-bold"
                     >
                         Complete Profile

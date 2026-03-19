@@ -185,6 +185,97 @@ export class NotificationService {
                 await this.cancelOrderReminders(order.id).catch(() => { });
             }
         }
+
+        // Schedule Daily Smart Reminders
+        await this.scheduleSmartReminders(orders);
+    }
+
+    static async scheduleSmartReminders(orders: any[]) {
+        try {
+            // Cancel existing smart reminders to avoid duplicates
+            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+            for (const notification of scheduled) {
+                if (notification.content.data?.type === 'smart_reminder') {
+                    await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+                }
+            }
+
+            const pendingOrders = orders.filter(o => ['PENDING', 'READY'].includes(o.status));
+            const hasPending = pendingOrders.length > 0;
+
+            // 1. Morning Reminder (8 AM)
+            const morningTitle = "Good Morning! 🧵";
+            const morningBody = hasPending
+                ? `You have ${pendingOrders.length} orders to work on. Let's crush those deadlines today! ✨`
+                : "Ready for a productive day? Start recording new orders to enable smart reminders. 📈";
+
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: morningTitle,
+                    body: morningBody,
+                    data: { type: 'smart_reminder', time: '8AM' },
+                    sound: true,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour: 8,
+                    minute: 0,
+                } as Notifications.DailyTriggerInput,
+            });
+
+            // 2. Evening Reminder (8 PM)
+            const eveningTitle = "Daily Wrap-up 🌙";
+            const eveningBody = "Time to wind down! Don't forget to record today's work and any pending debts while fresh in your mind. 📝💰";
+
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: eveningTitle,
+                    body: eveningBody,
+                    data: { type: 'smart_reminder', time: '8PM' },
+                    sound: true,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour: 20,
+                    minute: 0,
+                } as Notifications.DailyTriggerInput,
+            });
+
+            console.log("Smart reminders scheduled successfully.");
+        } catch (e) {
+            console.error("Failed to schedule smart reminders:", e);
+        }
+    }
+
+    static async testSmartReminders(hasPending: boolean = true) {
+        // Trigger both immediately for testing
+        const morningBody = hasPending
+            ? "You have pending orders to work on. Let's crush those deadlines today! ✨"
+            : "Ready for a productive day? Start recording new orders to enable smart reminders. 📈";
+
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Test: Morning Reminder 🧵",
+                body: morningBody,
+                data: { type: 'test' },
+                sound: true,
+            },
+            trigger: null, // trigger immediately
+        });
+
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Test: Evening Reminder 🌙",
+                body: "Time to wind down! Don't forget to record today's work and any pending debts while fresh in your mind. 📝💰",
+                data: { type: 'test' },
+                sound: true,
+            },
+            trigger: { 
+                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                seconds: 2,
+                repeats: false 
+            } as Notifications.TimeIntervalTriggerInput,
+        });
     }
 
     static async cancelOrderReminders(orderId: string) {

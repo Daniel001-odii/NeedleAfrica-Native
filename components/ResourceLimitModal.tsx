@@ -7,6 +7,7 @@ import { Surface } from './ui/Surface';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CURRENCIES } from '../constants/currencies';
+import Svg, { Path } from 'react-native-svg';
 
 type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
 
@@ -51,13 +52,14 @@ export function ResourceLimitModal({
 
   return (
     <Modal
+      className=''
       animationType="slide"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/50 justify-end">
-        <View className={`rounded-t-3xl p-6 pb-10 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <View className={`rounded-3xl p-6 pb-10 mb-6 m-2 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
             <View className="flex-row items-center">
@@ -67,7 +69,9 @@ export function ResourceLimitModal({
               </Typography>
             </View>
             <TouchableOpacity onPress={onClose}>
-              <CloseCircle size={28} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              <Svg className={isDark ? 'text-white' : 'text-black'} width="24" height="24" viewBox="0 0 24 24">{/* Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE */}
+                <Path fill="currentColor" d="m12 13.4l-4.9 4.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7l4.9-4.9l-4.9-4.9q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.9 4.9l4.9-4.9q.275-.275.7-.275t.7.275t.275.7t-.275.7L13.4 12l4.9 4.9q.275.275.275.7t-.275.7t-.7.275t-.7-.275z" />
+              </Svg>
             </TouchableOpacity>
           </View>
 
@@ -106,7 +110,7 @@ export function ResourceLimitModal({
                   Upgrade to Pro
                 </Typography>
                 <Typography variant="small" color="gray">
-                  Get unlimited {resourceLabel} and unlock all premium features for just {currencySymbol}2,500/month.
+                  Get unlimited {resourceLabel} and unlock all premium features.
                 </Typography>
               </View>
             </View>
@@ -114,8 +118,9 @@ export function ResourceLimitModal({
 
           {/* Actions */}
           <Button
+            variant='ghost'
             onPress={onUpgrade}
-            className="h-14 rounded-full bg-yellow-400"
+            className="h-14 rounded-full bg-yellow-400 border-none outline-none"
             textClassName="text-black font-bold"
           >
             <View className="flex-row items-center">

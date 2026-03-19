@@ -15,6 +15,7 @@ import Toast from 'react-native-toast-message';
 import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import PhoneInput from 'react-phone-number-input/react-native-input';
 
 export default function NewCustomer() {
     const { isDark } = useTheme();
@@ -150,14 +151,14 @@ export default function NewCustomer() {
                             <Call size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
                             <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Phone Number</Typography>
                         </View>
-                        <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
-                            <TextInput
-                                className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                placeholder="E.g. 08012345678"
+                        <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
+                            <PhoneInput
+                                style={{ flex: 1, color: isDark ? 'white' : 'black', fontWeight: 'bold' }}
+                                placeholder="+123 800 000 0000"
                                 placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
+                                defaultCountry="NG"
                                 value={phoneNumber}
-                                onChangeText={setPhoneNumber}
-                                keyboardType="phone-pad"
+                                onChange={(val) => setPhoneNumber(val || '')}
                             />
                         </Surface>
                     </View>
@@ -225,6 +226,7 @@ export default function NewCustomer() {
 
             <ResourceLimitModal
                 visible={showLimitModal}
+                // visible={true}
                 onClose={() => setShowLimitModal(false)}
                 onUpgrade={() => {
                     setShowLimitModal(false);

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import axiosInstance from '../lib/axios';
+import { Platform } from 'react-native';
 import { NotificationService } from '../services/NotificationService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import appleAuth from '@invertase/react-native-apple-authentication';
@@ -35,6 +36,7 @@ interface User {
     subscriptionStatus?: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' | 'UNPAID' | 'EXPIRED';
     subscriptionExpiry?: string;
     currentPlanCode?: string;
+    deviceType?: string;
 }
 
 interface AuthContextType {
@@ -119,7 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw new Error('Failed to obtain Google access token');
             }
 
-            const response = await axiosInstance.post('/auth/google', { accessToken });
+            const response = await axiosInstance.post('/auth/google', { 
+                accessToken,
+                deviceType: Platform.OS 
+            });
             const { status, token, user: userData, message, isNewUser: isNew } = response.data;
 
             if (status === 'error') {
@@ -173,7 +178,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Send to backend
             const response = await axiosInstance.post('/auth/apple', {
                 identityToken,
-                user: appleUser // Contains name/email on first sign-in
+                user: appleUser, // Contains name/email on first sign-in
+                deviceType: Platform.OS
             });
 
             const { status, token, user: userData, message, isNewUser: isNew } = response.data;
@@ -218,7 +224,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signIn = async (email: string, password: string) => {
         setIsActionLoading(true);
         try {
-            const response = await axiosInstance.post('/auth/login', { email, password });
+            const response = await axiosInstance.post('/auth/login', { 
+                email, 
+                password,
+                deviceType: Platform.OS
+            });
             const { status, token, user: userData, message } = response.data;
 
             if (status === 'error') {
@@ -257,7 +267,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signUp = async (email: string, password: string, username: string, businessName: string) => {
         setIsActionLoading(true);
         try {
-            const response = await axiosInstance.post('/auth/register', { email, password, username, businessName });
+            const response = await axiosInstance.post('/auth/register', { 
+                email, 
+                password, 
+                username, 
+                businessName,
+                deviceType: Platform.OS
+            });
             const { status, token, user: userData, message } = response.data;
 
             if (status === 'error') {

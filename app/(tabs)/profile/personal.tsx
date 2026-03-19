@@ -200,13 +200,9 @@ export default function PersonalInformation() {
                         </View>
                         <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
                             <PhoneInput
-                                style={{ flex: 1 }}
-                                textComponent={TextInput}
-                                textProps={{
-                                    placeholder: "+234 800 000 0000",
-                                    placeholderTextColor: "#9CA3AF",
-                                    className: `font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`
-                                }}
+                                style={{ flex: 1, color: isDark ? 'white' : 'black' }}
+                                placeholder="+123 800 000 0000"
+                                placeholderTextColor="#9CA3AF"
                                 defaultCountry="NG"
                                 value={phone}
                                 onChange={(val) => setPhone(val || '')}
