@@ -3,9 +3,17 @@ import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 
-// Use localhost for Android emulator (10.0.2.2) or local IP, 
-// or the production URL if available.
-const API_URL = Constants.expoConfig?.extra?.rootApiUrl || 'https://needle-africa-api.vercel.app/api';
+// Environment switcher
+const ENV = 'development'; // Defaulting to production for non-dev builds unless specified
+
+const API_CONFIG = {
+    development: 'http://192.168.1.101:3000/api',
+    staging: 'http://192.168.1.101:3000/api', // Pointing to local for both dev/staging as requested
+    production: 'https://needle-africa-api.vercel.app/api'
+};
+
+// const API_URL = Constants.expoConfig?.extra?.rootApiUrl || API_CONFIG[ENV];
+const API_URL = API_CONFIG[ENV];
 
 const axiosInstance = axios.create({
     baseURL: API_URL,

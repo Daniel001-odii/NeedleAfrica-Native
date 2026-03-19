@@ -91,5 +91,34 @@ export default schemaMigrations({
                 }),
             ],
         },
+        {
+            toVersion: 7,
+            steps: [
+                addColumns({
+                    table: 'customers',
+                    columns: [
+                        { name: 'server_id', type: 'string', isOptional: true },
+                        { name: 'created_at', type: 'number' },
+                        { name: 'updated_at', type: 'number' },
+                    ],
+                }),
+                addColumns({
+                    table: 'measurements',
+                    columns: [
+                        { name: 'server_id', type: 'string', isOptional: true },
+                        { name: 'created_at', type: 'number' },
+                        { name: 'updated_at', type: 'number' },
+                    ],
+                }),
+                addColumns({
+                    table: 'orders',
+                    columns: [
+                        { name: 'server_id', type: 'string', isOptional: true },
+                        { name: 'created_at', type: 'number' },
+                        { name: 'updated_at', type: 'number' },
+                    ],
+                }),
+            ],
+        },
     ],
 });

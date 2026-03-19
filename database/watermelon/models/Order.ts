@@ -18,6 +18,7 @@ export default class Order extends Model {
         customers: { type: 'belongs_to', key: 'customer_id' },
     };
 
+    @text('server_id') serverId?: string;
     @text('user_id') userId?: string;
     @text('customer_id') customerId?: string;
     @text('style_name') styleName?: string;
@@ -29,27 +30,17 @@ export default class Order extends Model {
     @text('fabric_image') fabricImage?: string | null;
     @text('style_image') styleImage?: string | null;
     @field('deleted_at') deletedAt?: number | null;
-    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt?: Date;
-    @date('updated_at') updatedAt?: Date;
+    @readonly @date('created_at') createdAt!: Date;
+    @readonly @date('updated_at') updatedAt!: Date;
 
-    @relation('customers', 'customer_id') customer?: Relation<Customer>;
-
-    get syncStatus(): SyncStatus {
-        return this._syncStatus as SyncStatus;
-    }
-
-    set syncStatus(value: SyncStatus) {
-        this._syncStatus = value;
-    }
+    @relation('customers', 'customer_id') customer!: Relation<Customer>;
 
     get balance(): number {
         return (this.amount || 0) - (this.amountPaid || 0);
     }
 
-    static async createSyncable(database: any, userId: string, customerId: string, data: any) {
-        const now = Date.now();
+    static async createSyncable(database: any, userId: string, customerId: string, data: Partial<Order>) {
         return await database.write(async () => {
             return await database.get('orders').create((record: any) => {
                 record.userId = userId;
@@ -62,25 +53,15 @@ export default class Order extends Model {
                 record.notes = data.notes || null;
                 record.fabricImage = data.fabricImage || null;
                 record.styleImage = data.styleImage || null;
-                record.deletedAt = null;
-                record.syncStatus = 'created';
-                record.createdAt = new Date(now);
-                record.updatedAt = new Date(now);
-            });
-        });
-    }
-
-    async markForSync() {
-        await this.database.write(async () => {
-            await this.update((record: any) => {
-                record.syncStatus = 'created';
-                record.updatedAt = new Date();
             });
         });
     }
 
     async softDelete() {
         await this.database.write(async () => {
+            await this.update(record => {
+                record.deletedAt = Date.now();
+            });
             await this.markAsDeleted();
         });
     }

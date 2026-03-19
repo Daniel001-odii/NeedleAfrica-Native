@@ -508,6 +508,7 @@
     "standalone_static_library": 1,
     "target": "25.2.1",
     "build_v8_with_gn": "false",
+    "legacy_peer_deps": "true",
     "global_prefix": "/opt/homebrew",
     "local_prefix": "/Users/mac/Desktop/PROJECTS/NEEDLE_BIRD/needleafrica-app",
     "globalconfig": "/opt/homebrew/etc/npmrc",

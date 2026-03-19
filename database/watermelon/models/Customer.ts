@@ -20,30 +20,21 @@ export default class Customer extends Model {
         orders: { type: 'has_many', foreignKey: 'customer_id' },
     };
 
+    @text('server_id') serverId?: string;
     @text('user_id') userId?: string;
     @text('full_name') fullName?: string;
     @text('phone_number') phoneNumber?: string | null;
     @text('gender') gender?: string | null;
     @text('notes') notes?: string | null;
     @field('deleted_at') deletedAt?: number | null;
-    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt?: Date;
-    @date('updated_at') updatedAt?: Date;
+    @readonly @date('created_at') createdAt!: Date;
+    @readonly @date('updated_at') updatedAt!: Date;
 
-    @children('measurements') measurements?: Query<Measurement>;
-    @children('orders') orders?: Query<Order>;
+    @children('measurements') measurements!: Query<Measurement>;
+    @children('orders') orders!: Query<Order>;
 
-    get syncStatus(): SyncStatus {
-        return this._syncStatus as SyncStatus;
-    }
-
-    set syncStatus(value: SyncStatus) {
-        this._syncStatus = value;
-    }
-
-    static async createSyncable(database: any, userId: string, data: any) {
-        const now = Date.now();
+    static async createSyncable(database: any, userId: string, data: Partial<Customer>) {
         return await database.write(async () => {
             return await database.get('customers').create((record: any) => {
                 record.userId = userId;
@@ -51,26 +42,16 @@ export default class Customer extends Model {
                 record.phoneNumber = data.phoneNumber || null;
                 record.gender = data.gender || null;
                 record.notes = data.notes || null;
-                record.deletedAt = null;
-                record.syncStatus = 'created';
-                record.createdAt = new Date(now);
-                record.updatedAt = new Date(now);
-            });
-        });
-    }
-
-    async markForSync() {
-        await this.database.write(async () => {
-            await this.update((record: any) => {
-                record.syncStatus = 'created';
-                record.updatedAt = new Date();
             });
         });
     }
 
     async softDelete() {
         await this.database.write(async () => {
-            await this.markAsDeleted();
+            await this.update(record => {
+                record.deletedAt = Date.now();
+            });
+            await this.markAsDeleted(); // Watermelon internal delete flag
         });
     }
 }

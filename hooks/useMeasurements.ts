@@ -45,7 +45,10 @@ export function useMeasurements(customerId?: string) {
     }) => {
         if (!user) return;
 
-        await Measurement.createSyncable(database, user.id, data.customerId, data);
+        await Measurement.createSyncable(database, user.id, data.customerId, {
+            title: data.title,
+            values: typeof data.valuesJson === 'string' ? JSON.parse(data.valuesJson) : data.valuesJson
+        });
 
         // Trigger immediate sync to server
         sync().catch(console.error);
@@ -57,7 +60,6 @@ export function useMeasurements(customerId?: string) {
             await measurement.update(record => {
                 if (data.title !== undefined) record.title = data.title;
                 if (data.valuesJson !== undefined) record.valuesJson = data.valuesJson;
-                record.syncStatus = 'created';
             });
         });
         sync().catch(console.error);

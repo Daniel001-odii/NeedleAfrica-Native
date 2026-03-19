@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal } from 'react-native';
+import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -243,7 +243,17 @@ export default function OrderDetail() {
                                         <Typography weight="bold">{customer.fullName || 'Unknown'}</Typography>
                                         <Typography variant="small" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
                                     </View>
-                                    <IconButton icon={<Call size={20} color={isDark ? "white" : "black"} />} variant="ghost" />
+                                    <IconButton 
+                                        icon={<Call size={20} color={isDark ? "white" : "black"} />} 
+                                        variant="ghost" 
+                                        onPress={() => {
+                                            if (customer.phoneNumber) {
+                                                Linking.openURL(`tel:${customer.phoneNumber}`);
+                                            } else {
+                                                Toast.show({ type: 'error', text1: 'No Number', text2: 'Customer has no phone number' });
+                                            }
+                                        }}
+                                    />
                                 </Surface>
                             )}
 

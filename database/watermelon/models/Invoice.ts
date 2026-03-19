@@ -1,5 +1,5 @@
 import { Model, Relation } from '@nozbe/watermelondb';
-import { field, text, date, relation } from '@nozbe/watermelondb/decorators';
+import { field, text, date, relation, readonly } from '@nozbe/watermelondb/decorators';
 import Customer from './Customer';
 import Order from './Order';
 import { Associations } from '@nozbe/watermelondb/Model';
@@ -12,6 +12,7 @@ export default class Invoice extends Model {
         orders: { type: 'belongs_to', key: 'order_id' },
     };
 
+    @text('server_id') serverId?: string;
     @text('user_id') userId?: string;
     @text('customer_id') customerId?: string;
     @text('order_id') orderId?: string;
@@ -20,21 +21,12 @@ export default class Invoice extends Model {
     @text('currency') currency?: string;
     @text('notes') notes?: string | null;
     @field('deleted_at') deletedAt?: number | null;
-    @text('sync_status') _syncStatus?: string;
 
-    @date('created_at') createdAt?: Date;
-    @date('updated_at') updatedAt?: Date;
+    @readonly @date('created_at') createdAt!: Date;
+    @readonly @date('updated_at') updatedAt!: Date;
 
-    @relation('customers', 'customer_id') customer?: Relation<Customer>;
-    @relation('orders', 'order_id') order?: Relation<Order>;
-
-    get syncStatus(): SyncStatus {
-        return this._syncStatus as SyncStatus;
-    }
-
-    set syncStatus(value: SyncStatus) {
-        this._syncStatus = value;
-    }
+    @relation('customers', 'customer_id') customer!: Relation<Customer>;
+    @relation('orders', 'order_id') order!: Relation<Order>;
 
     static async createSyncable(database: any, userId: string, data: {
         customerId: string;
@@ -44,7 +36,6 @@ export default class Invoice extends Model {
         currency: string;
         notes?: string;
     }) {
-        const now = Date.now();
         return await database.write(async () => {
             return await database.get('invoices').create((record: any) => {
                 record.userId = userId;
@@ -52,27 +43,17 @@ export default class Invoice extends Model {
                 record.orderId = data.orderId;
                 record.invoiceNumber = data.invoiceNumber;
                 record.amount = data.amount;
-                record.currency = data.currency;
+                record.currency = data.currency || 'NGN';
                 record.notes = data.notes || null;
-                record.deletedAt = null;
-                record.syncStatus = 'created';
-                record.createdAt = new Date(now);
-                record.updatedAt = new Date(now);
-            });
-        });
-    }
-
-    async markForSync() {
-        await this.database.write(async () => {
-            await this.update((record: any) => {
-                record.syncStatus = 'created';
-                record.updatedAt = new Date();
             });
         });
     }
 
     async softDelete() {
         await this.database.write(async () => {
+            await this.update(record => {
+                record.deletedAt = Date.now();
+            });
             await this.markAsDeleted();
         });
     }

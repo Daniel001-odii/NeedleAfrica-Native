@@ -2,121 +2,66 @@ import { synchronize } from '@nozbe/watermelondb/sync';
 import { database } from './index';
 import axiosInstance from '../../lib/axios';
 
-export async function sync(fullSync = false) {
-    if (fullSync) {
-        console.log('[Sync] Performing full sync - resetting local pull timestamp');
-        // Manually reset the last pulled at timestamp in Watermelon's internal state
-        // This forces pullChanges to receive lastPulledAt = null
-        await database.adapter.setLocal('__watermelon_last_pulled_at', '0');
-    }
-
+export async function performSync() {
     await synchronize({
         database,
         pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
-            console.log('[Sync] Pulling changes since:', lastPulledAt);
-            // If fullSync was requested, lastPulledAt will effectively be 0
-            const response = await axiosInstance.get('/sync', {
+            console.log('[Sync] Pulling changes...', { lastPulledAt });
+            const response = await axiosInstance.get('/sync/pull', {
                 params: {
-                    last_pulled_at: lastPulledAt || 0,
-                    schema_version: schemaVersion,
-                    migration,
-                },
+                    lastPulledAt: lastPulledAt || 0,
+                    schemaVersion
+                }
             });
 
             if (response.status !== 200) {
-                throw new Error(response.data?.error || 'Pull failed');
+                throw new Error(`Pull failed: ${response.data?.error || response.statusText}`);
             }
 
             const { changes, timestamp } = response.data;
-            // console.log('[Sync] Raw changes from server:', JSON.stringify(changes, null, 2));
 
-            // Clean up the changes object to ensure it matches WatermelonDB's expectations
-            // The backend might return nulls or missing fields, so we normalize here.
+            // Normalize pull changes to ensure correct local types
+            const normalizedChanges = { ...changes };
+            Object.keys(normalizedChanges).forEach(table => {
+                const tableChanges = normalizedChanges[table];
+                ['created', 'updated'].forEach(type => {
+                    if (tableChanges[type]) {
+                        tableChanges[type] = tableChanges[type].map((record: any) => ({
+                            ...record,
+                            created_at: record.created_at ? new Date(record.created_at).getTime() : Date.now(),
+                            updated_at: record.updated_at ? new Date(record.updated_at).getTime() : Date.now(),
+                            deleted_at: record.deleted_at ? new Date(record.deleted_at).getTime() : null,
+                            // Table specific conversions
+                            ...(table === 'orders' && record.delivery_date ? {
+                                delivery_date: new Date(record.delivery_date).getTime()
+                            } : {}),
+                            ...(table === 'invoices' && record.amount ? {
+                                amount: parseFloat(record.amount.toString())
+                            } : {}),
+                            ...(table === 'orders' && record.amount ? {
+                                amount: parseFloat(record.amount.toString())
+                            } : {}),
+                            ...(table === 'orders' && record.amount_paid ? {
+                                amount_paid: parseFloat(record.amount_paid.toString())
+                            } : {}),
+                        }));
+                    }
+                });
+            });
 
-            const normalizedChanges = {
-                customers: {
-                    created: (changes.customers?.created || []).map((c: any) => ({
-                        ...c,
-                        sync_status: 'synced'
-                    })),
-                    updated: (changes.customers?.updated || []).map((c: any) => ({
-                        ...c,
-                        sync_status: 'synced'
-                    })),
-                    deleted: changes.customers?.deleted?.map((c: any) => typeof c === 'string' ? c : c.id) || [],
-                },
-                measurements: {
-                    created: (changes.measurements?.created || []).map((m: any) => ({
-                        ...m,
-                        sync_status: 'synced'
-                    })),
-                    updated: (changes.measurements?.updated || []).map((m: any) => ({
-                        ...m,
-                        sync_status: 'synced'
-                    })),
-                    deleted: changes.measurements?.deleted?.map((m: any) => typeof m === 'string' ? m : m.id) || [],
-                },
-                orders: {
-                    created: (changes.orders?.created || []).map((o: any) => ({
-                        ...o,
-                        delivery_date: o.delivery_date ? new Date(o.delivery_date).getTime() : null,
-                        sync_status: 'synced'
-                    })),
-                    updated: (changes.orders?.updated || []).map((o: any) => ({
-                        ...o,
-                        delivery_date: o.delivery_date ? new Date(o.delivery_date).getTime() : null,
-                        sync_status: 'synced'
-                    })),
-                    deleted: changes.orders?.deleted?.map((o: any) => typeof o === 'string' ? o : o.id) || [],
-                },
-                measurement_templates: {
-                    created: (changes.measurement_templates?.created || []).map((t: any) => ({
-                        ...t,
-                        sync_status: 'synced'
-                    })),
-                    updated: (changes.measurement_templates?.updated || []).map((t: any) => ({
-                        ...t,
-                        sync_status: 'synced'
-                    })),
-                    deleted: changes.measurement_templates?.deleted?.map((t: any) => typeof t === 'string' ? t : t.id) || [],
-                },
-            };
-
-            console.log('[Sync] Pulled changes successfully');
             return { changes: normalizedChanges, timestamp };
         },
         pushChanges: async ({ changes, lastPulledAt }) => {
-            console.log('[Sync] Pushing changes');
+            console.log('[Sync] Pushing changes...', { lastPulledAt });
 
-            const allChanges = changes as any;
-            const ordersChanges = allChanges.orders;
-
-            // We need to ensure we send the changes in a format the backend expects
-            // Normalize dates to ISO strings for Prisma
-            const normalizedChanges = {
-                ...changes,
-                orders: ordersChanges ? {
-                    ...ordersChanges,
-                    created: (ordersChanges.created || []).map((o: any) => ({
-                        ...o,
-                        delivery_date: o.delivery_date ? o.delivery_date > 0 ? new Date(o.delivery_date).toISOString() : null : null
-                    })),
-                    updated: (ordersChanges.updated || []).map((o: any) => ({
-                        ...o,
-                        delivery_date: o.delivery_date ? o.delivery_date > 0 ? new Date(o.delivery_date).toISOString() : null : null
-                    }))
-                } : undefined
-            };
-
-            const response = await axiosInstance.post('/sync', {
-                changes: normalizedChanges,
-                last_pulled_at: lastPulledAt || 0,
+            const response = await axiosInstance.post('/sync/push', {
+                changes,
+                lastPulledAt
             });
 
             if (response.status !== 200) {
-                throw new Error(response.data?.error || 'Push failed');
+                throw new Error(`Push failed: ${response.data?.error || response.statusText}`);
             }
-            console.log('[Sync] Pushed changes successfully');
         },
         migrationsEnabledAtVersion: 1,
     });

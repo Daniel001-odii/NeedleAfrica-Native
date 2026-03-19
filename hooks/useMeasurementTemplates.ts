@@ -37,36 +37,23 @@ export function useMeasurementTemplates() {
 
     const addTemplate = async (data: { name: string; fields: string[] }) => {
         if (!user) return;
-        await database.write(async () => {
-            await database.get<MeasurementTemplate>('measurement_templates').create(record => {
-                record.user_id = user.id;
-                record.name = data.name;
-                record.fields_json = JSON.stringify(data.fields);
-                record.sync_status = 'created';
-                record.server_id = ''; // Provide empty string or generate temp ID if needed, but sync will handle
-            });
-        });
+        const template = await MeasurementTemplate.createSyncable(database, user.id, data);
         sync().catch(console.error);
+        return template;
     };
-
+ 
     const deleteTemplate = async (id: string) => {
-        await database.write(async () => {
-            const template = await database.get<MeasurementTemplate>('measurement_templates').find(id);
-            await template.update(record => {
-                record.deleted_at = Date.now();
-                record.sync_status = 'updated'; // Mark for sync
-            });
-        });
+        const template = await database.get<MeasurementTemplate>('measurement_templates').find(id);
+        await template.softDelete();
         sync().catch(console.error);
     };
-
+ 
     const updateTemplate = async (id: string, data: { name: string; fields: string[] }) => {
         await database.write(async () => {
             const template = await database.get<MeasurementTemplate>('measurement_templates').find(id);
             await template.update(record => {
                 record.name = data.name;
-                record.fields_json = JSON.stringify(data.fields);
-                record.sync_status = 'updated';
+                record.fieldsJson = JSON.stringify(data.fields);
             });
         });
         sync().catch(console.error);

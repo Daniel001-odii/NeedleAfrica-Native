@@ -8,12 +8,16 @@ interface AppleSignInButtonProps {
     onPress: () => void;
     isLoading?: boolean;
     className?: string;
+    style?: ViewStyle;
+    label?: string;
 }
 
 export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({ 
     onPress, 
     isLoading = false,
-    className = ""
+    className = "",
+    style,
+    label
 }) => {
     const { isDark } = useTheme();
 
@@ -23,6 +27,7 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
         <TouchableOpacity
             onPress={onPress}
             disabled={isLoading}
+            style={style}
             className={`h-14 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 flex-row items-center justify-center active:opacity-70 ${className}`}
         >
             {isLoading ? (
@@ -36,7 +41,7 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
                         />
                     </Svg>
                     <Typography color={isDark ? "white" : "black"} className="ml-2" weight="semibold">
-                        Continue with Apple
+                        {label || "Continue with Apple"}
                     </Typography>
                 </>
             )}

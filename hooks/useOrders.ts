@@ -106,8 +106,6 @@ export function useOrders(customerId?: string) {
                 if (data.deliveryDate !== undefined) record.deliveryDate = data.deliveryDate;
                 if (data.fabricImage !== undefined) record.fabricImage = data.fabricImage;
                 if (data.styleImage !== undefined) record.styleImage = data.styleImage;
-                record.syncStatus = 'created';
-                record.updatedAt = new Date();
             });
 
             // Handle Notification Rescheduling

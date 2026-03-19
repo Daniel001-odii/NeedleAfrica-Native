@@ -74,7 +74,7 @@ export function OTAUpdateModal({ testMode = false }: OTAUpdateModalProps) {
             onRequestClose={handleDismissLater}
         >
             <View className={`flex-1 bg-black/60 justify-end`}>
-                <Pressable className={`rounded-t-3xl ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+                <Pressable className={`m-2 mb-12 rounded-3xl ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
                     <View className="p-6 pb-12">
                         <View className="items-center mb-6 mt-4">
                             <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>

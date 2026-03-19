@@ -92,7 +92,7 @@ export default function Login() {
     };
 
     return (
-        <View className="flex-1 bg-muted dark:bg-background-dark p-6">
+        <View className="flex-1 bg-background dark:bg-background-dark p-6">
             <View style={{ paddingVertical: 16 }}>
                 <IconButton
                     icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}

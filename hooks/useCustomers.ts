@@ -73,7 +73,6 @@ export function useCustomers(searchQuery: string = '') {
                 if (data.phoneNumber !== undefined) record.phoneNumber = data.phoneNumber;
                 if (data.gender !== undefined) record.gender = data.gender;
                 if (data.notes !== undefined) record.notes = data.notes;
-                record.syncStatus = 'created'; // Custom flag for UI
             });
         });
         sync().catch(console.error);
