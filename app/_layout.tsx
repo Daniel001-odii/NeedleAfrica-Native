@@ -36,7 +36,6 @@ import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
 import { OfflineBanner } from '../components/ui/OfflineBanner';
-import { OTAUpdateModal } from '../components/ui/OTAUpdateModal';
 import { StoreUpdateModal } from '../components/ui/StoreUpdateModal';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
@@ -209,7 +208,6 @@ function ThemeAwareRoot() {
             <RootLayoutNavWithLoading />
             <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
             <Toast config={toastConfig} />
-            <OTAUpdateModal testMode={false} />
             <StoreUpdateModal />
         </View>
     );

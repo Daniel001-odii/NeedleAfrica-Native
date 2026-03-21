@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, TouchableOpacity, Pressable, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, User, Shop, Sms, Call, Location, Trash, Warning2, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, User, Shop, Sms, Call, Location, Trash, Warning2, CloseCircle, ArrowDown2, TickCircle } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -13,6 +13,22 @@ import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import CountryPicker, { Country, getAllCountries } from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
+const BUSINESS_TYPE_OPTIONS = [
+    'Tailor',
+    'Fashion Designer',
+    'Seamstress',
+    'Pattern Maker',
+    'Alterations Specialist',
+    'Bespoke / Made-to-Measure Brand',
+    'Ready-to-Wear Brand',
+    'Fashion Brand (Bespoke + Ready-to-Wear)',
+    'Bridal Designer',
+    'Uniform / Corporate Wear Maker',
+    'Costume Designer',
+    'Fashion House / Atelier / Studio',
+    'Fashion Student',
+    'Apprentice / Intern'
+];
 
 export default function PersonalInformation() {
     const { user, updateProfile, deleteAccount, isLoading: isAuthLoading } = useAuth();
@@ -28,6 +44,8 @@ export default function PersonalInformation() {
     const [country, setCountry] = useState(user?.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
     const [noOfEmployees, setNoOfEmployees] = useState(user?.noOfEmployees || '1-5');
+    const [businessType, setBusinessType] = useState(user?.businessType || '');
+    const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
@@ -52,6 +70,7 @@ export default function PersonalInformation() {
                 }).catch(() => { });
             }
             if (user.noOfEmployees) setNoOfEmployees(user.noOfEmployees);
+            if (user.businessType) setBusinessType(user.businessType);
         }
     }, [user]);
 
@@ -73,7 +92,8 @@ export default function PersonalInformation() {
                 phoneNumber: phone,
                 address,
                 country,
-                noOfEmployees
+                noOfEmployees,
+                businessType
             });
             Toast.show({
                 type: 'success',
@@ -145,15 +165,15 @@ export default function PersonalInformation() {
                         {/* <Sms size={18} color="#6B7280" variant="Bulk" /> */}
                         {/* <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">EMAIL ADDRESS</Typography> */}
                     </View>
-                    <Surface variant="white" rounded="2xl" className={`p-4 justify-center ${!isDark ? 'border border-gray-100' : ''}`}>
-                        <Typography variant="body" weight="semibold">
-                            {user?.email || 'No email set'}
-                        </Typography>
-                    </Surface>
+                    {/* <Surface variant="white" rounded="2xl" className={`p-4 justify-center ${!isDark ? 'border border-gray-100' : ''}`}> */}
+                    <Typography variant="body" weight="semibold">
+                        {user?.email || 'No email set'}
+                    </Typography>
+                    {/* </Surface> */}
                     <TouchableOpacity
                         onPress={() => confirm({
                             title: 'Change Email',
-                            message: 'Please contact us at support@needleafrica.com if you need to change your email address.',
+                            message: 'Please contact us at hello@needleafrica.com if you need to change your email address.',
                             confirmText: 'OK',
                             onConfirm: () => { }
                         })}
@@ -205,7 +225,7 @@ export default function PersonalInformation() {
                                 placeholderTextColor="#9CA3AF"
                                 defaultCountry="NG"
                                 value={phone}
-                                onChange={(val) => setPhone(val || '')}
+                                onChange={(val: any) => setPhone(val || '')}
                             />
                         </Surface>
                     </View>
@@ -269,6 +289,24 @@ export default function PersonalInformation() {
                                 </TouchableOpacity>
                             ))}
                         </View>
+                    </View>
+
+                    {/* What best describes you */}
+                    <View className="mb-6">
+                        <View className="flex-row items-center mb-2 ml-1">
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-2 uppercase tracking-tight">WHAT BEST DESCRIBES YOU?</Typography>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => setShowBusinessTypeModal(true)}
+                            activeOpacity={0.7}
+                        >
+                            <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 flex-row items-center justify-between`}>
+                                <Typography weight="semibold" className={businessType ? (isDark ? 'text-white' : 'text-dark') : 'text-gray-400'}>
+                                    {businessType || 'Select specialization'}
+                                </Typography>
+                                <ArrowDown2 size={18} color="#6B7280" variant="Outline" />
+                            </Surface>
+                        </TouchableOpacity>
                     </View>
 
                     <Button
@@ -375,6 +413,51 @@ export default function PersonalInformation() {
                         </Pressable>
                     </Pressable>
                 </KeyboardAvoidingView>
+            </Modal>
+
+            {/* Business Type Selector Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showBusinessTypeModal}
+                onRequestClose={() => setShowBusinessTypeModal(false)}
+            >
+                <Pressable
+                    className="flex-1 bg-black/50 justify-end"
+                    onPress={() => setShowBusinessTypeModal(false)}
+                >
+                    <Pressable className={`rounded-3xl max-h-[50%] m-2  mb-12 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+                        <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                            <Typography variant="h3" weight="bold">What describes you?</Typography>
+                            <TouchableOpacity onPress={() => setShowBusinessTypeModal(false)}>
+                                <CloseCircle size={28} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView className="p-4" showsVerticalScrollIndicator={false}>
+                            {BUSINESS_TYPE_OPTIONS.map((option) => (
+                                <TouchableOpacity
+                                    key={option}
+                                    onPress={() => {
+                                        setBusinessType(option);
+                                        setShowBusinessTypeModal(false);
+                                    }}
+                                    className={`flex-row items-center justify-between p-4 mb-2 rounded-2xl ${businessType === option ? 'bg-blue-50' : ''}`}
+                                >
+                                    <Typography
+                                        variant="body"
+                                        weight={businessType === option ? "bold" : "semibold"}
+                                        className={businessType === option ? 'text-blue-600' : (isDark ? 'text-white' : 'text-dark')}
+                                    >
+                                        {option}
+                                    </Typography>
+                                    {businessType === option && (
+                                        <TickCircle size={20} color="#2563EB" variant="Bold" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </Pressable>
+                </Pressable>
             </Modal>
         </View>
     );

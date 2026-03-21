@@ -8,6 +8,7 @@ import {
     ImageBackground,
     Dimensions,
     Linking,
+    Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -311,20 +312,34 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                                 <Crown size={32} color="#6366f1" variant="Bold" />
                                             </View>
 
-                                            <View className="flex-row items-end mb-5">
+                                            <View className="mb-5">
                                                 {isPro && subscriptionStatus?.productId === activePackage.product.identifier ? (
-                                                    <View className="bg-green-500/20 px-4 py-2 rounded-xl border border-green-500/50 my-2">
+                                                    <View className="bg-green-500/20 px-4 py-2 rounded-xl border border-green-500/50 my-2 self-start">
                                                         <Typography variant="body" weight="bold" className="text-green-400">Current Plan</Typography>
                                                     </View>
+                                                ) : selectedPlanType === 'YEARLY' ? (
+                                                    <View>
+                                                        {/*  <Typography variant="h3" weight="bold" color="white" className="opacity-90">
+                                                            $0.00 for the first 7 days,
+                                                        </Typography> */}
+                                                        <View className="flex-row items-end">
+                                                            <Typography variant="h1" weight="bold" color="white" className="py-1" style={{ fontSize: 32 }}>
+                                                                {activePackage.product.priceString}
+                                                            </Typography>
+                                                            <Typography variant="body" color="white" className="opacity-60 ml-2 mb-1.5">
+                                                                /year
+                                                            </Typography>
+                                                        </View>
+                                                    </View>
                                                 ) : (
-                                                    <>
+                                                    <View className="flex-row items-end">
                                                         <Typography variant="h1" weight="bold" color="white" className="py-1" style={{ fontSize: 36 }}>
                                                             {activePackage.product.priceString}
                                                         </Typography>
                                                         <Typography variant="body" color="white" className="opacity-60 ml-2 mb-1.5">
-                                                            / {selectedPlanType === 'YEARLY' ? 'year' : 'month'}
+                                                            / month
                                                         </Typography>
-                                                    </>
+                                                    </View>
                                                 )}
                                             </View>
 
@@ -385,7 +400,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                 </TouchableOpacity>
 
                                 <Typography variant="small" color="white" className="text-center opacity-40 mt-4 px-4 leading-4">
-                                    The subscription will automatically renew unless it is canceled at least 24 hours before the end of the current period.
+                                    {selectedPlanType === 'YEARLY'
+                                        ? `Your subscription begins after the 7-day trial. Cancel at least 24 hours before the trial ends in your ${Platform.OS === 'android' ? 'Google Play' : 'App Store'} Subscription settings to avoid being charged. Total cost ${activePackage?.product?.priceString} billed annually.`
+                                        : 'The subscription will automatically renew unless it is canceled at least 24 hours before the end of the current period.'
+                                    }
                                 </Typography>
 
                                 <View className="flex-row justify-center items-center gap-4 mt-4 opacity-60">

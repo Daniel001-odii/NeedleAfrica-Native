@@ -19,13 +19,14 @@ import { useTheme } from '../../contexts/ThemeContext';
 export default function CreateMeasurementScreen() {
     const router = useRouter();
     const { user } = useAuth();
-    const { initialCustomerId } = useLocalSearchParams<{ initialCustomerId: string }>();
+    const { initialCustomerId, customerId } = useLocalSearchParams<{ initialCustomerId: string, customerId: string }>();
+    const effectiveCustomerId = customerId || initialCustomerId;
     const { customers, loading: loadingCustomers } = useCustomers();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
     const posthog = usePostHog();
 
-    const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
+    const [selectedCustomerId, setSelectedCustomerId] = useState(effectiveCustomerId || '');
     const { addMeasurement } = useCustomerMeasurements(selectedCustomerId);
     const { templates, loading: templatesLoading } = useMeasurementTemplates();
 
@@ -165,15 +166,21 @@ export default function CreateMeasurementScreen() {
                                     {loadingCustomers ? (
                                         <ActivityIndicator color={isDark ? "white" : "black"} />
                                     ) : (
-                                        <View className="gap-3">
+                                        <View className="gap-0">
                                             {filteredCustomers.slice(0, 5).map(customer => (
                                                 <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
-                                                    <Surface variant="white" className={`p-4 border flex-row items-center ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl" hasBorder>
-                                                        <View className="w-10 h-10 bg-indigo-500 rounded-full items-center justify-center mr-4">
-                                                            <Typography weight="bold" color="white">{(customer.fullName || 'U')[0].toUpperCase()}</Typography>
+                                                    <View className="flex-row items-center py-4 px-1 mb-0">
+                                                        <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
+                                                            <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
+                                                                {(customer.fullName || 'U').charAt(0).toUpperCase()}
+                                                                {(customer.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
+                                                            </Typography>
+                                                        </Surface>
+                                                        <View className="flex-1">
+                                                            <Typography variant="body" weight="bold">{customer.fullName}</Typography>
+                                                            <Typography variant="caption" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
                                                         </View>
-                                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-dark'}>{customer.fullName}</Typography>
-                                                    </Surface>
+                                                    </View>
                                                 </Pressable>
                                             ))}
                                         </View>
@@ -190,7 +197,7 @@ export default function CreateMeasurementScreen() {
                                             <Typography variant="caption" color="gray">{selectedCustomer?.phoneNumber}</Typography>
                                         </View>
                                     </View>
-                                    {!initialCustomerId && (
+                                    {!effectiveCustomerId && (
                                         <Pressable onPress={() => { setSelectedCustomerId(''); setSelectedTemplate(null); }}>
                                             <Typography variant="small" color="primary" weight="bold">Change</Typography>
                                         </Pressable>

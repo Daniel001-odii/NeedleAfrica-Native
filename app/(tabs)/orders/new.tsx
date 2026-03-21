@@ -155,7 +155,7 @@ export default function NewOrder() {
             });
 
             Toast.show({ type: 'success', text1: 'Order created!' });
-            router.back();
+            router.replace('/(tabs)/orders');
         } catch (error) {
             console.error('Failed to create order:', error);
             Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to create order' });
@@ -234,13 +234,13 @@ export default function NewOrder() {
                 className="flex-1"
             >
                 <ScrollView
-                    contentContainerClassName="p-6 pb-20"
+                    contentContainerClassName="p-6 pt-8 pb-20"
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
 
                     {/* Header Input */}
-                    <View className="mb-6">
+                    <View className="mb-14 mt-8">
                         <TextInput
                             className={`text-center text-3xl font-bold ${isDark ? 'text-white' : 'text-dark'}`}
                             placeholder="Enter dress type"
@@ -347,7 +347,35 @@ export default function NewOrder() {
                         </View>
                     </View>
 
-                    {showDatePicker && (
+                    {showDatePicker && Platform.OS === 'ios' && (
+                        <Modal
+                            transparent={true}
+                            animationType="slide"
+                            visible={showDatePicker}
+                        >
+                            <View className="flex-1 justify-end">
+                                <View className={`p-6 pb-12 rounded-t-[40px] shadow-2xl ${isDark ? 'bg-surface-dark border-t border-border-dark' : 'bg-white'}`}>
+                                    <View className="flex-row justify-between items-center mb-6">
+                                        <Typography variant="h3" weight="bold">Due Date</Typography>
+                                        <Pressable onPress={() => setShowDatePicker(false)}>
+                                            <Typography variant="body" color="primary" weight="bold">Done</Typography>
+                                        </Pressable>
+                                    </View>
+                                    <DateTimePicker
+                                        testID="dateTimePicker"
+                                        value={dueDate}
+                                        mode="date"
+                                        is24Hour={true}
+                                        display="spinner"
+                                        onChange={onDateChange}
+                                        textColor={isDark ? 'white' : 'black'}
+                                    />
+                                </View>
+                            </View>
+                        </Modal>
+                    )}
+
+                    {showDatePicker && Platform.OS !== 'ios' && (
                         <DateTimePicker
                             testID="dateTimePicker"
                             value={dueDate}
@@ -360,8 +388,7 @@ export default function NewOrder() {
 
                     <Button
                         onPress={handleCreateOrder}
-                        className={`h-16 rounded-full border-0 shadow-xl ${isDark ? 'bg-white' : 'bg-black'} shadow-brand-primary/30`}
-                        textClassName={isDark ? "text-black text-lg" : "text-white text-lg"}
+                        className={`h-16 rounded-full border-0 bg-blue-500 text-white shadow-none`}
                         isLoading={isCreating}
                         disabled={isCreating}
                     >
@@ -418,24 +445,22 @@ export default function NewOrder() {
                                         setShowCustomerModal(false);
                                         setCustomerSearch('');
                                     }}
-                                    className="mb-3"
                                 >
-                                    <Surface
-                                        variant={selectedCustomer?.id === item.id ? 'white' : 'muted'}
-                                        className={`p-4 flex-row items-center border ${selectedCustomer?.id === item.id ? (isDark ? 'border-indigo-400' : 'border-black/10') : 'border-transparent'}`}
-                                        rounded="2xl"
-                                    >
-                                        <View className={`w-12 h-12 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-dark-800' : 'bg-indigo-500'}`}>
-                                            <Typography variant="h2" weight="bold" color="white">{item?.fullName?.charAt(0).toUpperCase()}</Typography>
-                                        </View>
+                                    <View className="flex-row items-center py-4 px-1">
+                                        <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
+                                            <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
+                                                {(item.fullName || 'U').charAt(0).toUpperCase()}
+                                                {(item.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
+                                            </Typography>
+                                        </Surface>
                                         <View className="flex-1">
-                                            <Typography weight="bold">{item.fullName}</Typography>
-                                            <Typography variant="small" color="gray">{item.phoneNumber || 'No phone'}</Typography>
+                                            <Typography variant="body" weight="bold">{item.fullName}</Typography>
+                                            <Typography variant="caption" color="gray">{item.phoneNumber || 'No phone number'}</Typography>
                                         </View>
                                         {selectedCustomer?.id === item.id && (
                                             <TickCircle size={24} color={"#818CF8"} variant="Bold" />
                                         )}
-                                    </Surface>
+                                    </View>
                                 </Pressable>
                             )}
                             ListEmptyComponent={() => (

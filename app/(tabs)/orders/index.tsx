@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator, Modal, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
-import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle, DocumentText } from 'iconsax-react-native';
+import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle, DocumentText, InfoCircle } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
@@ -43,6 +43,17 @@ export default function Orders() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const { getLimitStatus } = useResourceLimits();
+    const swipeableRefs = useRef<Record<string, Swipeable | null>>({});
+
+    const showHelpAnimation = () => {
+        const firstId = sortedOrders[0]?.id;
+        if (firstId && swipeableRefs.current[firstId]) {
+            swipeableRefs.current[firstId]?.openRight();
+            setTimeout(() => {
+                swipeableRefs.current[firstId]?.close();
+            }, 1500);
+        }
+    };
 
     const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
     const orderLimit = getLimitStatus('orders');
@@ -117,7 +128,7 @@ export default function Orders() {
 
     const renderRightActions = (order: any) => {
         return (
-            <View className="pl-4 mb-3 justify-center flex-row gap-2">
+            <View className="pl-4 mb-3 justify-center items-center flex-row gap-2">
                 <Pressable
                     onPress={() => handleToggleStatus(order.id, order.status)}
                     className={`${order.status === 'DELIVERED' ? 'bg-orange-100' : 'bg-green-100'} justify-center items-center w-16 h-16 rounded-3xl shadow-sm`}
@@ -138,6 +149,26 @@ export default function Orders() {
         const variants: SurfaceVariant[] = ['peach', 'green', 'lavender', 'blue'];
         const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return variants[index % variants.length];
+    };
+
+    const getDarkVariantClass = (variant: SurfaceVariant) => {
+        switch (variant) {
+            case 'peach': return 'bg-orange-900/20';
+            case 'green': return 'bg-green-900/20';
+            case 'lavender': return 'bg-indigo-900/40';
+            case 'blue': return 'bg-blue-900/40';
+            default: return 'bg-surface-dark';
+        }
+    };
+
+    const getVariantColor = (variant: SurfaceVariant) => {
+        switch (variant) {
+            case 'peach': return isDark ? '#fb923c' : '#c2410c';
+            case 'green': return isDark ? '#4ade80' : '#15803d';
+            case 'lavender': return isDark ? '#a5b4fc' : '#4f46e5';
+            case 'blue': return isDark ? '#38bdf8' : '#0369a1';
+            default: return isDark ? 'white' : 'black';
+        }
     };
 
     const filteredOrders = activeTab === 'All'
@@ -167,6 +198,15 @@ export default function Orders() {
                 return sorted;
         }
     }, [filteredOrders, sortBy]);
+
+    useEffect(() => {
+        if (!loading && sortedOrders.length > 0) {
+            const timer = setTimeout(() => {
+                showHelpAnimation();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [loading, sortedOrders.length === 0]);
 
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
@@ -265,13 +305,14 @@ export default function Orders() {
                         }
                         renderItem={({ item: order }) => (
                             <Swipeable
+                                ref={ref => { swipeableRefs.current[order.id] = ref; }}
                                 renderRightActions={() => renderRightActions(order)}
                                 friction={2}
                                 rightThreshold={40}
                             >
                                 <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
                                     <View
-                                        className={`py-4 mb-3 flex-row items-center`}
+                                        className={`py-4 mb-3 flex-row items-center px-1`}
                                     >
                                         <View className="relative mr-5 w-[54px] h-[54px] items-center justify-center">
                                             <View className="absolute">
@@ -286,7 +327,7 @@ export default function Orders() {
                                             </View>
                                             <Surface
                                                 variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
-                                                className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) && isDark ? 'bg-dark-800' : ''}`}
+                                                className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) ? (isDark ? 'bg-dark-800' : '') : (isDark ? getDarkVariantClass(getVariantForOrder(order.id)) : '')}`}
                                                 rounded="xl"
                                             >
                                                 {(order.fabricImage || order.styleImage) ? (
@@ -295,7 +336,7 @@ export default function Orders() {
                                                         className="w-full h-full"
                                                     />
                                                 ) : (
-                                                    <Box size={18} color={isDark ? "white" : "black"} variant="Bulk" />
+                                                    <Box size={18} color={getVariantColor(getVariantForOrder(order.id))} variant="Bulk" />
                                                 )}
                                             </Surface>
                                         </View>

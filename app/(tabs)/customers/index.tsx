@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
-import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, TickCircle, CloseCircle } from 'iconsax-react-native';
+import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, TickCircle, CloseCircle, InfoCircle } from 'iconsax-react-native';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -36,9 +36,17 @@ function CustomersScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const { getLimitStatus } = useResourceLimits();
+    const swipeableRefs = useRef<Record<string, Swipeable | null>>({});
 
-    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
-    const customerLimit = getLimitStatus('customers');
+    const showHelpAnimation = () => {
+        const firstId = sortedCustomers[0]?.id;
+        if (firstId && swipeableRefs.current[firstId]) {
+            swipeableRefs.current[firstId]?.openRight();
+            setTimeout(() => {
+                swipeableRefs.current[firstId]?.close();
+            }, 1000);
+        }
+    };
 
     const sortedCustomers = useMemo(() => {
         const sorted = [...customers];
@@ -55,6 +63,18 @@ function CustomersScreen() {
                 return sorted;
         }
     }, [customers, sortBy]);
+
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+    const customerLimit = getLimitStatus('customers');
+
+    useEffect(() => {
+        if (!loading && sortedCustomers.length > 0) {
+            const timer = setTimeout(() => {
+                showHelpAnimation();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [loading, sortedCustomers.length === 0]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
@@ -80,10 +100,10 @@ function CustomersScreen() {
 
     const renderRightActions = (id: string, name: string) => {
         return (
-            <View className="pl-4 mb-2 justify-center">
+            <View className="pl-4 mb-3 justify-center items-center">
                 <Pressable
                     onPress={() => handleDelete(id, name)}
-                    className="text-red-500 justify-center items-center w-16 h-16 rounded-3xl shadow-red-200"
+                    className="bg-red-50 justify-center items-center w-16 h-16 rounded-3xl"
                 >
                     <Trash size={24} color="red" variant="Bold" />
                 </Pressable>
@@ -115,11 +135,6 @@ function CustomersScreen() {
                             onPress={() => setShowSortModal(true)}
                         />
                         <IconButton
-                            icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
-                            variant="glass"
-                            onPress={onRefresh}
-                        />
-                        <IconButton
                             icon={<Add size={24} color={isDark ? "white" : "black"} />}
                             variant="glass"
                             onPress={() => router.push('/(tabs)/customers/new')}
@@ -144,13 +159,14 @@ function CustomersScreen() {
             <FlatList
                 data={sortedCustomers}
                 keyExtractor={item => item.id}
-                contentContainerClassName="p-6 pt-0 pb-16 gap-4"
+                contentContainerClassName="p-6 pt-0 pb-16 gap-0"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
                 renderItem={({ item }) => (
                     <Swipeable
+                        ref={ref => { swipeableRefs.current[item.id] = ref; }}
                         renderRightActions={() => renderRightActions(item.id, item.fullName || 'Client')}
                         friction={2}
                         rightThreshold={40}
@@ -159,7 +175,7 @@ function CustomersScreen() {
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
                             <View
-                                className={`flex-row items-center py-3`}
+                                className={`flex-row items-center py-4 mb-3 px-1`}
                             >
                                 <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
                                     <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>

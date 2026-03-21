@@ -84,8 +84,8 @@ export default function NewCustomer() {
             // Trigger sync in background (fire and forget)
             performSync().catch(console.error);
 
-            // Redirect immediately - don't wait for server!
-            router.back();
+            // Redirect to customers list
+            router.replace('/(tabs)/customers/');
 
             Toast.show({
                 type: 'success',
@@ -110,7 +110,13 @@ export default function NewCustomer() {
             <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => router.back()}
+                    onPress={() => {
+                        if (router.canGoBack()) {
+                            router.back();
+                        } else {
+                            router.replace('/(tabs)/customers/');
+                        }
+                    }}
                     variant="ghost"
                     className="-ml-2"
                 />
@@ -175,7 +181,7 @@ export default function NewCustomer() {
                                         onPress={() => setGender(g)}
                                         activeOpacity={0.7}
                                         className={`px-8 py-3 rounded-full border ${isActive
-                                            ? 'bg-brand-primary border-brand-primary'
+                                            ? 'bg-blue-500 border-blue-500'
                                             : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
                                             }`}
                                     >
@@ -216,8 +222,7 @@ export default function NewCustomer() {
                     <Button
                         onPress={handleSubmit}
                         isLoading={isSubmitting}
-                        className={`h-16 rounded-full border-0 shadow-lg ${isDark ? 'bg-white shadow-white/10' : 'bg-dark shadow-dark/10'}`}
-                        textClassName={isDark ? "text-black text-lg" : "text-white text-lg"}
+                        className={`h-16 rounded-full border-0 shadow-lg bg-blue-500 text-white shadow-none`}
                     >
                         Create Customer
                     </Button>

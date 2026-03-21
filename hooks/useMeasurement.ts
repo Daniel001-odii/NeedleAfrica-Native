@@ -39,7 +39,7 @@ export function useCustomerMeasurements(customerId: string) {
         if (!user) return;
         await Measurement.createSyncable(database, user.id, customerId, {
             title,
-            valuesJson: JSON.stringify(values)
+            values
         });
         sync().catch(console.error);
     };
@@ -55,7 +55,6 @@ export function useCustomerMeasurements(customerId: string) {
         await measurement.update(record => {
             record.title = title;
             record.valuesJson = JSON.stringify(values);
-            record.sync_status = 'updated';
         });
         sync().catch(console.error);
     };

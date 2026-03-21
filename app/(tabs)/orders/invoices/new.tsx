@@ -145,15 +145,21 @@ export default function CreateInvoiceScreen() {
                                 onChangeText={setSearchQuery}
                             />
                         </Surface>
-                        <View className="gap-3">
+                        <View className="gap-0">
                             {filteredCustomers.slice(0, 5).map(customer => (
                                 <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
-                                    <Surface variant="white" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} flex-row items-center`} rounded="2xl" hasBorder>
-                                        <View className={`w-10 h-10 ${isDark ? 'bg-indigo-600' : 'bg-blue-500'} rounded-full items-center justify-center mr-4`}>
-                                            <Typography weight="bold" color="white">{(customer.fullName || 'C')[0].toUpperCase()}</Typography>
+                                    <View className="flex-row items-center py-4 px-1">
+                                        <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
+                                            <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
+                                                {(customer.fullName || 'U').charAt(0).toUpperCase()}
+                                                {(customer.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
+                                            </Typography>
+                                        </Surface>
+                                        <View className="flex-1">
+                                            <Typography variant="body" weight="bold">{customer.fullName}</Typography>
+                                            <Typography variant="caption" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
                                         </View>
-                                        <Typography weight="bold">{customer.fullName}</Typography>
-                                    </Surface>
+                                    </View>
                                 </Pressable>
                             ))}
                         </View>

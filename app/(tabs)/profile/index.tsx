@@ -75,7 +75,8 @@ export default function Profile() {
                     )}
                     <View className="flex-1">
                         <Typography variant="h3" weight="bold">{user?.username || 'Jane Doe'}</Typography>
-                        <Typography variant="caption" color="gray" className="mb-2">{user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>
+                        <Typography variant="caption" color="primary" className="">{user?.businessType} - {user?.businessName || user?.email || 'jane@needleafrica.com'}</Typography>
+                        <Typography variant="caption" color="gray" className="text-sm" style={{ fontSize: 10 }}>{user?.country}</Typography>
                     </View>
                 </View>
 

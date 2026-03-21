@@ -4,10 +4,10 @@ import { router } from 'expo-router';
 import Constants from 'expo-constants';
 
 // Environment switcher
-const ENV = 'development'; // Defaulting to production for non-dev builds unless specified
+const ENV = (process.env.EXPO_PUBLIC_APP_ENV as 'development' | 'staging' | 'production') || (__DEV__ ? 'development' : 'production'); // Use env variable if provided, otherwise fallback based on build mode
 
 const API_CONFIG = {
-    development: 'http://192.168.1.101:3000/api',
+    development: 'http://192.168.212.147:3000/api',
     staging: 'http://192.168.1.101:3000/api', // Pointing to local for both dev/staging as requested
     production: 'https://needle-africa-api.vercel.app/api'
 };

@@ -29,6 +29,7 @@ interface User {
     pushTokens?: string[];
     country?: string;
     noOfEmployees?: string;
+    businessType?: string;
     joinedFrom?: string;
     currency?: string;
     // Subscription fields
@@ -37,6 +38,7 @@ interface User {
     subscriptionExpiry?: string;
     currentPlanCode?: string;
     deviceType?: string;
+    onboardingCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (token && userData) {
                 const parsedUser = JSON.parse(userData);
                 setUser(parsedUser);
+                setIsNewUser(!parsedUser.onboardingCompleted);
                 // Re-register push token on start to ensure it's up to date
                 registerPushToken();
 
@@ -133,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
-            setIsNewUser(!!isNew);
+            setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
 
@@ -190,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
-            setIsNewUser(!!isNew);
+            setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
 
@@ -237,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
-            setIsNewUser(false);
+            setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
 
@@ -284,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 await SecureStore.setItemAsync('auth_token', token);
             }
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
-            setIsNewUser(true);
+            setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
 
@@ -391,8 +394,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const completeOnboarding = () => {
-        setIsNewUser(false);
+    const completeOnboarding = async () => {
+        try {
+            const response = await axiosInstance.put('/users/me', { onboardingCompleted: true });
+            if (response.data.status !== 'error') {
+                const updatedUser = { ...user, ...response.data.user, onboardingCompleted: true };
+                await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+                setIsNewUser(false);
+            }
+        } catch (error) {
+            console.error('Failed to complete onboarding:', error);
+        }
     };
 
     const refreshUser = async () => {
@@ -405,6 +418,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const updatedUser = { ...response.data };
                 await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
                 setUser(updatedUser);
+                setIsNewUser(!updatedUser.onboardingCompleted);
             }
         } catch (error) {
             console.error('Failed to refresh user:', error);

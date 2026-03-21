@@ -148,12 +148,22 @@ export default function CustomerDetail() {
                 <Typography variant="h3" weight="bold">
                     {isEditing ? 'Edit Profile' : 'Customer Profile'}
                 </Typography>
-                <IconButton
-                    icon={isEditing ? <CloseCircle size={20} color="#EF4444" /> : <Edit2 size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => setIsEditing(!isEditing)}
-                    variant="ghost"
-                    className="-mr-2"
-                />
+                <View className="flex-row items-center gap-1">
+                    {!isEditing ? (
+                        <IconButton
+                            icon={<Trash size={20} color="#EF4444" variant="Linear" />}
+                            onPress={handleDelete}
+                            variant="ghost"
+                        />
+                    ) : (
+                        <IconButton
+                            icon={<CloseCircle size={20} color="#EF4444" />}
+                            onPress={() => setIsEditing(false)}
+                            variant="ghost"
+                            className="-mr-2"
+                        />
+                    )}
+                </View>
             </View>
 
             <KeyboardAvoidingView
@@ -166,122 +176,90 @@ export default function CustomerDetail() {
                 >
                     {!isEditing ? (
                         <>
-                            {/* View Mode: Profile Header Card */}
-                            <Surface variant="lavender" className={`p-6 items-center mb-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="3xl">
-                                <Surface variant="white" className={`w-16 h-16 items-center justify-center mb-3 shadow-sm ${isDark ? 'bg-indigo-800' : 'bg-white'}`} rounded="full">
-                                    <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-brand-primary'}>
-                                        {initials}
-                                    </Typography>
-                                </Surface>
-                                <Typography variant="h3" weight="bold" className="mb-0.5">{customer?.fullName}</Typography>
-                                <Typography variant="small" color="gray" className="capitalize">{customer?.gender || 'Unknown gender'}</Typography>
-                            </Surface>
+                            {/* View Mode: Compact Social Media Style Header */}
+                            <View className="py-2 mb-4">
+                                <View className="flex-row items-center mb-6">
+                                    {/* Smaller Avatar */}
+                                    <View className={`w-16 h-16 items-center justify-center rounded-full ${isDark ? 'bg-indigo-900/30' : 'bg-blue-50'}`}>
+                                        <Typography variant="h2" weight="bold" className={isDark ? 'text-indigo-300' : 'text-blue-600'}>
+                                            {initials}
+                                        </Typography>
+                                    </View>
 
-                            {/* Quick Actions */}
-                            <View className="flex-row gap-3 mb-6">
-                                <View className={`flex-1 p-3 items-center`}>
-                                    <IconButton
-                                        icon={<Call size={20} color={isDark ? "#818CF8" : "#6366f1"} variant="Bulk" />}
-                                        variant="glass"
-                                        className="mb-2"
-                                        onPress={() => {
-                                            if (customer?.phoneNumber) {
-                                                Linking.openURL(`tel:${customer.phoneNumber}`).catch(() => {
-                                                    confirm({
-                                                        title: 'Error',
-                                                        message: 'Could not open dialer',
-                                                        confirmText: 'OK',
-                                                        onConfirm: () => { }
-                                                    });
-                                                });
-                                            } else {
-                                                Toast.show({
-                                                    type: 'info',
-                                                    text1: 'Missing Contact',
-                                                    text2: 'No phone number provided for this customer'
-                                                });
-                                            }
-                                        }}
-                                    />
-                                    <Typography variant="small" weight="bold">Call</Typography>
+                                    <View className="ml-4 flex-1">
+                                        {/* Name and Pill-style gender */}
+                                        <Typography variant="h2" weight="bold" className="text-xl mb-1.5">{customer?.fullName}</Typography>
+                                        <View className={`px-3 py-0.5 self-start rounded-full ${isDark ? 'bg-indigo-400/10' : 'bg-blue-50'}`}>
+                                            <Typography variant="caption" weight="bold" color="primary" className="capitalize">{customer?.gender || 'Customer'}</Typography>
+                                        </View>
+                                    </View>
+
+                                    {/* Edit action remains in header for quick access */}
+                                    <View className="flex-row gap-2">
+                                        <TouchableOpacity
+                                            onPress={() => setIsEditing(true)}
+                                            className={`w-10 h-10 items-center justify-center rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'}`}
+                                        >
+                                            <Edit2 size={18} color={isDark ? "white" : "black"} variant="Bold" />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                                <View className={`flex-1 p-3 items-center`}>
-                                    <IconButton
-                                        icon={<Message size={20} color={isDark ? "#818CF8" : "#6366f1"} variant="Bulk" />}
-                                        variant="glass"
-                                        className="mb-2"
-                                        onPress={() => {
-                                            if (customer?.phoneNumber) {
-                                                Linking.openURL(`sms:${customer.phoneNumber}`).catch(() => {
-                                                    confirm({
-                                                        title: 'Error',
-                                                        message: 'Could not open messaging app',
-                                                        confirmText: 'OK',
-                                                        onConfirm: () => { }
-                                                    });
-                                                });
-                                            } else {
-                                                Toast.show({
-                                                    type: 'info',
-                                                    text1: 'Missing Contact',
-                                                    text2: 'No phone number provided for this customer'
-                                                });
-                                            }
-                                        }}
-                                    />
-                                    <Typography variant="small" weight="bold">Message</Typography>
+
+                                {/* Conspicuous Call & Message row */}
+                                <View className="flex-row gap-3 mb-6">
+                                    <TouchableOpacity
+                                        onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
+                                        className={`flex-1 flex-row h-12 items-center justify-center rounded-2xl bg-blue-500`}
+                                    >
+                                        <Call size={20} color="white" variant="Bold" />
+                                        <Typography variant="body" weight="bold" color="white" className="ml-2">Call Client</Typography>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
+                                        className={`flex-1 flex-row h-12 items-center justify-center rounded-2xl ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'} border border-indigo-100 dark:border-indigo-800`}
+                                    >
+                                        <Message size={20} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bold" />
+                                        <Typography variant="body" weight="bold" color={isDark ? "white" : "primary"} className="ml-2">Message</Typography>
+                                    </TouchableOpacity>
                                 </View>
-                                <View className={`flex-1 p-3 items-center`}>
-                                    <IconButton
-                                        icon={<Trash size={20} color="#EF4444" variant="Bulk" />}
-                                        variant="glass"
-                                        className="mb-2"
-                                        onPress={handleDelete}
-                                    />
-                                    <Typography variant="small" weight="bold" className="text-red-500">Delete</Typography>
+
+                                {/* Stats Row: Measurements, Orders - More Compact */}
+                                <View className="flex-row items-center border-y border-gray-50 dark:border-border-dark py-4 w-full">
+                                    <View className="flex-1 flex-row justify-center items-center border-r border-gray-50 dark:border-border-dark">
+                                        <Typography variant="body" weight="bold">{measurements.length}</Typography>
+                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest text-[9px] ml-2">Measurements</Typography>
+                                    </View>
+                                    <View className="flex-1 flex-row justify-center items-center">
+                                        <Typography variant="body" weight="bold">{orders.length}</Typography>
+                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest text-[9px] ml-2">Orders</Typography>
+                                    </View>
                                 </View>
                             </View>
 
                             {/* Info Sections */}
                             <View className="gap-4">
-                                <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1 tracking-widest">Contact Details</Typography>
-                                    <Surface variant="white" className={`p-3 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl">
-                                        <View className="flex-row items-center mb-3">
-                                            <Call size={20} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Linear" />
-                                            <View className="ml-4">
-                                                <Typography variant="caption" color="gray">Phone Number</Typography>
-                                                <Typography variant="body" weight="bold">{customer?.phoneNumber || 'Not provided'}</Typography>
-                                            </View>
+                                <View className="mb-8">
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1 tracking-widest">About</Typography>
+                                    <View className="px-1">
+                                        <Typography variant="body" weight="medium" className="leading-relaxed">
+                                            {customer?.notes || "No additional information recorded for this customer yet."}
+                                        </Typography>
+                                        <View className="flex-row items-center mt-6">
+                                            <Call size={14} color="#9CA3AF" variant="Linear" />
+                                            <Typography variant="small" color="gray" className="ml-2 font-bold">{customer?.phoneNumber || 'No phone number'}</Typography>
                                         </View>
-                                        <View className="flex-row items-center">
-                                            <User size={20} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Linear" />
-                                            <View className="ml-4">
-                                                <Typography variant="caption" color="gray">Gender</Typography>
-                                                <Typography variant="body" weight="bold" className="capitalize">{customer?.gender || 'Not specified'}</Typography>
-                                            </View>
-                                        </View>
-                                    </Surface>
+                                    </View>
                                 </View>
 
                                 <View>
-                                    <View className="flex-row justify-between items-center mb-2 ml-1">
+                                    <View className="flex-row justify-between items-center mb-4 mt-2 ml-1">
                                         <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">Measurements</Typography>
-                                        <Pressable onPress={() => router.push('/measurement-templates')}>
-                                            <Typography variant="small" color={isDark ? "white" : "primary"} weight="bold">Templates</Typography>
-                                        </Pressable>
-                                    </View>
-
-                                    <View className="flex-row gap-3 mb-2">
-                                        <Button
-                                            variant="secondary"
-                                            className={`flex-1 h-12 rounded-2xl border-0 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}
-                                            textClassName={isDark ? "text-white font-semibold" : "text-dark font-semibold"}
+                                        <TouchableOpacity
                                             onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}
+                                            className="px-4 py-1.5 rounded-full bg-blue-500"
                                         >
-                                            <Add size={18} color={isDark ? "white" : "black"} className="mr-2" />
-                                            Add Measurement
-                                        </Button>
+                                            <Typography variant="caption" weight="bold" color="white">Add New</Typography>
+                                        </TouchableOpacity>
                                     </View>
 
                                     {loadingMeasurements ? (
@@ -295,25 +273,23 @@ export default function CustomerDetail() {
                                         <View className="gap-3">
                                             {measurements.map(m => (
                                                 <Pressable key={m.id} onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: customer?.id } })}>
-                                                    <Surface variant="white" className={`p-4 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl">
+                                                    <View className={`py-4 border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                                                         <View className="flex-row justify-between items-center mb-2">
                                                             <Typography variant="body" weight="bold">{m.title}</Typography>
-                                                            <View className="flex-row items-center gap-2">
-                                                                <Typography variant="caption" color="gray">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
-                                                                <Edit2 size={14} color="#9CA3AF" />
-                                                            </View>
+                                                            <Typography variant="caption" color="gray">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
                                                         </View>
-                                                        <View className="flex-row flex-wrap gap-2">
-                                                            {Object.entries(JSON.parse(m.valuesJson || '{}')).map(([key, value]) => (
-                                                                <View key={key} className={`px-3 py-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                                                    <Typography variant="caption" color="gray">
-                                                                        <Typography weight="bold">{key}: </Typography>
-                                                                        {value as any} {user?.measurementUnit || 'inch'}
-                                                                    </Typography>
-                                                                </View>
-                                                            ))}
+                                                        <View className="flex-row flex-wrap gap-x-4 gap-y-1">
+                                                            {Object.entries(m.values).map(([key, value]) => (
+                                                                <Typography key={key} variant="caption" color="gray">
+                                                                    <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-blue-600'}>{key}: </Typography>
+                                                                    <Typography weight="medium" className={isDark ? 'text-gray-300' : 'text-gray-700'}>{value as any}{user?.measurementUnit || 'in'}</Typography>
+                                                                </Typography>
+                                                            )).slice(0, 6)}
+                                                            {Object.entries(m.values).length > 6 && (
+                                                                <Typography variant="caption" color="gray">...</Typography>
+                                                            )}
                                                         </View>
-                                                    </Surface>
+                                                    </View>
                                                 </Pressable>
                                             ))}
                                         </View>
@@ -337,12 +313,12 @@ export default function CustomerDetail() {
                                         <View className="gap-3">
                                             {orders.map(order => (
                                                 <Pressable key={order.id} onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                                    <Surface variant="white" className={`p-4 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'}`} rounded="2xl">
-                                                        <View className="flex-row justify-between items-center mb-2">
+                                                    <View className={`py-4 border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
+                                                        <View className="flex-row justify-between items-center">
                                                             <View className="flex-row items-center flex-1">
-                                                                <Surface variant={isDark ? "muted" : "lavender"} className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-surface-muted-dark' : ''}`}>
-                                                                    <Box size={20} color={isDark ? "white" : "#4F46E5"} variant="Bulk" />
-                                                                </Surface>
+                                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/20' : 'bg-indigo-50'}`}>
+                                                                    <Box size={20} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bulk" />
+                                                                </View>
                                                                 <View>
                                                                     <Typography variant="body" weight="bold">{order.styleName}</Typography>
                                                                     <Typography variant="caption" color="gray">
@@ -360,36 +336,25 @@ export default function CustomerDetail() {
                                                                 </Typography>
                                                             </View>
                                                         </View>
-                                                    </Surface>
+                                                    </View>
                                                 </Pressable>
                                             ))}
                                         </View>
                                     )}
                                 </View>
 
-                                <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1 tracking-widest">Notes</Typography>
-                                    <Surface variant="muted" className={`p-4 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-50'} min-h-[80px]`} rounded="2xl">
-                                        <View className="flex-row mb-2">
-                                            <InfoCircle size={20} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                                            <Typography variant="body" weight="medium" color="gray" className="ml-2">Notes Overview</Typography>
-                                        </View>
-                                        <Typography variant="body" className="leading-relaxed">
-                                            {customer?.notes || "No specific notes recorded for this customer yet."}
-                                        </Typography>
-                                    </Surface>
-                                </View>
 
                                 {/* Create Order Button */}
-                                <View className="mt-2">
+                                <View className="mt-8 border-t border-gray-100 pt-8 dark:border-border-dark">
                                     <Button
                                         onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
-                                        className={`h-14 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                        textClassName={isDark ? 'text-dark' : 'text-white'}
+                                        className={`h-16 rounded-full bg-blue-600 shadow-none`}
+                                        textClassName="text-white"
+                                        style={{ borderWidth: 0 }}
                                     >
                                         <View className="flex-row items-center justify-center">
-                                            <ShoppingCart size={20} color={isDark ? "black" : "white"} variant="Bold" />
-                                            <Typography weight="bold" className={`ml-3 ${isDark ? 'text-black' : 'text-white'}`} family="grotesk">Create Order</Typography>
+                                            <ShoppingCart size={22} color="white" variant="Bold" />
+                                            <Typography variant="body" weight="bold" className="ml-3 text-white">Create New Order</Typography>
                                         </View>
                                     </Button>
                                 </View>
