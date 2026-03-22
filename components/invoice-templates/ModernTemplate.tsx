@@ -13,7 +13,22 @@ export const ModernTemplate = ({ user, invoice, customer, order }: InvoiceTempla
                 <meta name="viewport" content="width=800, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-                    * { box-sizing: border-box; }
+                    * { 
+                        box-sizing: border-box; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                    }
+                    @page { size: 800px 1131px; margin: 0; }
+                    @media print {
+                        html, body {
+                            width: 800px !important;
+                            height: 1131px !important;
+                            overflow: hidden !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            page-break-inside: avoid !important;
+                        }
+                    }
                     body { 
                         font-family: 'Plus Jakarta Sans', Arial, sans-serif; 
                         color: #111827; 
@@ -235,6 +250,7 @@ export const ModernTemplate = ({ user, invoice, customer, order }: InvoiceTempla
                         </div>
                     </div>
                 </div>
+                <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX</div>
             </body>
         </html>
     `;

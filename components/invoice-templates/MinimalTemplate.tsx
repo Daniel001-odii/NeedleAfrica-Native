@@ -13,7 +13,22 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 <meta name="viewport" content="width=800, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-                    * { box-sizing: border-box; }
+                    * { 
+                        box-sizing: border-box; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                    }
+                    @page { size: 800px 1050px; margin: 0; }
+                    @media print {
+                        html, body {
+                            width: 800px !important;
+                            height: 1050px !important;
+                            overflow: hidden !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            page-break-inside: avoid !important;
+                        }
+                    }
                     body { 
                         font-family: 'Inter', -apple-system, sans-serif; 
                         color: #1f2937; 
@@ -21,7 +36,7 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         margin: 0; 
                         padding: 0;
                         width: 800px;
-                        height: 1131px;
+                        height: 1050px;
                         overflow: hidden;
                         position: relative;
                     }
@@ -62,7 +77,7 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     .container {
                         width: 100%;
                         height: 100%;
-                        padding: 80px 100px;
+                        padding: 50px 80px;
                         display: flex;
                         flex-direction: column;
                         position: relative;
@@ -72,7 +87,7 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-start;
-                        margin-bottom: 70px;
+                        margin-bottom: 40px;
                     }
                     .business-info {
                         display: flex;
@@ -123,8 +138,8 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     
                     .items-table {
                         width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 40px;
+                        border-spacing: 0;
+                        margin-bottom: 25px;
                     }
                     .items-table th {
                         text-align: left;
@@ -173,14 +188,14 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         font-weight: 700;
                     }
                     .grand-total {
-                        background-color: #f17b4c;
-                        color: white;
+                        background-color: #ff6b35;
+                        color: #ffffff;
                         display: flex;
                         justify-content: space-between;
                         padding: 15px 20px;
-                        font-size: 16px;
+                        font-size: 18px;
                         font-weight: 800;
-                        margin-top: 20px;
+                        margin-top: 10px;
                     }
                 </style>
             </head>
@@ -284,6 +299,7 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         </div>
                     </div>
                 </div>
+                <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX</div>
             </body>
         </html>
     `;

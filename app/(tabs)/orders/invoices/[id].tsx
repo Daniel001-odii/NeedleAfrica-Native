@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, ScrollView, Pressable, ActivityIndicator, Share, Image, Dimensions } from 'react-native';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { View, ScrollView, Pressable, ActivityIndicator, Share, Image, Dimensions, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
+import ViewShot from 'react-native-view-shot';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, DocumentDownload, ExportCurve, Printer, Trash } from 'iconsax-react-native';
@@ -16,7 +17,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../../contexts/ConfirmContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
-import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate } from '../../../../components/invoice-templates';
+import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate } from '../../../../components/invoice-templates';
 
 export default function InvoiceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +32,8 @@ export default function InvoiceDetailScreen() {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
+    
+    const viewShotRef = useRef<ViewShot>(null);
 
     // Calculate preview dimensions so it fits on screen all at once (A4 aspect ratio)
     const windowHeight = Dimensions.get('window').height;
@@ -72,56 +75,94 @@ export default function InvoiceDetailScreen() {
         if (!invoice || !customer || !order || !user) return '';
 
         const templateId = user.invoiceTemplate || 0;
-        const templates = [ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate];
+        const templates = [
+            ModernTemplate, 
+            ClassicTemplate, 
+            MinimalTemplate, 
+            CreativeTemplate, 
+            ElegantTemplate, 
+            BoldTemplate, 
+            CorporateTemplate
+        ];
         const SelectedTemplate = templates[templateId] || ModernTemplate;
 
         return SelectedTemplate({ user, invoice, customer, order });
     }, [invoice, customer, order, user]);
 
-    const handlePrint = async () => {
+    const scale = previewWidth / 800;
+    const previewHtml = useMemo(() => {
+        if (!htmlContent) return '';
+        // By replacing the viewport meta tag, we force WebKit to optically scale down the 800px document to match the physical wrapper width
+        // Wait, on some Android systems initial-scale breaks the layout width logic. Using CSS transform scale is 100% reliable across all WebKit browsers.
+        return htmlContent.replace('</head>', `
+            <style>
+                @media screen {
+                    html { 
+                        transform: scale(${scale}); 
+                        transform-origin: top left; 
+                        width: 800px;
+                        height: 1050px;
+                        overflow: hidden;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+            </style>
+        </head>`);
+    }, [htmlContent, scale]);
+
+    const handleDownloadPDF = async () => {
         setIsExporting(true);
         try {
-            await Print.printAsync({
-                html: htmlContent,
-            });
+            const { uri } = await Print.printToFileAsync({ html: htmlContent });
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(uri, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf' });
+            }
         } catch (error) {
             console.error(error);
-            confirm({
-                title: 'Error',
-                message: 'Failed to print invoice',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
+            Toast.show({ type: 'error', text1: 'Failed to generate PDF' });
         } finally {
             setIsExporting(false);
         }
     };
 
-    const handleShare = async () => {
+    const handleDownloadPNG = async () => {
         setIsExporting(true);
-        try {
-            const { uri } = await Print.printToFileAsync({ html: htmlContent });
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri);
-            } else {
-                confirm({
-                    title: 'Error',
-                    message: 'Sharing is not available on this device',
-                    confirmText: 'OK',
-                    onConfirm: () => { }
-                });
+        // Add a slight delay to ensure UI threads have caught up if just clicked
+        setTimeout(async () => {
+            try {
+                const uri = await viewShotRef.current?.capture?.();
+                if (uri && await Sharing.isAvailableAsync()) {
+                    await Sharing.shareAsync(uri, { UTI: 'public.png', mimeType: 'image/png' });
+                } else {
+                    Toast.show({ type: 'error', text1: 'Sharing unavailable natively' });
+                }
+            } catch (error) {
+                console.error(error);
+                Toast.show({ type: 'error', text1: 'Failed to export PNG image' });
+            } finally {
+                setIsExporting(false);
             }
-        } catch (error) {
-            console.error(error);
-            confirm({
-                title: 'Error',
-                message: 'Failed to share invoice',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
-        } finally {
-            setIsExporting(false);
-        }
+        }, 100);
+    };
+
+    const handleShare = async () => {
+        // Direct trigger of PNG share
+        await handleDownloadPNG();
+    };
+
+    const handleDownload = () => {
+        Alert.alert(
+            "Download Format",
+            "Please select how you'd like to export this invoice.",
+            [
+                { text: "Download PNG (Image)", onPress: handleDownloadPNG },
+                { text: "Download PDF (Document)", onPress: handleDownloadPDF },
+                { text: "Cancel", style: "cancel" }
+            ]
+        );
     };
 
     const handleDelete = async () => {
@@ -185,26 +226,28 @@ export default function InvoiceDetailScreen() {
 
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
                 <View className="items-center w-full mb-8">
-                    <Surface variant="white" className={`shadow-2xl overflow-hidden bg-white ${isDark ? 'border border-white/10' : 'border border-gray-100'}`} rounded="2xl" style={{ width: previewWidth, height: previewHeight }}>
-                        <WebView
-                            source={{ html: htmlContent }}
-                            style={{ flex: 1, backgroundColor: 'white' }}
-                            scrollEnabled={false}
-                            originWhitelist={['*']}
-                            scalesPageToFit={true}
-                        />
-                    </Surface>
+                    <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
+                        <Surface variant="white" className={`shadow-lg overflow-hidden bg-white ${isDark ? 'border border-white/10' : 'border border-gray-100'}`} rounded="2xl" style={{ width: previewWidth, height: previewHeight }}>
+                            <WebView
+                                source={{ html: previewHtml }}
+                                style={{ flex: 1, backgroundColor: 'white' }}
+                                scrollEnabled={false}
+                                originWhitelist={['*']}
+                                scalesPageToFit={true}
+                            />
+                        </Surface>
+                    </ViewShot>
                 </View>
 
                 <View className="flex-row gap-4">
                     <Button
-                        onPress={handlePrint}
+                        onPress={handleDownload}
                         isLoading={isExporting}
                         className={`flex-1 h-16 rounded-full border-0 shadow-lg ${isDark ? 'bg-blue-500 shadow-white/5' : 'bg-dark shadow-dark/5'}`}
                     >
                         <View className="flex-row items-center">
-                            <Printer size={20} color={"white"} className="mr-3" />
-                            <Typography weight="bold" color="white">Print PDF</Typography>
+                            <DocumentDownload size={20} color={"white"} className="mr-3" />
+                            <Typography weight="bold" color="white">Download</Typography>
                         </View>
                     </Button>
                     <Button

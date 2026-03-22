@@ -13,7 +13,22 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                 <meta name="viewport" content="width=800, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-                    * { box-sizing: border-box; }
+                    * { 
+                        box-sizing: border-box; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                    }
+                    @page { size: 800px 1050px; margin: 0; }
+                    @media print {
+                        html, body {
+                            width: 800px !important;
+                            height: 1050px !important;
+                            overflow: hidden !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            page-break-inside: avoid !important;
+                        }
+                    }
                     body { 
                         font-family: 'Poppins', sans-serif; 
                         color: #111827; 
@@ -21,7 +36,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         margin: 0; 
                         padding: 0;
                         width: 800px;
-                        height: 1131px;
+                        height: 1050px;
                         overflow: hidden;
                         display: flex;
                     }
@@ -69,7 +84,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     /* Main Content Area */
                     .main-content {
                         flex: 1;
-                        padding: 60px 50px;
+                        padding: 40px 50px;
                         display: flex;
                         flex-direction: column;
                     }
@@ -78,7 +93,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-start;
-                        margin-bottom: 50px;
+                        margin-bottom: 30px;
                     }
                     .invoice-title-wrapper { text-align: left; }
                     .invoice-title { font-size: 60px; font-weight: 800; color: #b07aba; line-height: 1; }
@@ -90,7 +105,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     .meta-grid {
                         display: flex;
                         justify-content: space-between;
-                        margin-bottom: 40px;
+                        margin-bottom: 30px;
                     }
                     .meta-block { flex: 1; }
                     .meta-label { font-size: 13px; font-weight: 800; color: #9fdfbc; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
@@ -104,7 +119,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         width: 100%;
                         border-collapse: separate;
                         border-spacing: 0;
-                        margin-bottom: 40px;
+                        margin-bottom: 25px;
                     }
                     .items-table th {
                         background-color: #9fdfbc;
@@ -131,7 +146,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     .totals-wrapper {
                         display: flex;
                         justify-content: flex-end;
-                        margin-bottom: 40px;
+                        margin-bottom: 25px;
                     }
                     .totals-box { width: 350px; }
                     .totals-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 15px; font-weight: 600; color: #4b5563; }
@@ -159,7 +174,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     .terms-text { font-size: 12px; color: #6b7280; line-height: 1.6; }
                     
                     .signature-box { width: 30%; text-align: center; }
-                    .signature-line { width: 100%; height: 2px; background-color: #111827; margin-top: 40px; margin-bottom: 10px; }
+                    .signature-line { width: 100%; height: 2px; background-color: #111827; margin-top: 25px; margin-bottom: 10px; }
                     .signature-name { font-size: 15px; font-weight: 800; color: #111827; text-transform: uppercase; }
                 </style>
             </head>
@@ -277,6 +292,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         </div>
                     </div>
                 </div>
+                <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX</div>
             </body>
         </html>
     `;

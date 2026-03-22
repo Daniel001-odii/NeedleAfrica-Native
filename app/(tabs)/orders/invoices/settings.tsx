@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, TouchableOpacity, Image, Platform, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, Building, Call, Location, DocumentText, Save2, Trash } from 'iconsax-react-native';
+import { ArrowLeft, Camera, Building, Call, Location, DocumentText } from 'iconsax-react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -11,6 +11,8 @@ import { useTheme } from '../../../../contexts/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
 import { TextInput } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
+import { WebView } from 'react-native-webview';
+import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate } from '../../../../components/invoice-templates';
 
 export default function InvoiceSettingsScreen() {
     const router = useRouter();
@@ -68,6 +70,12 @@ export default function InvoiceSettingsScreen() {
             });
         }
     };
+
+    const mockData = useMemo(() => ({
+        invoice: { invoiceNumber: '1023', amount: 2450, currency: '$' },
+        customer: { fullName: 'Jane Cooper' },
+        order: { styleName: 'Brand Strategy' }
+    }), []);
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
@@ -154,45 +162,59 @@ export default function InvoiceSettingsScreen() {
                     </View>
 
                     {/* Invoice Template Selection */}
-                    <Typography variant="body" weight="bold" className="mb-4">Invoice Template</Typography>
-                    <View className="gap-y-3 mb-8">
+                    <Typography variant="body" weight="bold" className="mb-4 mt-8">Invoice Template Formats</Typography>
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false} 
+                        className="mb-8" 
+                        contentContainerStyle={{ gap: 16, paddingRight: 24, paddingBottom: 10 }}
+                    >
                         {[
-                            { id: 0, name: 'Modern', description: 'Clean gradient design with modern aesthetics' },
-                            { id: 1, name: 'Classic', description: 'Traditional professional invoice layout' },
-                            { id: 2, name: 'Minimal', description: 'Simple and clean minimalist design' },
-                            { id: 3, name: 'Creative', description: 'Vibrant colors with creative elements' },
-                        ].map((template) => (
-                            <TouchableOpacity
-                                key={template.id}
-                                onPress={() => setForm({ ...form, invoiceTemplate: template.id })}
-                                className={`p-4 rounded-xl border-2 ${
-                                    form.invoiceTemplate === template.id
-                                        ? 'border-blue-500 bg-blue-50'
-                                        : isDark ? 'border-border-dark bg-gray-800' : 'border-gray-100 bg-white'
-                                }`}
-                            >
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-1">
-                                        <Typography variant="body" weight="bold" className="mb-1">
-                                            {template.name}
-                                        </Typography>
-                                        <Typography variant="small" color="gray">
-                                            {template.description}
-                                        </Typography>
+                            { id: 0, TemplateComp: ModernTemplate },
+                            { id: 1, TemplateComp: ClassicTemplate },
+                            { id: 2, TemplateComp: MinimalTemplate },
+                            { id: 3, TemplateComp: CreativeTemplate },
+                            { id: 4, TemplateComp: ElegantTemplate },
+                            { id: 5, TemplateComp: BoldTemplate },
+                            { id: 6, TemplateComp: CorporateTemplate },
+                        ].map((template) => {
+                            const scale = 100 / 800; // 100px width thumbnail layout
+                            const rawHtml = template.TemplateComp({ user: user || {}, ...mockData });
+                            // Inject CSS scaling for mini-thumbnail view!
+                            const miniHtml = rawHtml.replace('</head>', `
+                                <style>
+                                    @media screen {
+                                        html { transform: scale(${scale}); transform-origin: top left; width: 800px; height: 1050px; overflow: hidden; }
+                                        body { margin: 0; padding: 0; }
+                                    }
+                                </style>
+                            </head>`);
+
+                            const isActive = form.invoiceTemplate === template.id;
+
+                            return (
+                                <TouchableOpacity
+                                    key={template.id}
+                                    onPress={() => setForm({ ...form, invoiceTemplate: template.id })}
+                                    className={`p-1 rounded-2xl border-2 ${
+                                        isActive
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : isDark ? 'border-border-dark bg-gray-800' : 'border-gray-200 bg-white'
+                                    }`}
+                                >
+                                    <View pointerEvents="none" className="overflow-hidden rounded-xl bg-white" style={{ width: 100, height: 131 }}>
+                                        <WebView
+                                            source={{ html: miniHtml }}
+                                            style={{ backgroundColor: 'white' }}
+                                            scrollEnabled={false}
+                                            showsVerticalScrollIndicator={false}
+                                            originWhitelist={['*']}
+                                        />
                                     </View>
-                                    <View className={`w-5 h-5 rounded-full border-2 ${
-                                        form.invoiceTemplate === template.id
-                                            ? 'border-blue-500 bg-blue-500'
-                                            : isDark ? 'border-gray-600' : 'border-gray-300'
-                                    }`}>
-                                        {form.invoiceTemplate === template.id && (
-                                            <View className="w-2 h-2 bg-white rounded-full self-center mt-1" />
-                                        )}
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
 
                     {/* Info Surface */}
                     <Surface variant={isDark ? "muted" : "blue"} className="mt-8 p-4 border border-blue-500/10" rounded="2xl">
