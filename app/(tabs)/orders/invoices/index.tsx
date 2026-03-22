@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, DocumentText, SearchNormal1 } from 'iconsax-react-native';
+import { ArrowLeft, Add, DocumentText, SearchNormal1, Setting2, Setting } from 'iconsax-react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -35,7 +35,7 @@ export default function InvoicesScreen() {
                 <View className="flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                        onPress={() => router.back()}
+                        onPress={() => router.replace('/(tabs)/orders')}
                         variant="ghost"
                         className="-ml-2"
                     />
@@ -48,11 +48,20 @@ export default function InvoicesScreen() {
                         </View>
                     )}
                 </View>
-                <IconButton
-                    icon={<Add size={24} color={isDark ? "white" : "black"} />}
-                    variant="glass"
-                    onPress={() => router.push('/(tabs)/orders/invoices/new')}
-                />
+                <View className="flex-row gap-2">
+                    <Pressable
+                        className={`h-10 rounded-full items-center justify-center flex-row gap-2 px-3 ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
+                        onPress={() => router.push('/(tabs)/orders/invoices/settings')}
+                    >
+                        <Setting size={20} color={isDark ? "white" : "black"} />
+                        <Typography variant="body" weight="bold">Customise</Typography>
+                    </Pressable>
+                    <IconButton
+                        icon={<Add size={24} color={isDark ? "white" : "black"} />}
+                        variant="glass"
+                        onPress={() => router.push('/(tabs)/orders/invoices/new')}
+                    />
+                </View>
             </View>
 
             {loading ? (

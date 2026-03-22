@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { View, Image } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Home, User, People, Calendar, MagicStar } from 'iconsax-react-native';
@@ -12,7 +12,7 @@ export default function TabLayout() {
     const { isDark } = useTheme();
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
             <LimitedOfflineBanner />
             <SafeAreaView style={{ flex: 1, paddingBottom: insets.bottom }} edges={['top']}>
                 <Tabs

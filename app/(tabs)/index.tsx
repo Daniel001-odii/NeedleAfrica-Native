@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, Image, RefreshControl } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
@@ -16,7 +16,6 @@ import Svg, { Path } from 'react-native-svg';
 
 export default function Home() {
     const { user } = useAuth();
-    const router = useRouter();
     const { isSyncing, sync: performSync } = useSync();
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
@@ -124,7 +123,7 @@ export default function Home() {
                     <>
                         {/* Balance Section */}
                         <View className="mb-8">
-                            <View className={`rounded-3xl overflow-hidden ${isDark ? 'bg-blue-900/20 border border-blue-500/20' : 'bg-blue-500 shadow-xl shadow-blue-100'}`} style={{ padding: 20 }}>
+                            <View style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: isDark ? 'rgba(30, 58, 138, 0.2)' : '#3B82F6', padding: 20, borderWidth: isDark ? 1 : 0, borderColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'transparent' }}>
                                 {/* Header Row: Label + Eye Toggle */}
                                 <View className="flex-row items-center justify-between mb-3">
                                     <View className="flex-row items-center">

@@ -39,6 +39,7 @@ interface User {
     currentPlanCode?: string;
     deviceType?: string;
     onboardingCompleted?: boolean;
+    invoiceTemplate?: number;
 }
 
 interface AuthContextType {
@@ -52,6 +53,7 @@ interface AuthContextType {
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, otp: string, password: string) => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<void>;
+    uploadProfilePhoto: (imageUri: string) => Promise<void>;
     deleteAccount: () => Promise<void>;
     completeOnboarding: () => void;
     refreshUser: () => Promise<void>;
@@ -369,6 +371,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const uploadProfilePhoto = async (imageUri: string) => {
+        setIsActionLoading(true);
+        try {
+            // Read file as base64 using expo-file-system
+            const { File } = await import('expo-file-system');
+            const file = new File(imageUri);
+            const base64 = await file.base64();
+            
+            const extension = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+            const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
+            const dataUrl = `data:${mimeType};base64,${base64}`;
+
+            const response = await axiosInstance.post('/users/me/photo', { image: dataUrl });
+            const { status, user: userData, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Photo upload failed');
+            }
+
+            const updatedUser = { ...user, ...userData };
+            await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Photo upload failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     const deleteAccount = async () => {
         setIsActionLoading(true);
         try {
@@ -442,7 +474,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple }}>
             {children}
         </AuthContext.Provider>
     );

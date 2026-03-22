@@ -1,7 +1,7 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
@@ -12,49 +12,20 @@ import { useSync } from '../hooks/useSync';
 import { NotificationService } from '../services/NotificationService';
 import { revenueCatService } from '../services/RevenueCatService';
 import * as Notifications from 'expo-notifications';
-// import {
-//     useFonts,
-//     PlayfairDisplay_400Regular,
-//     PlayfairDisplay_500Medium,
-//     PlayfairDisplay_600SemiBold,
-//     PlayfairDisplay_700Bold,
-//     PlayfairDisplay_800ExtraBold,
-//     PlayfairDisplay_900Black
-// } from '@expo-google-fonts/playfair-display';
-// import {
-//     SpaceGrotesk_300Light,
-//     SpaceGrotesk_400Regular,
-//     SpaceGrotesk_500Medium,
-//     SpaceGrotesk_600SemiBold,
-//     SpaceGrotesk_700Bold
-// } from '@expo-google-fonts/space-grotesk';
 import "../global.css";
-
 import { PostHogProvider } from 'posthog-react-native'
-
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
 import { OfflineBanner } from '../components/ui/OfflineBanner';
 import { StoreUpdateModal } from '../components/ui/StoreUpdateModal';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ConfirmProvider } from '../contexts/ConfirmContext';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
-function RootLayoutNavWithLoading() {
-    const { isLoading } = useAuth();
-    const segments = useSegments();
-
-    // Show loading screen while auth state is being determined
-    // This is the global blocking loading state
-    if (isLoading) {
-        return <LoadingScreen />;
-    }
-
-    return <RootLayoutNav />;
-}
 
 function RootLayoutNav() {
     const { user, isLoading, isNewUser } = useAuth();
@@ -62,11 +33,9 @@ function RootLayoutNav() {
     const { sync } = useSync();
     const { isDark } = useTheme();
     const segments = useSegments();
-    const router = useRouter();
 
     // 1. Auth redirection logic
     useEffect(() => {
-        // Wait for auth to be ready
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
@@ -77,30 +46,23 @@ function RootLayoutNav() {
         const inInvoices = segments[0] === 'invoices';
 
         if (!user && !inAuthGroup && !inOnboarding) {
-            // Not logged in: redirect to login
             setTimeout(() => router.replace('/(auth)'), 0);
         } else if (user) {
-            // Logged in
             if (isNewUser) {
-                // New user: go to onboarding
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
             } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices) {
-                // Existing user not in a valid protected route (like measurements): go to main app
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
     }, [user, isLoading, segments, isNewUser]);
 
-
     // 2. Sync logic: Interval & Foreground
     useEffect(() => {
         if (!user) return;
 
-        // Sync every 30 seconds
-        const interval = setInterval(async () => {
-            console.log('Performing periodic background sync...');
+        const performSync = async () => {
             try {
                 await sync();
                 const orders = await database.get('orders').query().fetch();
@@ -108,46 +70,26 @@ function RootLayoutNav() {
             } catch (e) {
                 console.error(e);
             }
-        }, 30 * 1000);
+        };
 
-        // Sync on app foreground
+        const interval = setInterval(performSync, 60 * 1000);
         const subscription = AppState.addEventListener('change', async nextAppState => {
             if (nextAppState === 'active') {
-                console.log('App returned to foreground, performing sync...');
-                sync().catch(console.error);
-
-                // Refresh subscription status
-                try {
-                    await revenueCatService.getCustomerInfo();
-                } catch (rcError) {
-                    console.error('Failed to refresh subscription status on foreground:', rcError);
-                }
+                performSync();
+                revenueCatService.getCustomerInfo().catch(console.error);
             }
         });
 
-        // Initial sync and reminder refresh on mount if logged in
-        const initializeReminders = async () => {
-            try {
-                await sync();
-                const orders = await database.get('orders').query().fetch();
-                await NotificationService.refreshAllReminders(orders, user);
-            } catch (e) {
-                console.error('Failed to init reminders:', e);
-            }
-        };
-
-        initializeReminders();
-
+        performSync();
         return () => {
             clearInterval(interval);
             subscription.remove();
         };
     }, [user, sync]);
 
-    // 3. Early Hider Effect: Ensure native splash is hidden once JS is ready
+    // 3. Early Hider Effect
     useEffect(() => {
         if (!isLoading) {
-            // Give the app a moment to render the first frame
             const timer = setTimeout(() => {
                 SplashScreen.hideAsync().catch(() => { });
                 setIsNavReady(true);
@@ -156,27 +98,13 @@ function RootLayoutNav() {
         }
     }, [isLoading]);
 
-    // 3. Notification listeners
-    useEffect(() => {
-        const notificationListener = NotificationService.addNotificationReceivedListener(notification => {
-            console.log('Notification received in foreground:', notification);
-        });
+    if (isLoading) {
+        return <LoadingScreen />;
+    }
 
-        const responseListener = NotificationService.addNotificationResponseReceivedListener(response => {
-            console.log('Notification response received:', response);
-            // Handle navigation here if needed
-        });
-
-        return () => {
-            NotificationService.removeNotificationSubscription(notificationListener);
-            NotificationService.removeNotificationSubscription(responseListener);
-        };
-    }, []);
-
-    // 4. Loading & Redirection state handling
-    // Only show full-screen loading when the initial auth state is unknown
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: isDark ? '#000000' : 'white' }}>
+            <OfflineBanner />
             <Stack
                 screenOptions={{
                     headerShown: false,
@@ -193,19 +121,6 @@ function RootLayoutNav() {
                     <LoadingScreen />
                 </View>
             )}
-        </View>
-    );
-}
-
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ConfirmProvider } from '../contexts/ConfirmContext';
-
-function ThemeAwareRoot() {
-    const { isDark } = useTheme();
-    return (
-        <View style={{ flex: 1, backgroundColor: isDark ? '#000000' : 'white' }}>
-            <OfflineBanner />
-            <RootLayoutNavWithLoading />
             <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
             <Toast config={toastConfig} />
             <StoreUpdateModal />
@@ -214,29 +129,9 @@ function ThemeAwareRoot() {
 }
 
 export default function RootLayout() {
-    const fontsReady = true;
-
-    // Splash screen is hidden manually in app/loading.tsx to ensure a smooth transition
-    // from native splash to custom React splash.
-
-
-    // Initialize RevenueCat on app start
     useEffect(() => {
-        const initializeRevenueCat = async () => {
-            try {
-                await revenueCatService.initialize();
-                console.log('RevenueCat initialized successfully');
-            } catch (error) {
-                console.error('Failed to initialize RevenueCat:', error);
-            }
-        };
-
-        initializeRevenueCat();
+        revenueCatService.initialize().catch(err => console.error('RC Init failed:', err));
     }, []);
-
-    if (!fontsReady) {
-        return null;
-    }
 
     return (
         <PostHogProvider
@@ -255,7 +150,7 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    keyboardVerticalOffset={Platform.OS === 'android' ? -100 : 0} // Adjust 24 to match your header/nav height
+                    keyboardVerticalOffset={Platform.OS === 'android' ? -100 : 0}
                     style={{ flex: 1 }}
                 >
                     <SafeAreaProvider>
@@ -263,7 +158,7 @@ export default function RootLayout() {
                             <AuthProvider>
                                 <ThemeProvider>
                                     <ConfirmProvider>
-                                        <ThemeAwareRoot />
+                                        <RootLayoutNav />
                                     </ConfirmProvider>
                                 </ThemeProvider>
                             </AuthProvider>

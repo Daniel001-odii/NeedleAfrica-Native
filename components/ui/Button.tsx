@@ -5,7 +5,7 @@ import { Typography } from './Typography';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface ButtonProps extends React.ComponentProps<typeof TouchableOpacity> {
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'blue';
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;
     className?: string;
@@ -31,7 +31,8 @@ export function Button({
         primary: isDark ? "bg-brand-primary border-2 border-brand-primary" : "bg-peach border-2 border-black",
         secondary: isDark ? "bg-dark-700 border-2 border-dark-600" : "bg-lavender border-2 border-black",
         outline: isDark ? "bg-transparent border-2 border-text-dark" : "bg-white border-2 border-black",
-        ghost: "bg-transparent border-0 shadow-none"
+        ghost: "bg-transparent border-0 shadow-none",
+        blue: "bg-blue-600 border-2 border-blue-700"
     };
 
     const sizes = {
@@ -44,7 +45,8 @@ export function Button({
         primary: "text-white",
         secondary: isDark ? "text-white" : "text-black",
         outline: isDark ? "text-text-dark" : "text-black",
-        ghost: isDark ? "text-text-dark" : "text-black"
+        ghost: isDark ? "text-text-dark" : "text-black",
+        blue: "text-white"
     };
 
     return (

@@ -5,13 +5,12 @@ import { Typography } from './ui/Typography';
 import { useSync } from '../hooks/useSync';
 import { useSubscription } from '../hooks/useSubscription';
 import { useResourceLimits } from '../hooks/useResourceLimits';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 
 export function LimitedOfflineBanner() {
   const { isOnline } = useSync();
   const { isFree } = useSubscription();
   const { counts } = useResourceLimits();
-  const router = useRouter();
   const [dismissed, setDismissed] = React.useState(false);
 
   // Only show for free tier users when offline

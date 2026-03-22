@@ -61,6 +61,84 @@ const PRESET_PALETTES: Palette[] = [
     }
 ];
 
+const STYLING_INSIGHTS = [
+    {
+        title: "Complementary Contrast",
+        insight: "Pair colors opposite on the color wheel (e.g. blue + orange) to create high visual impact and bold statement pieces.",
+        use_case: "Streetwear, statement outfits, editorial looks"
+    },
+    {
+        title: "Analogous Harmony",
+        insight: "Use colors next to each other on the wheel (e.g. blue, teal, green) for a cohesive and calm aesthetic.",
+        use_case: "Luxury wear, minimal collections, soft tailoring"
+    },
+    {
+        title: "Monochrome Layering",
+        insight: "Work within one hue using different tints, tones, and shades to create depth without visual noise.",
+        use_case: "Capsule wardrobes, elevated basics"
+    },
+    {
+        title: "Neutral Anchoring",
+        insight: "Balance bold Pantone colors with neutrals like beige, black, white, or grey to avoid overwhelming the design.",
+        use_case: "Commercial fashion, ready-to-wear collections"
+    },
+    {
+        title: "Warm vs Cool Balance",
+        insight: "Combine warm tones (reds, oranges) with cool tones (blues, greens) to create dynamic tension and visual balance.",
+        use_case: "Seasonal transitions, standout pieces"
+    },
+    {
+        title: "Saturation Control",
+        insight: "Pair a highly saturated color with a muted or desaturated tone to prevent color competition.",
+        use_case: "Daywear, wearable fashion"
+    },
+    {
+        title: "Value Contrast",
+        insight: "Mix light and dark Pantone shades to improve silhouette visibility and structure.",
+        use_case: "Layered outfits, tailoring, outerwear"
+    },
+    {
+        title: "Accent Pop Strategy",
+        insight: "Use one bright Pantone color as an accent against a subdued base palette.",
+        use_case: "Accessories, trims, branding elements"
+    },
+    {
+        title: "Seasonal Palette Alignment",
+        insight: "Use lighter, airy Pantones for spring/summer and deeper, richer tones for fall/winter collections.",
+        use_case: "Collection planning, trend alignment"
+    },
+    {
+        title: "Cultural & Market Context",
+        insight: "Consider regional color preferences and symbolism when pairing Pantone shades.",
+        use_case: "Global fashion lines, targeted markets"
+    },
+    {
+        title: "Texture Interaction",
+        insight: "The same Pantone color can appear different on silk vs denim vs leather—pair with material in mind.",
+        use_case: "Fabric selection, premium design"
+    },
+    {
+        title: "Print & Pattern Balance",
+        insight: "When working with prints, anchor with one dominant Pantone and support with secondary tones.",
+        use_case: "Textile design, patterned garments"
+    },
+    {
+        title: "Trend vs Timeless Mix",
+        insight: "Combine trending Pantone colors with classic staples to extend product lifespan.",
+        use_case: "Retail collections, evergreen pieces"
+    },
+    {
+        title: "Skin Tone Consideration",
+        insight: "Choose pairings that complement a wide range of skin undertones for broader appeal.",
+        use_case: "Inclusive fashion lines"
+    },
+    {
+        title: "Contrast Placement",
+        insight: "Strategically place contrasting colors to highlight or contour body areas.",
+        use_case: "Fit-enhancing designs, couture"
+    }
+];
+
 const generateRandomHex = () => {
     const chars = '0123456789ABCDEF';
     let color = '#';
@@ -75,6 +153,7 @@ export default function PantoneScreen() {
     const { isDark } = useTheme();
     const posthog = usePostHog();
     const [currentPalette, setCurrentPalette] = useState<Palette>(PRESET_PALETTES[0]);
+    const [currentInsight, setCurrentInsight] = useState(STYLING_INSIGHTS[0]);
     const [fadeAnim] = useState(new Animated.Value(0));
     const [pulseAnim] = useState(new Animated.Value(1));
     const viewRef = useRef<View>(null);
@@ -134,6 +213,10 @@ export default function PantoneScreen() {
             }))
         };
         setCurrentPalette(newPalette);
+
+        // Randomize insight
+        const randomInsight = STYLING_INSIGHTS[Math.floor(Math.random() * STYLING_INSIGHTS.length)];
+        setCurrentInsight(randomInsight);
 
         // Track pantone palette generation
         posthog.capture('pantone_generated', {
@@ -197,13 +280,6 @@ export default function PantoneScreen() {
                     />
                     <Typography variant="h3" weight="bold" className="ml-2">Pantone</Typography>
                 </View>
-                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                    <IconButton
-                        icon={<Refresh size={20} color={isDark ? "white" : "black"} />}
-                        onPress={generateNewPalette}
-                        variant="glass"
-                    />
-                </Animated.View>
             </View>
 
             <ScrollView contentContainerClassName="p-6 pb-32" showsVerticalScrollIndicator={false}>
@@ -289,26 +365,38 @@ export default function PantoneScreen() {
                 <Surface variant={isDark ? "muted" : "lavender"} className="mt-10 p-6" rounded="3xl">
                     <View className="flex-row items-center mb-4">
                         <Colorfilter size={24} color="#4F46E5" variant="Bulk" />
-                        <Typography variant="body" weight="bold" className="ml-3">Styling Insights</Typography>
+                        <Typography variant="body" weight="bold" className="ml-3">{currentInsight.title}</Typography>
                     </View>
-                    <Typography variant="small" color="gray" className="leading-5">
-                        Mix metallic accents with deep earth tones to create a balanced, luxurious look. These pairings are currently trending in high-fashion runways across sub-Saharan Africa.
+                    <Typography variant="small" color="gray" className="leading-5 mb-3">
+                        {currentInsight.insight}
                     </Typography>
+                    <View className="flex-row items-center">
+                        <Typography variant="small" weight="bold" color="primary" className="text-[10px] uppercase">Best for: </Typography>
+                        <Typography variant="small" color="gray" className="text-[10px] italic">{currentInsight.use_case}</Typography>
+                    </View>
                 </Surface>
             </ScrollView>
 
-            {/* Bottom Trigger */}
-            {/*  <View className="absolute bottom-10 left-6 right-6">
-                <Button
+            {/* Floating Action Button */}
+            <Animated.View
+                className="absolute bottom-10 right-6"
+                style={{ transform: [{ scale: pulseAnim }] }}
+            >
+                <TouchableOpacity
+                    activeOpacity={0.9}
                     onPress={generateNewPalette}
-                    className={`h-16 rounded-full shadow-lg bg-blue-500 border-none`}
+                    className={`w-16 h-16 rounded-full items-center justify-center shadow-xl ${isDark ? 'bg-white' : 'bg-black'}`}
+                    style={{
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 4.65,
+                        elevation: 8,
+                    }}
                 >
-                    <View className="flex-row items-center gap-3">
-                        <Refresh size={20} color="white" />
-                        <Typography weight="bold" color="white">Generate Palette</Typography>
-                    </View>
-                </Button>
-            </View> */}
+                    <Refresh size={24} color={isDark ? "black" : "white"} />
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     );
 }
