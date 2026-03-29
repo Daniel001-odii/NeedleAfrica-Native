@@ -15,7 +15,7 @@ import Toast from 'react-native-toast-message';
 
 export default function SignUp() {
     const [name, setName] = useState('');
-    const [businessName, setBusinessName] = useState('');
+    // const [businessName, setBusinessName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -62,7 +62,7 @@ export default function SignUp() {
     };
 
     const handleSignUp = async () => {
-        if (!name || !email || !password || !businessName) {
+        if (!name || !email || !password /* || !businessName */) {
             Toast.show({
                 type: 'error',
                 text1: 'Required Fields',
@@ -71,8 +71,7 @@ export default function SignUp() {
             return;
         }
         try {
-            await signUp(email, password, name, businessName);
-
+            await signUp(email, password, name, ''); // businessName handled in onboarding flow
             Toast.show({
                 type: 'success',
                 text1: 'Account Created',
@@ -139,7 +138,7 @@ export default function SignUp() {
                         </Surface>
                     </View>
 
-                    <View className="mb-6">
+                    {/*  <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Business Name</Typography>
                         <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
                             <Shop size={20} color="#6B7280" variant="Bulk" />
@@ -151,7 +150,7 @@ export default function SignUp() {
                                 onChangeText={setBusinessName}
                             />
                         </Surface>
-                    </View>
+                    </View> */}
 
 
 

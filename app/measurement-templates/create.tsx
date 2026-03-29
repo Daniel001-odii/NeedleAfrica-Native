@@ -31,7 +31,7 @@ export default function CreateTemplateScreen() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 3,
+        limit: 5,
         message: '',
         isAtLimit: false,
         isNearLimit: false,

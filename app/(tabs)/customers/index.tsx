@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, Modal } from 'react-native';
+import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
-import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, TickCircle, CloseCircle, InfoCircle } from 'iconsax-react-native';
+import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, InfoCircle } from 'iconsax-react-native';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -24,6 +24,8 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
     { key: 'a-z', label: 'Name (A-Z)' },
     { key: 'z-a', label: 'Name (Z-A)' },
 ];
+
+import { ActionSheet } from '../../../components/ui/ActionSheet';
 
 function CustomersScreen() {
     const [search, setSearch] = useState('');
@@ -91,7 +93,7 @@ function CustomersScreen() {
     const handleDelete = (id: string, name: string) => {
         confirm({
             title: "Delete Customer",
-            message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+            message: `Are you sure you want to delete ${name}?`,
             confirmText: "Delete",
             type: "danger",
             onConfirm: () => deleteCustomer(id)
@@ -103,9 +105,9 @@ function CustomersScreen() {
             <View className="pl-4 mb-3 justify-center items-center">
                 <Pressable
                     onPress={() => handleDelete(id, name)}
-                    className="bg-red-50 justify-center items-center w-16 h-16 rounded-3xl"
+                    className="bg-red-500 justify-center items-center w-16 h-16 rounded-2xl"
                 >
-                    <Trash size={24} color="red" variant="Bold" />
+                    <Trash size={24} color="white" variant="Bold" />
                 </Pressable>
             </View>
         );
@@ -114,41 +116,37 @@ function CustomersScreen() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
-            <View className="p-6 pb-0">
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                 {/* Header */}
-                <View className="flex-row justify-between items-center mb-6">
+                <View className="flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center">
                         <Typography variant="h2" weight="bold">Customers</Typography>
                         {!isPro && (
-                            <View className={`ml-3 px-2 py-0.5 rounded-lg ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
-                                <Typography variant="small" weight="bold" className={isDark ? 'text-indigo-400' : 'text-indigo-600'}>
+                            <View className={`ml-3 px-2 py-0.5 rounded-md ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                                <Typography variant="caption" weight="bold" color="gray">
                                     {customerLimit.current}/{customerLimit.limit}
                                 </Typography>
                             </View>
                         )}
                     </View>
-                    <View className="flex-row gap-2">
-                        <IconButton
-                            icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
-                            variant="glass"
-                            onPress={() => setShowSortModal(true)}
-                        />
-                        <IconButton
-                            icon={<Add size={24} color={isDark ? "white" : "black"} />}
-                            variant="glass"
-                            onPress={() => router.push('/(tabs)/customers/new')}
-                        />
+                    <View className="flex-row gap-4">
+                        <TouchableOpacity onPress={() => setShowSortModal(true)}>
+                            <FilterSearch size={22} color="#6366f1" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')}>
+                            <Add size={26} color="#6366f1" />
+                        </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Search Bar */}
-                <Surface variant="muted" className="flex-row items-center px-4 h-14 mb-6" rounded="2xl" hasBorder>
-                    <SearchNormal size={20} color="#9CA3AF" />
+                {/* Search Bar - Native iOS Look */}
+                <Surface variant="muted" className={`flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
+                    <SearchNormal size={18} color="#8E8E93" />
                     <TextInput
-                        className={`flex-1 ml-3 text-base font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                        placeholder="Search for a customer..."
-                        placeholderTextColor="#9CA3AF"
+                        className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
+                        placeholder="Search"
+                        placeholderTextColor="#8E8E93"
                         value={search}
                         onChangeText={setSearch}
                     />
@@ -159,10 +157,10 @@ function CustomersScreen() {
             <FlatList
                 data={sortedCustomers}
                 keyExtractor={item => item.id}
-                contentContainerClassName="p-6 pt-0 pb-16 gap-0"
+                contentContainerClassName="p-4 pt-6 pb-20"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
                 }
                 renderItem={({ item }) => (
                     <Swipeable
@@ -174,106 +172,54 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <View
-                                className={`flex-row items-center py-4 mb-3 px-1`}
-                            >
-                                <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
-                                    <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
+                            <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="2xl">
+                                <View className={`w-12 h-12 items-center justify-center mr-4 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                    <Typography weight="bold" color="primary">
                                         {(item.fullName || 'C').charAt(0).toUpperCase()}
-                                        {(item.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
                                     </Typography>
-                                </Surface>
+                                </View>
                                 <View className="flex-1">
                                     <Typography variant="body" weight="bold">{item.fullName}</Typography>
-                                    <Typography variant="caption" color="gray">{item.phoneNumber || 'No phone number'}</Typography>
+                                    <Typography variant="caption" color="gray" className="mt-0.5">{item.phoneNumber || 'No phone number'}</Typography>
                                 </View>
-                                <View className="flex-row items-center">
-                                    {item.phoneNumber && (
-                                        <IconButton
-                                            icon={<Call size={18} color="#22c55e" variant="Bold" />}
-                                            onPress={() => handleCall(item.phoneNumber || null)}
-                                            variant="ghost"
-                                        />
-                                    )}
+                                {item.phoneNumber && (
+                                    <TouchableOpacity
+                                        className={`w-10 h-10 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-green-50'}`}
+                                        onPress={() => handleCall(item.phoneNumber || null)}
+                                    >
+                                        <Call size={18} color="#22c55e" variant="Bold" />
+                                    </TouchableOpacity>
+                                )}
+                                <View className="ml-2">
+                                    <ArrowRight size={16} color="#D1D1D6" />
                                 </View>
-                            </View>
+                            </Surface>
                         </Pressable>
                     </Swipeable>
                 )}
                 ListEmptyComponent={
                     !loading ? (
                         <View className="items-center justify-center py-20 px-10">
-                            <Surface variant="muted" className="w-24 h-24 items-center justify-center mb-6" rounded="full">
-                                <User size={40} color="#9CA3AF" variant="Bulk" />
+                            <Surface variant="muted" className="w-20 h-20 items-center justify-center mb-6" rounded="full">
+                                <User size={32} color="#8E8E93" variant="Bulk" />
                             </Surface>
-                            <Typography variant="h3" weight="bold" className="text-center mb-2">No customers yet</Typography>
-                            <Typography variant="body" color="gray" className="text-center leading-relaxed">
-                                {search
-                                    ? `We couldn't find any customers matching "${search}".`
-                                    : "Start building your customer base by adding your first client."}
+                            <Typography variant="h3" weight="bold" className="text-center mb-2">No customers</Typography>
+                            <Typography variant="body" color="gray" className="text-center">
+                                {search ? "Try a different search term" : "Add your first client to get started"}
                             </Typography>
-                            {!search && (
-                                <View className="flex-row gap-3 mt-8">
-                                    <Button
-                                        onPress={() => router.push('/(tabs)/customers/new')}
-                                        className={`h-16 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}
-                                        variant="ghost"
-                                    >
-                                        Add New
-                                    </Button>
-                                </View>
-                            )}
                         </View>
                     ) : null
                 }
             />
 
-            {/* Sort Modal */}
-            <Modal
+            <ActionSheet
                 visible={showSortModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setShowSortModal(false)}
-            >
-                <Pressable
-                    className="flex-1 bg-black/50 justify-end"
-                    onPress={() => setShowSortModal(false)}
-                >
-                    <Pressable onPress={() => { }} className={`${isDark ? 'bg-surface-dark' : 'bg-white'} rounded-t-3xl p-6`}>
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Typography variant="h3" weight="bold">Sort By</Typography>
-                            <IconButton
-                                icon={<CloseCircle size={24} color="#9CA3AF" variant="Bold" />}
-                                variant="ghost"
-                                onPress={() => setShowSortModal(false)}
-                            />
-                        </View>
-                        <View className="gap-2">
-                            {SORT_OPTIONS.map((option) => (
-                                <Pressable
-                                    key={option.key}
-                                    onPress={() => {
-                                        setSortBy(option.key);
-                                        setShowSortModal(false);
-                                    }}
-                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? (isDark ? 'bg-dark-700' : 'bg-lavender') : (isDark ? 'bg-dark-800' : 'bg-gray-50')}`}
-                                >
-                                    <Typography
-                                        weight={sortBy === option.key ? 'bold' : 'medium'}
-                                        color={sortBy === option.key ? 'primary' : 'black'}
-                                    >
-                                        {option.label}
-                                    </Typography>
-                                    {sortBy === option.key && (
-                                        <TickCircle size={20} color="#4F46E5" variant="Bold" />
-                                    )}
-                                </Pressable>
-                            ))}
-                        </View>
-                        <View className="h-8" />
-                    </Pressable>
-                </Pressable>
-            </Modal>
+                onClose={() => setShowSortModal(false)}
+                title="Sort By"
+                options={SORT_OPTIONS}
+                selectedValue={sortBy}
+                onSelect={setSortBy}
+            />
         </View>
     );
 }

@@ -76,7 +76,7 @@ export default function OrderDetail() {
         return (
             <View className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
                 <Typography variant="body" color="gray">Order not found</Typography>
-                <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
+                <Button onPress={() => router.replace('/(tabs)/orders')} className="mt-4">Go Back</Button>
             </View>
         );
     }
@@ -194,7 +194,7 @@ export default function OrderDetail() {
             <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => isEditing ? setIsEditing(false) : router.back()}
+                    onPress={() => isEditing ? setIsEditing(false) : router.replace('/(tabs)/orders')}
                     variant="ghost"
                     className="-ml-2"
                 />
@@ -243,9 +243,9 @@ export default function OrderDetail() {
                                         <Typography weight="bold">{customer.fullName || 'Unknown'}</Typography>
                                         <Typography variant="small" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
                                     </View>
-                                    <IconButton 
-                                        icon={<Call size={20} color={isDark ? "white" : "black"} />} 
-                                        variant="ghost" 
+                                    <IconButton
+                                        icon={<Call size={20} color={isDark ? "white" : "black"} />}
+                                        variant="ghost"
                                         onPress={() => {
                                             if (customer.phoneNumber) {
                                                 Linking.openURL(`tel:${customer.phoneNumber}`);

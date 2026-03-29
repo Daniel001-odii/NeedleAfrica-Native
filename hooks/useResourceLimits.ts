@@ -38,10 +38,10 @@ interface UseResourceLimitsReturn {
 }
 
 const LIMITS: Record<ResourceType, number> = {
-  orders: 5,
-  customers: 5,
-  templates: 3,
-  invoices: 5,
+  orders: 10,
+  customers: 10,
+  templates: 5,
+  invoices: 10,
 };
 
 export function useResourceLimits(): UseResourceLimitsReturn {

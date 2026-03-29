@@ -13,6 +13,7 @@ import { useCustomers } from '../../hooks/useCustomers';
 import { useTheme } from '../../contexts/ThemeContext';
 import { database } from '../../database/watermelon';
 import Svg, { Path } from 'react-native-svg';
+import { OnboardingChecklist } from '../../components/OnboardingChecklist';
 
 export default function Home() {
     const { user } = useAuth();
@@ -174,6 +175,10 @@ export default function Home() {
                                 </View>
                             </View>
                         </View>
+
+                        {!user?.onboardingCompleted && (
+                            <OnboardingChecklist />
+                        )}
 
                         {/* Quick Access */}
                         <View className="mb-8">

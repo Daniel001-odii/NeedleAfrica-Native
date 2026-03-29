@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, Pressable, TouchableOpacity } from 'react-native';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useSync } from '../../../hooks/useSync';
-import { ArrowLeft, User, Call, InfoCircle } from 'iconsax-react-native';
+import { User, Call, InfoCircle, ArrowLeft } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
-import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
+import { IconButton } from '../../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
 import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import PhoneInput from 'react-phone-number-input/react-native-input';
+import { useDatabase } from '@nozbe/watermelondb/hooks';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useMeasurementTemplates, MeasurementTemplate } from '../../../hooks/useMeasurementTemplates';
+import Measurement from '../../../database/watermelon/models/Measurement';
+import { DocumentText, Add, CloseSquare } from 'iconsax-react-native';
 
 export default function NewCustomer() {
     const { isDark } = useTheme();
@@ -28,12 +33,13 @@ export default function NewCustomer() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 5,
+        limit: 10,
         message: '',
         isAtLimit: false,
         isNearLimit: false,
     });
     const [proceedAnyway, setProceedAnyway] = useState(false);
+    const [wantsMeasurements, setWantsMeasurements] = useState(false);
 
     const { addCustomer } = useCustomers();
     const { sync: performSync, isOnline } = useSync();
@@ -42,19 +48,29 @@ export default function NewCustomer() {
     const { isFree } = useSubscription();
     const router = useRouter();
     const posthog = usePostHog();
+    const database = useDatabase();
+    const { user } = useAuth();
+    const { templates } = useMeasurementTemplates();
 
-    const handleSubmit = async () => {
+    const [selectedTemplate, setSelectedTemplate] = useState<MeasurementTemplate | null>(null);
+    const [mTitle, setMTitle] = useState('');
+    const [mValues, setMValues] = useState<Record<string, string>>({});
+    const unit = user?.measurementUnit || 'inch';
+
+    const handleSubmit = async (addMeasurementsFlag?: boolean | any) => {
+        const _wantsMeasurements = typeof addMeasurementsFlag === 'boolean' ? addMeasurementsFlag : wantsMeasurements;
+        setWantsMeasurements(_wantsMeasurements);
+
         if (!fullName.trim()) {
             confirm({
-                title: 'Error',
-                message: 'Full name is required',
+                title: 'Required Field',
+                message: 'Please enter the customer\'s full name.',
                 confirmText: 'OK',
                 onConfirm: () => { }
             });
             return;
         }
 
-        // Check resource limits for free tier
         if (isFree) {
             const limitCheck = canCreate('customers');
             if (!limitCheck.allowed && !proceedAnyway) {
@@ -66,172 +82,223 @@ export default function NewCustomer() {
 
         try {
             setIsSubmitting(true);
-            // OPTIMISTIC UPDATE: Write to local DB and redirect immediately
-            await addCustomer({
-                fullName,
-                phoneNumber,
-                gender,
-                notes
-            });
+            const customer = await addCustomer({ fullName, phoneNumber, gender, notes });
+            
+            // Save measurements if template selected
+            if (selectedTemplate && customer?.id && user?.id) {
+                const hasValues = Object.values(mValues).some(v => v.trim().length > 0);
+                if (hasValues) {
+                    await Measurement.createSyncable(database, user.id, customer.id, {
+                        title: mTitle || selectedTemplate.name || 'Initial Measurements',
+                        values: mValues
+                    });
+                    posthog.capture('measurement_captured', { 
+                        context: 'customer_creation',
+                        template_name: selectedTemplate.name || 'Unknown'
+                    });
+                }
+            }
 
-            // Track customer creation
-            posthog.capture('customer_created', {
-                gender,
-                has_phone: !!phoneNumber,
-                has_notes: !!notes
-            });
-
-            // Trigger sync in background (fire and forget)
+            posthog.capture('customer_created', { gender, has_phone: !!phoneNumber });
             performSync().catch(console.error);
-
-            // Redirect to customers list
+            Toast.show({ type: 'success', text1: 'Saved', text2: 'Customer and measurements added' });
+            
             router.replace('/(tabs)/customers/');
-
-            Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Customer created locally'
-            });
         } catch (error) {
-            confirm({
-                title: 'Error',
-                message: 'Failed to save customer',
-                confirmText: 'OK',
-                onConfirm: () => { }
+            confirm({ 
+                title: 'Error', 
+                message: 'Failed to save customer', 
+                confirmText: 'OK', 
+                onConfirm: () => { } 
             });
         } finally {
             setIsSubmitting(false);
+            setProceedAnyway(false); // reset state after submission
         }
     };
 
+    const SectionLabel = ({ children }: { children: string }) => (
+        <Typography variant="caption" color="gray" weight="bold" className="uppercase ml-4 mb-2 tracking-widest opacity-60">
+            {children}
+        </Typography>
+    );
+
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-            {/* Header */}
-            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                <IconButton
-                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => {
-                        if (router.canGoBack()) {
-                            router.back();
-                        } else {
-                            router.replace('/(tabs)/customers/');
-                        }
-                    }}
-                    variant="ghost"
-                    className="-ml-2"
-                />
-                <Typography variant="h3" weight="bold" className="ml-2">New Customer</Typography>
+        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+            {/* Standard Refined Header */}
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+                <View className="flex-row items-center">
+                    <IconButton
+                        icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
+                        onPress={() => router.back()}
+                        variant="ghost"
+                    />
+                    <Typography variant="h3" weight="bold" className="ml-2">New Customer</Typography>
+                </View>
+                <TouchableOpacity onPress={() => handleSubmit(false)} disabled={isSubmitting}>
+                    <Typography color="primary" weight="bold" className={isSubmitting ? 'opacity-50' : ''}>
+                        {isSubmitting ? '...' : 'Create'}
+                    </Typography>
+                </TouchableOpacity>
             </View>
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                <ScrollView
-                    contentContainerClassName="p-6 pb-20"
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <Typography variant="body" weight="bold" className="mb-6">Customer Details</Typography>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+                <ScrollView contentContainerClassName="py-6 px-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-                    {/* Name Input */}
-                    <View className="mb-6">
-                        <View className="flex-row items-center mb-2 ml-1">
-                            <User size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Full Name *</Typography>
-                        </View>
-                        <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                    {/* Basic Info Section */}
+                    <SectionLabel>Personal Information</SectionLabel>
+                    <Surface variant="white" rounded="2xl" className="mb-6 overflow-hidden">
+                        <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-50'}`}>
+                            <User size={18} color="#94a3b8" variant="Bulk" />
                             <TextInput
-                                className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                placeholder="E.g. Jane Doe"
-                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
+                                className={`flex-1 h-14 ml-3 font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                placeholder="Full Name"
+                                placeholderTextColor="#94a3b8"
                                 value={fullName}
                                 onChangeText={setFullName}
                             />
-                        </Surface>
-                    </View>
-
-                    {/* Phone Input */}
-                    <View className="mb-6">
-                        <View className="flex-row items-center mb-2 ml-1">
-                            <Call size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Phone Number</Typography>
                         </View>
-                        <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
-                            <PhoneInput
-                                style={{ flex: 1, color: isDark ? 'white' : 'black', fontWeight: 'bold' }}
-                                placeholder="+123 800 000 0000"
-                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
-                                defaultCountry="NG"
-                                value={phoneNumber}
-                                onChange={(val) => setPhoneNumber(val || '')}
-                            />
-                        </Surface>
-                    </View>
+                        <View className="flex-row items-center px-4">
+                            <Call size={18} color="#94a3b8" variant="Bulk" />
+                            <View className="flex-1 ml-3 h-14 justify-center">
+                                <PhoneInput
+                                    style={{ color: isDark ? 'white' : 'black', fontWeight: '600' }}
+                                    placeholder="Phone Number"
+                                    placeholderTextColor="#94a3b8"
+                                    defaultCountry="NG"
+                                    value={phoneNumber}
+                                    onChange={(val) => setPhoneNumber(val || '')}
+                                />
+                            </View>
+                        </View>
+                    </Surface>
 
-                    {/* Gender Selection */}
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-4 uppercase tracking-widest">Gender</Typography>
-                        <View className="flex-row flex-wrap gap-3">
-                            {['female', 'male', 'other'].map((g) => {
-                                const isActive = gender === g;
-                                return (
-                                    <TouchableOpacity
-                                        key={g}
-                                        onPress={() => setGender(g)}
-                                        activeOpacity={0.7}
-                                        className={`px-8 py-3 rounded-full border ${isActive
-                                            ? 'bg-blue-500 border-blue-500'
-                                            : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
-                                            }`}
+                    {/* Gender Section (Segmented Control Style) */}
+                    <SectionLabel>Gender</SectionLabel>
+                    <Surface variant="white" rounded="2xl" className="p-1 mb-6 flex-row">
+                        {['female', 'male', 'other'].map((g) => {
+                            const isActive = gender === g;
+                            return (
+                                <TouchableOpacity
+                                    key={g}
+                                    onPress={() => setGender(g)}
+                                    className={`flex-1 py-2.5 rounded-xl items-center ${isActive ? (isDark ? 'bg-zinc-700' : 'bg-white shadow-sm border border-zinc-100') : ''}`}
+                                >
+                                    <Typography
+                                        variant="small"
+                                        weight={isActive ? "bold" : "medium"}
+                                        className={`capitalize ${isActive ? (isDark ? 'text-white' : 'text-brand-primary') : 'text-zinc-400'}`}
                                     >
-                                        <Typography
-                                            variant="small"
-                                            weight="bold"
-                                            color={isActive ? 'white' : (isDark ? 'gray' : 'black')}
-                                            className="capitalize"
-                                        >
-                                            {g}
-                                        </Typography>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
+                                        {g}
+                                    </Typography>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </Surface>
+
+                    {/* Measurements Section */}
+                    <View className="flex-row items-center justify-between ml-4 mb-2 pr-4">
+                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest opacity-60">
+                            Measurements (Optional)
+                        </Typography>
+                        {selectedTemplate && (
+                            <TouchableOpacity onPress={() => { setSelectedTemplate(null); setMValues({}); }}>
+                                <Typography variant="caption" color="red" weight="bold">Clear</Typography>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
-                    {/* Notes Input */}
-                    <View className="mb-10">
-                        <View className="flex-row items-center mb-2 ml-1">
-                            <InfoCircle size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                            <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase">Additional Notes</Typography>
-                        </View>
-                        <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} min-h-[140px]`}>
+                    {!selectedTemplate ? (
+                        <Surface variant="white" rounded="2xl" className="mb-6 p-1">
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-1">
+                                {templates.map((template) => (
+                                    <TouchableOpacity
+                                        key={template.id}
+                                        onPress={() => {
+                                            setSelectedTemplate(template);
+                                            setMTitle(template.name || '');
+                                            const initialValues: Record<string, string> = {};
+                                            template.fields.forEach((f: string) => initialValues[f] = '');
+                                            setMValues(initialValues);
+                                        }}
+                                        className={`mr-2 px-6 py-4 rounded-xl items-center justify-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}
+                                    >
+                                        <DocumentText size={18} color={isDark ? '#94a3b8' : '#64748b'} variant="Bulk" />
+                                        <Typography variant="small" weight="bold" className="mt-2">{template.name}</Typography>
+                                    </TouchableOpacity>
+                                ))}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/measurement-templates/create')}
+                                    className={`px-6 py-4 rounded-xl items-center justify-center border border-dashed ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}
+                                >
+                                    <Add size={18} color="#94a3b8" />
+                                    <Typography variant="small" color="gray" className="mt-2">New Template</Typography>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </Surface>
+                    ) : (
+                        <Surface variant="white" rounded="2xl" className="p-4 mb-6">
+                            <View className="flex-row items-center mb-4">
+                                <DocumentText size={20} color="#3b82f6" variant="Bulk" />
+                                <TextInput
+                                    className={`flex-1 ml-3 font-bold text-lg ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                    placeholder="Measurement Title"
+                                    value={mTitle}
+                                    onChangeText={setMTitle}
+                                />
+                            </View>
+                            
+                            <View className="flex-row flex-wrap gap-3">
+                                {selectedTemplate.fields.map((field: string) => (
+                                    <View key={field} style={{ width: '47%' }} className={`p-3 rounded-xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-zinc-100'}`}>
+                                        <Typography variant="caption" color="gray" weight="bold" className="mb-1 uppercase text-[10px]">{field} ({unit})</Typography>
+                                        <TextInput
+                                            className={`font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                            placeholder="0"
+                                            placeholderTextColor="#94a3b8"
+                                            keyboardType="numeric"
+                                            value={mValues[field]}
+                                            onChangeText={(val) => setMValues(prev => ({ ...prev, [field]: val }))}
+                                        />
+                                    </View>
+                                ))}
+                            </View>
+                        </Surface>
+                    )}
+
+                    {/* Notes Section */}
+                    <SectionLabel>Notes</SectionLabel>
+                    <Surface variant="white" rounded="2xl" className="p-4 mb-8">
+                        <View className="flex-row items-start">
+                            <InfoCircle size={18} color="#94a3b8" variant="Bulk" className="mt-1" />
                             <TextInput
-                                className={`font-medium flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
-                                placeholder="Add measurements or style preferences..."
-                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
+                                className={`flex-1 ml-3 min-h-[120px] font-medium ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                placeholder="Any extra preferences..."
+                                placeholderTextColor="#94a3b8"
                                 value={notes}
                                 onChangeText={setNotes}
                                 multiline
                                 textAlignVertical="top"
                             />
-                        </Surface>
-                    </View>
+                        </View>
+                    </Surface>
 
-                    {/* Footer Action */}
+                    {/* Primary Action Button (Standard Bottom Placement) */}
                     <Button
-                        onPress={handleSubmit}
+                        onPress={() => handleSubmit(false)}
                         isLoading={isSubmitting}
-                        className={`h-16 rounded-full border-0 shadow-lg bg-blue-500 text-white shadow-none`}
+                        disabled={isSubmitting}
+                        style={{ borderWidth: 0 }}
+                        className="h-16 rounded-full shadow-none bg-blue-500 border-none mt-4"
+                        textClassName="font-bold text-white text-lg"
                     >
-                        Create Customer
+                        Save Customer
                     </Button>
                 </ScrollView>
             </KeyboardAvoidingView>
 
             <ResourceLimitModal
                 visible={showLimitModal}
-                // visible={true}
                 onClose={() => setShowLimitModal(false)}
                 onUpgrade={() => {
                     setShowLimitModal(false);
@@ -240,7 +307,7 @@ export default function NewCustomer() {
                 onContinueAnyway={() => {
                     setShowLimitModal(false);
                     setProceedAnyway(true);
-                    setTimeout(() => handleSubmit(), 100);
+                    setTimeout(() => handleSubmit(wantsMeasurements), 100);
                 }}
                 resource="customers"
                 currentCount={limitModalData.currentCount}

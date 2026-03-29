@@ -1,8 +1,8 @@
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, Pressable, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, TickCircle, CloseCircle, ShoppingCart, Box } from 'iconsax-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, ShoppingCart, Box, ArrowRight2 } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -14,9 +14,7 @@ import { useCustomers } from '../../../hooks/useCustomers';
 import { useSync } from '../../../hooks/useSync';
 import { useCustomerMeasurements } from '../../../hooks/useMeasurement';
 import { useOrders } from '../../../hooks/useOrders';
-import { Add } from 'iconsax-react-native';
 import Toast from 'react-native-toast-message';
-import { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 
 export default function CustomerDetail() {
@@ -31,8 +29,6 @@ export default function CustomerDetail() {
     const { orders, loading: loadingOrders } = useOrders(id as string);
 
     const [isEditing, setIsEditing] = useState(false);
-
-    // Find customer from existing list
     const customer = customers.find(c => c.id === id);
 
     const [fullName, setFullName] = useState('');
@@ -49,401 +45,250 @@ export default function CustomerDetail() {
         }
     }, [customer, isEditing]);
 
-    if (!customer) {
-        return (
-            <View className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-                <Typography variant="body" color="gray">Customer not found</Typography>
-                <Button onPress={() => router.back()} className="mt-4">Go Back</Button>
-            </View>
-        );
-    }
+    if (!customer) return null;
 
     const handleUpdate = async () => {
         if (!fullName.trim()) {
-            Toast.show({
-                type: 'error',
-                text1: 'Required',
-                text2: 'Customer name is required'
-            });
+            Toast.show({ type: 'error', text1: 'Name is required' });
             return;
         }
-
-        try {
-            // OPTIMISTIC UPDATE: Write to local DB and close edit mode immediately
-            updateCustomer(id as string, {
-                fullName,
-                phoneNumber,
-                gender,
-                notes
-            });
-
-            setIsEditing(false);
-
-            Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Saved to device'
-            });
-
-            // Trigger sync in background
-            performSync().catch(console.error);
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Update Failed',
-                text2: 'Could not update customer locally'
-            });
-        }
+        updateCustomer(id as string, { fullName, phoneNumber, gender, notes });
+        setIsEditing(false);
+        performSync().catch(console.error);
     };
 
     const handleDelete = () => {
         confirm({
             title: 'Delete Customer',
-            message: 'Are you sure you want to delete this customer? This will also remove all their measurements and orders.',
+            message: 'All measurements and orders for this customer will be permanently removed.',
             confirmText: 'Delete',
             type: 'danger',
             onConfirm: async () => {
-                try {
-                    // OPTIMISTIC DELETE: Remove locally and navigate back immediately
-                    deleteCustomer(id as string);
-
-                    router.back();
-
-                    Toast.show({
-                        type: 'success',
-                        text1: 'Deleted',
-                        text2: 'Removed from device'
-                    });
-
-                    // Trigger sync in background
-                    performSync().catch(console.error);
-                } catch (error) {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Delete Failed',
-                        text2: 'Could not remove customer'
-                    });
-                }
+                deleteCustomer(id as string);
+                router.back();
+                performSync().catch(console.error);
             }
         });
     };
 
-    const initials = (fullName || '??')
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+    const SectionLabel = ({ children, rightAction }: { children: string, rightAction?: React.ReactNode }) => (
+        <View className="flex-row justify-between items-center ml-4 mb-2 mr-4">
+            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest opacity-60">
+                {children}
+            </Typography>
+            {rightAction}
+        </View>
+    );
+
+    const initials = (fullName || '??').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-            {/* Header */}
-            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                <IconButton
-                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => isEditing ? setIsEditing(false) : router.back()}
-                    variant="ghost"
-                    className="-ml-2"
-                />
-                <Typography variant="h3" weight="bold">
-                    {isEditing ? 'Edit Profile' : 'Customer Profile'}
-                </Typography>
-                <View className="flex-row items-center gap-1">
-                    {!isEditing ? (
-                        <IconButton
-                            icon={<Trash size={20} color="#EF4444" variant="Linear" />}
-                            onPress={handleDelete}
-                            variant="ghost"
-                        />
-                    ) : (
-                        <IconButton
-                            icon={<CloseCircle size={20} color="#EF4444" />}
-                            onPress={() => setIsEditing(false)}
-                            variant="ghost"
-                            className="-mr-2"
-                        />
-                    )}
+        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+            {/* Standard Refined Header */}
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+                <View className="flex-row items-center">
+                    <IconButton
+                        icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
+                        onPress={() => isEditing ? setIsEditing(false) : router.back()}
+                        variant="ghost"
+                    />
+                    <Typography variant="h3" weight="bold" className="ml-2">
+                        {isEditing ? 'Edit Profile' : 'Customer'}
+                    </Typography>
                 </View>
+                <TouchableOpacity onPress={() => isEditing ? handleUpdate() : setIsEditing(true)}>
+                    <Typography color="primary" weight="bold">
+                        {isEditing ? 'Done' : 'Edit'}
+                    </Typography>
+                </TouchableOpacity>
             </View>
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                <ScrollView
-                    contentContainerClassName="p-6 pb-20"
-                    showsVerticalScrollIndicator={false}
-                >
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+                <ScrollView contentContainerClassName="py-6" showsVerticalScrollIndicator={false}>
                     {!isEditing ? (
                         <>
-                            {/* View Mode: Compact Social Media Style Header */}
-                            <View className="py-2 mb-4">
-                                <View className="flex-row items-center mb-6">
-                                    {/* Smaller Avatar */}
-                                    <View className={`w-16 h-16 items-center justify-center rounded-full ${isDark ? 'bg-indigo-900/30' : 'bg-blue-50'}`}>
-                                        <Typography variant="h2" weight="bold" className={isDark ? 'text-indigo-300' : 'text-blue-600'}>
-                                            {initials}
-                                        </Typography>
+                            {/* Profile Header Row */}
+                            <View className="flex-row items-start mb-8 px-4">
+                                <View className={`w-20 h-20 items-center justify-center rounded-full mr-5 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
+                                    <Typography weight="bold" color="primary" className="text-2xl">{initials}</Typography>
+                                </View>
+                                <View className="flex-1">
+                                    <View>
+                                        <Typography variant="h2" weight="bold">{customer.fullName}</Typography>
+                                        <Typography color="gray" variant="body" className="capitalize -mt-1 font-medium">{customer.gender || 'Client'}</Typography>
                                     </View>
 
-                                    <View className="ml-4 flex-1">
-                                        {/* Name and Pill-style gender */}
-                                        <Typography variant="h2" weight="bold" className="text-xl mb-1.5">{customer?.fullName}</Typography>
-                                        <View className={`px-3 py-0.5 self-start rounded-full ${isDark ? 'bg-indigo-400/10' : 'bg-blue-50'}`}>
-                                            <Typography variant="caption" weight="bold" color="primary" className="capitalize">{customer?.gender || 'Customer'}</Typography>
-                                        </View>
-                                    </View>
-
-                                    {/* Edit action remains in header for quick access */}
-                                    <View className="flex-row gap-2">
+                                    {/* Action Chips */}
+                                    <View className="flex-row mt-4 gap-3">
                                         <TouchableOpacity
-                                            onPress={() => setIsEditing(true)}
-                                            className={`w-10 h-10 items-center justify-center rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'}`}
+                                            onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
+                                            className={`flex-row items-center px-4 py-2 rounded-full ${isDark ? 'bg-primary/20' : 'bg-primary/10'}`}
                                         >
-                                            <Edit2 size={18} color={isDark ? "white" : "black"} variant="Bold" />
+                                            <Call size={16} color={isDark ? "white" : "#6366f1"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" color="primary" className="ml-2">Call</Typography>
                                         </TouchableOpacity>
-                                    </View>
-                                </View>
 
-                                {/* Conspicuous Call & Message row */}
-                                <View className="flex-row gap-3 mb-6">
-                                    <TouchableOpacity
-                                        onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
-                                        className={`flex-1 flex-row h-12 items-center justify-center rounded-2xl bg-blue-500`}
-                                    >
-                                        <Call size={20} color="white" variant="Bold" />
-                                        <Typography variant="body" weight="bold" color="white" className="ml-2">Call Client</Typography>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
-                                        className={`flex-1 flex-row h-12 items-center justify-center rounded-2xl ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'} border border-indigo-100 dark:border-indigo-800`}
-                                    >
-                                        <Message size={20} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bold" />
-                                        <Typography variant="body" weight="bold" color={isDark ? "white" : "primary"} className="ml-2">Message</Typography>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Stats Row: Measurements, Orders - More Compact */}
-                                <View className="flex-row items-center border-y border-gray-50 dark:border-border-dark py-4 w-full">
-                                    <View className="flex-1 flex-row justify-center items-center border-r border-gray-50 dark:border-border-dark">
-                                        <Typography variant="body" weight="bold">{measurements.length}</Typography>
-                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest text-[9px] ml-2">Measurements</Typography>
-                                    </View>
-                                    <View className="flex-1 flex-row justify-center items-center">
-                                        <Typography variant="body" weight="bold">{orders.length}</Typography>
-                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest text-[9px] ml-2">Orders</Typography>
+                                        <TouchableOpacity
+                                            onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
+                                            className={`flex-row items-center px-4 py-2 rounded-full ${isDark ? 'bg-green-950/30' : 'bg-green-50'}`}
+                                        >
+                                            <Message size={16} color="#22c55e" variant="Bold" />
+                                            <Typography variant="small" weight="bold" className="ml-2 text-green-600">Message</Typography>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
 
-                            {/* Info Sections */}
-                            <View className="gap-4">
-                                <View className="mb-8">
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-2 uppercase ml-1 tracking-widest">About</Typography>
-                                    <View className="px-1">
-                                        <Typography variant="body" weight="medium" className="leading-relaxed">
-                                            {customer?.notes || "No additional information recorded for this customer yet."}
-                                        </Typography>
-                                        <View className="flex-row items-center mt-6">
-                                            <Call size={14} color="#9CA3AF" variant="Linear" />
-                                            <Typography variant="small" color="gray" className="ml-2 font-bold">{customer?.phoneNumber || 'No phone number'}</Typography>
-                                        </View>
+                            {/* Stats Summary */}
+                            <View className="px-4 mb-8">
+                                <Surface variant="white" className="flex-row py-4" rounded="2xl">
+                                    <View className="flex-1 items-center border-r border-zinc-100">
+                                        <Typography variant="h3" weight="bold">{measurements.length}</Typography>
+                                        <Typography variant="caption" color="gray">Measurements</Typography>
                                     </View>
-                                </View>
-
-                                <View>
-                                    <View className="flex-row justify-between items-center mb-4 mt-2 ml-1">
-                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">Measurements</Typography>
-                                        <TouchableOpacity
-                                            onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}
-                                            className="px-4 py-1.5 rounded-full bg-blue-500"
-                                        >
-                                            <Typography variant="caption" weight="bold" color="white">Add New</Typography>
-                                        </TouchableOpacity>
+                                    <View className="flex-1 items-center">
+                                        <Typography variant="h3" weight="bold">{orders.length}</Typography>
+                                        <Typography variant="caption" color="gray">Orders</Typography>
                                     </View>
+                                </Surface>
+                            </View>
 
-                                    {loadingMeasurements ? (
-                                        <Typography color="gray" className="text-center py-4">Loading measurements...</Typography>
-                                    ) : measurements.length === 0 ? (
-                                        <Surface variant="muted" className={`p-6 items-center justify-center border border-dashed ${isDark ? 'bg-surface-muted-dark border-gray-700' : 'border-gray-300'}`} rounded="2xl">
-                                            <Typography color="gray" variant="small" className="text-center mb-2">No measurements added yet.</Typography>
-                                            <Typography color="gray" variant="small" className="text-center">Use templates to quickly add measurements.</Typography>
-                                        </Surface>
+                            {/* Notes Section */}
+                            <SectionLabel>About & Notes</SectionLabel>
+                            <View className="px-4 mb-8">
+                                <Surface variant="white" className="p-4" rounded="2xl">
+                                    <Typography className="text-zinc-600 leading-6">
+                                        {customer.notes || "No additional notes for this customer."}
+                                    </Typography>
+                                </Surface>
+                            </View>
+
+                            {/* Measurements Section */}
+                            <SectionLabel
+                                rightAction={
+                                    <TouchableOpacity onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}>
+                                        <Typography variant="small" weight="bold" color="primary">Add New</Typography>
+                                    </TouchableOpacity>
+                                }
+                            >
+                                Measurements
+                            </SectionLabel>
+                            <View className="px-4 mb-8">
+                                <Surface variant="white" rounded="2xl" className="overflow-hidden">
+                                    {measurements.length === 0 ? (
+                                        <View className="p-8 items-center"><Typography color="gray" variant="small">No measurements yet</Typography></View>
                                     ) : (
-                                        <View className="gap-3">
-                                            {measurements.map(m => (
-                                                <Pressable key={m.id} onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: customer?.id } })}>
-                                                    <View className={`py-4 border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                                                        <View className="flex-row justify-between items-center mb-2">
-                                                            <Typography variant="body" weight="bold">{m.title}</Typography>
-                                                            <Typography variant="caption" color="gray">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
-                                                        </View>
-                                                        <View className="flex-row flex-wrap gap-x-4 gap-y-1">
-                                                            {Object.entries(m.values).map(([key, value]) => (
-                                                                <Typography key={key} variant="caption" color="gray">
-                                                                    <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-blue-600'}>{key}: </Typography>
-                                                                    <Typography weight="medium" className={isDark ? 'text-gray-300' : 'text-gray-700'}>{value as any}{user?.measurementUnit || 'in'}</Typography>
-                                                                </Typography>
-                                                            )).slice(0, 6)}
-                                                            {Object.entries(m.values).length > 6 && (
-                                                                <Typography variant="caption" color="gray">...</Typography>
-                                                            )}
-                                                        </View>
-                                                    </View>
-                                                </Pressable>
-                                            ))}
-                                        </View>
+                                        measurements.map((m, idx) => (
+                                            <Pressable
+                                                key={m.id}
+                                                onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: id } })}
+                                                className={`p-4 flex-row items-center justify-between ${idx !== measurements.length - 1 ? 'border-b border-zinc-50' : ''}`}
+                                            >
+                                                <View>
+                                                    <Typography weight="bold">{m.title}</Typography>
+                                                    <Typography variant="caption" color="gray">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
+                                                </View>
+                                                <ArrowRight2 size={18} color="#D1D1D6" />
+                                            </Pressable>
+                                        ))
                                     )}
-                                </View>
+                                </Surface>
+                            </View>
 
-                                {/* Customer Orders Section */}
-                                <View>
-                                    <View className="flex-row justify-between items-center mb-2 ml-1">
-                                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">Recent Orders</Typography>
-                                    </View>
-
-                                    {loadingOrders ? (
-                                        <Typography color="gray" className="text-center py-4">Loading orders...</Typography>
-                                    ) : orders.length === 0 ? (
-                                        <Surface variant="muted" className={`p-6 items-center justify-center border border-dashed ${isDark ? 'bg-surface-muted-dark border-gray-700' : 'border-gray-300'}`} rounded="2xl">
-                                            <Typography color="gray" variant="small" className="text-center mb-2">No orders created yet.</Typography>
-                                            <Typography color="gray" variant="small" className="text-center">Create an order to track their outfits.</Typography>
-                                        </Surface>
+                            {/* Recent Orders Section */}
+                            <SectionLabel>Recent Orders</SectionLabel>
+                            <View className="px-4 mb-8">
+                                <Surface variant="white" rounded="2xl" className="overflow-hidden">
+                                    {orders.length === 0 ? (
+                                        <View className="p-8 items-center"><Typography color="gray" variant="small">No orders yet</Typography></View>
                                     ) : (
-                                        <View className="gap-3">
-                                            {orders.map(order => (
-                                                <Pressable key={order.id} onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                                    <View className={`py-4 border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                                                        <View className="flex-row justify-between items-center">
-                                                            <View className="flex-row items-center flex-1">
-                                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/20' : 'bg-indigo-50'}`}>
-                                                                    <Box size={20} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bulk" />
-                                                                </View>
-                                                                <View>
-                                                                    <Typography variant="body" weight="bold">{order.styleName}</Typography>
-                                                                    <Typography variant="caption" color="gray">
-                                                                        {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
-                                                                    </Typography>
-                                                                </View>
-                                                            </View>
-                                                            <View
-                                                                className={`px-3 py-1 rounded-full ${order.status === 'DELIVERED'
-                                                                    ? (isDark ? 'bg-green-900/20' : 'bg-soft-green')
-                                                                    : (isDark ? 'bg-orange-900/20' : 'bg-soft-peach')}`}
-                                                            >
-                                                                <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-600' : (isDark ? 'text-orange-400' : 'text-orange-700')}>
-                                                                    {order.status}
-                                                                </Typography>
-                                                            </View>
-                                                        </View>
+                                        orders.slice(0, 3).map((order, idx) => (
+                                            <Pressable
+                                                key={order.id}
+                                                onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}
+                                                className={`p-4 flex-row items-center justify-between ${idx !== orders.length - 1 ? 'border-b border-zinc-50' : ''}`}
+                                            >
+                                                <View className="flex-row items-center">
+                                                    <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${order.status === 'DELIVERED' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                                                        <Box size={16} color={order.status === 'DELIVERED' ? '#22c55e' : '#f97316'} variant="Bulk" />
                                                     </View>
-                                                </Pressable>
-                                            ))}
-                                        </View>
+                                                    <View>
+                                                        <Typography weight="bold" variant="small">{order.styleName}</Typography>
+                                                        <Typography variant="caption" color="gray">{order.status}</Typography>
+                                                    </View>
+                                                </View>
+                                                <ArrowRight2 size={18} color="#D1D1D6" />
+                                            </Pressable>
+                                        ))
                                     )}
-                                </View>
+                                </Surface>
+                            </View>
 
-
-                                {/* Create Order Button */}
-                                <View className="mt-8 border-t border-gray-100 pt-8 dark:border-border-dark">
-                                    <Button
-                                        onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
-                                        className={`h-16 rounded-full bg-blue-600 shadow-none`}
-                                        textClassName="text-white"
-                                        style={{ borderWidth: 0 }}
-                                    >
-                                        <View className="flex-row items-center justify-center">
-                                            <ShoppingCart size={22} color="white" variant="Bold" />
-                                            <Typography variant="body" weight="bold" className="ml-3 text-white">Create New Order</Typography>
-                                        </View>
-                                    </Button>
-                                </View>
+                            <View className="px-4 mb-10">
+                                <Button
+                                    onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
+                                    className="h-16 bg-blue-500 rounded-full border-none"
+                                    textClassName="font-bold"
+                                    style={{ borderWidth: 0 }}
+                                >
+                                    <ShoppingCart size={20} color="white" variant="Bold" />
+                                    <Typography weight="bold" color="white" className="ml-2">Create New Order</Typography>
+                                </Button>
                             </View>
                         </>
                     ) : (
-                        <View className="gap-6">
-                            {/* Edit Mode: Form Fields */}
-                            <View>
-                                <View className="flex-row items-center mb-2 ml-1">
-                                    <User size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                                    <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase tracking-widest">Full Name</Typography>
+                        <View className="px-4">
+                            <SectionLabel>Profile Details</SectionLabel>
+                            <Surface variant="white" rounded="2xl" className="mb-6 overflow-hidden">
+                                <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-50'}`}>
+                                    <Typography weight="medium" className="w-24">Full Name</Typography>
+                                    <TextInput value={fullName} onChangeText={setFullName} className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`} />
                                 </View>
-                                <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`}>
-                                    <TextInput
-                                        className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="E.g. Jane Doe"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={fullName}
-                                        onChangeText={setFullName}
-                                    />
-                                </Surface>
-                            </View>
-
-                            <View>
-                                <View className="flex-row items-center mb-2 ml-1">
-                                    <Call size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                                    <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase tracking-widest">Phone Number</Typography>
+                                <View className="flex-row items-center px-4">
+                                    <Typography weight="medium" className="w-24">Phone</Typography>
+                                    <View className="flex-1 h-14 justify-center">
+                                        <PhoneInput
+                                            style={{ color: isDark ? 'white' : 'black', fontWeight: 'bold' }}
+                                            defaultCountry="NG"
+                                            value={phoneNumber}
+                                            onChange={(val) => setPhoneNumber(val || '')}
+                                        />
+                                    </View>
                                 </View>
-                                <Surface variant="muted" rounded="2xl" className={`px-4 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'} h-16 justify-center`}>
-                                    <PhoneInput
-                                        style={{ flex: 1, color: isDark ? 'white' : 'black', fontWeight: 'bold' }}
-                                        placeholder="+123 800 000 0000"
-                                        placeholderTextColor="#9CA3AF"
-                                        defaultCountry="NG"
-                                        value={phoneNumber}
-                                        onChange={(val) => setPhoneNumber(val || '')}
-                                    />
-                                </Surface>
-                            </View>
+                            </Surface>
 
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-4 uppercase tracking-widest">Gender</Typography>
-                                <View className="flex-row flex-wrap gap-3">
-                                    {['female', 'male', 'other'].map((g) => {
-                                        const isActive = gender === g;
-                                        return (
-                                            <TouchableOpacity
-                                                key={g}
-                                                onPress={() => setGender(g)}
-                                                activeOpacity={0.7}
-                                                className={`px-8 py-3 rounded-full border ${isActive
-                                                    ? 'bg-brand-primary border-brand-primary'
-                                                    : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
-                                                    }`}
-                                            >
-                                                <Typography variant="small" weight="bold" color={isActive ? 'white' : (isDark ? 'gray' : 'black')} className="capitalize">
-                                                    {g}
-                                                </Typography>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
-                            </View>
+                            <SectionLabel>Gender</SectionLabel>
+                            <Surface variant="white" rounded="2xl" className="p-1 mb-6 flex-row">
+                                {['female', 'male', 'other'].map((g) => {
+                                    const isActive = gender === g;
+                                    return (
+                                        <TouchableOpacity
+                                            key={g}
+                                            onPress={() => setGender(g)}
+                                            className={`flex-1 py-2.5 rounded-xl items-center ${isActive ? (isDark ? 'bg-zinc-700' : 'bg-white shadow-sm border border-zinc-100') : ''}`}
+                                        >
+                                            <Typography variant="small" weight={isActive ? "bold" : "medium"} className={`capitalize ${isActive ? (isDark ? 'text-white' : 'text-primary') : 'text-zinc-400'}`}>
+                                                {g}
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </Surface>
 
-                            <View>
-                                <View className="flex-row items-center mb-2 ml-1">
-                                    <InfoCircle size={16} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
-                                    <Typography variant="caption" color="gray" weight="medium" className="ml-2 uppercase tracking-widest">Measurements & Notes</Typography>
-                                </View>
-                                <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'} min-h-[140px]`}>
-                                    <TextInput
-                                        className={`font-medium flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="Add notes..."
-                                        placeholderTextColor="#9CA3AF"
-                                        value={notes}
-                                        onChangeText={setNotes}
-                                        multiline
-                                        textAlignVertical="top"
-                                    />
-                                </Surface>
-                            </View>
+                            <SectionLabel>Notes</SectionLabel>
+                            <Surface variant="white" rounded="2xl" className="p-4 mb-8">
+                                <TextInput
+                                    value={notes}
+                                    onChangeText={setNotes}
+                                    multiline
+                                    placeholder="Add measurements or preferences..."
+                                    className={`min-h-[120px] font-medium ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                    textAlignVertical="top"
+                                />
+                            </Surface>
 
-                            <Button
-                                onPress={handleUpdate}
-                                className={`h-16 rounded-full mt-4 ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                textClassName={isDark ? 'text-dark' : 'text-white'}
-                            >
-                                Save Changes
+                            <Button onPress={handleDelete} variant="ghost" className="h-14 mb-10" textClassName="text-red-500 font-bold">
+                                Delete Customer
                             </Button>
                         </View>
                     )}

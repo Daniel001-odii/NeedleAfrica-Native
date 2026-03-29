@@ -21,6 +21,7 @@ import { OfflineBanner } from '../components/ui/OfflineBanner';
 import { StoreUpdateModal } from '../components/ui/StoreUpdateModal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConfirmProvider } from '../contexts/ConfirmContext';
+import { OnboardingProvider } from '../contexts/OnboardingContext';
 
 console.log('Is WatermelonDB Linked?', !!NativeModules.WMDatabaseBridge);
 
@@ -157,9 +158,11 @@ export default function RootLayout() {
                         <DatabaseProvider database={database}>
                             <AuthProvider>
                                 <ThemeProvider>
-                                    <ConfirmProvider>
-                                        <RootLayoutNav />
-                                    </ConfirmProvider>
+                                        <ConfirmProvider>
+                                            <OnboardingProvider>
+                                                <RootLayoutNav />
+                                            </OnboardingProvider>
+                                        </ConfirmProvider>
                                 </ThemeProvider>
                             </AuthProvider>
                         </DatabaseProvider>

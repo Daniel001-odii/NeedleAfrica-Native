@@ -20,10 +20,10 @@ export function LimitedOfflineBanner() {
 
   // Determine which resource is closest to limit
   const resources = [
-    { key: 'orders', label: 'orders', count: counts.orders, limit: 5 },
-    { key: 'customers', label: 'customers', count: counts.customers, limit: 5 },
-    { key: 'invoices', label: 'invoices', count: counts.invoices, limit: 5 },
-    { key: 'templates', label: 'templates', count: counts.templates, limit: 3 },
+    { key: 'orders', label: 'orders', count: counts.orders, limit: 10 },
+    { key: 'customers', label: 'customers', count: counts.customers, limit: 10 },
+    { key: 'invoices', label: 'invoices', count: counts.invoices, limit: 10 },
+    { key: 'templates', label: 'templates', count: counts.templates, limit: 5 },
   ] as const;
 
   const mostUsed = resources.reduce((prev, current) => {

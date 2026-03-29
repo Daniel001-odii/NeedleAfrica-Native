@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal, FlatList } from 'react-native';
+import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal, FlatList, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Notification, Sms, DirectNotification, MagicStar, Timer1, Ruler, Coin1, Add, SearchNormal1, TickCircle, CloseCircle, Moon, Sun, ArrowLeft2 } from 'iconsax-react-native';
-import * as Notifications from 'expo-notifications';
-import { CURRENCIES, Currency } from '../../../constants/currencies';
+import {
+    ArrowLeft, Sms, DirectNotification, MagicStar, Ruler,
+    Coin1, Add, SearchNormal1, TickCircle, Moon, Sun,
+    ArrowRight2, Monitor, Notification, CalendarTick, CloseCircle
+} from 'iconsax-react-native';
+import { CURRENCIES } from '../../../constants/currencies';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
-import axiosInstance from '../../../lib/axios';
 import Toast from 'react-native-toast-message';
-
-import { NotificationService } from '../../../services/NotificationService';
 import Svg, { Path } from 'react-native-svg';
 
 export default function Preferences() {
@@ -23,21 +23,17 @@ export default function Preferences() {
     const { theme, setTheme, isDark } = useTheme();
     const [isSaving, setIsSaving] = useState(false);
 
-    // Notification states
+    // States
     const [smsAlerts, setSmsAlerts] = useState(user?.smsAlerts ?? true);
     const [emailNotifs, setEmailNotifs] = useState(user?.emailNotifications ?? true);
     const [marketingTips, setMarketingTips] = useState(user?.marketingTips ?? false);
 
-    // Delivery Reminder states
-    // Initialize with '1' if reminderDays is '0', null, or undefined to ensure a default is visible
     const initialReminderValue = (!user?.reminderDays || user.reminderDays === '0') ? '1' : user.reminderDays;
-
-    const [reminderDay, setReminderDay] = useState(initialReminderValue); // '1', '2', '3', 'custom'
+    const [reminderDay, setReminderDay] = useState(initialReminderValue);
     const [customDays, setCustomDays] = useState(!['1', '2', '3'].includes(initialReminderValue) ? initialReminderValue : '');
     const [showCustomInput, setShowCustomInput] = useState(!['1', '2', '3'].includes(initialReminderValue));
 
-    // Personal Setting states
-    const [unit, setUnit] = useState<'cm' | 'inch'>(user?.measurementUnit || 'inch'); // 'cm' or 'inch'
+    const [unit, setUnit] = useState<'cm' | 'inch'>(user?.measurementUnit || 'inch');
     const [currency, setCurrency] = useState(user?.currency || 'NGN');
     const [isCurrencyModalVisible, setIsCurrencyModalVisible] = useState(false);
     const [currencySearchQuery, setCurrencySearchQuery] = useState('');
@@ -56,18 +52,10 @@ export default function Preferences() {
                 currency,
                 theme
             });
-            Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Preferences updated successfully'
-            });
+            Toast.show({ type: 'success', text1: 'Preferences saved' });
             router.back();
         } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Update Failed',
-                text2: error.message || 'Something went wrong'
-            });
+            Toast.show({ type: 'error', text1: 'Error', text2: error.message });
         } finally {
             setIsSaving(false);
         }
@@ -78,348 +66,273 @@ export default function Preferences() {
         c.code.toLowerCase().includes(currencySearchQuery.toLowerCase())
     );
 
-    const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-        setTheme(newTheme);
-    };
-
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
-            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                <IconButton
-                    icon={<ArrowLeft size={20} color={isDark ? 'white' : 'black'} />}
-                    onPress={() => router.back()}
-                    variant="ghost"
-                    className="-ml-2"
-                />
-                <Typography variant="h3" weight="bold" className="ml-2">Preferences</Typography>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+            {/* Header */}
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+                <View className="flex-row items-center">
+                    <IconButton
+                        icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
+                        onPress={() => router.back()}
+                        variant="ghost"
+                    />
+                    <Typography variant="h3" weight="bold" className="ml-2">Preferences</Typography>
+                </View>
+                <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+                    <Typography color="primary" weight="bold" className={isSaving ? 'opacity-50' : ''}>
+                        {isSaving ? 'Saving...' : 'Done'}
+                    </Typography>
+                </TouchableOpacity>
             </View>
 
-            <ScrollView
-                contentContainerClassName="p-6 pb-20"
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-            >
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="p-5 pb-10" keyboardShouldPersistTaps="handled">
 
-                {/* Section: Appearance */}
-                <View className="mb-10">
-                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Appearance</Typography>
-
-                    <View className="mb-4">
-                        <Typography variant="body" weight="semibold" className="mb-4 ml-1">Theme</Typography>
-                        <View className="flex-row gap-3">
-                            {['light', 'dark', 'system'].map((themeOption) => {
-                                const isSelected = theme === themeOption;
-                                return (
-                                    <TouchableOpacity
-                                        key={themeOption}
-                                        onPress={() => handleThemeChange(themeOption as 'light' | 'dark' | 'system')}
-                                        activeOpacity={0.7}
-                                        className="flex-1"
-                                    >
-                                        <Surface
-                                            variant={isSelected ? 'white' : 'muted'}
-                                            rounded="3xl"
-                                            className={`items-center justify-center py-6 border-2 ${isSelected
-                                                ? 'border-blue-500'
-                                                : isDark ? 'border-transparent' : 'border-transparent'
-                                                }`}
-                                        >
-                                            <View className={`w-12 h-12 rounded-2xl items-center justify-center mb-3 ${isSelected ? 'bg-blue-500' : isDark ? 'bg-dark-700' : 'bg-white'}`}>
-                                                {themeOption === 'light' && <Sun size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
-                                                {themeOption === 'dark' && <Moon size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
-                                                {themeOption === 'system' && <MagicStar size={24} color={isSelected ? 'white' : isDark ? '#9CA3AF' : '#4B5563'} variant={isSelected ? 'Bold' : 'Linear'} />}
-                                            </View>
-                                            <Typography
-                                                variant="small"
-                                                weight={isSelected ? 'bold' : 'medium'}
-                                                className={isSelected ? (isDark ? 'text-white' : 'text-blue-500') : 'text-gray-500'}
-                                            >
-                                                {themeOption === 'system' ? 'System' : themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
-                                            </Typography>
-
-                                            {isSelected && (
-                                                <View className="absolute top-2 right-2">
-                                                    <TickCircle size={18} color={isDark ? '#FFFFFF' : '#3B82F6'} variant="Bold" />
-                                                </View>
-                                            )}
-                                        </Surface>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    </View>
+                {/* Appearance Section */}
+                <SectionLabel label="Appearance" isFirst />
+                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                    <ThemeRow
+                        current={theme}
+                        onChange={(t) => setTheme(t)}
+                        isDark={isDark}
+                    />
                 </View>
 
-                {/* Section: Notifications */}
-                <View className="mb-10">
-                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Notifications</Typography>
-
-                    <PreferenceToggle
+                {/* Notifications Section */}
+                <SectionLabel label="Notifications" />
+                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                    <SettingRow
                         icon={<Sms size={20} color="#3b82f6" variant="Bulk" />}
                         title="SMS Alerts"
                         subtitle="Receive order updates via text"
-                        value={smsAlerts}
-                        onValueChange={setSmsAlerts}
-                    />
-
-                    <PreferenceToggle
+                        last={false}
+                    >
+                        <Switch
+                            value={smsAlerts}
+                            onValueChange={setSmsAlerts}
+                            trackColor={{ false: '#71717a', true: '#3b82f6' }}
+                            thumbColor={Platform.OS === 'ios' ? undefined : '#fff'}
+                        />
+                    </SettingRow>
+                    <SettingRow
                         icon={<DirectNotification size={20} color="#3b82f6" variant="Bulk" />}
-                        title="Email Notifications"
-                        subtitle="Updates about your workshop activities"
-                        value={emailNotifs}
-                        onValueChange={setEmailNotifs}
-                    />
-
-                    <PreferenceToggle
+                        title="Email Updates"
+                        subtitle="Workshop activity and summaries"
+                        last={false}
+                    >
+                        <Switch
+                            value={emailNotifs}
+                            onValueChange={setEmailNotifs}
+                            trackColor={{ false: '#71717a', true: '#3b82f6' }}
+                            thumbColor={Platform.OS === 'ios' ? undefined : '#fff'}
+                        />
+                    </SettingRow>
+                    <SettingRow
                         icon={<MagicStar size={20} color="#3b82f6" variant="Bulk" />}
                         title="Marketing & Tips"
                         subtitle="Growth hacks and special offers"
-                        value={marketingTips}
-                        onValueChange={setMarketingTips}
-                    />
+                        last={true}
+                    >
+                        <Switch
+                            value={marketingTips}
+                            onValueChange={setMarketingTips}
+                            trackColor={{ false: '#71717a', true: '#3b82f6' }}
+                            thumbColor={Platform.OS === 'ios' ? undefined : '#fff'}
+                        />
+                    </SettingRow>
                 </View>
 
-                {/* Section: Delivery Reminders */}
-                <View className="mb-10">
-                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Delivery Reminders</Typography>
+                {/* Delivery & Personal Section */}
+                <SectionLabel label="App Settings" />
+                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                    <Pressable onPress={() => setShowCustomInput(!showCustomInput)}>
+                        <SettingRow
+                            icon={<CalendarTick size={20} color="#3b82f6" variant="Bulk" />}
+                            title="Delivery Reminder"
+                            last={false}
+                        >
+                            <View className="flex-row items-center">
+                                <Typography color="gray" className="mr-1">
+                                    {showCustomInput ? `${customDays || 0} days` : `${reminderDay} days`}
+                                </Typography>
+                                <ArrowRight2 size={14} color="#9CA3AF" />
+                            </View>
+                        </SettingRow>
+                    </Pressable>
 
-                    <Typography variant="body" weight="semibold" className="mb-4 ml-1">Remind me before delivery:</Typography>
-
-                    <View className="flex-row flex-wrap gap-3">
+                    {/* Compact Reminder Picker */}
+                    <View className={`px-4 pb-4 flex-row justify-between bg-transparent`}>
                         {['1', '2', '3'].map((day) => (
                             <TouchableOpacity
                                 key={day}
-                                onPress={() => {
-                                    setReminderDay(day);
-                                    setShowCustomInput(false);
-                                }}
-                                className={`px-6 py-3 rounded-full border ${reminderDay === day && !showCustomInput
-                                    ? 'bg-blue-500 border-blue-500'
-                                    : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
-                                    }`}
+                                onPress={() => { setReminderDay(day); setShowCustomInput(false); }}
+                                className={`flex-1 mx-1 py-2 rounded-lg items-center ${reminderDay === day && !showCustomInput ? 'bg-blue-500' : isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}
                             >
-                                <Typography weight="bold" color={(reminderDay === day && !showCustomInput) ? 'white' : (isDark ? 'gray' : 'black')}>
-                                    {day} Day{day !== '1' ? 's' : ''}
-                                </Typography>
+                                <Typography weight="bold" color={reminderDay === day && !showCustomInput ? 'white' : 'gray'}>{day}d</Typography>
                             </TouchableOpacity>
                         ))}
                         <TouchableOpacity
                             onPress={() => setShowCustomInput(true)}
-                            className={`px-6 py-3 rounded-full border flex-row items-center ${showCustomInput
-                                ? 'bg-blue-500 border-blue-500'
-                                : isDark ? 'bg-dark-800 border-border-dark' : 'bg-white border-gray-100'
-                                }`}
+                            className={`flex-1 mx-1 py-2 rounded-lg items-center ${showCustomInput ? 'bg-blue-500' : isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}
                         >
-                            <Add size={16} color={showCustomInput ? 'white' : (isDark ? '#9CA3AF' : 'black')} className="mr-2" />
-                            <Typography weight="bold" color={showCustomInput ? 'white' : (isDark ? 'gray' : 'black')}>Custom</Typography>
+                            <Typography weight="bold" color={showCustomInput ? 'white' : 'gray'}>Edit</Typography>
                         </TouchableOpacity>
                     </View>
 
                     {showCustomInput && (
-                        <Surface variant="muted" rounded="2xl" className={`mt-4 px-4 h-16 border ${isDark ? 'border-border-dark' : 'border-gray-100'} justify-center`}>
+                        <View className="px-4 pb-4">
                             <TextInput
-                                className={`font-semibold flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
-                                placeholder="Enter custom days (e.g. 5)"
+                                className={`p-3 rounded-xl ${isDark ? 'bg-zinc-800 text-white' : 'bg-gray-50 text-black'}`}
+                                placeholder="Enter custom days..."
                                 placeholderTextColor="#9CA3AF"
                                 value={customDays}
                                 onChangeText={setCustomDays}
                                 keyboardType="number-pad"
                             />
-                        </Surface>
+                        </View>
                     )}
-                </View>
 
-                {/* Section: Personal Settings */}
-                <View className="mb-12">
-                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Personal Settings</Typography>
+                    <View className={`h-[1px] mx-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`} />
 
-                    <View className="mb-6">
-                        <Typography variant="body" weight="semibold" className="mb-4 ml-1">Measurement Unit</Typography>
-                        <Pressable
-                            onPress={() => setUnit(unit === 'cm' ? 'inch' : 'cm')}
-                            className="active:opacity-90"
+                    <Pressable onPress={() => setUnit(unit === 'cm' ? 'inch' : 'cm')}>
+                        <SettingRow
+                            icon={<Ruler size={20} color="#3b82f6" variant="Bulk" />}
+                            title="Measurement Unit"
+                            last={false}
+                        >
+                            <View className={`px-3 py-1 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+                                <Typography variant="small" weight="bold">{unit.toUpperCase()}</Typography>
+                            </View>
+                        </SettingRow>
+                    </Pressable>
+
+                    <Pressable onPress={() => setIsCurrencyModalVisible(true)}>
+                        <SettingRow
+                            icon={<Coin1 size={20} color="#3b82f6" variant="Bulk" />}
+                            title="Currency"
+                            last={true}
                         >
                             <View className="flex-row items-center">
-                                <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
-                                    <Ruler size={20} color="#3b82f6" variant="Bulk" />
-                                </View>
-                                <View className="flex-1">
-                                    <Typography variant="body" weight="bold">Unit System</Typography>
-                                    <Typography variant="small" color="gray">Currently using {unit === 'cm' ? 'Centimeters' : 'Inches'}</Typography>
-                                </View>
-                                <View className="bg-muted w-24 h-10 rounded-full p-1 flex-row">
-                                    <View className={`flex-1 items-center justify-center !rounded-full ${unit === 'cm' ? 'bg-dark' : ''}`}>
-                                        <Typography variant="small" weight="bold" color={unit === 'cm' ? 'white' : 'gray'}>CM</Typography>
-                                    </View>
-                                    <View className={`flex-1 items-center justify-center !rounded-full ${unit === 'inch' ? 'bg-dark' : ''}`}>
-                                        <Typography variant="small" weight="bold" color={unit === 'inch' ? 'white' : 'gray'}>IN</Typography>
-                                    </View>
-                                </View>
+                                <Typography color="gray" className="mr-1">{selectedCurrency.code}</Typography>
+                                <ArrowRight2 size={14} color="#9CA3AF" />
                             </View>
-                        </Pressable>
-                    </View>
-
-                    <View className="mt-6">
-                        <Typography variant="body" weight="semibold" className="mb-4 ml-1">Currency</Typography>
-                        <Pressable onPress={() => setIsCurrencyModalVisible(true)}>
-                            <View className="flex-row items-center h-16">
-                                <Coin1 size={20} color="#3b82f6" variant="Bulk" />
-                                <Typography weight="bold" className="ml-3 flex-1">
-                                    {selectedCurrency.name} ({selectedCurrency.symbol})
-                                </Typography>
-                                <ArrowLeft2 size={18} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                            </View>
-                        </Pressable>
-                    </View>
+                        </SettingRow>
+                    </Pressable>
                 </View>
 
-                {/* Currency Selection Modal */}
-                <Modal
-                    visible={isCurrencyModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => setIsCurrencyModalVisible(false)}
-                >
-                    <View className="flex-1 bg-black/50 justify-end">
-                        <Surface variant="white" className="h-[80%] rounded-t-[40px] p-6 pb-12" rounded="none">
-                            <View className="flex-row items-center justify-between mb-6">
-                                <Typography variant="h2" weight="bold">Select Currency</Typography>
-                                <TouchableOpacity onPress={() => setIsCurrencyModalVisible(false)} className="p-2">
-                                    <Svg width="24" height="24" viewBox="0 0 24 24">
-                                        <Path
-                                            fill="none"
-                                            stroke={isDark ? "white" : "black"}
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="1.5"
-                                            d="M18 6L6 18m12 0L6 6"
-                                        />
-                                    </Svg>
-                                </TouchableOpacity>
-                            </View>
-
-                            <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-14 mb-6 border border-gray-100">
-                                <SearchNormal1 size={18} color="#6B7280" />
-                                <TextInput
-                                    className="ml-3 flex-1 font-semibold text-dark"
-                                    placeholder="Search currency..."
-                                    placeholderTextColor="#9CA3AF"
-                                    value={currencySearchQuery}
-                                    onChangeText={setCurrencySearchQuery}
-                                />
-                            </Surface>
-
-                            <FlatList
-                                data={filteredCurrencies}
-                                keyExtractor={(item) => item.code}
-                                showsVerticalScrollIndicator={false}
-                                renderItem={({ item }) => (
-                                    <Pressable
-                                        onPress={() => {
-                                            setCurrency(item.code);
-                                            setIsCurrencyModalVisible(false);
-                                            setCurrencySearchQuery('');
-                                        }}
-                                        className="mb-3"
-                                    >
-                                        <Surface
-                                            variant={currency === item.code ? 'white' : 'muted'}
-                                            className={`p-4 flex-row items-center border ${currency === item.code ? 'border-dark' : 'border-transparent'}`}
-                                            rounded="2xl"
-                                        >
-                                            <View className="w-10 h-10 items-center justify-center bg-white/50 rounded-xl mr-4 shadow-sm">
-                                                <Typography weight="bold" variant="subtitle">{item.symbol}</Typography>
-                                            </View>
-                                            <View className="flex-1">
-                                                <Typography weight="bold">{item.name}</Typography>
-                                                <Typography variant="small" color="gray">{item.code}</Typography>
-                                            </View>
-                                            {currency === item.code && (
-                                                <TickCircle size={20} color="#1C1C1E" variant="Bold" />
-                                            )}
-                                        </Surface>
-                                    </Pressable>
-                                )}
-                                ListEmptyComponent={() => (
-                                    <View className="items-center py-10">
-                                        <Typography color="gray">No currencies found</Typography>
-                                    </View>
-                                )}
-                            />
-                        </Surface>
-                    </View>
-                </Modal>
-
-                {/* Section: Test Notifications (Developer) */}
-                {/* <View className="mb-10">
-                    <Typography variant="caption" color="gray" weight="bold" className="mb-6 uppercase tracking-widest ml-1">Testing Notifications</Typography>
-                    <View className="gap-3">
-                        <Button 
-                            variant="secondary"
-                            className={`h-14 rounded-2xl border-0 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}
-                            textClassName={isDark ? 'text-white' : 'text-dark'}
-                            onPress={() => {
-                                Toast.show({ type: 'info', text1: 'Morning Triggered', text2: 'Testing 8 AM logic' });
-                                NotificationService.testSmartReminders(true);
-                            }}
-                        >
-                            Test Morning Reminder (with pending)
-                        </Button>
-                        <Button 
-                            variant="secondary"
-                            className={`h-14 rounded-2xl border-0 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}
-                            textClassName={isDark ? 'text-white' : 'text-dark'}
-                            onPress={() => {
-                                Toast.show({ type: 'info', text1: 'Evening Triggered', text2: 'Testing 8 PM logic' });
-                                NotificationService.testSmartReminders(false);
-                            }}
-                        >
-                            Test Evening/Empty Reminder
-                        </Button>
-                    </View>
-                </View> */}
-
+                {/* Main Save Button */}
                 <Button
                     onPress={handleSave}
                     isLoading={isSaving}
-                    className="h-16 rounded-full bg-blue-600 border-0"
-                    textClassName="text-white"
+                    className="h-14 rounded-full bg-blue-600 border-0 mt-8"
+                    textClassName="text-white text-[16px] font-bold"
                 >
-                    Save Preferences
+                    Save Changes
                 </Button>
             </ScrollView>
+
+            {/* Currency Modal (Keeping Logic Similar but UI cleaner) */}
+            <Modal visible={isCurrencyModalVisible} animationType="slide" transparent>
+                <View className="flex-1 bg-black/60 justify-end">
+                    <View className={`h-[70%] rounded-t-[32px] p-6 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+                        <View className="flex-row items-center justify-between mb-6">
+                            <Typography variant="h2" weight="bold">Currency</Typography>
+                            <TouchableOpacity onPress={() => setIsCurrencyModalVisible(false)} className="bg-gray-100 dark:bg-zinc-800 p-1.5 rounded-full">
+                                <CloseCircle size={22} color="#6B7280" variant="Bold" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <TextInput
+                            className={`mb-4 p-4 rounded-2xl ${isDark ? 'bg-zinc-800 text-white' : 'bg-gray-100 text-black'}`}
+                            placeholder="Search currency..."
+                            placeholderTextColor="#9CA3AF"
+                            value={currencySearchQuery}
+                            onChangeText={setCurrencySearchQuery}
+                        />
+
+                        <FlatList
+                            data={filteredCurrencies}
+                            keyExtractor={(item) => item.code}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    onPress={() => { setCurrency(item.code); setIsCurrencyModalVisible(false); }}
+                                    className={`flex-row items-center py-4 border-b ${isDark ? 'border-zinc-800' : 'border-gray-100'}`}
+                                >
+                                    <Typography className="flex-1 text-lg" weight={currency === item.code ? 'bold' : 'medium'}>
+                                        {item.name} <Typography color="gray">({item.symbol})</Typography>
+                                    </Typography>
+                                    {currency === item.code && <TickCircle size={22} color="#3b82f6" variant="Bold" />}
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
 
-interface PreferenceToggleProps {
-    icon: React.ReactNode;
-    title: string;
-    subtitle: string;
-    value: boolean;
-    onValueChange: (value: boolean) => void;
+/** 
+ * Sub-Components for a Cleaner Main Render
+ */
+
+function SectionLabel({ label, isFirst }: { label: string, isFirst?: boolean }) {
+    return (
+        <Typography variant="caption" color="gray" weight="bold" className={`${isFirst ? 'mt-2' : 'mt-8'} mb-2 ml-4 uppercase tracking-widest text-[11px]`}>
+            {label}
+        </Typography>
+    );
 }
 
-function PreferenceToggle({ icon, title, subtitle, value, onValueChange }: PreferenceToggleProps) {
+function SettingRow({ icon, title, subtitle, children, last }: { icon: React.ReactNode, title: string, subtitle?: string, children: React.ReactNode, last: boolean }) {
     const { isDark } = useTheme();
-
     return (
-        // <Surface variant="white" className={`p-4 mb-4 ${isDark ? 'border-border-dark' : 'border-gray-50'}`} rounded="2xl" hasBorder>
-        <View className="flex-row items-center py-4">
-            <View className="w-12 h-12 items-center justify-center bg-blue-50 rounded-xl mr-4">
+        <View className={`flex-row items-center px-4 ${subtitle ? 'min-h-[76px] py-3' : 'h-16'}`}>
+            <View className={`w-10 h-10 items-center justify-center rounded-xl mr-3 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
                 {icon}
             </View>
             <View className="flex-1">
-                <Typography variant="body" weight="bold">{title}</Typography>
-                <Typography variant="small" color="gray">{subtitle}</Typography>
+                <Typography variant="body" weight="bold" className="text-gray-900 dark:text-white">{title}</Typography>
+                {subtitle && (
+                    <Typography color="gray" className="text-[12px] mt-0.5 leading-tight">
+                        {subtitle}
+                    </Typography>
+                )}
             </View>
-            <Switch
-                value={value}
-                onValueChange={onValueChange}
-                trackColor={{ false: '#F4F4F4', true: '#3b82f6' }}
-                thumbColor="#FFFFFF"
-            />
+            {children}
+            {!last && <View className={`absolute bottom-0 right-0 left-16 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`} />}
         </View>
-        // </Surface>
+    );
+}
+
+function ThemeRow({ current, onChange, isDark }: { current: string, onChange: (t: any) => void, isDark: boolean }) {
+    const options = [
+        { id: 'light', icon: Sun, label: 'Light' },
+        { id: 'dark', icon: Moon, label: 'Dark' },
+        { id: 'system', icon: Monitor, label: 'Auto' },
+    ];
+
+    return (
+        <View className="flex-row p-2 justify-between">
+            {options.map((opt) => {
+                const isActive = current === opt.id;
+                const Icon = opt.icon;
+                return (
+                    <TouchableOpacity
+                        key={opt.id}
+                        onPress={() => onChange(opt.id)}
+                        className={`flex-1 flex-row items-center justify-center py-3 rounded-xl ${isActive ? (isDark ? 'bg-zinc-800' : 'bg-gray-100') : ''}`}
+                    >
+                        <Icon size={18} color={isActive ? '#3b82f6' : '#9CA3AF'} variant={isActive ? 'Bold' : 'Linear'} />
+                        <Typography
+                            variant="small"
+                            weight={isActive ? 'bold' : 'medium'}
+                            className={`ml-2 ${isActive ? (isDark ? 'text-white' : 'text-blue-600') : 'text-gray-500'}`}
+                        >
+                            {opt.label}
+                        </Typography>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
     );
 }

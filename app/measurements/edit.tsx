@@ -118,80 +118,101 @@ export default function EditMeasurementScreen() {
     if (!measurementId || !customerId) return null;
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
             <SafeAreaView className="flex-1" edges={['top']}>
+                <View className="flex-row items-center justify-between px-4 py-3">
+                    <IconButton
+                        icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
+                        variant="ghost"
+                        onPress={() => router.back()}
+                    />
+                    <Typography variant="h2" weight="bold">Edit Measurement</Typography>
+                    <IconButton
+                        icon={<Trash size={22} color="#EF4444" />}
+                        variant="ghost"
+                        onPress={handleDelete}
+                    />
+                </View>
+
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     className="flex-1"
                 >
-                    <View className="flex-1 p-6">
-                        {/* Header */}
-                        <View className="flex-row items-center justify-between mb-6">
-                            <View className="flex-row items-center gap-3">
-                                <IconButton
-                                    icon={<ArrowLeft size={24} color={isDark ? "white" : "black"} />}
-                                    variant="ghost"
-                                    onPress={() => router.back()}
-                                />
-                                <Typography variant="h2" weight="bold">Edit Measurement</Typography>
-                            </View>
-                            <IconButton
-                                icon={<Trash size={24} color="#EF4444" />}
-                                variant="ghost"
-                                className={isDark ? "bg-red-900/20" : "bg-red-50"}
-                                onPress={handleDelete}
-                            />
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                        contentContainerClassName="pb-10 pt-4"
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {/* Title Section */}
+                        <View className="mb-6">
+                            <Typography variant="caption" color="gray" weight="medium" className="mb-2 px-6 uppercase tracking-wider">
+                                Measurement Title
+                            </Typography>
+                            <Surface variant="white" className="mx-4 overflow-hidden" rounded="xl">
+                                <View className="px-4 py-3.5">
+                                    <TextInput
+                                        className={`text-[17px] ${isDark ? 'text-white' : 'text-black'}`}
+                                        style={{ fontFamily: 'Grotesk-Medium' }}
+                                        placeholder="e.g. Shirt for Wedding"
+                                        placeholderTextColor={isDark ? "#636366" : "#AEAEB2"}
+                                        value={title}
+                                        onChangeText={setTitle}
+                                    />
+                                </View>
+                            </Surface>
                         </View>
 
-                        <ScrollView
-                            showsVerticalScrollIndicator={false}
-                            contentContainerClassName="pb-10"
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            {/* Title Input */}
-                            <Typography variant="h3" weight="bold" className="mb-2">Title</Typography>
-                            <Surface variant="muted" className={`px-4 py-3 mb-6 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
-                                <TextInput
-                                    className={`text-base font-medium ${isDark ? 'text-white' : 'text-dark'}`}
-                                    placeholder="e.g. Shirt for Wedding"
-                                    placeholderTextColor="#9CA3AF"
-                                    value={title}
-                                    onChangeText={setTitle}
-                                />
-                            </Surface>
-
-                            {/* Measurement Values */}
-                            <Typography variant="h3" weight="bold" className="mb-4">Values</Typography>
-                            <View className="gap-3 mb-8">
-                                {Object.keys(values).map((field) => (
+                        {/* Values Section */}
+                        <View className="mb-8">
+                            <Typography variant="caption" color="gray" weight="medium" className="mb-2 px-6 uppercase tracking-wider">
+                                Measurement Values ({unit})
+                            </Typography>
+                            <Surface variant="white" className="mx-4 overflow-hidden" rounded="xl">
+                                {Object.keys(values).map((field, index, array) => (
                                     <View key={field}>
-                                        <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field} ({unit})</Typography>
-                                        <Surface variant="muted" className={`px-4 py-3 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
+                                        <View className="flex-row items-center px-4 py-3.5">
+                                            <Typography
+                                                variant="body"
+                                                weight="medium"
+                                                className="w-1/3 capitalize"
+                                                color="gray"
+                                            >
+                                                {field}
+                                            </Typography>
                                             <TextInput
-                                                className={`text-base font-medium ${isDark ? 'text-white' : 'text-dark'}`}
-                                                placeholder={`Enter ${field}`}
-                                                placeholderTextColor="#9CA3AF"
+                                                className={`flex-1 text-[17px] text-right ${isDark ? 'text-white' : 'text-black'}`}
+                                                style={{ fontFamily: 'Grotesk-Bold' }}
+                                                placeholder="0.0"
+                                                placeholderTextColor={isDark ? "#636366" : "#AEAEB2"}
                                                 value={String(values[field] || '')}
                                                 onChangeText={(text) => handleValueChange(field, text)}
                                                 keyboardType="numeric"
                                             />
-                                        </Surface>
+                                        </View>
+                                        {index < array.length - 1 && (
+                                            <View className={`h-[0.5px] ml-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-200'}`} />
+                                        )}
                                     </View>
                                 ))}
-                            </View>
+                            </Surface>
+                        </View>
 
+                        <View className="px-4 mt-4">
                             <Button
                                 onPress={handleSave}
-                                className={`h-16 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                textClassName={isDark ? 'text-dark' : 'text-white'}
+                                style={{
+                                    borderWidth: 0,
+                                }}
+                                className={`h-14 text-white rounded-2xl bg-blue-500 rounded-full`}
                                 isLoading={submitting}
                             >
                                 Save Changes
                             </Button>
-                        </ScrollView>
-                    </View>
+                        </View>
+                    </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </View>
     );
 }
+

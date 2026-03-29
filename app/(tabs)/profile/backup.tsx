@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, CloudChange, TickCircle, Refresh, ShieldTick, Danger } from 'iconsax-react-native';
+import {
+    ArrowLeft, CloudChange, TickCircle, Refresh,
+    ShieldTick, Danger, InfoCircle, Cloud
+} from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useSync } from '../../../hooks/useSync';
-import Toast from 'react-native-toast-message';
 import { useTheme } from '../../../contexts/ThemeContext';
+import Toast from 'react-native-toast-message';
 
 export default function BackupData() {
     const router = useRouter();
@@ -32,8 +34,8 @@ export default function BackupData() {
         if (!isOnline) {
             Toast.show({
                 type: 'error',
-                text1: 'Offline',
-                text2: 'Please connect to the internet to ' + (full ? 'sync' : 'backup')
+                text1: 'Connection Error',
+                text2: 'Please connect to the internet to sync data.'
             });
             return;
         }
@@ -42,107 +44,158 @@ export default function BackupData() {
             await performSync({ full });
             Toast.show({
                 type: 'success',
-                text1: full ? 'Fresh Sync complete' : 'Backup complete',
-                text2: full ? 'Your local records have been updated from the cloud' : 'Your data is now safe in the cloud'
+                text1: full ? 'Database Reset & Synced' : 'Backup Successful',
             });
         } catch (error) {
             Toast.show({
                 type: 'error',
-                text1: full ? 'Sync failed' : 'Backup failed',
-                text2: 'Could not reach the server'
+                text1: 'Sync Failed',
+                text2: 'Please try again later'
             });
         }
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-            <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                <IconButton
-                    icon={<ArrowLeft size={20} color={isDark ? 'white' : 'black'} />}
-                    onPress={() => router.back()}
-                    variant="ghost"
-                    className="-ml-2"
-                />
-                <Typography variant="h3" weight="bold" className="ml-2">Backup Data</Typography>
+        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+            {/* Header */}
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+                <View className="flex-row items-center">
+                    <IconButton
+                        icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
+                        onPress={() => router.back()}
+                        variant="ghost"
+                    />
+                    <Typography variant="h3" weight="bold" className="ml-2">Backup & Sync</Typography>
+                </View>
             </View>
 
-            <ScrollView contentContainerClassName="p-6 pb-12" showsVerticalScrollIndicator={false}>
-                <View className="items-center my-10">
-                    <Surface variant={isDark ? "dark" : "blue"} className={`w-24 h-24 items-center justify-center mb-6 ${isDark ? 'border border-border-dark' : ''}`} rounded="3xl">
-                        <CloudChange size={48} color={isDark ? "white" : "#3b82f6"} variant="Bulk" />
-                    </Surface>
-                    <Typography variant="h2" weight="bold" className="text-center mb-2">Cloud Backup</Typography>
-                    <Typography variant="body" color="gray" className="text-center px-4">
-                        Keep your workshop data safe and synchronized across all your devices.
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="p-5 pb-12" keyboardShouldPersistTaps="handled">
+
+                {/* Visual Status Hero */}
+                <View className="items-center py-8">
+                    <View className={`w-20 h-20 rounded-[28px] items-center justify-center mb-4 ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-blue-50'}`}>
+                        {isSyncing ? (
+                            <ActivityIndicator color="#3b82f6" />
+                        ) : (
+                            <CloudChange size={40} color="#3b82f6" variant="Bulk" />
+                        )}
+                    </View>
+                    <Typography variant="h2" weight="bold">Cloud Backup</Typography>
+                    <Typography color="gray" className="text-center px-10 mt-2">
+                        Your workshop data is securely encrypted and synced across your devices.
                     </Typography>
                 </View>
 
-                <Surface variant="muted" className={`p-6 mb-8 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`} rounded="3xl">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <View>
-                            <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Status</Typography>
-                            <Typography variant="body" weight="bold" className="mt-1">
-                                {lastSyncError ? 'Sync Error' : (lastSyncedAt ? 'Everything is safe' : 'Not backed up yet')}
-                            </Typography>
-                        </View>
-                        {lastSyncError ? (
-                            <Danger size={24} color="#EF4444" variant="Bold" />
-                        ) : (
-                            <TickCircle size={24} color="#10B981" variant="Bold" />
-                        )}
-                    </View>
-                    <View className={`h-[1px] mb-4 ${isDark ? 'bg-border-dark' : 'bg-gray-200'}`} />
-                    <View>
-                        <Typography variant="small" color="gray" weight="bold" className="uppercase tracking-wider">Last Backup</Typography>
-                        <Typography variant="body" weight="semibold" className="mt-1">{formatDate(lastSyncedAt)}</Typography>
-                    </View>
-                </Surface>
+                {/* Status Group */}
+                <SectionLabel label="Sync Status" isFirst />
+                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                    <InfoRow
+                        label="Database Status"
+                        value={lastSyncError ? 'Attention Required' : 'Up to date'}
+                        valueColor={lastSyncError ? 'text-red-500' : 'text-green-600'}
+                        icon={lastSyncError ? <Danger size={20} color="#EF4444" variant="Bold" /> : <TickCircle size={20} color="#10B981" variant="Bold" />}
+                    />
+                    <InfoRow
+                        label="Last Cloud Sync"
+                        value={formatDate(lastSyncedAt)}
+                        last
+                    />
+                </View>
 
-                <View className="flex flex-col gap-4 mb-10">
-                    <View className={`flex-row items-center`}>
-                        <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
-                            <ShieldTick size={20} color="#3b82f6" variant="Bulk" />
-                        </View>
-                        <View className="flex-1">
-                            <Typography weight="bold">Secure Storage</Typography>
-                            <Typography variant="small" color="gray">End-to-end encrypted backup</Typography>
-                        </View>
-                    </View>
+                {/* Features Info Group */}
+                <SectionLabel label="Security & Logic" />
+                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                    <SettingItem
+                        icon={<ShieldTick size={20} color="#3b82f6" variant="Bulk" />}
+                        title="End-to-End Encryption"
+                        subtitle="Only you can access your data"
+                    />
+                    <SettingItem
+                        icon={<Refresh size={20} color="#3b82f6" variant="Bulk" />}
+                        title="Automatic Background Sync"
+                        subtitle="Syncs when connected to Wi-Fi"
+                        last
+                    />
+                </View>
 
-                    <View className={`flex-row items-center mt-6`}>
-                        <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-dark-800' : 'bg-blue-50'}`}>
-                            <Refresh size={20} color="#3B82F6" variant="Bulk" />
-                        </View>
-                        <View className="flex-1">
-                            <Typography weight="bold">Auto Sync</Typography>
-                            <Typography variant="small" color="gray">Syncs whenever you're online</Typography>
-                        </View>
+                {/* Action Buttons */}
+                <View className="mt-10">
+                    <Button
+                        onPress={() => handleBackup(false)}
+                        isLoading={isSyncing}
+                        className="h-16 rounded-full bg-blue-600 border-0"
+                        textClassName="text-white font-bold text-lg"
+                    >
+                        Backup Now
+                    </Button>
+
+                    <TouchableOpacity
+                        onPress={() => handleBackup(true)}
+                        disabled={isSyncing}
+                        className="mt-4 flex-row items-center justify-center py-2"
+                    >
+                        <Refresh size={14} color={isDark ? '#71717a' : '#9CA3AF'} />
+                        <Typography variant="small" color="gray" className="ml-2 font-medium">
+                            Force Full Cloud Sync
+                        </Typography>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Online Indicator */}
+                <View className="items-center mt-6">
+                    <View className="flex-row items-center px-3 py-1 bg-gray-100 dark:bg-zinc-800 rounded-full">
+                        <View className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <Typography variant="caption" color="gray">
+                            {isOnline ? 'System Online' : 'Offline Mode'}
+                        </Typography>
                     </View>
                 </View>
 
-                <Button
-                    onPress={() => handleBackup(false)}
-                    isLoading={isSyncing}
-                    className="h-16 rounded-full bg-blue-600 border-0 shadow-none"
-                    textClassName="text-white"
-                >
-                    {isSyncing ? 'Backing up...' : 'Backup Now'}
-                </Button>
-
-                <Button
-                    onPress={() => handleBackup(true)}
-                    isLoading={isSyncing}
-                    variant="ghost"
-                    className="h-12 rounded-full mt-2"
-                >
-                    <View className="flex-row items-center gap-3">
-                        <Refresh size={16} color={isDark ? '#9CA3AF' : '#6B7280'} className="mr-2" />
-                        <Typography variant="small" color="gray">
-                            Reset & Full Sync from Cloud
-                        </Typography>
-                    </View>
-                </Button>
             </ScrollView>
+        </View>
+    );
+}
+
+/** 
+ * Reusable Internal Components
+ */
+
+function SectionLabel({ label, isFirst }: { label: string, isFirst?: boolean }) {
+    return (
+        <Typography variant="caption" color="gray" weight="bold" className={`${isFirst ? 'mt-2' : 'mt-8'} mb-2 ml-4 uppercase tracking-widest text-[11px]`}>
+            {label}
+        </Typography>
+    );
+}
+
+function InfoRow({ label, value, valueColor = '', icon, last }: { label: string, value: string, valueColor?: string, icon?: React.ReactNode, last?: boolean }) {
+    const { isDark } = useTheme();
+    return (
+        <View className="px-4 h-16 flex-row items-center justify-between">
+            <Typography variant="body" color="gray" weight="medium">{label}</Typography>
+            <View className="flex-row items-center">
+                <Typography weight="bold" className={`mr-2 ${valueColor || (isDark ? 'text-white' : 'text-zinc-950')}`}>
+                    {value}
+                </Typography>
+                {icon}
+            </View>
+            {!last && <View className={`absolute bottom-0 right-0 left-4 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`} />}
+        </View>
+    );
+}
+
+function SettingItem({ icon, title, subtitle, last }: { icon: React.ReactNode, title: string, subtitle: string, last?: boolean }) {
+    const { isDark } = useTheme();
+    return (
+        <View className="px-4 py-4 flex-row items-center">
+            <View className={`w-10 h-10 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
+                {icon}
+            </View>
+            <View className="flex-1">
+                <Typography weight="bold">{title}</Typography>
+                <Typography variant="small" color="gray">{subtitle}</Typography>
+            </View>
+            {!last && <View className={`absolute bottom-0 right-0 left-16 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`} />}
         </View>
     );
 }

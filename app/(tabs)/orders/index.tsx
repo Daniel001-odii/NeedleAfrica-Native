@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator, Modal, Image } from 'react-native';
+import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator, Image, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { IconButton } from '../../../components/ui/IconButton';
-import { Box, FilterSearch, Add, Trash, TickCircle, CloseCircle, DocumentText, InfoCircle } from 'iconsax-react-native';
+import { Box, FilterSearch, Add, Trash, TickCircle, DocumentText, InfoCircle, SearchNormal, ArrowRight } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
@@ -30,9 +30,11 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 import { Swipeable } from 'react-native-gesture-handler';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { ProgressSquare } from '../../../components/ui/ProgressSquare';
+import { ActionSheet } from '../../../components/ui/ActionSheet';
 
 export default function Orders() {
     const [activeTab, setActiveTab] = useState<TabType>('All');
+    const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [showSortModal, setShowSortModal] = useState(false);
@@ -60,29 +62,23 @@ export default function Orders() {
 
     const getProgressColors = (order: any) => {
         if (order.status === 'DELIVERED') return '#16a34a'; // Green
-
         if (!order.deliveryDate) return '#9CA3AF'; // Gray
-
         const now = new Date();
         const due = new Date(order.deliveryDate);
         const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
         if (diffDays < 0) return '#dc2626'; // Overdue Red
         if (diffDays <= 3) return '#f97316'; // Soon Orange
-        return '#3b82f6'; // Safe Blue
+        return '#6366f1';
     };
 
     const getProgressValue = (order: any) => {
         if (order.status === 'DELIVERED') return 1;
         if (!order.deliveryDate || !order.createdAt) return 0.5;
-
         const start = new Date(order.createdAt).getTime();
         const end = new Date(order.deliveryDate).getTime();
         const now = Date.now();
-
         if (now >= end) return 1;
         if (now <= start) return 0;
-
         const total = end - start;
         const elapsed = now - start;
         return Math.min(1, elapsed / total);
@@ -105,7 +101,7 @@ export default function Orders() {
     const handleDelete = (id: string, name: string) => {
         confirm({
             title: "Delete Order",
-            message: `Are you sure you want to delete the order "${name}"? This action cannot be undone.`,
+            message: `Are you sure you want to delete "${name}"?`,
             confirmText: "Delete",
             type: "danger",
             onConfirm: () => deleteOrder(id)
@@ -129,18 +125,18 @@ export default function Orders() {
     const renderRightActions = (order: any) => {
         return (
             <View className="pl-4 mb-3 justify-center items-center flex-row gap-2">
-                <Pressable
+                <TouchableOpacity
                     onPress={() => handleToggleStatus(order.id, order.status)}
-                    className={`${order.status === 'DELIVERED' ? 'bg-orange-100' : 'bg-green-100'} justify-center items-center w-16 h-16 rounded-3xl shadow-sm`}
+                    className={`${order.status === 'DELIVERED' ? 'bg-orange-100' : 'bg-green-100'} justify-center items-center w-16 h-16 rounded-2xl`}
                 >
                     <TickCircle size={24} color={order.status === 'DELIVERED' ? '#f97316' : '#16a34a'} variant="Bold" />
-                </Pressable>
-                <Pressable
+                </TouchableOpacity>
+                <TouchableOpacity
                     onPress={() => handleDelete(order.id, order.styleName)}
-                    className="bg-red-50 justify-center items-center w-16 h-16 rounded-3xl shadow-sm"
+                    className="bg-red-500 justify-center items-center w-16 h-16 rounded-2xl"
                 >
-                    <Trash size={24} color="red" variant="Bold" />
-                </Pressable>
+                    <Trash size={24} color="white" variant="Bold" />
+                </TouchableOpacity>
             </View>
         );
     };
@@ -171,9 +167,20 @@ export default function Orders() {
         }
     };
 
-    const filteredOrders = activeTab === 'All'
-        ? orders
-        : orders.filter(o => o.status === activeTab.toUpperCase());
+    const filteredOrders = useMemo(() => {
+        let items = orders;
+        if (activeTab !== 'All') {
+            items = items.filter(o => o.status === activeTab.toUpperCase());
+        }
+        if (search) {
+            const query = search.toLowerCase();
+            items = items.filter(o =>
+                (o.styleName || '').toLowerCase().includes(query) ||
+                ((o as any).customerFullName || '').toLowerCase().includes(query)
+            );
+        }
+        return items;
+    }, [orders, activeTab, search]);
 
     const sortedOrders = useMemo(() => {
         const sorted = [...filteredOrders];
@@ -211,250 +218,199 @@ export default function Orders() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-default'}`}>
-            <View className="flex-1">
-                <View className="p-6 pb-0">
-                    <View className="flex-row justify-between items-center mb-6">
-                        <View className="flex-row items-center">
-                            <Typography variant="h2" weight="bold">Orders</Typography>
-                            {!isPro && (
-                                <View className={`ml-3 px-2 py-0.5 rounded-lg ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
-                                    <Typography variant="small" weight="bold" className={isDark ? 'text-indigo-400' : 'text-indigo-600'}>
-                                        {orderLimit.current}/{orderLimit.limit}
-                                    </Typography>
-                                </View>
-                            )}
-                        </View>
-                        <View className="flex-row gap-2">
-                            <Pressable
-                                className={`h-10 rounded-full items-center justify-center flex-row gap-2 px-3 ${isDark ? 'bg-surface-muted-dark' : 'bg-muted'}`}
-                                onPress={() => router.push('/(tabs)/orders/invoices/')}
-                            >
-                                <DocumentText size={20} color={isDark ? "white" : "black"} />
-                                <Typography variant="body" weight="bold">Invoices</Typography>
-                            </Pressable>
-                            <IconButton
-                                icon={<FilterSearch size={20} color={isDark ? "white" : "black"} />}
-                                variant="glass"
-                                onPress={() => setShowSortModal(true)}
-                            />
-                            <IconButton
-                                icon={<Add size={24} color={isDark ? "white" : "black"} />}
-                                variant="glass"
-                                onPress={() => router.push('/(tabs)/orders/new')}
-                            />
-                        </View>
-                    </View>
-
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        className="mb-6"
-                        contentContainerClassName="pr-6"
-                    >
-                        {TABS.map((tab) => {
-                            const isActive = activeTab === tab;
-                            const count = tab === 'All'
-                                ? orders.length
-                                : orders.filter(o => o.status === tab.toUpperCase()).length;
-
-                            return (
-                                <Pressable
-                                    key={tab}
-                                    onPress={() => setActiveTab(tab)}
-                                    className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border ${isActive
-                                        ? 'bg-dark border-dark'
-                                        : isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100'
-                                        }`}
-                                >
-                                    <Typography
-                                        variant="small"
-                                        weight={isActive ? 'bold' : 'medium'}
-                                        color={isActive ? 'white' : 'gray'}
-                                    >
-                                        {tab}
-                                    </Typography>
-                                    <View className={`ml-2 px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20' : (isDark ? 'bg-surface-muted-dark' : 'bg-muted')}`}>
-                                        <Typography
-                                            variant="small"
-                                            weight="bold"
-                                            color={isActive ? 'white' : 'black'}
-                                            className="text-[10px]"
-                                        >
-                                            {count}
-                                        </Typography>
-                                    </View>
-                                </Pressable>
-                            );
-                        })}
-                    </ScrollView>
-                </View>
-
-                {loading ? (
-                    <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator color={isDark ? "white" : "black"} />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={sortedOrders}
-                        keyExtractor={(item) => item.id}
-                        contentContainerClassName="px-6 pb-32"
-                        showsVerticalScrollIndicator={false}
-                        refreshControl={
-                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                        }
-                        renderItem={({ item: order }) => (
-                            <Swipeable
-                                ref={ref => { swipeableRefs.current[order.id] = ref; }}
-                                renderRightActions={() => renderRightActions(order)}
-                                friction={2}
-                                rightThreshold={40}
-                            >
-                                <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                    <View
-                                        className={`py-4 mb-3 flex-row items-center px-1`}
-                                    >
-                                        <View className="relative mr-5 w-[54px] h-[54px] items-center justify-center">
-                                            <View className="absolute">
-                                                <ProgressSquare
-                                                    progress={getProgressValue(order)}
-                                                    size={54}
-                                                    strokeWidth={2.5}
-                                                    borderRadius={14}
-                                                    color={getProgressColors(order)}
-                                                    backgroundColor={isDark ? '#1F2937' : '#F3F4F6'}
-                                                />
-                                            </View>
-                                            <Surface
-                                                variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
-                                                className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) ? (isDark ? 'bg-dark-800' : '') : (isDark ? getDarkVariantClass(getVariantForOrder(order.id)) : '')}`}
-                                                rounded="xl"
-                                            >
-                                                {(order.fabricImage || order.styleImage) ? (
-                                                    <Image
-                                                        source={{ uri: (order.fabricImage || order.styleImage) as string }}
-                                                        className="w-full h-full"
-                                                    />
-                                                ) : (
-                                                    <Box size={18} color={getVariantColor(getVariantForOrder(order.id))} variant="Bulk" />
-                                                )}
-                                            </Surface>
-                                        </View>
-
-                                        <View className="flex-1">
-                                            <View className="flex-row justify-between items-start mb-1">
-                                                <View>
-                                                    <Typography variant="body" weight="bold">{order.styleName}</Typography>
-                                                    <Typography variant="small" color="gray" className="mt-0.5">{(order as any).customerFullName}</Typography>
-                                                </View>
-                                                <View className="items-end">
-                                                    <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
-                                                    {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
-                                                        <View className={`${isDark ? 'bg-red-900/20' : 'bg-red-50'} px-1.5 py-0.5 rounded mt-0.5`}>
-                                                            <Typography variant="small" color="red" weight="bold" className="text-[9px]">
-                                                                OWING: {formatCurrency(order.balance || 0)}
-                                                            </Typography>
-                                                        </View>
-                                                    )}
-                                                </View>
-                                            </View>
-
-                                            <View className="flex-row justify-between items-center">
-                                                <View className="flex-row items-center">
-                                                    <Typography variant="caption" color="gray">
-                                                        {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
-                                                    </Typography>
-                                                </View>
-                                                <View
-                                                    className={`px-3 py-1 rounded-full ${order.status === 'DELIVERED'
-                                                        ? (isDark ? 'bg-green-900/20' : 'bg-soft-green')
-                                                        : (isDark ? 'bg-orange-900/20' : 'bg-soft-peach')}`}
-                                                >
-                                                    <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-600' : (isDark ? 'text-orange-400' : 'text-orange-700')}>
-                                                        {order.status}
-                                                    </Typography>
-                                                </View>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </Pressable>
-                            </Swipeable>
-                        )
-                        }
-                        ListEmptyComponent={
-                            <View className="items-center justify-center py-20 px-10">
-                                <Surface
-                                    variant="muted"
-                                    className="w-24 h-24 items-center justify-center mb-6"
-                                    rounded="full"
-                                >
-                                    <Box size={40} color="#9CA3AF" variant="Bulk" />
-                                </Surface>
-                                <Typography variant="h3" weight="bold" className="text-center mb-2">
-                                    No {activeTab === 'All' ? '' : activeTab.toLowerCase()} orders found
-                                </Typography>
-                                <Typography
-                                    variant="body"
-                                    color="gray"
-                                    className="text-center leading-relaxed"
-                                >
-                                    {activeTab === 'All'
-                                        ? "You haven't added any orders yet. Start by adding a new order to your list."
-                                        : `It looks like there are no orders currently marked as ${activeTab.toLowerCase()}.`
-                                    }
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+                {/* Header */}
+                <View className="flex-row justify-between items-center mb-4">
+                    <View className="flex-row items-center">
+                        <Typography variant="h2" weight="bold" className="text-2xl">Orders</Typography>
+                        {!isPro && (
+                            <View className={`ml-3 px-2 py-0.5 rounded-md ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                                <Typography variant="caption" weight="bold" color="gray">
+                                    {orderLimit.current}/{orderLimit.limit}
                                 </Typography>
                             </View>
-                        }
+                        )}
+                    </View>
+                    <View className="flex-row gap-4">
+                        <TouchableOpacity onPress={() => setShowSortModal(true)}>
+                            <FilterSearch size={22} color="#6366f1" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/orders/new')}>
+                            <Add size={26} color="#6366f1" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Search Bar - Matching Customers */}
+                <Surface variant="muted" className={`flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
+                    <SearchNormal size={18} color="#8E8E93" />
+                    <TextInput
+                        className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
+                        placeholder="Search for an order..."
+                        placeholderTextColor="#8E8E93"
+                        value={search}
+                        onChangeText={setSearch}
                     />
-                )}
+                </Surface>
             </View>
 
-            {/* Sort Modal */}
-            <Modal
-                visible={showSortModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setShowSortModal(false)}
-            >
-                <Pressable
-                    className="flex-1 bg-black/50 justify-end"
-                    onPress={() => setShowSortModal(false)}
+            {/* Tabs */}
+            <View className="py-4">
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerClassName="px-6"
                 >
-                    <Pressable onPress={() => { }} className={`${isDark ? 'bg-surface-dark' : 'bg-white'} rounded-t-3xl p-6`}>
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Typography variant="h3" weight="bold">Sort Orders By</Typography>
-                            <IconButton
-                                icon={<CloseCircle size={24} color="#9CA3AF" variant="Bold" />}
-                                variant="ghost"
-                                onPress={() => setShowSortModal(false)}
-                            />
-                        </View>
-                        <View className="gap-2">
-                            {SORT_OPTIONS.map((option) => (
-                                <Pressable
-                                    key={option.key}
-                                    onPress={() => {
-                                        setSortBy(option.key);
-                                        setShowSortModal(false);
-                                    }}
-                                    className={`flex-row items-center justify-between p-4 rounded-2xl ${sortBy === option.key ? (isDark ? 'bg-dark-700' : 'bg-lavender') : (isDark ? 'bg-dark-800' : 'bg-gray-50')}`}
+                    {TABS.map((tab) => {
+                        const isActive = activeTab === tab;
+                        const count = tab === 'All'
+                            ? orders.length
+                            : orders.filter(o => o.status === tab.toUpperCase()).length;
+
+                        return (
+                            <TouchableOpacity
+                                key={tab}
+                                activeOpacity={0.7}
+                                onPress={() => setActiveTab(tab)}
+                                className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 ${isActive
+                                    ? (isDark ? 'bg-zinc-100' : 'bg-zinc-900')
+                                    : (isDark ? 'bg-zinc-900 border border-white/5' : 'bg-white shadow-sm')
+                                    }`}
+                            >
+                                <Typography
+                                    variant="small"
+                                    weight={isActive ? 'bold' : 'medium'}
+                                    className={isActive ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500'}
                                 >
+                                    {tab}
+                                </Typography>
+                                <View className={`ml-2 px-1.5 py-0.5 rounded-md ${isActive ? (isDark ? 'bg-black/10' : 'bg-white/10') : (isDark ? 'bg-white/5' : 'bg-zinc-50')}`}>
                                     <Typography
-                                        weight={sortBy === option.key ? 'bold' : 'medium'}
-                                        color={sortBy === option.key ? 'primary' : 'black'}
+                                        variant="small"
+                                        weight="bold"
+                                        className={`text-[10px] ${isActive ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500'}`}
                                     >
-                                        {option.label}
+                                        {count}
                                     </Typography>
-                                    {sortBy === option.key && (
-                                        <TickCircle size={20} color="#4F46E5" variant="Bold" />
-                                    )}
-                                </Pressable>
-                            ))}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+
+            {loading ? (
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator color={isDark ? "white" : "#6366f1"} />
+                </View>
+            ) : (
+                <FlatList
+                    data={sortedOrders}
+                    keyExtractor={(item) => item.id}
+                    contentContainerClassName="p-4 pt-2 pb-32"
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+                    }
+                    renderItem={({ item: order }) => (
+                        <Swipeable
+                            ref={ref => { swipeableRefs.current[order.id] = ref; }}
+                            renderRightActions={() => renderRightActions(order)}
+                            friction={2}
+                            rightThreshold={40}
+                        >
+                            <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
+                                <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="2xl" hasShadow={!isDark}>
+                                    <View className="relative mr-4 w-[54px] h-[54px] items-center justify-center">
+                                        <View className="absolute">
+                                            <ProgressSquare
+                                                progress={getProgressValue(order)}
+                                                size={54}
+                                                strokeWidth={2.5}
+                                                borderRadius={14}
+                                                color={getProgressColors(order)}
+                                                backgroundColor={isDark ? '#1F2937' : '#F3F4F6'}
+                                            />
+                                        </View>
+                                        <Surface
+                                            variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
+                                            className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) ? (isDark ? 'bg-dark-800' : '') : (isDark ? getDarkVariantClass(getVariantForOrder(order.id)) : '')}`}
+                                            rounded="xl"
+                                        >
+                                            {(order.fabricImage || order.styleImage) ? (
+                                                <Image
+                                                    source={{ uri: (order.fabricImage || order.styleImage) as string }}
+                                                    className="w-full h-full"
+                                                />
+                                            ) : (
+                                                <Box size={18} color={getVariantColor(getVariantForOrder(order.id))} variant="Bulk" />
+                                            )}
+                                        </Surface>
+                                    </View>
+
+                                    <View className="flex-1">
+                                        <View className="flex-row justify-between items-start mb-1">
+                                            <View>
+                                                <Typography variant="body" weight="bold">{order.styleName}</Typography>
+                                                <Typography variant="caption" color="gray" className="mt-0.5">{(order as any).customerFullName}</Typography>
+                                            </View>
+                                            <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
+                                        </View>
+
+                                        <View className="flex-row justify-between items-center mt-1">
+                                            <View className="flex-row items-center gap-2">
+                                                <Typography variant="caption" color="gray">
+                                                    {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
+                                                </Typography>
+                                                {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
+                                                    <View className={`${isDark ? 'bg-red-900/20' : 'bg-red-50'} px-1.5 py-0.5 rounded`}>
+                                                        <Typography variant="small" color="red" weight="bold" className="text-[9px]">
+                                                            OWING
+                                                        </Typography>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            <View
+                                                className={`px-2 py-0.5 rounded-md ${order.status === 'DELIVERED'
+                                                    ? (isDark ? 'bg-green-900/20' : 'bg-green-50')
+                                                    : (isDark ? 'bg-orange-900/20' : 'bg-orange-50')}`}
+                                            >
+                                                <Typography variant="small" weight="bold" className={`${order.status === 'DELIVERED' ? 'text-green-600' : 'text-orange-500'} text-[10px]`}>
+                                                    {order.status}
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View className="ml-3">
+                                        <ArrowRight size={16} color="#D1D1D6" />
+                                    </View>
+                                </Surface>
+                            </Pressable>
+                        </Swipeable>
+                    )}
+                    ListEmptyComponent={
+                        <View className="items-center justify-center py-20 px-10">
+                            <Surface variant="muted" className="w-20 h-20 items-center justify-center mb-6" rounded="full">
+                                <Box size={32} color="#8E8E93" variant="Bulk" />
+                            </Surface>
+                            <Typography variant="h3" weight="bold" className="text-center mb-2">No orders</Typography>
+                            <Typography variant="body" color="gray" className="text-center">
+                                {search ? "Try a different search term" : "Add your first order to get started"}
+                            </Typography>
                         </View>
-                        <View className="h-8" />
-                    </Pressable>
-                </Pressable>
-            </Modal>
+                    }
+                />
+            )}
+
+            <ActionSheet
+                visible={showSortModal}
+                onClose={() => setShowSortModal(false)}
+                title="Sort By"
+                options={SORT_OPTIONS}
+                selectedValue={sortBy}
+                onSelect={setSortBy}
+            />
         </View>
     );
 }
