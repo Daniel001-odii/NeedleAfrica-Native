@@ -11,7 +11,8 @@ import {
     ArrowRight2,
     Setting4,
     Receipt21,
-    MoneySend
+    MoneySend,
+    Gallery
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -27,24 +28,24 @@ export default function Extras() {
 
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
-                {/* Hero: Invoice Generator */}
+                {/* Hero: Catalog Management */}
                 <View className="px-4 mt-6">
                     <TouchableOpacity
                         activeOpacity={0.9}
-                        onPress={() => router.push('/(tabs)/orders/invoices')}
+                        onPress={() => router.push('/(tabs)/extras/catalog-gallery' as any)}
                         className={`overflow-hidden rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-blue-600 shadow-xl shadow-blue-200'}`}
                     >
                         <View className="p-6 z-10 w-3/4">
-                            <Typography variant="h3" weight="bold" color="white">Professional Invoices</Typography>
+                            <Typography variant="h3" weight="bold" color="white">My Online Catalog</Typography>
                             <Typography variant="small" className="text-blue-100 mt-1 mb-4">
-                                Generate and send digital receipts to your clients instantly.
+                                Showcase your best designs and get orders directly from clients.
                             </Typography>
                             <View className="bg-white self-start px-5 py-2.5 rounded-full shadow-sm">
-                                <Typography variant="small" weight="bold" className="text-blue-600">Create New</Typography>
+                                <Typography variant="small" weight="bold" className="text-blue-600">Open Catalog</Typography>
                             </View>
                         </View>
                         <View className="absolute -right-8 -bottom-8 opacity-20">
-                            <DocumentText size={160} color="white" variant="Bulk" />
+                            <Gallery size={160} color="white" variant="Bulk" />
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -53,27 +54,27 @@ export default function Extras() {
                 <SectionLabel label="Creative Tools" />
                 <View className="flex-row flex-wrap px-4 justify-between">
                     <ToolCard
+                        icon={<DocumentText size={24} color="#10B981" variant="Bulk" />}
+                        title="Invoices"
+                        desc="Billing and client receipts"
+                        onPress={() => router.push('/(tabs)/orders/invoices' as any)}
+                    />
+                    <ToolCard
                         icon={<Colorfilter size={24} color="#0D9488" variant="Bulk" />}
                         title="Pantone"
-                        desc="Color palettes"
+                        desc="Fashion color palettes"
                         onPress={() => router.push('/(tabs)/extras/pantone')}
                     />
                     <ToolCard
                         icon={<TrendUp size={24} color="#F43F5E" variant="Bulk" />}
-                        title="Tag Walk"
-                        desc="Runway trends"
+                        title="Style Ideas"
+                        desc="Latest runway trends"
                         onPress={() => router.push('/(tabs)/extras/ideas' as any)}
-                    />
-                    <ToolCard
-                        icon={<DocumentText size={24} color="#10B981" variant="Bulk" />}
-                        title="Receipts"
-                        desc="Digital records"
-                        infoText="Generate digital receipts for your customers after payment."
                     />
                     <ToolCard
                         icon={<PenTool size={24} color="#8B5CF6" variant="Bulk" />}
                         title="Monogram"
-                        desc="Embroidery inspo"
+                        desc="Embroidery inspirations"
                         infoText="Browse unique monogram designs and embroidery patterns."
                     />
                 </View>

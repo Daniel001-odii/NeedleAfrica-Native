@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Switch, TouchableOpacity, TextInput, Pressable, Modal, FlatList, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import {
     ArrowLeft, Sms, DirectNotification, MagicStar, Ruler,
     Coin1, Add, SearchNormal1, TickCircle, Moon, Sun,
@@ -18,7 +18,6 @@ import Toast from 'react-native-toast-message';
 import Svg, { Path } from 'react-native-svg';
 
 export default function Preferences() {
-    const router = useRouter();
     const { user, updateProfile } = useAuth();
     const { theme, setTheme, isDark } = useTheme();
     const [isSaving, setIsSaving] = useState(false);
@@ -317,7 +316,7 @@ function ThemeRow({ current, onChange, isDark }: { current: string, onChange: (t
                 const isActive = current === opt.id;
                 const Icon = opt.icon;
                 return (
-                    <TouchableOpacity
+                    <Pressable
                         key={opt.id}
                         onPress={() => onChange(opt.id)}
                         className={`flex-1 flex-row items-center justify-center py-3 rounded-xl ${isActive ? (isDark ? 'bg-zinc-800' : 'bg-gray-100') : ''}`}
@@ -330,7 +329,7 @@ function ThemeRow({ current, onChange, isDark }: { current: string, onChange: (t
                         >
                             {opt.label}
                         </Typography>
-                    </TouchableOpacity>
+                    </Pressable>
                 );
             })}
         </View>

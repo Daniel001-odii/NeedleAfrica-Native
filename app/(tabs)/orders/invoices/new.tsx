@@ -18,6 +18,7 @@ import { ResourceLimitModal } from '../../../../components/ResourceLimitModal';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../../contexts/ConfirmContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
+import { StoreReviewService } from '../../../../services/StoreReviewService';
 
 export default function CreateInvoiceScreen() {
     const router = useRouter();
@@ -100,6 +101,11 @@ export default function CreateInvoiceScreen() {
                 text1: 'Invoice Created',
                 text2: `Invoice ${invoice?.invoiceNumber} generated successfully`
             });
+
+            // Auto-prompt for review after a short delay
+            setTimeout(() => {
+                StoreReviewService.requestReview().catch(console.error);
+            }, 1500);
 
             router.navigate(`/(tabs)/orders/invoices/`);
         } catch (error) {

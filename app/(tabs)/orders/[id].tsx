@@ -18,6 +18,8 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CURRENCIES } from '../../../constants/currencies';
+import * as StoreReview from 'expo-store-review';
+import { StoreReviewService } from '../../../services/StoreReviewService';
 
 const isLocalUri = (uri: string | null) => uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
@@ -174,6 +176,12 @@ export default function OrderDetail() {
                 text2: `Status updated to ${newStatus}`
             });
             performSync().catch(console.error);
+
+            if (newStatus === 'DELIVERED') {
+                setTimeout(() => {
+                    StoreReviewService.requestReview().catch(console.error);
+                }, 1500);
+            }
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update status' });
         }
@@ -359,13 +367,22 @@ export default function OrderDetail() {
                                 </Surface>
                             </View>
 
-                            <Button
-                                onPress={handleStatusToggle}
-                                className={`h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-600' : (isDark ? 'bg-white' : 'bg-dark')}`}
-                                textClassName={order.status === 'DELIVERED' ? 'text-white' : (isDark ? 'text-black' : 'text-white')}
-                            >
-                                {order.status === 'DELIVERED' ? 'Order Delivered' : 'Mark as Delivered'}
-                            </Button>
+                            <View className="flex-row gap-3">
+                                <Button
+                                    onPress={handleStatusToggle}
+                                    className={`flex-[1.5] h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-600' : (isDark ? 'bg-white' : 'bg-dark')}`}
+                                    textClassName={order.status === 'DELIVERED' ? 'text-white' : (isDark ? 'text-black' : 'text-white')}
+                                >
+                                    {order.status === 'DELIVERED' ? 'Delivered' : 'Mark as Delivered'}
+                                </Button>
+                                <Button
+                                    onPress={() => router.push(`/(tabs)/orders/invoices/${order.id}` as any)}
+                                    className={`flex-1 h-16 rounded-full border-0 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}
+                                    textClassName={isDark ? 'text-indigo-400' : 'text-indigo-600'}
+                                >
+                                    Invoice
+                                </Button>
+                            </View>
                         </>
                     ) : (
                         <View className="gap-6">

@@ -203,6 +203,11 @@ export class NotificationService {
             const pendingOrders = orders.filter(o => ['PENDING', 'READY'].includes(o.status));
             const hasPending = pendingOrders.length > 0;
 
+            const owingOrders = orders.filter(o => {
+                const balance = typeof o.balance === 'number' ? o.balance : ((o.amount || 0) - (o.amountPaid || 0));
+                return balance > 0;
+            });
+
             // 1. Morning Reminder (8 AM)
             const morningTitle = "Good Morning! 🧵";
             const morningBody = hasPending
@@ -240,6 +245,45 @@ export class NotificationService {
                     minute: 0,
                 } as Notifications.DailyTriggerInput,
             });
+
+            // 3. Debt Reminder (12 PM)
+            if (owingOrders.length > 0) {
+                const firstOrder = owingOrders[0];
+                let customerName = 'a client';
+
+                try {
+                    if (firstOrder.customerId && firstOrder.collections) {
+                        const customers = await firstOrder.collections.get('customers')
+                            .query(Q.where('id', firstOrder.customerId))
+                            .fetch();
+                        if (customers.length > 0 && customers[0].fullName) {
+                            customerName = customers[0].fullName;
+                        }
+                    }
+                } catch (e) {
+                    console.log("Could not fetch customer name for debt reminder", e);
+                }
+
+                const remainingCount = owingOrders.length - 1;
+                const debtTitle = "Outstanding Balances 💰";
+                const debtBody = remainingCount > 0 
+                    ? `Reminder for debts owed by ${customerName} and ${remainingCount} other${remainingCount > 1 ? 's' : ''}.`
+                    : `Reminder for debt owed by ${customerName}.`;
+
+                await Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: debtTitle,
+                        body: debtBody,
+                        data: { type: 'smart_reminder', time: '12PM' },
+                        sound: true,
+                    },
+                    trigger: {
+                        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                        hour: 12,
+                        minute: 0,
+                    } as Notifications.DailyTriggerInput,
+                });
+            }
 
             console.log("Smart reminders scheduled successfully.");
         } catch (e) {

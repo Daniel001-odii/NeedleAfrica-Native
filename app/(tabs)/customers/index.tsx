@@ -130,27 +130,28 @@ function CustomersScreen() {
                             </View>
                         )}
                     </View>
-                    <View className="flex-row gap-4">
-                        <TouchableOpacity onPress={() => setShowSortModal(true)}>
-                            <FilterSearch size={22} color="#6366f1" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')}>
-                            <Add size={26} color="#6366f1" />
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                        <Add size={20} color="#6366f1" />
+                        <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Search Bar - Native iOS Look */}
-                <Surface variant="muted" className={`flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
-                    <SearchNormal size={18} color="#8E8E93" />
-                    <TextInput
-                        className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
-                        placeholder="Search"
-                        placeholderTextColor="#8E8E93"
-                        value={search}
-                        onChangeText={setSearch}
-                    />
-                </Surface>
+                {/* Search Bar & Filter */}
+                <View className="flex-row items-center gap-3">
+                    <Surface variant="muted" className={`flex-1 flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
+                        <SearchNormal size={18} color="#8E8E93" />
+                        <TextInput
+                            className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
+                            placeholder="Search"
+                            placeholderTextColor="#8E8E93"
+                            value={search}
+                            onChangeText={setSearch}
+                        />
+                    </Surface>
+                    <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-xl ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                        <FilterSearch size={22} color={isDark ? "#818cf8" : "#6366f1"} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {/* List */}

@@ -4,6 +4,7 @@ import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { database } from '../database/watermelon';
+import { Q } from '@nozbe/watermelondb';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
@@ -45,6 +46,7 @@ function RootLayoutNav() {
         const inMeasurements = segments[0] === 'measurements';
         const inTemplates = segments[0] === 'measurement-templates';
         const inInvoices = segments[0] === 'invoices';
+        const inNotifications = segments[0] === 'notifications';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -53,7 +55,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -66,7 +68,7 @@ function RootLayoutNav() {
         const performSync = async () => {
             try {
                 await sync();
-                const orders = await database.get('orders').query().fetch();
+                const orders = await database.get('orders').query(Q.where('deleted_at', Q.eq(null))).fetch();
                 await NotificationService.refreshAllReminders(orders, user);
             } catch (e) {
                 console.error(e);
@@ -115,6 +117,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                <Stack.Screen name="notifications" options={{ presentation: 'modal', headerShown: false }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (

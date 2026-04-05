@@ -3,7 +3,7 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "1.5.0",
+    "version": "1.8.5",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -50,7 +50,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-image.png",
-          "imageWidth": 100,
+          "imageWidth": 180,
           "resizeMode": "contain",
           "backgroundColor": "#FF5678",
           "dark": {

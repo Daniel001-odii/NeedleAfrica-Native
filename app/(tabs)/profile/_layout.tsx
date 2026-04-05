@@ -14,6 +14,7 @@ export default function ProfileLayout() {
             <Stack.Screen name="preferences" />
             <Stack.Screen name="backup" />
             <Stack.Screen name="download-data" />
+            <Stack.Screen name="catalog" />
         </Stack>
     );
 }

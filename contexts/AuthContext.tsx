@@ -9,6 +9,7 @@ import appleAuth from '@invertase/react-native-apple-authentication';
 import { revenueCatService } from '../services/RevenueCatService';
 import { posthog } from '../posthogConfig';
 import Constants from 'expo-constants';
+import { database } from '../database/watermelon';
 
 interface User {
     id: string;
@@ -40,6 +41,7 @@ interface User {
     deviceType?: string;
     onboardingCompleted?: boolean;
     invoiceTemplate?: number;
+    provider?: 'NEEDLEX' | 'GOOGLE' | 'APPLE';
 }
 
 interface AuthContextType {
@@ -59,6 +61,7 @@ interface AuthContextType {
     refreshUser: () => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signInWithApple: () => Promise<void>;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -138,6 +141,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            await database.write(async () => {
+                await database.unsafeResetDatabase();
+            });
             setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
@@ -195,6 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            await database.write(async () => {
+                await database.unsafeResetDatabase();
+            });
             setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
@@ -242,6 +251,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await SecureStore.setItemAsync('auth_token', token);
             await SecureStore.setItemAsync('user_data', JSON.stringify(userData));
+            await database.write(async () => {
+                await database.unsafeResetDatabase();
+            });
             setIsNewUser(!userData.onboardingCompleted);
             setUser(userData);
             registerPushToken();
@@ -371,6 +383,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const changePassword = async (currentPassword: string, newPassword: string) => {
+        setIsActionLoading(true);
+        try {
+            const response = await axiosInstance.post('/auth/change-password', { currentPassword, newPassword });
+            const { status, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Password change failed');
+            }
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Password change failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     const uploadProfilePhoto = async (imageUri: string) => {
         setIsActionLoading(true);
         try {
@@ -474,7 +503,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple, changePassword }}>
             {children}
         </AuthContext.Provider>
     );

@@ -44,6 +44,13 @@ export default function CreateFirstOrder() {
             return;
         }
 
+        const parsedPrice = parseInt(amount.replace(/,/g, '')) || 0;
+        const parsedDeposit = parseInt(amountPaid.replace(/,/g, '')) || 0;
+        if (parsedDeposit > parsedPrice) {
+            Toast.show({ type: 'error', text1: 'Invalid Deposit', text2: 'Deposit cannot be higher than order total amount' });
+            return;
+        }
+
         setIsLoading(true);
         try {
             let uploadedImages: { fabricImage?: string; styleImage?: string } = {};

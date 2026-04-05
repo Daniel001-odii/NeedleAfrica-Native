@@ -111,6 +111,13 @@ export default function NewOrder() {
             return;
         }
 
+        const parsedPrice = parseInt(price.replace(/,/g, '')) || 0;
+        const parsedDeposit = parseInt(amountPaid.replace(/,/g, '')) || 0;
+        if (parsedDeposit > parsedPrice) {
+            Toast.show({ type: 'error', text1: 'Invalid Deposit', text2: 'Deposit cannot be higher than order total amount' });
+            return;
+        }
+
         // Check resource limits for free tier
         if (isFree) {
             const limitCheck = canCreate('orders');

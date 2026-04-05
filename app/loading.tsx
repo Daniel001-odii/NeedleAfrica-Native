@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -26,8 +26,13 @@ export default function LoadingScreen() {
     }, [isHydrated]);
 
     return (
-        <View style={[styles.container, { backgroundColor: effectiveIsDark ? '#000000' : '#ffffff' }]}>
-            <ActivityIndicator size="large" color={effectiveIsDark ? '#ffffff' : '#000000'} />
+        <View style={[styles.container, { backgroundColor: effectiveIsDark ? '#FF5678' : '#FF5678' }]}>
+            <Image 
+                source={require('../assets/splash-image.png')} 
+                style={{ width: 180, height: 180, marginBottom: 40 }} 
+                resizeMode="contain"
+            />
+            <ActivityIndicator size="large" color="#ffffff" />
         </View>
     );
 }

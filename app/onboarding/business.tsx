@@ -5,7 +5,8 @@ import {
     TouchableOpacity,
     Modal,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    TextInput
 } from 'react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
@@ -191,7 +192,7 @@ export default function BusinessDetails() {
                                             fontWeight: '600',
                                             color: '#111827',
                                             textAlign: 'right',
-                                            width: '100%'
+                                            width: '100%',
                                         }}
                                         placeholder="(555) 000-0000"
                                         placeholderTextColor="#D1D5DB"
@@ -200,6 +201,7 @@ export default function BusinessDetails() {
                                         onChange={(p: any) => {
                                             if (p !== phone) setPhone(p || '');
                                         }}
+                                        international={false}
                                     />
                                 </View>
                             </View>

@@ -120,7 +120,7 @@ export default function AddFirstCustomer() {
                                             fontWeight: '600',
                                             color: '#111827',
                                             textAlign: 'right',
-                                            width: '100%'
+                                            width: '100%',
                                         }}
                                         placeholder="(555) 000-0000"
                                         placeholderTextColor="#D1D5DB"
@@ -128,7 +128,8 @@ export default function AddFirstCustomer() {
                                         onChange={(v: any) => {
                                             if (v !== phone) setPhone(v || '');
                                         }}
-                                        defaultCode="NG"
+                                        defaultCountry="NG"
+                                        international={false}
                                     />
                                 </View>
                             </View>

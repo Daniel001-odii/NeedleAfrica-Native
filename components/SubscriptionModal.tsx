@@ -42,7 +42,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     } = useRevenueCat();
 
     const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-    const [selectedPlanType, setSelectedPlanType] = useState<'MONTHLY' | 'YEARLY'>('YEARLY');
+    const [selectedPlanType, setSelectedPlanType] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
     const [loadingPackages, setLoadingPackages] = useState(true);
 
     useEffect(() => {

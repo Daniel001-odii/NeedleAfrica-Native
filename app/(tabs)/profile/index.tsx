@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Constants from 'expo-constants';
 import { View, ScrollView, Image, Pressable, Linking, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
+import { Platform } from 'react-native';
 import {
     Setting2,
     User,
@@ -10,7 +12,9 @@ import {
     CloudChange,
     Crown,
     ArrowRight2,
-    People
+    People,
+    Gallery,
+    Star
 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
@@ -18,6 +22,7 @@ import { Typography } from '../../../components/ui/Typography';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Svg, { Path } from 'react-native-svg';
+import { StoreReviewService } from '../../../services/StoreReviewService';
 
 export default function Profile() {
     const { user, logout, refreshUser } = useAuth();
@@ -64,7 +69,7 @@ export default function Profile() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
             >
                 {/* User Info Card */}
-                <View className={`flex-row items-center mb-8`}>
+                <View className={`flex-row items-center mb-6`}>
                     {user?.profilePicture ? (
                         <Image
                             source={{ uri: user.profilePicture }}
@@ -90,7 +95,7 @@ export default function Profile() {
                 </View>
 
                 {/* Account Section */}
-                <View className="mb-8">
+                <View className="mb-6">
                     <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                         Account
                     </Typography>
@@ -98,21 +103,18 @@ export default function Profile() {
                         <ProfileItem
                             icon={<User size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Personal Information"
-                            subtitle="Update your name, business & contact info"
                             onPress={() => router.push('/(tabs)/profile/personal')}
                             isDark={isDark}
                         />
                         <ProfileItem
                             icon={<Setting2 size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Preferences"
-                            subtitle="App theme, notifications & currency"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                             isDark={isDark}
                         />
                         <ProfileItem
                             icon={<Crown size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Subscription"
-                            subtitle="Manage your plan & billing"
                             badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : ''}
                             badgeColor={userIsPro ? 'bg-yellow-500' : 'bg-blue-600'}
                             onPress={() => setIsSubscriptionModalVisible(true)}
@@ -122,8 +124,29 @@ export default function Profile() {
                     </View>
                 </View>
 
+                {/* Section: Grow (Online Catalog) */}
+                <View className="mb-6">
+                    <View className="flex-row items-center ml-4 mb-2">
+                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                            Grow
+                        </Typography>
+                        <View className="bg-blue-600 px-1.5 py-0.5 rounded-md ml-2">
+                            <Typography color="white" weight="bold" className="text-[8px] uppercase">New</Typography>
+                        </View>
+                    </View>
+                    <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                        <ProfileItem
+                            icon={<Gallery size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            title="My Business"
+                            onPress={() => router.push('/(tabs)/profile/catalog')}
+                            isDark={isDark}
+                            isLast
+                        />
+                    </View>
+                </View>
+
                 {/* Data & Security Section */}
-                <View className="mb-8">
+                <View className="mb-6">
                     <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                         Data & Security
                     </Typography>
@@ -131,7 +154,6 @@ export default function Profile() {
                         <ProfileItem
                             icon={<CloudChange size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Backup Data"
-                            subtitle="Securely sync your workshop data to cloud"
                             onPress={() => router.push('/(tabs)/profile/backup')}
                             isDark={isDark}
                             isLast
@@ -140,7 +162,7 @@ export default function Profile() {
                 </View>
 
                 {/* Support Section */}
-                <View className="mb-8">
+                <View className="mb-6">
                     <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                         Support & Community
                     </Typography>
@@ -148,15 +170,19 @@ export default function Profile() {
                         <ProfileItem
                             icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
-                            subtitle="Get assistance or reach out to us"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                             isDark={isDark}
                         />
                         <ProfileItem
                             icon={<People size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
                             title="Join our Community"
-                            subtitle="Connect with other designers & tailors"
                             onPress={() => Linking.openURL('https://chat.whatsapp.com/FTIvYiBIyfE4ZLniuOJWmL?mode=gi_t')}
+                            isDark={isDark}
+                        />
+                        <ProfileItem
+                            icon={<Star size={20} color="#FDB022" variant="Bulk" />}
+                            title="Rate Needle Africa"
+                            onPress={() => StoreReviewService.requestReview(true)}
                             isDark={isDark}
                         />
                         <ProfileItem
@@ -167,7 +193,6 @@ export default function Profile() {
                                 </Svg>
                             }
                             title="Send Feedback"
-                            subtitle="Help us improve NeedleX"
                             onPress={() => Linking.openURL('mailto:hello@needleafrica.com?subject=Feedback for NeedleX')}
                             isDark={isDark}
                             isLast
@@ -244,10 +269,10 @@ function ProfileItem({
 
     return (
         <Pressable
-            className={`active:bg-gray-50/50 dark:active:bg-white/5 flex-row items-center py-5 px-4 ${borderStyle}`}
+            className={`active:bg-gray-50/50 dark:active:bg-white/5 flex-row items-center py-[10px] px-4 ${borderStyle}`}
             onPress={onPress}
         >
-            <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-4 ${isDark ? 'bg-indigo-900/20' : 'bg-blue-50'}`}>
+            <View className={`w-9 h-9 items-center justify-center rounded-[12px] mr-3.5 ${isDark ? 'bg-indigo-900/20' : 'bg-blue-50'}`}>
                 {icon}
             </View>
 

@@ -28,7 +28,7 @@ const BUSINESS_TYPE_OPTIONS = [
 ];
 
 export default function PersonalInformation() {
-    const { user, updateProfile, deleteAccount } = useAuth();
+    const { user, updateProfile, deleteAccount, changePassword } = useAuth();
     const router = useRouter();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
@@ -47,6 +47,12 @@ export default function PersonalInformation() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -113,6 +119,35 @@ export default function PersonalInformation() {
         }
     };
 
+    const handleChangePassword = async () => {
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            Toast.show({ type: 'error', text1: 'Required', text2: 'Please fill in all password fields' });
+            return;
+        }
+        if (newPassword.length < 8) {
+            Toast.show({ type: 'error', text1: 'Invalid', text2: 'New password must be at least 8 characters' });
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            Toast.show({ type: 'error', text1: 'Mismatch', text2: 'New passwords do not match' });
+            return;
+        }
+
+        setIsChangingPassword(true);
+        try {
+            await changePassword(currentPassword, newPassword);
+            Toast.show({ type: 'success', text1: 'Success', text2: 'Password updated successfully' });
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+            setShowPasswordModal(false);
+        } catch (error: any) {
+            Toast.show({ type: 'error', text1: 'Update Failed', text2: error.message || 'Could not change password' });
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
     const cardBaseStyle = isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
 
     return (
@@ -138,10 +173,10 @@ export default function PersonalInformation() {
 
                 <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-                    {/* Section: Workspace Profile */}
+                    {/* Section: Account Settings */}
                     <View className="mb-6">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Workspace Profile
+                            Account Settings
                         </Typography>
                         <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
 
@@ -162,6 +197,20 @@ export default function PersonalInformation() {
                                 </View>
                             </TouchableOpacity>
 
+                            {/* Password Menu Item */}
+                            {(!user?.provider || user?.provider === 'NEEDLEX') && (
+                                <TouchableOpacity
+                                    onPress={() => setShowPasswordModal(true)}
+                                    className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
+                                >
+                                    <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Security</Typography>
+                                    <View className="flex-row items-center">
+                                        <Typography className="text-gray-400 text-[14px] mr-1">Update password</Typography>
+                                        <ArrowRight2 size={14} color="#9CA3AF" />
+                                    </View>
+                                </TouchableOpacity>
+                            )}
+
                             <ProfileRowInput
                                 label="Username"
                                 value={username}
@@ -169,124 +218,6 @@ export default function PersonalInformation() {
                                 placeholder="Choose username"
                                 isDark={isDark}
                             />
-
-                            <ProfileRowInput
-                                label="Brand Name"
-                                value={businessName}
-                                onChangeText={setBusinessName}
-                                placeholder="Studio / Brand Name"
-                                isDark={isDark}
-                            />
-
-                            {/* Phone Input */}
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[15px]">
-                                    WhatsApp
-                                </Typography>
-                                <View className="flex-1 items-end">
-                                    <PhoneInput
-                                        style={{ fontSize: 15, fontWeight: '600', color: isDark ? 'white' : '#111827', textAlign: 'right', width: '100%' }}
-                                        placeholder="+123 000 000 000"
-                                        placeholderTextColor="#9CA3AF"
-                                        defaultCountry="NG"
-                                        value={phone}
-                                        onChange={(val: any) => setPhone(val || '')}
-                                    />
-                                </View>
-                            </View>
-
-                            {/* Country Picker */}
-                            <View className="flex-row items-center px-4 py-4">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[15px]">
-                                    Country
-                                </Typography>
-                                <View className="flex-1 items-end">
-                                    <CountryPicker
-                                        withFilter
-                                        withFlag
-                                        withCountryNameButton
-                                        withAlphaFilter
-                                        withCallingCode={false}
-                                        withEmoji
-                                        onSelect={(c: any) => {
-                                            setCountry(c.name as string);
-                                            setCountryCode(c.cca2);
-                                        }}
-                                        countryCode={countryCode}
-                                        theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
-                                        containerButtonStyle={{ padding: 0 }}
-                                    />
-                                </View>
-                            </View>
-
-                        </View>
-                    </View>
-
-                    {/* Section: Studio Particulars */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Studio Particulars
-                        </Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-
-                            {/* Specialization Selection */}
-                            <TouchableOpacity
-                                onPress={() => setShowBusinessTypeModal(true)}
-                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
-                            >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Description</Typography>
-                                <View className="flex-row items-center">
-                                    <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>
-                                        {businessType || 'Select specialization'}
-                                    </Typography>
-                                    <ArrowRight2 size={16} color="#9CA3AF" />
-                                </View>
-                            </TouchableOpacity>
-
-                            {/* Team Size */}
-                            <View className="px-4 py-4 border-b border-gray-50 dark:border-white/5">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px] mb-3">
-                                    Team Size
-                                </Typography>
-                                <View className="flex-row flex-wrap gap-2">
-                                    {['1-5', '6-20', '21-50', '50+'].map((range) => {
-                                        const isSelected = noOfEmployees === range;
-                                        return (
-                                            <TouchableOpacity
-                                                key={range}
-                                                onPress={() => setNoOfEmployees(range)}
-                                                className={`px-4 py-2 rounded-[12px] border ${isSelected
-                                                    ? 'bg-blue-600 border-blue-600'
-                                                    : 'bg-gray-50 dark:bg-white/5 border-gray-100 dark:border-white/5'
-                                                    }`}
-                                            >
-                                                <Typography
-                                                    weight="bold"
-                                                    className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}
-                                                >
-                                                    {range}
-                                                </Typography>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
-                            </View>
-
-                            {/* Multi-Line Address */}
-                            <View className="px-4 py-4">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px] mb-2">
-                                    Workshop Address
-                                </Typography>
-                                <TextInput
-                                    className={`text-[15px] leading-tight min-h-[64px] font-medium text-left ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                    placeholder="Enter physical workshop address"
-                                    placeholderTextColor="#9CA3AF"
-                                    value={address}
-                                    onChangeText={setAddress}
-                                    multiline
-                                    textAlignVertical="top"
-                                />
-                            </View>
                         </View>
                     </View>
 
@@ -297,13 +228,13 @@ export default function PersonalInformation() {
                         className="h-14 rounded-full bg-blue-600 border-0 mb-8 mt-2"
                         textClassName="text-white text-[16px] font-bold"
                     >
-                        Save Changes
+                        Save Account Settings
                     </Button>
 
                     {/* Section: Account Actions */}
                     <View className="mb-6">
                         <Typography variant="caption" color="red" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Account Actions
+                            Danger Zone
                         </Typography>
                         <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                             <TouchableOpacity
@@ -433,6 +364,68 @@ export default function PersonalInformation() {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            {/* Modal: Change Password */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showPasswordModal}
+                onRequestClose={() => setShowPasswordModal(false)}
+            >
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+                    <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setShowPasswordModal(false)}>
+                        <Pressable className={`rounded-t-[32px] max-h-[85%] pb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'}`}>
+                            <View className="p-6">
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <View className="flex-row items-center">
+                                        <Warning2 size={24} color="#2563EB" variant="Bulk" />
+                                        <Typography variant="h3" weight="bold" className="text-gray-900 dark:text-white ml-2">Update Password</Typography>
+                                    </View>
+                                    <TouchableOpacity onPress={() => setShowPasswordModal(false)} className="bg-gray-200/80 dark:bg-white/10 p-1.5 rounded-full">
+                                        <CloseCircle size={22} color="#6B7280" variant="Bold" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View className={`rounded-[24px] overflow-hidden mb-6 ${cardBaseStyle}`}>
+                                    <ProfileRowInput
+                                        label="Current"
+                                        value={currentPassword}
+                                        onChangeText={setCurrentPassword}
+                                        placeholder="••••••••"
+                                        isDark={isDark}
+                                        secureTextEntry
+                                    />
+                                    <ProfileRowInput
+                                        label="New"
+                                        value={newPassword}
+                                        onChangeText={setNewPassword}
+                                        placeholder="••••••••"
+                                        isDark={isDark}
+                                        secureTextEntry
+                                    />
+                                    <ProfileRowInput
+                                        label="Confirm"
+                                        value={confirmNewPassword}
+                                        onChangeText={setConfirmNewPassword}
+                                        placeholder="••••••••"
+                                        isDark={isDark}
+                                        secureTextEntry
+                                    />
+                                </View>
+
+                                <Button
+                                    onPress={handleChangePassword}
+                                    isLoading={isChangingPassword}
+                                    className="h-14 rounded-full bg-blue-600 border-0"
+                                    textClassName="text-white text-[16px] font-bold"
+                                >
+                                    Update Password
+                                </Button>
+                            </View>
+                        </Pressable>
+                    </Pressable>
+                </KeyboardAvoidingView>
+            </Modal>
         </View>
     );
 }
@@ -447,12 +440,13 @@ interface ProfileRowInputProps {
     onChangeText: (text: string) => void;
     placeholder: string;
     isDark?: boolean;
+    secureTextEntry?: boolean;
 }
 
-function ProfileRowInput({ label, value, onChangeText, placeholder, isDark }: ProfileRowInputProps) {
+function ProfileRowInput({ label, value, onChangeText, placeholder, isDark, secureTextEntry }: ProfileRowInputProps) {
     return (
         <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
-            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[15px]">
+            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">
                 {label}
             </Typography>
             <TextInput
@@ -463,6 +457,7 @@ function ProfileRowInput({ label, value, onChangeText, placeholder, isDark }: Pr
                 onChangeText={onChangeText}
                 autoCorrect={false}
                 returnKeyType="done"
+                secureTextEntry={secureTextEntry}
             />
         </View>
     );
