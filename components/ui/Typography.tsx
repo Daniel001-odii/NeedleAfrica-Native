@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 // import { useTheme } from '../../../contexts/ThemeContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
-interface TypographyProps extends TextProps {
+export interface TypographyProps extends TextProps {
     variant?: 'h1' | 'h2' | 'h3' | 'subtitle' | 'body' | 'caption' | 'small';
     weight?: 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold' | 'black';
     color?: 'black' | 'gray' | 'white' | 'primary' | 'red';

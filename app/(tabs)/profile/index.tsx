@@ -124,7 +124,7 @@ export default function Profile() {
                     </View>
                 </View>
 
-                {/* Section: Grow (Online Catalog) */}
+                {/* Section: Grow (Catalog Storefront) */}
                 <View className="mb-6">
                     <View className="flex-row items-center ml-4 mb-2">
                         <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
@@ -137,7 +137,7 @@ export default function Profile() {
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
                             icon={<Gallery size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
-                            title="My Business"
+                            title="Catalog Storefront"
                             onPress={() => router.push('/(tabs)/profile/catalog')}
                             isDark={isDark}
                             isLast

@@ -15,17 +15,26 @@ import { useCustomers } from '../../hooks/useCustomers';
 import { IconButton } from '../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
 import PhoneInput from 'react-phone-number-input/react-native-input';
+import { TypingText } from '../../components/ui/TypingText';
+
+const PHONE_INPUT_STYLE = {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#111827',
+    textAlign: 'right' as const,
+    width: '100%',
+};
 
 export default function AddFirstCustomer() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addCustomer } = useCustomers();
 
     const [name, setName] = useState(state.customer?.name || '');
-    const [phone, setPhone] = useState(state.customer?.phone || '');
+    const [phone, setPhone] = useState<string | undefined>(state.customer?.phone || undefined);
     const [gender, setGender] = useState(state.customer?.gender || '');
     const [isLoading, setIsLoading] = useState(false);
 
-    const isFormValid = name.trim() && phone.trim() && gender;
+    const isFormValid = name.trim() && phone && gender;
 
     const handleSaveCustomer = async () => {
         if (!name.trim()) {
@@ -37,14 +46,14 @@ export default function AddFirstCustomer() {
         try {
             const customer = await addCustomer({
                 fullName: name.trim(),
-                phoneNumber: phone.trim(),
+                phoneNumber: phone?.trim() || '',
                 gender: gender,
                 notes: 'Created during onboarding'
             });
 
             if (customer) {
                 updateState({
-                    customer: { id: customer.id, name: name.trim(), phone: phone.trim(), gender: gender },
+                    customer: { id: customer.id, name: name.trim(), phone: phone?.trim() || '', gender: gender },
                     step: 3
                 });
 
@@ -78,9 +87,7 @@ export default function AddFirstCustomer() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Add First Customer
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Add First Client" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Who are you dressing today? Don't worry, you can easily add more later.
                         </Typography>
@@ -115,21 +122,12 @@ export default function AddFirstCustomer() {
                                 </Typography>
                                 <View className="flex-1 items-end">
                                     <PhoneInput
-                                        style={{
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            color: '#111827',
-                                            textAlign: 'right',
-                                            width: '100%',
-                                        }}
-                                        placeholder="(555) 000-0000"
+                                        style={PHONE_INPUT_STYLE}
+                                        placeholder="(+123) 456 7890"
                                         placeholderTextColor="#D1D5DB"
                                         value={phone}
-                                        onChange={(v: any) => {
-                                            if (v !== phone) setPhone(v || '');
-                                        }}
+                                        onChange={setPhone}
                                         defaultCountry="NG"
-                                        international={false}
                                     />
                                 </View>
                             </View>
@@ -150,8 +148,8 @@ export default function AddFirstCustomer() {
                                         key={g}
                                         onPress={() => setGender(g)}
                                         className={`flex-1 h-12 rounded-[16px] items-center justify-center border ${isSelected
-                                                ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-gray-50 border-gray-100'
+                                            ? 'bg-blue-600 border-blue-600'
+                                            : 'bg-gray-50 border-gray-100'
                                             }`}
                                     >
                                         <Typography

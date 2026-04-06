@@ -36,12 +36,12 @@ export default function Extras() {
                         className={`overflow-hidden rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-blue-600 shadow-xl shadow-blue-200'}`}
                     >
                         <View className="p-6 z-10 w-3/4">
-                            <Typography variant="h3" weight="bold" color="white">My Online Catalog</Typography>
+                            <Typography variant="h3" weight="bold" color="white">Catalog Gallery</Typography>
                             <Typography variant="small" className="text-blue-100 mt-1 mb-4">
                                 Showcase your best designs and get orders directly from clients.
                             </Typography>
                             <View className="bg-white self-start px-5 py-2.5 rounded-full shadow-sm">
-                                <Typography variant="small" weight="bold" className="text-blue-600">Open Catalog</Typography>
+                                <Typography variant="small" weight="bold" className="text-blue-600">Open Gallery</Typography>
                             </View>
                         </View>
                         <View className="absolute -right-8 -bottom-8 opacity-20">

@@ -17,6 +17,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import CountryPicker from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import Toast from 'react-native-toast-message';
+import { TypingText } from '../../components/ui/TypingText';
+
+const PHONE_INPUT_STYLE = {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#111827',
+    textAlign: 'right' as const,
+    width: '100%',
+};
 
 const BUSINESS_TYPE_OPTIONS = [
     'Tailor',
@@ -46,7 +55,7 @@ export default function BusinessDetails() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
 
     const [businessType, setBusinessType] = useState(state.businessType || '');
-    const [phone, setPhone] = useState(state.phoneNumber || '');
+    const [phone, setPhone] = useState<string | undefined>(state.phoneNumber || undefined);
     const [country, setCountry] = useState(state.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(state.country === 'Nigeria' ? 'NG' : (state.country ? undefined : 'NG'));
     const [noOfEmployees, setNoOfEmployees] = useState(state.noOfEmployees || '1-5');
@@ -68,7 +77,7 @@ export default function BusinessDetails() {
         try {
             await updateProfile({
                 businessType,
-                phoneNumber: phone,
+                phoneNumber: phone || '',
                 country,
                 noOfEmployees,
                 joinedFrom
@@ -76,7 +85,7 @@ export default function BusinessDetails() {
 
             updateState({
                 businessType,
-                phoneNumber: phone,
+                phoneNumber: phone || '',
                 country,
                 noOfEmployees,
                 joinedFrom,
@@ -111,9 +120,7 @@ export default function BusinessDetails() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Business Details
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Business Details" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Help us tailor your experience to suit your craft.
                         </Typography>
@@ -155,8 +162,8 @@ export default function BusinessDetails() {
                                                 key={range}
                                                 onPress={() => setNoOfEmployees(range)}
                                                 className={`px-4 py-2.5 rounded-[12px] border ${isSelected
-                                                        ? 'bg-blue-600 border-blue-600'
-                                                        : 'bg-gray-50 border-gray-100'
+                                                    ? 'bg-blue-600 border-blue-600'
+                                                    : 'bg-gray-50 border-gray-100'
                                                     }`}
                                             >
                                                 <Typography
@@ -187,21 +194,12 @@ export default function BusinessDetails() {
                                 </Typography>
                                 <View className="flex-1 items-end">
                                     <PhoneInput
-                                        style={{
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            color: '#111827',
-                                            textAlign: 'right',
-                                            width: '100%',
-                                        }}
-                                        placeholder="(555) 000-0000"
+                                        style={PHONE_INPUT_STYLE}
+                                        placeholder="(+123) 456 7890"
                                         placeholderTextColor="#D1D5DB"
                                         defaultCountry="NG"
                                         value={phone}
-                                        onChange={(p: any) => {
-                                            if (p !== phone) setPhone(p || '');
-                                        }}
-                                        international={false}
+                                        onChange={setPhone}
                                     />
                                 </View>
                             </View>

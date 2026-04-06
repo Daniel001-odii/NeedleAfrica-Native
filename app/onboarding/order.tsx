@@ -6,7 +6,8 @@ import {
     Platform,
     Image,
     TouchableOpacity,
-    KeyboardAvoidingView
+    KeyboardAvoidingView,
+    Pressable
 } from 'react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
@@ -20,6 +21,8 @@ import { IconButton } from '../../components/ui/IconButton';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
+import { Modal } from 'react-native';
+import { TypingText } from '../../components/ui/TypingText';
 
 export default function CreateFirstOrder() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
@@ -110,6 +113,17 @@ export default function CreateFirstOrder() {
         return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
+    const formatDate = (date: Date) => {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        if (date.toDateString() === today.toDateString()) return 'Today';
+        if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
     const isFormValid = styleName.trim() && amount.trim();
 
     return (
@@ -132,9 +146,7 @@ export default function CreateFirstOrder() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Create First Order
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Create First Order" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Let's get the details of {state.customer?.name}'s {state.template?.name || 'order'}.
                         </Typography>
@@ -172,7 +184,7 @@ export default function CreateFirstOrder() {
                                 </Typography>
                                 <View className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-lg">
                                     <Typography weight="bold" className="text-blue-600 mr-2">
-                                        {deliveryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        {formatDate(deliveryDate)}
                                     </Typography>
                                     <Calendar size={16} color="#2563EB" variant="Bulk" />
                                 </View>
@@ -298,7 +310,35 @@ export default function CreateFirstOrder() {
                 </View>
 
                 {/* Date Picker Overlay */}
-                {showDatePicker && (
+                {showDatePicker && Platform.OS === 'ios' && (
+                    <Modal
+                        transparent={true}
+                        animationType="slide"
+                        visible={showDatePicker}
+                    >
+                        <View className="flex-1 justify-end">
+                            <View className={`p-6 pb-12 rounded-t-[40px] shadow-2xl bg-white`}>
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <Typography variant="h3" weight="bold">Due Date</Typography>
+                                    <Pressable onPress={() => setShowDatePicker(false)} style={{ padding: 10 }}>
+                                        <Typography variant="body" color="primary" weight="bold">Done</Typography>
+                                    </Pressable>
+                                </View>
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={deliveryDate}
+                                    mode="date"
+                                    is24Hour={true}
+                                    display="spinner"
+                                    onChange={onDateChange}
+                                    minimumDate={new Date()}
+                                />
+                            </View>
+                        </View>
+                    </Modal>
+                )}
+
+                {showDatePicker && Platform.OS !== 'ios' && (
                     <DateTimePicker
                         value={deliveryDate}
                         mode="date"

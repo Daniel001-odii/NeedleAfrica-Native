@@ -15,6 +15,7 @@ import { useMeasurements } from '../../hooks/useMeasurements';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
 import { IconButton } from '../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
+import { TypingText } from '../../components/ui/TypingText';
 
 const DEFAULT_TEMPLATES = [
     {
@@ -126,9 +127,7 @@ export default function AddMeasurements() {
                 </View>
                 <ScrollView contentContainerClassName="p-6 pb-20 bg-white" showsVerticalScrollIndicator={false}>
                     <View className="mb-8 mt-2">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Choose a Template
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Choose a Template" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Select a starting point to measure {state.customer?.name}.
                         </Typography>
@@ -193,9 +192,7 @@ export default function AddMeasurements() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Measurements
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Measurements" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Enter values for {state.customer?.name} ({selectedTemplate?.name}).
                         </Typography>

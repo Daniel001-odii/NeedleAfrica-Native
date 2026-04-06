@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image } from 'react-native';
+import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image, Linking } from 'react-native';
 import { router } from 'expo-router';
 import {
     ArrowLeft,
@@ -24,6 +24,7 @@ import Toast from 'react-native-toast-message';
 import CountryPicker, { getAllCountries } from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
 
@@ -69,8 +70,10 @@ const TikTokIcon = ({ color }: { color: string }) => (
 
 export default function BusinessSettings() {
     const { isDark } = useTheme();
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, uploadProfilePhoto } = useAuth();
 
+    const [catalogId, setCatalogId] = useState<string | null>(null);
+    const [catalogViews, setCatalogViews] = useState(0);
     const [isEnabled, setIsEnabled] = useState(false);
     const [showPrices, setShowPrices] = useState(true);
     const [showWhatsApp, setShowWhatsApp] = useState(true);
@@ -96,8 +99,9 @@ export default function BusinessSettings() {
     const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
     const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const userIsPro = user?.subscriptionPlan === 'PRO' && user?.subscriptionStatus === 'ACTIVE';
+    const userIsPro = user?.subscriptionPlan !== 'FREE' && user?.subscriptionStatus === 'ACTIVE';
 
     useEffect(() => {
         const checkDisclaimer = async () => {
@@ -107,7 +111,68 @@ export default function BusinessSettings() {
             }
         };
         checkDisclaimer();
+
+        // Initial fetch
+        fetchCatalogSettings();
     }, []);
+
+    // Reactive check: if user drops from Pro, turn off catalog
+    useEffect(() => {
+        if (!userIsPro && isEnabled) {
+            setIsEnabled(false);
+            if (showPrices) setShowPrices(false);
+        }
+    }, [userIsPro]);
+
+    const fetchCatalogSettings = async () => {
+        setIsLoading(true);
+        try {
+            const { default: axiosInstance } = await import('../../../lib/axios');
+            const res = await axiosInstance.get('/catalog');
+            if (res.data && res.data.id) {
+                setCatalogId(res.data.id);
+                setCatalogViews(res.data.views || 0);
+                setIsEnabled(userIsPro ? (res.data.catalogEnabled || false) : false);
+                setShowPrices(userIsPro ? (res.data.showPricesInCatalog ?? true) : false);
+                setHeadline(res.data.businessHeadline || '');
+                setBrandDescription(res.data.businessDescription || '');
+                setInstagram(res.data.instagram || '');
+                setTwitter(res.data.twitter || '');
+                setFacebook(res.data.facebook || '');
+                setTiktok(res.data.tiktok || '');
+                if (res.data.catalogThemeColor) setSelectedTheme(res.data.catalogThemeColor);
+                if (res.data.businessLogo) setLogo(res.data.businessLogo);
+            } else {
+                setCatalogId(null);
+            }
+        } catch (error) {
+            console.log('Error fetching catalog', error);
+            setCatalogId(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCreateCatalog = async () => {
+        setIsSaving(true);
+        try {
+            const { default: axiosInstance } = await import('../../../lib/axios');
+            const res = await axiosInstance.put('/catalog', {
+                catalogEnabled: false,
+                catalogThemeColor: selectedTheme,
+            });
+            if (res.data && res.data.id) {
+                setCatalogId(res.data.id);
+                setIsEnabled(false);
+                Toast.show({ type: 'success', text1: 'Success', text2: 'Catalog created successfully' });
+            }
+        } catch (error: any) {
+            console.error('Creation Failed:', error.response?.data || error);
+            Toast.show({ type: 'error', text1: 'Creation Failed', text2: 'Could not create catalog' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const closeDisclaimer = async () => {
         await AsyncStorage.setItem('hasSeenBusinessDisclaimer', 'true');
@@ -119,7 +184,6 @@ export default function BusinessSettings() {
             setBusinessName(user.businessName || '');
             setPhone(user.phoneNumber || '');
             setAddress(user.address || '');
-            setIsEnabled((user as any).onlineCatalogEnabled || false);
             if (user.country) {
                 setCountry(user.country);
                 getAllCountries('emoji' as any).then(countries => {
@@ -135,15 +199,6 @@ export default function BusinessSettings() {
         }
     }, [user]);
 
-    const handleToggleEnableShop = (value: boolean) => {
-        if (value && !userIsPro) {
-            setIsSubscriptionModalVisible(true);
-            setIsEnabled(false);
-            return;
-        }
-        setIsEnabled(value);
-    };
-
     const handlePickLogo = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -155,13 +210,49 @@ export default function BusinessSettings() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            let currentLogoUrl = logo;
+
+            // 0. If logo is a local URI, upload it first
+            if (logo && logo !== user?.profilePicture && !logo.startsWith('http')) {
+                try {
+                    const updatedUser = await uploadProfilePhoto(logo);
+                    currentLogoUrl = updatedUser.profilePicture || logo;
+                } catch (uploadError) {
+                    console.error('Logo upload failed:', uploadError);
+                    // Continue anyway, it might fail later but we tried
+                }
+            }
+
+            // 1. Update general user profile
             await updateProfile({
-                businessName: businessName.trim(), phoneNumber: phone, address: address.trim(),
-                country, noOfEmployees, businessType
+                businessName: businessName.trim(),
+                phoneNumber: phone,
+                address: address.trim(),
+                country,
+                noOfEmployees,
+                businessType
             });
+
+            // 2. Update Catalog-specific settings
+            const { default: axiosInstance } = await import('../../../lib/axios');
+            await axiosInstance.put('/catalog', {
+                id: catalogId,
+                catalogEnabled: userIsPro ? isEnabled : false,
+                showPricesInCatalog: userIsPro ? showPrices : false,
+                businessHeadline: headline.trim(),
+                businessDescription: brandDescription.trim(),
+                instagram: instagram.trim(),
+                twitter: twitter.trim(),
+                facebook: facebook.trim(),
+                tiktok: tiktok.trim(),
+                catalogThemeColor: selectedTheme,
+                businessLogo: currentLogoUrl
+            });
+
             Toast.show({ type: 'success', text1: 'Success', text2: 'Business info updated' });
         } catch (error: any) {
-            Toast.show({ type: 'error', text1: 'Update Failed', text2: error.message || 'Something went wrong' });
+            console.error('Update Failed:', error.response?.data || error);
+            Toast.show({ type: 'error', text1: 'Update Failed', text2: error.response?.data?.error || error.message || 'Something went wrong' });
         } finally {
             setIsSaving(false);
         }
@@ -174,183 +265,286 @@ export default function BusinessSettings() {
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />} onPress={() => router.back()} variant="ghost" />
-                    <Typography variant="h3" weight="bold" className="ml-2">My Business</Typography>
+                    <Typography variant="h3" weight="bold" className="ml-2">Catalog Storefront</Typography>
                 </View>
-                <TouchableOpacity onPress={handleSave} disabled={isSaving}>
-                    <Typography color="primary" weight="bold" className={isSaving ? 'opacity-50' : ''}>{isSaving ? 'Saving...' : 'Done'}</Typography>
-                </TouchableOpacity>
+                {catalogId && (
+                    <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+                        <Typography color="primary" weight="bold" className={isSaving ? 'opacity-50' : ''}>{isSaving ? 'Saving...' : 'Done'}</Typography>
+                    </TouchableOpacity>
+                )}
             </View>
 
-            <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {isLoading ? (
+                <View className="flex-1 p-5">
+                    <SkeletonLoader isDark={isDark} />
+                </View>
+            ) : !catalogId ? (
+                <EmptyState onApply={handleCreateCatalog} isSaving={isSaving} isDark={isDark} />
+            ) : (
+                <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                    {/* BRANDING */}
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Business Branding</Typography>
+                        <View className={`rounded-[24px] overflow-hidden p-6 items-center ${cardBaseStyle}`}>
+                            <TouchableOpacity onPress={handlePickLogo} className="relative mb-4">
+                                <View className={`w-24 h-24 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+                                    {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={40} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                                </View>
+                                <View className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-4 border-white dark:border-zinc-900">
+                                    <Camera size={16} color="white" variant="Bulk" />
+                                </View>
+                            </TouchableOpacity>
+                            <Typography weight="bold" className="text-[14px] text-blue-600 mb-6" onPress={handlePickLogo}>Change Business Logo</Typography>
 
-                {/* BRANDING */}
-                <View className="mb-8">
-                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Business Branding</Typography>
-                    <View className={`rounded-[24px] overflow-hidden p-6 items-center ${cardBaseStyle}`}>
-                        <TouchableOpacity onPress={handlePickLogo} className="relative mb-4">
-                            <View className={`w-24 h-24 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={40} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                            <View className="w-full gap-y-4">
+                                <View>
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Business Headline</Typography>
+                                    <TextInput
+                                        className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[15px]`}
+                                        placeholder="e.g. House of Luxury" value={headline} onChangeText={setHeadline}
+                                    />
+                                </View>
+                                <View>
+                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Description</Typography>
+                                    <TextInput
+                                        className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-medium text-[14px] min-h-[100px]`}
+                                        placeholder="Briefly describe your craft" value={brandDescription} onChangeText={setBrandDescription} multiline
+                                        textAlignVertical="top"
+                                    />
+                                </View>
                             </View>
-                            <View className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-4 border-white dark:border-zinc-900">
-                                <Camera size={16} color="white" variant="Bulk" />
-                            </View>
-                        </TouchableOpacity>
-                        <Typography weight="bold" className="text-[14px] text-blue-600 mb-6" onPress={handlePickLogo}>Change Business Logo</Typography>
+                        </View>
+                    </View>
 
-                        <View className="w-full gap-y-4">
-                            <View>
-                                <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Business Headline</Typography>
+                    {/* BASIC DETAILS */}
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Basic Details</Typography>
+                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                            <ProfileRowInput label="Brand Name" value={businessName} onChangeText={setBusinessName} placeholder="Studio Name" isDark={isDark} />
+                            <TouchableOpacity
+                                onPress={() => setShowBusinessTypeModal(true)}
+                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
+                            >
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[14px]">Craft</Typography>
+                                <View className="flex-row items-center">
+                                    <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>{businessType || 'Specialization'}</Typography>
+                                    <Building size={16} color="#9CA3AF" variant="Bulk" />
+                                </View>
+                            </TouchableOpacity>
+
+                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">WhatsApp</Typography>
+                                <View className="flex-1 items-end">
+                                    <PhoneInput
+                                        style={{ fontSize: 14, fontWeight: '600', color: isDark ? 'white' : '#111827', textAlign: 'right', width: '100%' }}
+                                        defaultCountry={countryCode || "NG"} value={phone} onChange={(val: any) => setPhone(val || '')}
+                                    />
+                                </View>
+                            </View>
+
+                            <View className="flex-row items-center px-4 py-4">
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Country</Typography>
+                                <View className="flex-1 items-end">
+                                    <CountryPicker
+                                        withFilter withFlag withCountryNameButton withAlphaFilter withEmoji
+                                        onSelect={(c: any) => { setCountry(c.name as string); setCountryCode(c.cca2); }}
+                                        countryCode={countryCode}
+                                        theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
+                                        containerButtonStyle={{ padding: 0 }}
+                                    />
+                                </View>
+                            </View>
+
+                            <ProfileRowInput label="Address" value={address} onChangeText={setAddress} placeholder="Street, City, Country" isDark={isDark} />
+                        </View>
+                    </View>
+
+                    {/* SOCIAL MEDIA */}
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Social Presence</Typography>
+                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                                <View className="mr-3"><InstagramIcon color="#E4405F" /></View>
+                                <Typography weight="semibold" className="w-1/4 text-[14px]">Instagram</Typography>
                                 <TextInput
-                                    className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[15px]`}
-                                    placeholder="e.g. House of Luxury" value={headline} onChangeText={setHeadline}
+                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                    placeholder="@handle" value={instagram} onChangeText={setInstagram}
                                 />
                             </View>
-                            <View>
-                                <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Description</Typography>
+                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                                <View className="mr-3"><XIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
+                                <Typography weight="semibold" className="w-1/4 text-[14px]">Twitter (X)</Typography>
                                 <TextInput
-                                    className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-medium text-[14px] min-h-[100px]`}
-                                    placeholder="Briefly describe your craft" value={brandDescription} onChangeText={setBrandDescription} multiline
-                                    textAlignVertical="top"
+                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                    placeholder="@handle" value={twitter} onChangeText={setTwitter}
+                                />
+                            </View>
+                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                                <View className="mr-3"><FacebookIcon color="#1877F2" /></View>
+                                <Typography weight="semibold" className="w-1/4 text-[14px]">Facebook</Typography>
+                                <TextInput
+                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                    placeholder="page name" value={facebook} onChangeText={setFacebook}
+                                />
+                            </View>
+                            <View className="flex-row items-center px-4 py-4">
+                                <View className="mr-3"><TikTokIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
+                                <Typography weight="semibold" className="w-1/4 text-[14px]">TikTok</Typography>
+                                <TextInput
+                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                    placeholder="@handle" value={tiktok} onChangeText={setTiktok}
                                 />
                             </View>
                         </View>
                     </View>
-                </View>
 
-                {/* BASIC DETAILS */}
-                <View className="mb-8">
-                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Basic Details</Typography>
-                    <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                        <ProfileRowInput label="Brand Name" value={businessName} onChangeText={setBusinessName} placeholder="Studio Name" isDark={isDark} />
-                        <TouchableOpacity
-                            onPress={() => setShowBusinessTypeModal(true)}
-                            className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
-                        >
-                            <Typography weight="semibold" className="text-gray-900 dark:text-white text-[14px]">Craft</Typography>
-                            <View className="flex-row items-center">
-                                <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>{businessType || 'Specialization'}</Typography>
-                                <Building size={16} color="#9CA3AF" variant="Bulk" />
+                    {/* THEME PICKER */}
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Catalog Appearance</Typography>
+                        <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
+                            <View className="flex-row items-center justify-between mb-4">
+                                <Typography weight="bold" className="text-[14px]">Store Accent Color</Typography>
+                                <Typography variant="small" color="primary" weight="semibold">Customized</Typography>
                             </View>
-                        </TouchableOpacity>
-
-                        <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
-                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">WhatsApp</Typography>
-                            <View className="flex-1 items-end">
-                                <PhoneInput
-                                    style={{ fontSize: 14, fontWeight: '600', color: isDark ? 'white' : '#111827', textAlign: 'right', width: '100%' }}
-                                    defaultCountry={countryCode || "NG"} value={phone} onChange={(val: any) => setPhone(val || '')}
-
-                                />
-                            </View>
-                        </View>
-
-                        <View className="flex-row items-center px-4 py-4">
-                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Country</Typography>
-                            <View className="flex-1 items-end">
-                                <CountryPicker
-                                    withFilter withFlag withCountryNameButton withAlphaFilter withEmoji
-                                    onSelect={(c: any) => { setCountry(c.name as string); setCountryCode(c.cca2); }}
-                                    countryCode={countryCode}
-                                    theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
-                                    containerButtonStyle={{ padding: 0 }}
-                                />
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
-                {/* SOCIAL MEDIA */}
-                <View className="mb-8">
-                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Social Presence</Typography>
-                    <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                        <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
-                            <View className="mr-3"><InstagramIcon color="#E4405F" /></View>
-                            <Typography weight="semibold" className="w-1/4 text-[14px]">Instagram</Typography>
-                            <TextInput
-                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                placeholder="@handle" value={instagram} onChangeText={setInstagram}
-                            />
-                        </View>
-                        <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
-                            <View className="mr-3"><XIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
-                            <Typography weight="semibold" className="w-1/4 text-[14px]">Twitter (X)</Typography>
-                            <TextInput
-                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                placeholder="@handle" value={twitter} onChangeText={setTwitter}
-                            />
-                        </View>
-                        <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
-                            <View className="mr-3"><FacebookIcon color="#1877F2" /></View>
-                            <Typography weight="semibold" className="w-1/4 text-[14px]">Facebook</Typography>
-                            <TextInput
-                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                placeholder="page name" value={facebook} onChangeText={setFacebook}
-                            />
-                        </View>
-                        <View className="flex-row items-center px-4 py-4">
-                            <View className="mr-3"><TikTokIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
-                            <Typography weight="semibold" className="w-1/4 text-[14px]">TikTok</Typography>
-                            <TextInput
-                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                placeholder="@handle" value={tiktok} onChangeText={setTiktok}
-                            />
-                        </View>
-                    </View>
-                </View>
-
-                {/* THEME PICKER */}
-                <View className="mb-8">
-                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Catalog Appearance</Typography>
-                    <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
-                        <View className="flex-row items-center justify-between mb-4">
-                            <Typography weight="bold" className="text-[14px]">Store Accent Color</Typography>
-                            <Typography variant="small" color="primary" weight="semibold">Customized</Typography>
-                        </View>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
-                            {PREDEFINED_THEMES.map((theme) => {
-                                const isSelected = selectedTheme === theme.color;
-                                return (
-                                    <View key={theme.color} className="mr-2">
-                                        <View style={{ width: 48, height: 48, borderRadius: 24, borderWidth: isSelected ? 2 : 0, borderColor: theme.color, alignItems: 'center', justifyContent: 'center' }}>
-                                            <Pressable
-                                                onPress={() => setSelectedTheme(theme.color)}
-                                                style={{ backgroundColor: theme.color, width: 36, height: 36, borderRadius: 18, borderWidth: isSelected ? 2.5 : 0, borderColor: isDark ? '#1C1C1E' : 'white' }}
-                                                className={isSelected ? 'scale-100 shadow-sm' : 'scale-90 opacity-80'}
-                                            />
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
+                                {PREDEFINED_THEMES.map((theme) => {
+                                    const isSelected = selectedTheme === theme.color;
+                                    return (
+                                        <View key={theme.color} className="mr-2">
+                                            <View style={{ width: 48, height: 48, borderRadius: 24, borderWidth: isSelected ? 2 : 0, borderColor: theme.color, alignItems: 'center', justifyContent: 'center' }}>
+                                                <Pressable
+                                                    onPress={() => setSelectedTheme(theme.color)}
+                                                    style={{ backgroundColor: theme.color, width: 36, height: 36, borderRadius: 18, borderWidth: isSelected ? 2.5 : 0, borderColor: isDark ? '#1C1C1E' : 'white' }}
+                                                    className={isSelected ? 'scale-100 shadow-sm' : 'scale-90 opacity-80'}
+                                                />
+                                            </View>
                                         </View>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+                    </View>
+
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Visibility Settings</Typography>
+                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                             <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
+                                <View className="flex-1 mr-4">
+                                    <View className="flex-row items-center mb-1">
+                                        <Typography weight="bold" className="text-[15px]">Catalog Visibility</Typography>
+                                        {!userIsPro && (
+                                            <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
+                                                <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
+                                            </View>
+                                        )}
                                     </View>
-                                );
-                            })}
-                        </ScrollView>
-                    </View>
-                </View>
-
-                {/* VISIBILITY */}
-                <View className="mb-8">
-                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Visibility Settings</Typography>
-                    <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                        <View className="p-4 flex-row items-center justify-between border-b border-gray-100 dark:border-white/5">
-                            <View className="flex-1 mr-4">
-                                <Typography weight="bold" className="text-[15px] mb-1">Enable Online Shop</Typography>
-                                <Typography variant="small" color="gray">Publicly visible storefront</Typography>
+                                    <Typography variant="small" color="gray">Allow anyone with your link to view your products</Typography>
+                                </View>
+                                <Switch 
+                                    value={userIsPro ? isEnabled : false} 
+                                    onValueChange={(val) => {
+                                        if (!userIsPro) {
+                                            Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to enable your public catalog' });
+                                            return;
+                                        }
+                                        setIsEnabled(val);
+                                    }} 
+                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} 
+                                    thumbColor="#FFFFFF" 
+                                />
                             </View>
-                            <Switch value={isEnabled} onValueChange={handleToggleEnableShop} trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} thumbColor="#FFFFFF" />
-                        </View>
-                        <View className="p-4 flex-row items-center justify-between">
-                            <View className="flex-1 mr-4">
-                                <Typography weight="bold" className="text-[15px] mb-1">Show Price Tags</Typography>
-                                <Typography variant="small" color="gray">Display prices to every visitor</Typography>
+                            <View className="p-4 flex-row items-center justify-between">
+                                <View className="flex-1 mr-4">
+                                    <View className="flex-row items-center mb-1">
+                                        <Typography weight="bold" className="text-[15px]">Show Price Tags</Typography>
+                                        {!userIsPro && (
+                                            <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
+                                                <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Typography variant="small" color="gray">Display prices to every visitor</Typography>
+                                </View>
+                                <Switch 
+                                    value={userIsPro ? showPrices : false} 
+                                    onValueChange={(val) => {
+                                        if (!userIsPro) {
+                                            Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
+                                            return;
+                                        }
+                                        setShowPrices(val);
+                                    }} 
+                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} 
+                                    thumbColor="#FFFFFF" 
+                                />
                             </View>
-                            <Switch value={showPrices} onValueChange={setShowPrices} trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} thumbColor="#FFFFFF" />
                         </View>
                     </View>
-                </View>
 
-                <Button onPress={handleSave} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8 mt-4" textClassName="text-white text-[16px] font-bold">
-                    Save Everything
-                </Button>
+                    {/* STORE LINK (If Enabled) */}
+                    {catalogId && (
+                        <View className="mb-8">
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Your Store Link</Typography>
+                            <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
+                                <View className="relative">
+                                    <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'} ${!userIsPro ? 'opacity-20' : ''}`}>
+                                        {userIsPro ? `https://catalog.needleafrica.com/cg/${catalogId}` : 'https://catalog.needleafrica.com/cg/••••••••••••••••'}
+                                    </Typography>
+                                    {!userIsPro && (
+                                        <View className="absolute inset-0 items-center justify-center -top-2">
+                                           <Warning2 size={16} color="#9CA3AF" variant="Bulk" />
+                                        </View>
+                                    )}
+                                </View>
 
-            </ScrollView>
+                                <View className="flex-row gap-x-3">
+                                    <TouchableOpacity
+                                        onPress={async () => {
+                                            if (!userIsPro) return;
+                                            await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${catalogId}`);
+                                            Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
+                                        }}
+                                        disabled={!userIsPro}
+                                        className={`flex-1 flex-row items-center justify-center h-14 rounded-2xl ${userIsPro ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-white/5 opacity-50'}`}
+                                    >
+                                        <Typography weight="bold" className={userIsPro ? 'text-blue-600' : 'text-gray-400'}>Copy Link</Typography>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            if (!userIsPro) return;
+                                            Linking.openURL(`https://catalog.needleafrica.com/cg/${catalogId}`);
+                                        }}
+                                        disabled={!userIsPro}
+                                        className={`flex-1 flex-row items-center justify-center h-14 rounded-2xl ${userIsPro ? 'bg-gray-100 dark:bg-white/10' : 'bg-gray-100 dark:bg-white/5 opacity-50'}`}
+                                    >
+                                        <Typography weight="bold" className={userIsPro ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'}>Preview Store</Typography>
+                                    </TouchableOpacity>
+                                </View>
+
+                                {!userIsPro && (
+                                    <View className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 items-center">
+                                        <Typography variant="small" color="gray" weight="medium" className="text-center mb-4 leading-relaxed">
+                                            Public catalog storefront and link sharing are exclusively available to <Typography weight="black" className="text-amber-500">PRO</Typography> members.
+                                        </Typography>
+                                        <TouchableOpacity 
+                                            onPress={() => setIsSubscriptionModalVisible(true)}
+                                            className="bg-amber-500 px-6 py-3 rounded-full flex-row items-center"
+                                        >
+                                            <Typography weight="bold" className="text-white text-[12px] uppercase tracking-widest mr-2">Upgrade to Pro</Typography>
+                                            <ArrowLeft size={14} color="white" style={{ transform: [{ rotate: '180deg' }] }} />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
+                        </View>
+                    )}
+
+                    <Button onPress={handleSave} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8 mt-4" textClassName="text-white text-[16px] font-bold">
+                        Save Everything
+                    </Button>
+                </ScrollView>
+            )}
 
             {/* Modal: Business Specialization Selector */}
             <Modal animationType="slide" transparent={true} visible={showBusinessTypeModal} onRequestClose={() => setShowBusinessTypeModal(false)}>
@@ -396,7 +590,7 @@ export default function BusinessSettings() {
 
                             <Typography variant="h2" weight="bold" className="text-center mb-3">Your Digital Storefront</Typography>
                             <Typography variant="body" color="gray" className="text-center mb-8 leading-6">
-                                Setting up your business profile allows you to showcase your craft to the world and accept orders directly through your online catalog.
+                                Setting up your business profile allows you to showcase your craft to the world and accept orders directly through your storefront.
                             </Typography>
 
                             <View className="w-full gap-y-4 mb-8">
@@ -453,6 +647,50 @@ function ProfileRowInput({ label, value, onChangeText, placeholder, isDark }: { 
         <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
             <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">{label}</Typography>
             <TextInput className={`flex-1 text-right font-semibold text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`} placeholder={placeholder} placeholderTextColor="#9CA3AF" value={value} onChangeText={onChangeText} />
+        </View>
+    );
+}
+
+function SkeletonLoader({ isDark }: { isDark: boolean }) {
+    const shimmerClass = isDark ? 'bg-zinc-800' : 'bg-gray-200';
+    return (
+        <ScrollView showsVerticalScrollIndicator={false}>
+            <View className="mb-8 p-5">
+                <View className={`h-4 w-32 mb-4 rounded-md ${shimmerClass} opacity-50`} />
+                <View className={`h-64 w-full rounded-[32px] ${shimmerClass} opacity-20`} />
+            </View>
+            <View className="mb-8 p-5">
+                <View className={`h-4 w-24 mb-4 rounded-md ${shimmerClass} opacity-50`} />
+                <View className={`h-48 w-full rounded-[32px] ${shimmerClass} opacity-20`} />
+            </View>
+            <View className="mb-8 p-5">
+                <View className={`h-4 w-28 mb-4 rounded-md ${shimmerClass} opacity-50`} />
+                <View className={`h-40 w-full rounded-[32px] ${shimmerClass} opacity-20`} />
+            </View>
+        </ScrollView>
+    );
+}
+
+function EmptyState({ onApply, isSaving, isDark }: { onApply: () => void, isSaving: boolean, isDark: boolean }) {
+    return (
+        <View className="flex-1 justify-center p-8">
+            <View className={`p-10 rounded-[48px] items-center ${isDark ? 'bg-zinc-900/50' : 'bg-white'}`}>
+                <View className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full items-center justify-center mb-8">
+                    <Magicpen size={48} color="#2563EB" variant="Bulk" />
+                </View>
+                <Typography variant="h2" weight="bold" className="text-center mb-4">No Catalog Yet</Typography>
+                <Typography variant="body" color="gray" className="text-center mb-10 leading-6">
+                    Create your personal catalog storefront to showcase your products and services to customers worldwide.
+                </Typography>
+                <Button
+                    onPress={onApply}
+                    isLoading={isSaving}
+                    className="w-full h-16 rounded-full bg-blue-600 border-0"
+                    textClassName="text-white font-bold text-lg"
+                >
+                    Create My Catalog
+                </Button>
+            </View>
         </View>
     );
 }

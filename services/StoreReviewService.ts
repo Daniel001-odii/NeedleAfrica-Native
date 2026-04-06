@@ -13,14 +13,10 @@ export class StoreReviewService {
      */
     static async requestReview(force = false) {
         try {
-            // Manual trigger fallback for devices without store review support
+            // Manual trigger fallback for devices without store review support or when forcing bypass
             if (force) {
-                const isAvailable = await StoreReview.isAvailableAsync();
-                if (isAvailable) {
-                    await StoreReview.requestReview();
-                    return;
-                }
-                // Fallback to manual store link
+                // For manual clicks (like settings "Rate App" button), always direct to the store page
+                // Native dialogs might be blocked due to OS quotas, so direct links are much more reliable
                 this.openStorePage();
                 return;
             }
@@ -38,7 +34,9 @@ export class StoreReviewService {
                 }
             }
 
-            if (await StoreReview.hasAction()) {
+            // Use isAvailableAsync instead of hasAction because hasAction can fail on Android
+            const isAvailable = await StoreReview.isAvailableAsync();
+            if (isAvailable) {
                 await StoreReview.requestReview();
                 await SecureStore.setItemAsync('last_store_review_ask', now.toString());
             }

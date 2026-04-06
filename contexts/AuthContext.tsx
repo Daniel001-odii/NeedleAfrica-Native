@@ -54,8 +54,8 @@ interface AuthContextType {
     signUp: (email: string, password: string, username: string, businessName: string) => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, otp: string, password: string) => Promise<void>;
-    updateProfile: (data: Partial<User>) => Promise<void>;
-    uploadProfilePhoto: (imageUri: string) => Promise<void>;
+    updateProfile: (data: Partial<User>) => Promise<User>;
+    uploadProfilePhoto: (imageUri: string) => Promise<User>;
     deleteAccount: () => Promise<void>;
     completeOnboarding: () => void;
     refreshUser: () => Promise<void>;
@@ -375,6 +375,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const updatedUser = { ...user, ...userData };
             await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
             setUser(updatedUser);
+            return updatedUser;
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Update failed';
             throw new Error(errorMsg);
@@ -422,6 +423,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const updatedUser = { ...user, ...userData };
             await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
             setUser(updatedUser);
+            return updatedUser;
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Photo upload failed';
             throw new Error(errorMsg);

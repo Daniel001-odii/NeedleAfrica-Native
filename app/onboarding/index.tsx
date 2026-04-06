@@ -21,6 +21,7 @@ import { CURRENCIES } from '../../constants/currencies';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
+import { TypingText } from '../../components/ui/TypingText';
 
 export default function WorkspaceSetup() {
     const { user, updateProfile, logout } = useAuth();
@@ -71,9 +72,7 @@ export default function WorkspaceSetup() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-4">
-                        <Typography variant="h1" weight="bold" className="mb-2 text-gray-900">
-                            Workspace Setup
-                        </Typography>
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Workspace Setup" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
                             Every great creation starts with a space. Tell us about yours.
                         </Typography>
