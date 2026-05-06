@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add, ArrowRight2 } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Typography } from '../../../components/ui/Typography';
@@ -187,347 +187,373 @@ export default function OrderDetail() {
 
     const handleStatusToggle = async () => {
         const newStatus = order.status === 'DELIVERED' ? 'PENDING' : 'DELIVERED';
-        try {
-            await updateOrderStatus(id as string, newStatus);
-            Toast.show({
-                type: 'success',
-                text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',
-                text2: `Status updated to ${newStatus}`
-            });
-            performSync().catch(console.error);
 
-            if (newStatus === 'DELIVERED') {
-                setTimeout(() => {
-                    StoreReviewService.requestReview().catch(console.error);
-                }, 1500);
+        const performToggle = async () => {
+            try {
+                await updateOrderStatus(id as string, newStatus);
+                Toast.show({
+                    type: 'success',
+                    text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',
+                    text2: `Status updated to ${newStatus}`
+                });
+                performSync().catch(console.error);
+
+                if (newStatus === 'DELIVERED') {
+                    setTimeout(() => {
+                        StoreReviewService.requestReview().catch(console.error);
+                    }, 1500);
+                }
+            } catch (error) {
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update status' });
             }
-        } catch (error) {
-            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update status' });
+        };
+
+        if (newStatus === 'DELIVERED') {
+            confirm({
+                title: 'Mark as Delivered',
+                message: 'Are you sure this order has been delivered to the client?',
+                confirmText: 'Yes, Delivered',
+                type: 'success',
+                onConfirm: performToggle
+            });
+        } else {
+            performToggle();
         }
     };
 
     const onDateChange = (event: any, selectedDate?: Date) => {
+        const currentDate = selectedDate || deliveryDate || new Date();
         setShowDatePicker(Platform.OS === 'ios');
-        if (selectedDate) setDeliveryDate(selectedDate);
+        setDeliveryDate(currentDate);
+        if (Platform.OS !== 'ios') {
+            setShowDatePicker(false);
+        }
     };
 
-    const formatDate = (date: Date | null) => {
+    const SectionLabel = ({ children, rightAction }: { children: string, rightAction?: React.ReactNode }) => (
+        <View className="flex-row justify-between items-center ml-5 mb-2 mr-5 mt-4">
+            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider opacity-50 text-[11px]">
+                {children}
+            </Typography>
+            {rightAction}
+        </View>
+    );
+
+    const formatDateShort = (date: Date | null) => {
         if (!date) return 'Not set';
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row justify-between items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-50'}`}>
                 <IconButton
-                    icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
+                    icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
                     onPress={() => isEditing ? setIsEditing(false) : router.replace('/(tabs)/orders')}
                     variant="ghost"
-                    className="-ml-2"
                 />
                 <Typography variant="h3" weight="bold">
                     {isEditing ? 'Edit Order' : 'Order Details'}
                 </Typography>
-                <IconButton
-                    icon={isEditing ? <CloseCircle size={20} color="#EF4444" /> : <Edit2 size={20} color={isDark ? "white" : "black"} />}
-                    onPress={() => setIsEditing(!isEditing)}
-                    variant="ghost"
-                    className="-mr-2"
-                />
+                <TouchableOpacity onPress={() => isEditing ? handleUpdate() : setIsEditing(true)}>
+                    <Typography color="primary" weight="bold">
+                        {isEditing ? 'Done' : 'Edit'}
+                    </Typography>
+                </TouchableOpacity>
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
-                <ScrollView contentContainerClassName="p-6 pb-24" showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerClassName="py-6 pb-24" showsVerticalScrollIndicator={false}>
                     {!isEditing ? (
                         <>
-                            {/* View Mode */}
-                            <View className="flex-row justify-between items-start mb-6">
-                                <View className="flex-1">
-                                    <Typography variant="h1" weight="bold" className="mb-2 leading-tight">{order.styleName}</Typography>
-                                    <View className="flex-row items-center">
-                                        <Surface variant={order.status === 'DELIVERED' ? 'green' : 'peach'} className="px-3 py-1 mr-2" rounded="full">
-                                            <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? 'text-green-700' : (isDark ? 'text-orange-400' : 'text-orange-700')}>
+                            {/* Order Basics */}
+                            <SectionLabel>Order Basics</SectionLabel>
+                            <View className="px-4 mb-6">
+                                <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                    <View className={`p-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                        <Typography variant="h2" weight="bold" className="text-2xl">{order.styleName}</Typography>
+                                        <Typography color="gray" variant="caption" weight="bold" className="opacity-50 mt-1">ID: #{order.id.slice(-8).toUpperCase()}</Typography>
+                                    </View>
+                                    <View className={`p-4 flex-row justify-between items-center`}>
+                                        <Typography weight="semibold">Status</Typography>
+                                        <Surface variant={order.status === 'DELIVERED' ? 'green' : 'peach'} className={`px-3 py-1 ${isDark ? (order.status === 'DELIVERED' ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`} rounded="full">
+                                            <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
                                                 {order.status}
                                             </Typography>
                                         </Surface>
-                                        <Typography variant="caption" color="gray">#{order.id.slice(-6).toUpperCase()}</Typography>
                                     </View>
-                                </View>
-                                <Surface variant="muted" className={`w-16 h-16 items-center justify-center ${isDark ? 'bg-surface-muted-dark' : ''}`} rounded="2xl">
-                                    <Calendar size={24} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />
                                 </Surface>
                             </View>
 
-                            {/* Client Info Card */}
+                            {/* Client Section */}
                             {customer && (
-                                <Surface variant="white" className={`p-4 mb-6 border ${isDark ? 'border-border-dark' : 'border-gray-100'} flex-row items-center`} rounded="2xl">
-                                    <View className={`w-12 h-12 items-center justify-center rounded-xl mr-4 ${isDark ? 'bg-indigo-900/30' : 'bg-lavender'}`}>
-                                        <Typography weight="bold" className={isDark ? 'text-indigo-400' : 'text-brand-primary'}>
-                                            {(customer.fullName || 'UN').charAt(0).toUpperCase()}{(customer.fullName || 'UN').charAt(1).toUpperCase()}
-                                        </Typography>
+                                <>
+                                    <SectionLabel>Client</SectionLabel>
+                                    <View className="px-4 mb-6">
+                                        <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                            <TouchableOpacity
+                                                onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: customer.id } })}
+                                                className={`p-4 flex-row items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}
+                                            >
+                                                <View className={`w-12 h-12 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-zinc-800' : 'bg-indigo-50'}`}>
+                                                    <Typography weight="bold" color="primary">
+                                                        {(customer.fullName || '??').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </Typography>
+                                                </View>
+                                                <View className="flex-1">
+                                                    <Typography weight="bold" className="text-[16px]">{customer.fullName}</Typography>
+                                                    <Typography variant="caption" color="gray" className="mt-0.5">{customer.phoneNumber}</Typography>
+                                                </View>
+                                            </TouchableOpacity>
+
+                                            <View className="p-3 flex-row gap-3">
+                                                <TouchableOpacity
+                                                    onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
+                                                    className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
+                                                >
+                                                    <Call size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
+                                                    <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>Call Client</Typography>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
+                                                    className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}
+                                                >
+                                                    <Timer1 size={16} color={isDark ? "#30D158" : "#34C759"} variant="Bold" />
+                                                    <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#30D158]' : 'text-[#34C759]'}`}>Text Client</Typography>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </Surface>
                                     </View>
-                                    <View className="flex-1">
-                                        <Typography weight="bold">{customer.fullName || 'Unknown'}</Typography>
-                                        <Typography variant="small" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
-                                    </View>
-                                    <IconButton
-                                        icon={<Call size={20} color={isDark ? "white" : "black"} />}
-                                        variant="ghost"
-                                        onPress={() => {
-                                            if (customer.phoneNumber) {
-                                                Linking.openURL(`tel:${customer.phoneNumber}`);
-                                            } else {
-                                                Toast.show({ type: 'error', text1: 'No Number', text2: 'Customer has no phone number' });
-                                            }
-                                        }}
-                                    />
-                                </Surface>
+                                </>
                             )}
 
-                            {/* Grid Info */}
-                            <View className="flex-row gap-4 mb-4">
-                                <Surface variant="blue" className={`flex-1 p-4 ${isDark ? 'bg-blue-900/40 border border-blue-500/20' : ''}`} rounded="3xl">
-                                    <View className="flex-row items-center mb-2 opacity-60">
-                                        <Timer1 size={16} color={isDark ? "white" : "black"} className="mr-2" />
-                                        <Typography variant="small" weight="bold">Due Date</Typography>
+                            {/* Logistics & Payment */}
+                            <SectionLabel>Logistics & Billing</SectionLabel>
+                            <View className="px-4 mb-6">
+                                <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                        <Typography weight="semibold" color="gray">Delivery Date</Typography>
+                                        <Typography weight="bold" color="primary">{formatDateShort(deliveryDate)}</Typography>
                                     </View>
-                                    <Typography variant="h3" weight="bold">{formatDate(deliveryDate)}</Typography>
+                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                        <Typography weight="semibold" color="gray">Total Amount</Typography>
+                                        <Typography weight="bold" className="text-lg">{currencySymbol}{order.amount?.toLocaleString()}</Typography>
+                                    </View>
+                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                        <Typography weight="semibold" color="gray">Amount Paid</Typography>
+                                        <Typography weight="bold" className="text-lg text-[#34C759]">{currencySymbol}{order.amountPaid?.toLocaleString()}</Typography>
+                                    </View>
+                                    <View className="p-4">
+                                        <View className="flex-row justify-between items-center mb-3">
+                                            <Typography weight="semibold" color="gray">Balance Due</Typography>
+                                            <Typography weight="bold" className={`text-lg ${(order.balance || 0) > 0 ? 'text-[#FF9500]' : 'text-[#34C759]'}`}>
+                                                {currencySymbol}{order.balance?.toLocaleString()}
+                                            </Typography>
+                                        </View>
+                                        <View className={`${isDark ? 'bg-white/5' : 'bg-gray-100'} h-2 rounded-full overflow-hidden`}>
+                                            <View
+                                                className={`h-full ${(order.balance || 0) > 0 ? 'bg-[#FF9500]' : 'bg-[#34C759]'}`}
+                                                style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
+                                            />
+                                        </View>
+                                    </View>
                                 </Surface>
-                                <Surface variant="muted" className={`flex-1 p-4 border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
-                                    <View className="flex-row items-center mb-2 opacity-60">
-                                        <Money size={16} color={isDark ? "white" : "black"} className="mr-2" />
-                                        <Typography variant="small" weight="bold">Total Price</Typography>
-                                    </View>
-                                    <Typography variant="h3" weight="bold">{currencySymbol}{order.amount?.toLocaleString() || '0'}</Typography>
-                                </Surface>
-                            </View>
-
-                            {/* Payment Balance Card */}
-                            <View className={`p-5 mb-6 rounded-3xl border ${(order.balance || 0) > 0
-                                ? (isDark ? 'bg-orange-900/10 border-orange-500/20' : 'bg-soft-peach border-orange-100')
-                                : (isDark ? 'bg-green-900/10 border-green-500/20' : 'bg-soft-green border-green-100')
-                                }`}>
-                                <View className="flex-row justify-between items-center mb-4">
-                                    <View>
-                                        <Typography variant="caption" weight="bold" color="gray" className="uppercase opacity-60">Payment Status</Typography>
-                                        <Typography variant="h3" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
-                                            {(order.balance || 0) > 0 ? 'Balance Owing' : 'Fully Paid'}
-                                        </Typography>
-                                    </View>
-                                    <View className={`${isDark ? 'bg-white/10' : 'bg-white/50'} px-3 py-1 rounded-full`}>
-                                        <Typography variant="small" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
-                                            {currencySymbol}{order.amountPaid?.toLocaleString() || '0'} Paid
-                                        </Typography>
-                                    </View>
-                                </View>
-
-                                <View className={`${isDark ? 'bg-white/10' : 'bg-gray-200'} h-2 rounded-full overflow-hidden mb-4`}>
-                                    <View
-                                        className={`h-full ${(order.balance || 0) > 0 ? (isDark ? 'bg-orange-400' : 'bg-orange-500') : 'bg-green-500'}`}
-                                        style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
-                                    />
-                                </View>
-
-                                <View className="flex-row justify-between">
-                                    <Typography variant="caption" color="gray">Balance to pay</Typography>
-                                    <Typography variant="body" weight="bold" className={(order.balance || 0) > 0 ? (isDark ? 'text-orange-400' : 'text-orange-700') : 'text-green-600'}>
-                                        {currencySymbol}{order.balance?.toLocaleString() || '0'}
-                                    </Typography>
-                                </View>
                             </View>
 
                             {/* Reference Images */}
-                            <Typography variant="caption" weight="bold" color="gray" className="mb-3 uppercase ml-1">References</Typography>
-                            <View className="flex-row gap-4 mb-8 h-48">
-                                <Pressable
-                                    className="flex-1"
-                                    onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
-                                    disabled={!fabricImage}
-                                >
-                                    <Surface variant="muted" className={`overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
+                            <SectionLabel>Design References</SectionLabel>
+                            <View className="px-4 mb-6">
+                                <Surface variant="white" className={`p-2 flex-row gap-2 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                    <TouchableOpacity
+                                        className="flex-1 aspect-square rounded-xl overflow-hidden bg-gray-100"
+                                        onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
+                                    >
                                         {fabricImage ? (
-                                            <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                            <Image source={{ uri: fabricImage }} className="w-full h-full" />
                                         ) : (
-                                            <Typography variant="caption" color="gray">No Fabric Photo</Typography>
+                                            <View className="w-full h-full items-center justify-center">
+                                                <Typography variant="caption" color="gray">No Fabric</Typography>
+                                            </View>
                                         )}
-                                        <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
-                                            <Typography variant="small" weight="bold">Fabric</Typography>
+                                        <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
+                                            <Typography variant="caption" color="white" weight="bold">Fabric</Typography>
                                         </View>
-                                    </Surface>
-                                </Pressable>
-                                <Pressable
-                                    className="flex-1"
-                                    onPress={() => styleImage && openViewer(styleImage, 'Style')}
-                                    disabled={!styleImage}
-                                >
-                                    <Surface variant="muted" className={`overflow-hidden h-full items-center justify-center border ${isDark ? 'border-border-dark' : 'border-transparent'}`} rounded="3xl">
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        className="flex-1 aspect-square rounded-xl overflow-hidden bg-gray-100"
+                                        onPress={() => styleImage && openViewer(styleImage, 'Style')}
+                                    >
                                         {styleImage ? (
-                                            <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                            <Image source={{ uri: styleImage }} className="w-full h-full" />
                                         ) : (
-                                            <Typography variant="caption" color="gray">No Style Photo</Typography>
+                                            <View className="w-full h-full items-center justify-center">
+                                                <Typography variant="caption" color="gray">No Style</Typography>
+                                            </View>
                                         )}
-                                        <View className={`absolute bottom-3 left-3 px-2 py-1 rounded-lg ${isDark ? 'bg-black/60' : 'bg-white/80'}`}>
-                                            <Typography variant="small" weight="bold">Style</Typography>
+                                        <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
+                                            <Typography variant="caption" color="white" weight="bold">Style</Typography>
                                         </View>
-                                    </Surface>
-                                </Pressable>
+                                    </TouchableOpacity>
+                                </Surface>
                             </View>
 
                             {/* Notes */}
-                            <View className="mb-10">
-                                <View className="flex-row items-center mb-3">
-                                    <DocumentText size={20} color="#6B7280" variant="Bulk" />
-                                    <Typography variant="caption" weight="bold" color="gray" className="uppercase ml-2">Notes</Typography>
-                                </View>
-                                <Surface variant="muted" className="p-5" rounded="2xl">
-                                    <Typography variant="body" className="leading-relaxed">
+                            <SectionLabel>Special Notes</SectionLabel>
+                            <View className="px-4 mb-8">
+                                <Surface variant="white" className={`p-4 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                    <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium`}>
                                         {order.notes || "No additional notes for this order."}
                                     </Typography>
                                 </Surface>
                             </View>
 
-                            <View className="flex-row gap-3">
+                            <View className="px-4 mb-12">
                                 <Button
                                     onPress={handleStatusToggle}
-                                    className={`flex-1 h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-600' : (isDark ? 'bg-white' : 'bg-dark')}`}
-                                    textClassName={order.status === 'DELIVERED' ? 'text-white' : (isDark ? 'text-black' : 'text-white')}
+                                    className={`h-16 rounded-2xl ${order.status === 'DELIVERED' ? 'bg-[#FF9500]' : 'bg-[#34C759]'} border-0`}
+                                    textClassName="text-white font-bold"
                                 >
-                                    {order.status === 'DELIVERED' ? 'Delivered' : 'Mark as Delivered'}
+                                    {order.status === 'DELIVERED' ? 'Reopen Order' : 'Mark as Delivered'}
                                 </Button>
                             </View>
                         </>
                     ) : (
-                        <View className="gap-6">
-                            {/* Edit Mode */}
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Dress Type</Typography>
-                                <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                        <View className="px-4">
+                            {/* Edit Mode Header */}
+                            <SectionLabel>Order Information</SectionLabel>
+                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                                <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Style Name</Typography>
                                     <TextInput
-                                        className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="E.g. Senator Suit"
-                                        placeholderTextColor="#9CA3AF"
                                         value={styleName}
                                         onChangeText={setStyleName}
+                                        className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                        placeholder="Senator Suit..."
                                     />
-                                </Surface>
-                            </View>
-
-                            {/* Image Pickers in Edit Mode */}
-                            <View className="flex-row gap-4">
-                                <View className="flex-1">
-                                    <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Fabric</Typography>
-                                    <Pressable onPress={() => pickImage('fabric')}>
-                                        <Surface variant="white" className={`h-40 items-center justify-center border-2 border-dashed ${isDark ? 'border-border-dark' : 'border-blue-200'} overflow-hidden`} rounded="3xl">
-                                            {fabricImage ? (
-                                                <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                            ) : (
-                                                <>
-                                                    <Add size={24} color="#3B82F6" />
-                                                    <Typography variant="caption" color="gray" weight="bold" className="mt-1">Add Fabric</Typography>
-                                                </>
-                                            )}
-                                        </Surface>
-                                    </Pressable>
                                 </View>
-                                <View className="flex-1">
-                                    <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Style</Typography>
-                                    <Pressable onPress={() => pickImage('style')}>
-                                        <Surface variant="white" className={`h-40 items-center justify-center border-2 border-dashed ${isDark ? 'border-border-dark' : 'border-blue-200'} overflow-hidden`} rounded="3xl">
-                                            {styleImage ? (
-                                                <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
-                                            ) : (
-                                                <>
-                                                    <Add size={24} color="#3B82F6" />
-                                                    <Typography variant="caption" color="gray" weight="bold" className="mt-1">Add Style</Typography>
-                                                </>
-                                            )}
-                                        </Surface>
-                                    </Pressable>
-                                </View>
-                            </View>
 
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount ({currencySymbol})</Typography>
-                                <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                                <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Total ({currencySymbol})</Typography>
                                     <TextInput
-                                        className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="E.g. 5000"
-                                        placeholderTextColor="#9CA3AF"
                                         value={amount}
                                         onChangeText={(v) => handleAmountInput(v, setAmount)}
                                         keyboardType="numeric"
+                                        className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                        placeholder="0"
                                     />
-                                </Surface>
-                            </View>
+                                </View>
 
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Amount Paid ({currencySymbol})</Typography>
-                                <Surface variant="muted" rounded="2xl" className={`p-1 px-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                                <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Paid ({currencySymbol})</Typography>
                                     <TextInput
-                                        className={`h-14 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="E.g. 2500"
-                                        placeholderTextColor="#9CA3AF"
                                         value={amountPaid}
                                         onChangeText={(v) => handleAmountInput(v, setAmountPaid)}
                                         keyboardType="numeric"
+                                        className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-[#34C759]'}`}
+                                        placeholder="0"
                                     />
-                                </Surface>
-                            </View>
+                                </View>
 
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Due Date</Typography>
-                                <Pressable onPress={() => setShowDatePicker(true)}>
-                                    <Surface variant="muted" rounded="2xl" className={`p-4 h-14 justify-center border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
-                                        <Typography weight="semibold">{formatDate(deliveryDate)}</Typography>
-                                    </Surface>
+                                <Pressable
+                                    onPress={() => setShowDatePicker(true)}
+                                    className={`flex-row items-center px-4 h-14`}
+                                >
+                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Due Date</Typography>
+                                    <Typography weight="bold" color="primary" className="flex-1">{formatDateShort(deliveryDate)}</Typography>
+                                    <ArrowRight2 size={16} color="#C7C7CC" />
                                 </Pressable>
-                                {showDatePicker && (
-                                    <DateTimePicker
-                                        value={deliveryDate || new Date()}
-                                        mode="date"
-                                        display="default"
-                                        onChange={onDateChange}
-                                    />
-                                )}
+                            </Surface>
+
+                            <SectionLabel>Images</SectionLabel>
+                            <View className="flex-row gap-4 mb-6">
+                                <TouchableOpacity onPress={() => pickImage('fabric')} className="flex-1">
+                                    <Surface variant="white" className={`h-36 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm'} overflow-hidden`} rounded="2xl">
+                                        {fabricImage ? (
+                                            <Image source={{ uri: fabricImage }} className="w-full h-full" />
+                                        ) : (
+                                            <View className="items-center">
+                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
+                                                    <Add size={20} color="#007AFF" />
+                                                </View>
+                                                <Typography variant="caption" color="gray" weight="bold">Fabric</Typography>
+                                            </View>
+                                        )}
+                                    </Surface>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity onPress={() => pickImage('style')} className="flex-1">
+                                    <Surface variant="white" className={`h-36 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm'} overflow-hidden`} rounded="2xl">
+                                        {styleImage ? (
+                                            <Image source={{ uri: styleImage }} className="w-full h-full" />
+                                        ) : (
+                                            <View className="items-center">
+                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
+                                                    <Add size={20} color="#007AFF" />
+                                                </View>
+                                                <Typography variant="caption" color="gray" weight="bold">Design</Typography>
+                                            </View>
+                                        )}
+                                    </Surface>
+                                </TouchableOpacity>
                             </View>
 
-                            <View>
-                                <Typography variant="caption" color="gray" weight="medium" className="ml-1 mb-2 uppercase">Notes</Typography>
-                                <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'} min-h-[140px]`}>
-                                    <TextInput
-                                        className={`font-medium flex-1 ${isDark ? 'text-white' : 'text-dark'}`}
-                                        placeholder="Add details..."
-                                        placeholderTextColor="#9CA3AF"
-                                        value={notes}
-                                        onChangeText={setNotes}
-                                        multiline
-                                        textAlignVertical="top"
-                                    />
-                                </Surface>
-                            </View>
+                            <SectionLabel>Notes</SectionLabel>
+                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                                <TextInput
+                                    value={notes}
+                                    onChangeText={setNotes}
+                                    multiline
+                                    placeholder="Add styling details or measurements..."
+                                    className={`min-h-[120px] font-medium text-[15px] ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                    textAlignVertical="top"
+                                />
+                            </Surface>
 
-                            <View className="flex-row gap-4 mt-4">
-                                <Button
-                                    onPress={handleDelete}
-                                    className={`flex-1 h-16 rounded-full border-0 ${isDark ? 'bg-red-900/20' : 'bg-red-50'}`}
-                                    textClassName="text-red-500"
-                                >
-                                    Delete
-                                </Button>
-                                <Button
-                                    onPress={handleUpdate}
-                                    className={`flex-[2] h-16 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                    textClassName={isDark ? 'text-black' : 'text-white'}
-                                    isLoading={isUpdating}
-                                    disabled={isUpdating}
-                                >
-                                    {isUpdating ? 'Saving...' : 'Save Changes'}
-                                </Button>
-                            </View>
+                            <Button onPress={handleDelete} variant="ghost" className="h-14 mb-10 bg-red-500/10 rounded-2xl" textClassName="text-[#FF3B30] font-bold">
+                                Delete Order
+                            </Button>
+
+                            {showDatePicker && Platform.OS !== 'ios' && (
+                                <DateTimePicker
+                                    value={deliveryDate || new Date()}
+                                    mode="date"
+                                    display="default"
+                                    onChange={onDateChange}
+                                />
+                            )}
                         </View>
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* Modals */}
+            {showDatePicker && Platform.OS === 'ios' && (
+                <Modal
+                    transparent={true}
+                    animationType="slide"
+                    visible={showDatePicker}
+                >
+                    <View className="flex-1 justify-end">
+                        <View className={`p-6 pb-12 rounded-t-[40px] shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-t border-white/5' : 'bg-white'}`}>
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Typography variant="h3" weight="bold">Due Date</Typography>
+                                <Pressable onPress={() => setShowDatePicker(false)}>
+                                    <Typography variant="body" color="primary" weight="bold">Done</Typography>
+                                </Pressable>
+                            </View>
+                            <DateTimePicker
+                                testID="dateTimePicker"
+                                value={deliveryDate || new Date()}
+                                mode="date"
+                                is24Hour={true}
+                                display="spinner"
+                                onChange={onDateChange}
+                                textColor={isDark ? 'white' : 'black'}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+            )}
 
             {/* Image Viewer Modal */}
             <Modal

@@ -110,15 +110,30 @@ export default function Orders() {
 
     const handleToggleStatus = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === 'DELIVERED' ? 'PENDING' : 'DELIVERED';
-        try {
-            await updateOrderStatus(id, newStatus);
-            Toast.show({
-                type: 'success',
-                text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',
+        
+        const performToggle = async () => {
+            try {
+                await updateOrderStatus(id, newStatus);
+                Toast.show({
+                    type: 'success',
+                    text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',
+                });
+                performSync().catch(console.error);
+            } catch (error) {
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update status' });
+            }
+        };
+
+        if (newStatus === 'DELIVERED') {
+            confirm({
+                title: "Mark as Delivered",
+                message: "Are you sure this order has been delivered?",
+                confirmText: "Yes, Delivered",
+                type: "success",
+                onConfirm: performToggle
             });
-            performSync().catch(console.error);
-        } catch (error) {
-            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update status' });
+        } else {
+            performToggle();
         }
     };
 
@@ -389,9 +404,7 @@ export default function Orders() {
                                             </View>
                                         </View>
                                     </View>
-                                    <View className="ml-3">
-                                        <ArrowRight size={16} color="#D1D1D6" />
-                                    </View>
+
                                 </Surface>
                             </Pressable>
                         </Swipeable>

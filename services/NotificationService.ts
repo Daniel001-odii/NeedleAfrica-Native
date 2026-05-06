@@ -149,45 +149,49 @@ export class NotificationService {
     }
 
     static async refreshAllReminders(orders: any[], user: any) {
-        console.log(`Refreshing local reminders for ${orders.length} orders...`);
-        const activeStatuses = ['PENDING', 'DELIVERING', 'READY'];
+        try {
+            console.log(`Refreshing local reminders for ${orders.length} orders...`);
+            const activeStatuses = ['PENDING', 'DELIVERING', 'READY'];
+            
+            // 1. Fetch all scheduled notifications once to avoid multiple async calls in the loop
+            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 
-        for (const order of orders) {
-            try {
-                if (activeStatuses.includes(order.status) && order.deliveryDate) {
-                    // Safe fetch: query by ID instead of using relation.fetch()
-                    // which throws Diagnostic Error if record is missing in some versions/states
-                    const customerId = order.customerId;
-                    let customer = null;
+            for (const order of orders) {
+                try {
+                    if (activeStatuses.includes(order.status) && order.deliveryDate) {
+                        // Safe fetch: query by ID instead of using relation.fetch()
+                        const customerId = order.customerId;
+                        let customer = null;
 
-                    if (customerId) {
-                        const customers = await order.collections.get('customers')
-                            .query(Q.where('id', customerId))
-                            .fetch();
-                        customer = customers.length > 0 ? customers[0] : null;
+                        if (customerId) {
+                            const customers = await order.collections.get('customers')
+                                .query(Q.where('id', customerId))
+                                .fetch();
+                            customer = customers.length > 0 ? customers[0] : null;
+                        }
+
+                        const reminderDays = parseInt((!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays);
+
+                        await this.scheduleDeliveryReminder(
+                            order.id,
+                            customer?.fullName || 'Customer',
+                            order.deliveryDate,
+                            isNaN(reminderDays) ? 1 : reminderDays
+                        );
+                    } else {
+                        // 2. Cancel if no longer active, passing the scheduled list for optimization
+                        await this.cancelOrderRemindersOptimized(order.id, scheduled);
                     }
-
-                    const reminderDays = parseInt((!user?.reminderDays || user?.reminderDays === '0') ? '1' : user?.reminderDays);
-
-                    await this.scheduleDeliveryReminder(
-                        order.id,
-                        customer?.fullName || 'Customer',
-                        order.deliveryDate,
-                        isNaN(reminderDays) ? 1 : reminderDays
-                    );
-                } else {
-                    // Cancel if no longer active
-                    await this.cancelOrderReminders(order.id);
+                } catch (e) {
+                    console.error(`Error processing reminders for order ${order.id}:`, e);
                 }
-            } catch (e) {
-                console.error(`Error processing reminders for order ${order.id}:`, e);
-                // Optionally cancel reminders for problematic orders to be safe
-                await this.cancelOrderReminders(order.id).catch(() => { });
             }
-        }
 
-        // Schedule Daily Smart Reminders
-        await this.scheduleSmartReminders(orders);
+            // Schedule Daily Smart Reminders
+            await this.scheduleSmartReminders(orders);
+        } catch (e) {
+            console.error("Critical error in refreshAllReminders:", e);
+        }
     }
 
     static async scheduleSmartReminders(orders: any[]) {
@@ -200,10 +204,15 @@ export class NotificationService {
                 }
             }
 
-            const pendingOrders = orders.filter(o => ['PENDING', 'READY'].includes(o.status));
+            // Only consider PENDING or READY orders for smart reminders
+            const pendingOrders = orders.filter(o => ['PENDING', 'READY', 'DELIVERING'].includes(o.status));
             const hasPending = pendingOrders.length > 0;
 
+            // EXCLUDE Delivered orders from debt reminders as well to avoid confusing users
             const owingOrders = orders.filter(o => {
+                const isDelivered = o.status === 'DELIVERED';
+                if (isDelivered) return false;
+
                 const balance = typeof o.balance === 'number' ? o.balance : ((o.amount || 0) - (o.amountPaid || 0));
                 return balance > 0;
             });
@@ -322,18 +331,24 @@ export class NotificationService {
         });
     }
 
-    static async cancelOrderReminders(orderId: string) {
+    /**
+     * Optimized version that takes an optional pre-fetched list of scheduled notifications
+     */
+    private static async cancelOrderRemindersOptimized(orderId: string, scheduledList?: Notifications.NotificationRequest[]) {
         try {
-            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+            const scheduled = scheduledList || await Notifications.getAllScheduledNotificationsAsync();
             for (const notification of scheduled) {
                 const data = notification.content.data;
                 if (data && data.orderId === orderId) {
                     await Notifications.cancelScheduledNotificationAsync(notification.identifier);
                 }
             }
-            console.log(`Cancelled all reminders for order ${orderId}`);
         } catch (e) {
             console.error("Failed to cancel notifications:", e);
         }
+    }
+
+    static async cancelOrderReminders(orderId: string) {
+        return this.cancelOrderRemindersOptimized(orderId);
     }
 }

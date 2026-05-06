@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, TextInput, ScrollView, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
@@ -7,14 +7,15 @@ import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
-import { ArrowLeft, DocumentText, SearchNormal1, User as UserIcon } from 'iconsax-react-native';
+import { Ruler, ArrowLeft, DocumentText, SearchNormal1, User as UserIcon, TickCircle, ArrowDown2 } from 'iconsax-react-native';
+import { TypingText } from '../../components/ui/TypingText';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useCustomers } from '../../hooks/useCustomers';
 import { useCustomerMeasurements } from '../../hooks/useMeasurement';
 import { useMeasurementTemplates, MeasurementTemplate } from '../../hooks/useMeasurementTemplates';
-import { useCustomers } from '../../hooks/useCustomers';
-import { useAuth } from '../../contexts/AuthContext';
-import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../contexts/ConfirmContext';
-import { useTheme } from '../../contexts/ThemeContext';
+import Toast from 'react-native-toast-message';
 
 export default function CreateMeasurementScreen() {
     const router = useRouter();
@@ -66,33 +67,18 @@ export default function CreateMeasurementScreen() {
 
     const handleSave = async () => {
         if (!selectedCustomerId) {
-            confirm({
-                title: 'Error',
-                message: 'Please select a customer',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Please select a customer' });
             return;
         }
 
         if (!title.trim()) {
-            confirm({
-                title: 'Error',
-                message: 'Please enter a title',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Please enter a title' });
             return;
         }
 
         const hasValues = Object.values(values).some(v => v.trim().length > 0);
         if (!hasValues) {
-            confirm({
-                title: 'Error',
-                message: 'Please enter at least one measurement value',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Please enter at least one measurement' });
             return;
         }
 
@@ -100,7 +86,6 @@ export default function CreateMeasurementScreen() {
         try {
             await addMeasurement(title, values);
 
-            // Track measurement capture
             posthog.capture('measurement_captured', {
                 template_name: selectedTemplate?.name || 'Manual',
                 field_count: Object.keys(values).length,
@@ -114,46 +99,55 @@ export default function CreateMeasurementScreen() {
             router.back();
         } catch (error) {
             console.error(error);
-            confirm({
-                title: 'Error',
-                message: 'Failed to save measurement',
-                confirmText: 'OK',
-                onConfirm: () => { }
-            });
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to save measurement' });
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-[#F2F2F7]'}`}>
             <SafeAreaView className="flex-1" edges={['top']}>
+                <View className={`px-6 pt-2 pb-2 ${isDark ? 'bg-background-dark' : 'bg-[#F2F2F7]'}`}>
+                    <IconButton
+                        icon={<ArrowLeft size={24} color={isDark ? "white" : "#1F2937"} />}
+                        onPress={() => router.back()}
+                        variant="ghost"
+                        className="-ml-4"
+                    />
+                </View>
+
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     className="flex-1"
                 >
-                    <View className="flex-1">
-                        <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
-                            <IconButton
-                                icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
-                                onPress={() => router.back()}
-                                variant="ghost"
-                                className="-ml-2"
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                        contentContainerClassName="p-6 pb-20"
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <View className="mb-10 mt-2">
+                            <TypingText
+                                variant="h1"
+                                weight="bold"
+                                className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                text="New Measurement"
+                                speed={30}
                             />
-                            <Typography variant="h3" weight="bold" className="ml-2">New Measurement</Typography>
+                            <Typography color="gray" variant="subtitle" className="leading-5">
+                                Record and save specific measurements for your clients.
+                            </Typography>
                         </View>
 
-                        <ScrollView
-                            showsVerticalScrollIndicator={false}
-                            contentContainerClassName="p-6 pb-20"
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            {/* 1. Customer Selection */}
-                            <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">1. Select Customer</Typography>
+                        {/* Section 1: Customer Selection */}
+                        <View className="mb-8">
+                            <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                                Customer Selection
+                            </Typography>
 
                             {!selectedCustomerId ? (
-                                <View className="mb-8">
-                                    <Surface variant="muted" rounded="2xl" className={`flex-row items-center px-4 h-14 mb-4 border ${isDark ? 'border-border-dark' : 'border-gray-100'}`}>
+                                <View>
+                                    <Surface variant="muted" rounded="2xl" className={`flex-row items-center px-4 h-14 mb-4 border ${isDark ? 'border-border-dark bg-surface-muted-dark' : 'border-gray-100 bg-white'}`}>
                                         <SearchNormal1 size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
                                         <TextInput
                                             className={`ml-3 flex-1 font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
@@ -164,126 +158,147 @@ export default function CreateMeasurementScreen() {
                                         />
                                     </Surface>
                                     {loadingCustomers ? (
-                                        <ActivityIndicator color={isDark ? "white" : "black"} />
+                                        <ActivityIndicator color="#6366f1" />
                                     ) : (
-                                        <View className="gap-0">
-                                            {filteredCustomers.slice(0, 5).map(customer => (
-                                                <Pressable key={customer.id} onPress={() => setSelectedCustomerId(customer.id)}>
-                                                    <View className="flex-row items-center py-4 px-1 mb-0">
-                                                        <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
-                                                            <Typography weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
-                                                                {(customer.fullName || 'U').charAt(0).toUpperCase()}
-                                                                {(customer.fullName || '').split(' ')[1]?.charAt(0).toUpperCase() || ''}
-                                                            </Typography>
-                                                        </Surface>
-                                                        <View className="flex-1">
-                                                            <Typography variant="body" weight="bold">{customer.fullName}</Typography>
-                                                            <Typography variant="caption" color="gray">{customer.phoneNumber || 'No phone number'}</Typography>
-                                                        </View>
+                                        <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
+                                            {filteredCustomers.slice(0, 5).map((customer, index) => (
+                                                <TouchableOpacity
+                                                    key={customer.id}
+                                                    onPress={() => setSelectedCustomerId(customer.id)}
+                                                    className={`flex-row items-center p-4 ${index < filteredCustomers.slice(0, 5).length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''} ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
+                                                >
+                                                    <Surface variant="lavender" className={`w-10 h-10 items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
+                                                        <Typography variant="small" weight="bold" className={isDark ? 'text-indigo-300' : 'text-brand-primary'}>
+                                                            {(customer.fullName || 'U').charAt(0).toUpperCase()}
+                                                        </Typography>
+                                                    </Surface>
+                                                    <View className="flex-1">
+                                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>{customer.fullName}</Typography>
+                                                        <Typography variant="caption" color="gray">{customer.phoneNumber || 'No phone'}</Typography>
                                                     </View>
-                                                </Pressable>
+                                                </TouchableOpacity>
                                             ))}
+                                            {filteredCustomers.length === 0 && (
+                                                <View className="p-8 items-center">
+                                                    <Typography color="gray">No customers found</Typography>
+                                                </View>
+                                            )}
                                         </View>
                                     )}
                                 </View>
                             ) : (
-                                <Surface variant="lavender" className={`p-4 mb-8 flex-row items-center justify-between ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="2xl">
+                                <Surface variant="lavender" className={`p-4 flex-row items-center justify-between ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="2xl">
                                     <View className="flex-row items-center">
-                                        <View className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-white/10' : 'bg-white'}`}>
-                                            <UserIcon size={20} color={isDark ? "white" : "black"} variant="Bulk" />
+                                        <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${isDark ? 'bg-white/10' : 'bg-white'}`}>
+                                            <UserIcon size={20} color={isDark ? "white" : "#6366f1"} variant="Bulk" />
                                         </View>
                                         <View>
-                                            <Typography weight="bold" className={isDark ? 'text-white' : 'text-dark'}>{selectedCustomer?.fullName}</Typography>
+                                            <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>{selectedCustomer?.fullName}</Typography>
                                             <Typography variant="caption" color="gray">{selectedCustomer?.phoneNumber}</Typography>
                                         </View>
                                     </View>
                                     {!effectiveCustomerId && (
-                                        <Pressable onPress={() => { setSelectedCustomerId(''); setSelectedTemplate(null); }}>
+                                        <TouchableOpacity onPress={() => { setSelectedCustomerId(''); setSelectedTemplate(null); }} className="px-3 py-1 bg-indigo-500/10 rounded-full">
                                             <Typography variant="small" color="primary" weight="bold">Change</Typography>
-                                        </Pressable>
+                                        </TouchableOpacity>
                                     )}
                                 </Surface>
                             )}
+                        </View>
 
-                            {selectedCustomerId && (
-                                <>
-                                    {/* 2. Template Selection */}
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">2. Choose Template</Typography>
-                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6">
+                        {selectedCustomerId && (
+                            <>
+                                {/* Section 2: Template Selection */}
+                                <View className="mb-8">
+                                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                                        Measurement Template
+                                    </Typography>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row overflow-visible">
                                         {templates.map(template => (
-                                            <Pressable
+                                            <TouchableOpacity
                                                 key={template.id}
                                                 onPress={() => setSelectedTemplate(template)}
-                                                className={`mr-3 p-4 rounded-2xl border ${selectedTemplate?.id === template.id
+                                                className={`mr-3 px-6 py-4 rounded-2xl border ${selectedTemplate?.id === template.id
                                                     ? (isDark ? 'bg-indigo-900/60 border-indigo-500' : 'bg-soft-lavender border-brand-primary')
-                                                    : (isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-200')}`}
+                                                    : (isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100')}`}
                                             >
                                                 <Typography weight="bold" color={selectedTemplate?.id === template.id ? 'primary' : (isDark ? 'white' : 'black')}>
                                                     {template.name}
                                                 </Typography>
-                                            </Pressable>
+                                            </TouchableOpacity>
                                         ))}
-                                        <Pressable
+                                        <TouchableOpacity
                                             onPress={() => router.push('/measurement-templates')}
-                                            className={`px-6 py-4 rounded-2xl border border-dashed ${isDark ? 'border-gray-600' : 'border-gray-300'} items-center justify-center`}
+                                            className={`px-6 py-4 rounded-2xl border border-dashed ${isDark ? 'border-gray-700 bg-surface-dark' : 'border-gray-200 bg-white'} items-center justify-center`}
                                         >
-                                            <Typography variant="small" color="gray">Manage</Typography>
-                                        </Pressable>
+                                            <Typography variant="small" color="gray" weight="bold">Manage Templates</Typography>
+                                        </TouchableOpacity>
                                     </ScrollView>
+                                </View>
 
-                                    {/* 3. Measurement Details */}
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">3. Measurement Values</Typography>
+                                {/* Section 3: Measurements */}
+                                <View className="mb-8">
+                                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                                        Measurement Values
+                                    </Typography>
 
-                                    <View className="mb-6">
-                                        <Typography variant="body" weight="semibold" className="mb-2 ml-1">Title</Typography>
-                                        <Surface variant="muted" className={`px-4 h-14 justify-center border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
+                                    <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
+                                        {/* Title Field */}
+                                        <View className={`flex-row items-center px-5 py-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                                            <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-orange-900/30' : 'bg-orange-50'}`}>
+                                                <DocumentText size={18} color="#f97316" variant="Bulk" />
+                                            </View>
                                             <TextInput
-                                                className={`text-base font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                                placeholder="e.g. Wedding Suit"
-                                                placeholderTextColor="#9CA3AF"
+                                                className={`flex-1 text-[16px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                                placeholder="Measurement Title (e.g. Kaftan)"
+                                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
                                                 value={title}
                                                 onChangeText={setTitle}
                                             />
-                                        </Surface>
-                                    </View>
+                                        </View>
 
-                                    {selectedTemplate ? (
-                                        <View className="gap-4 mb-8">
-                                            {selectedTemplate.fields.map((field: string) => (
-                                                <View key={field}>
-                                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">{field} ({unit})</Typography>
-                                                    <Surface variant="muted" className={`px-4 h-14 justify-center border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
+                                        {selectedTemplate ? (
+                                            <View>
+                                                {selectedTemplate.fields.map((field: string, index: number) => (
+                                                    <View
+                                                        key={field}
+                                                        className={`flex-row items-center justify-between px-5 py-4 ${index < selectedTemplate.fields.length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}
+                                                    >
+                                                        <Typography weight="semibold" className={isDark ? 'text-white' : 'text-gray-900'}>
+                                                            {field} <Typography variant="caption" color="gray">({unit})</Typography>
+                                                        </Typography>
                                                         <TextInput
-                                                            className={`text-base font-semibold ${isDark ? 'text-white' : 'text-dark'}`}
-                                                            placeholder={`Enter ${field}`}
+                                                            className={`text-right text-[16px] font-bold ${isDark ? 'text-white' : 'text-blue-600'} min-w-[60px]`}
+                                                            placeholder="0"
                                                             placeholderTextColor="#9CA3AF"
                                                             value={values[field] || ''}
                                                             onChangeText={(text) => handleValueChange(field, text)}
                                                             keyboardType="numeric"
                                                         />
-                                                    </Surface>
-                                                </View>
-                                            ))}
-                                        </View>
-                                    ) : (
-                                        <View className={`items-center justify-center p-10 rounded-3xl mb-8 ${isDark ? 'bg-surface-muted-dark' : 'bg-gray-50'}`}>
-                                            <DocumentText size={32} color="#9CA3AF" variant="Bulk" />
-                                            <Typography color="gray" className="mt-2 text-center">Select a template above to start entering values</Typography>
-                                        </View>
-                                    )}
-                                    <Button
-                                        onPress={handleSave}
-                                        className={`h-16 rounded-full mb-10 ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                        textClassName={`${isDark ? 'text-dark' : 'text-white'} font-bold`}
-                                        isLoading={submitting}
-                                        disabled={!selectedTemplate}
-                                    >
-                                        Save Measurement
-                                    </Button>
-                                </>
-                            )}
-                        </ScrollView>
-                    </View>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        ) : (
+                                            <View className="p-10 items-center">
+                                                <Ruler size={32} color="#9CA3AF" variant="Bulk" />
+                                                <Typography color="gray" className="mt-2 text-center">Select a template above to reveal measurement fields</Typography>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+
+                                <Button
+                                    onPress={handleSave}
+                                    className={`h-16 rounded-full border-0 bg-blue-600 shadow-none`}
+                                    textClassName="text-white font-bold text-lg"
+                                    isLoading={submitting}
+                                    disabled={!selectedTemplate || submitting}
+                                >
+                                    Save Measurements
+                                </Button>
+                            </>
+                        )}
+                    </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </View>

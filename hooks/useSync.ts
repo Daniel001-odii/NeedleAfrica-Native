@@ -51,6 +51,16 @@ export function useSync() {
             setLastSyncedAt(now);
             if (syncKey) await AsyncStorage.setItem(syncKey, now.toString());
             console.log('[Sync] Synchronization successful');
+
+            // CRITICAL: Refresh reminders after successful sync to ensure notifications match local state
+            try {
+                const { NotificationService } = await import('../services/NotificationService');
+                const { Q } = await import('@nozbe/watermelondb');
+                const orders = await database.get('orders').query(Q.where('deleted_at', Q.eq(null))).fetch();
+                await NotificationService.refreshAllReminders(orders, user);
+            } catch (notifyError) {
+                console.error('[Sync] Failed to refresh notifications after sync:', notifyError);
+            }
         } catch (error: any) {
             console.error('[Sync] Synchronization failed:', error);
             setLastSyncError(error);

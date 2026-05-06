@@ -191,9 +191,7 @@ function CustomersScreen() {
                                         <Call size={18} color="#22c55e" variant="Bold" />
                                     </TouchableOpacity>
                                 )}
-                                <View className="ml-2">
-                                    <ArrowRight size={16} color="#D1D1D6" />
-                                </View>
+
                             </Surface>
                         </Pressable>
                     </Swipeable>

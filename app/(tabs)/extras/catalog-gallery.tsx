@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight } from 'iconsax-react-native';
+import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
@@ -9,6 +9,8 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path } from 'react-native-svg';
+import { WebView } from 'react-native-webview';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function CatalogGallery() {
@@ -20,6 +22,11 @@ export default function CatalogGallery() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [catalogViews, setCatalogViews] = useState(0);
     const [catalogId, setCatalogId] = useState<string | null>(null);
+    const insets = useSafeAreaInsets();
+
+    const [showWebView, setShowWebView] = useState(false);
+    const [webViewLoading, setWebViewLoading] = useState(true);
+    const [webViewKey, setWebViewKey] = useState(0);
 
     // Form State
     const [name, setName] = useState('');
@@ -219,7 +226,12 @@ export default function CatalogGallery() {
             <TouchableOpacity
                 activeOpacity={catalogId ? 0.8 : 0.5}
                 onPress={() => catalogId ? setShowUploadModal(true) : Toast.show({ type: 'info', text1: 'Action Required', text2: 'Setup Storefront Settings first' })}
-                className={`absolute bottom-8 right-6 w-16 h-16 rounded-full items-center justify-center shadow-lg z-50 ${catalogId ? 'bg-blue-600 shadow-blue-500/50' : 'bg-gray-400 opacity-50 shadow-black/20'}`}
+                className={`w-16 h-16 rounded-full items-center justify-center shadow-lg z-50 ${catalogId ? 'bg-blue-600 shadow-blue-500/50' : 'bg-gray-400 opacity-50 shadow-black/20'}`}
+                style={{
+                    position: 'absolute',
+                    right: 20,
+                    bottom: insets.bottom + 20,
+                }}
             >
                 <Add size={32} color="white" variant="Linear" />
             </TouchableOpacity>
@@ -258,6 +270,85 @@ export default function CatalogGallery() {
                     </View>
                 </View>
             </Modal>
+
+            {/* LIVE PREVIEW MODAL */}
+            <Modal
+                visible={showWebView}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={() => setShowWebView(false)}
+            >
+                <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
+                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-100'}`}>
+                        <View className="flex-row items-center">
+                            <IconButton 
+                                icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />} 
+                                onPress={() => setShowWebView(false)} 
+                                variant="ghost" 
+                            />
+                            <Typography variant="h3" weight="bold" className="ml-2">Live Storefront</Typography>
+                        </View>
+                        <View className="flex-row items-center">
+                            <IconButton 
+                                icon={<Refresh2 size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />} 
+                                onPress={() => {
+                                    setWebViewLoading(true);
+                                    setWebViewKey(prev => prev + 1);
+                                }} 
+                                variant="ghost" 
+                            />
+                        </View>
+                    </View>
+                    
+                    <View className="flex-1 relative">
+                        <WebView
+                            key={webViewKey}
+                            source={{ uri: `https://catalog.needleafrica.com/cg/${catalogId}` }}
+                            style={{ flex: 1, backgroundColor: isDark ? '#09090b' : '#ffffff' }}
+                            onLoadStart={() => setWebViewLoading(true)}
+                            onLoadEnd={() => setWebViewLoading(false)}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                            startInLoadingState={true}
+                            originWhitelist={['*']}
+                        />
+                        {webViewLoading && (
+                            <View className="absolute inset-0 items-center justify-center bg-white/50 dark:bg-black/50">
+                                <ActivityIndicator size="large" color="#2563EB" />
+                            </View>
+                        )}
+                    </View>
+                </SafeAreaView>
+            </Modal>
+
+            {/* FLOATING EYE BUTTON */}
+            {catalogId && (
+                <TouchableOpacity
+                    onPress={() => setShowWebView(true)}
+                    activeOpacity={0.8}
+                    style={{
+                        position: 'absolute',
+                        right: 20,
+                        bottom: insets.bottom + 100, // Positioned above the Add FAB
+                        backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+                        width: 56,
+                        height: 56,
+                        borderRadius: 28,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 12,
+                        elevation: 8,
+                        zIndex: 999,
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                    }}
+                >
+                    <Eye size={28} color="#2563EB" variant="Bulk" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 }

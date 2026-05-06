@@ -68,10 +68,8 @@ function RootLayoutNav() {
         const performSync = async () => {
             try {
                 await sync();
-                const orders = await database.get('orders').query(Q.where('deleted_at', Q.eq(null))).fetch();
-                await NotificationService.refreshAllReminders(orders, user);
             } catch (e) {
-                console.error(e);
+                console.error('[RootLayout] Background sync error:', e);
             }
         };
 

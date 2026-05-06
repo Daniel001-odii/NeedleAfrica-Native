@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image, Linking } from 'react-native';
+import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image, Linking, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import {
     ArrowLeft,
@@ -12,7 +12,10 @@ import {
     Camera,
     StatusUp,
     ShieldTick,
-    Activity
+    Activity,
+    Eye,
+    Refresh2,
+    ArrowRight
 } from 'iconsax-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Typography } from '../../../components/ui/Typography';
@@ -27,6 +30,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
+import { WebView } from 'react-native-webview';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BUSINESS_TYPE_OPTIONS = [
     'Tailor', 'Fashion Designer', 'Seamstress', 'Pattern Maker', 'Bespoke / Made-to-Measure Brand',
@@ -71,12 +76,17 @@ const TikTokIcon = ({ color }: { color: string }) => (
 export default function BusinessSettings() {
     const { isDark } = useTheme();
     const { user, updateProfile, uploadProfilePhoto } = useAuth();
+    const insets = useSafeAreaInsets();
 
     const [catalogId, setCatalogId] = useState<string | null>(null);
     const [catalogViews, setCatalogViews] = useState(0);
     const [isEnabled, setIsEnabled] = useState(false);
     const [showPrices, setShowPrices] = useState(true);
     const [showWhatsApp, setShowWhatsApp] = useState(true);
+
+    const [showWebView, setShowWebView] = useState(false);
+    const [webViewLoading, setWebViewLoading] = useState(true);
+    const [webViewKey, setWebViewKey] = useState(0);
 
     const [businessName, setBusinessName] = useState(user?.businessName || '');
     const [headline, setHeadline] = useState('');
@@ -102,6 +112,8 @@ export default function BusinessSettings() {
     const [isLoading, setIsLoading] = useState(true);
 
     const userIsPro = user?.subscriptionPlan !== 'FREE' && user?.subscriptionStatus === 'ACTIVE';
+
+    const catalogUrl = `https://catalog.needleafrica.com/cg/${encodeURIComponent(catalogId as string)}`;
 
     useEffect(() => {
         const checkDisclaimer = async () => {
@@ -623,6 +635,83 @@ export default function BusinessSettings() {
                 visible={isSubscriptionModalVisible}
                 onClose={() => setIsSubscriptionModalVisible(false)}
             />
+
+            {/* LIVE PREVIEW MODAL */}
+            <Modal
+                visible={showWebView}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={() => setShowWebView(false)}
+            >
+                <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
+                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-100'}`}>
+                        <View className="flex-row items-center">
+                            <IconButton
+                                icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />}
+                                onPress={() => setShowWebView(false)}
+                                variant="ghost"
+                            />
+                            <Typography variant="h3" weight="bold" className="ml-2">Live Storefront</Typography>
+                        </View>
+                        <View className="flex-row items-center">
+                            <IconButton
+                                icon={<Refresh2 size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />}
+                                onPress={() => {
+                                    setWebViewLoading(true);
+                                    setWebViewKey(prev => prev + 1);
+                                }}
+                                variant="ghost"
+                            />
+                        </View>
+                    </View>
+
+                    <View className="flex-1 relative">
+                        <WebView
+                            key={webViewKey}
+                            source={{ uri: catalogUrl }}
+                            style={{ flex: 1, backgroundColor: isDark ? '#09090b' : '#ffffff' }}
+                            onLoadStart={() => { setWebViewLoading(true); console.log(catalogUrl); }}
+                            onLoadEnd={() => setWebViewLoading(false)}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                            startInLoadingState={true}
+                            originWhitelist={['*']}
+                        />
+                        {webViewLoading && (
+                            <View className="absolute inset-0 items-center justify-center bg-white/50 dark:bg-black/50">
+                                <ActivityIndicator size="large" color="#2563EB" />
+                            </View>
+                        )}
+                    </View>
+                </SafeAreaView>
+            </Modal>
+
+            {/* FLOATING EYE BUTTON */}
+            {catalogId && (
+                <TouchableOpacity
+                    onPress={() => setShowWebView(true)}
+                    activeOpacity={0.8}
+                    style={{
+                        position: 'absolute',
+                        right: 20,
+                        bottom: insets.bottom + 20,
+                        backgroundColor: '#2563EB',
+                        width: 56,
+                        height: 56,
+                        borderRadius: 28,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 10,
+                        zIndex: 999
+                    }}
+                >
+                    <Eye size={28} color="white" variant="Bulk" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 }
@@ -681,17 +770,24 @@ function EmptyState({ onApply, isSaving, isDark }: { onApply: () => void, isSavi
                     resizeMode="contain"
                 />
                 <Typography variant="h2" weight="bold" className="text-center mb-2 font-bold">You have no catalog yet</Typography>
-                <Typography variant="body" color="gray" className="text-center mb-10 leading-6">
+                <Typography variant="body" color="gray" className="text-center mb-6 leading-6">
                     Create your personal catalog storefront website to showcase your products and services to customers worldwide.
                 </Typography>
                 <Button
                     onPress={onApply}
                     isLoading={isSaving}
-                    className="w-full h-16 rounded-full bg-blue-600 border-0"
+                    className="w-full h-16 rounded-full bg-blue-600 border-0 mb-6"
                     textClassName="text-white font-bold text-lg"
                 >
                     Create My Catalog
                 </Button>
+
+                <TouchableOpacity onPress={() => Linking.openURL('https://catalog.needleafrica.com/cg/cmnm8rm9z0001lb04jwwf74cm')}>
+                    <View className='flex-row items-center gap-2'>
+                        <Typography color="gray" weight="bold" className="text-[14px]">View Sample Storefront</Typography>
+                        <ArrowRight size={16} color="gray" variant="Linear" />
+                    </View>
+                </TouchableOpacity>
             </View>
         </View>
     );

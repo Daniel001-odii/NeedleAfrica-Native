@@ -61,6 +61,16 @@ export default function CreateInvoiceScreen() {
         return orders.filter(o => o.customerId === selectedCustomerId && o.deletedAt === null);
     }, [orders, selectedCustomerId]);
 
+    React.useEffect(() => {
+        if (customerOrders.length > 0) {
+            if (!selectedOrderId || !customerOrders.find(o => o.id === selectedOrderId)) {
+                setSelectedOrderId(customerOrders[0].id);
+            }
+        } else {
+            setSelectedOrderId('');
+        }
+    }, [customerOrders]);
+
     const selectedOrder = useMemo(() => {
         return orders.find(o => o.id === selectedOrderId);
     }, [orders, selectedOrderId]);
