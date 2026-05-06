@@ -51,7 +51,7 @@ interface AuthContextType {
     isNewUser: boolean; // Flag to trigger onboarding
     signIn: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-    signUp: (email: string, password: string, username: string, businessName: string) => Promise<void>;
+    signUp: (email: string, password: string, username: string, businessName: string, phoneNumber?: string) => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, otp: string, password: string) => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<User>;
@@ -281,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const signUp = async (email: string, password: string, username: string, businessName: string) => {
+    const signUp = async (email: string, password: string, username: string, businessName: string, phoneNumber?: string) => {
         setIsActionLoading(true);
         try {
             const response = await axiosInstance.post('/auth/register', { 
@@ -289,6 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 password, 
                 username, 
                 businessName,
+                phoneNumber,
                 deviceType: Platform.OS
             });
             const { status, token, user: userData, message } = response.data;
@@ -365,7 +366,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const updateProfile = async (data: Partial<User>) => {
         setIsActionLoading(true);
         try {
-            const response = await axiosInstance.put('/users/me', data);
+            const response = await axiosInstance.patch('/users/me', data);
             const { status, user: userData, message } = response.data;
 
             if (status === 'error') {
@@ -459,7 +460,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const completeOnboarding = async () => {
         try {
-            const response = await axiosInstance.put('/users/me', { onboardingCompleted: true });
+            const response = await axiosInstance.patch('/users/me', { onboardingCompleted: true });
             if (response.data.status !== 'error') {
                 const updatedUser = { ...user, ...response.data.user, onboardingCompleted: true };
                 await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
@@ -501,8 +502,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsNewUser(false);
         setUser(null);
         posthog.reset();
-        router.replace('/(auth)/login');
+        
+        // Use setTimeout to ensure state updates have propagated before navigation
+        // and to avoid issues with axios interceptor calls
+        setTimeout(() => {
+            router.replace('/(auth)/login');
+        }, 0);
     };
+
+    // Register logout handler with axios
+    useEffect(() => {
+        const { setLogoutHandler } = require('../lib/axios');
+        setLogoutHandler(logout);
+    }, [logout]);
 
     return (
         <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple, changePassword }}>

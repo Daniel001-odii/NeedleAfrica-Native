@@ -30,7 +30,7 @@ export function useCustomers(searchQuery: string = '') {
             );
         }
 
-        const subscription = query.observe().subscribe(data => {
+        const subscription = query.observeWithColumns(['full_name', 'phone_number', 'notes', 'updated_at']).subscribe(data => {
             setCustomers(data);
             setLoading(false);
         });

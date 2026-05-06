@@ -7,6 +7,7 @@ import {
     KeyboardAvoidingView,
     Platform
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { ArrowLeft } from 'iconsax-react-native';
@@ -28,13 +29,14 @@ const PHONE_INPUT_STYLE = {
 export default function AddFirstCustomer() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addCustomer } = useCustomers();
+    const router = useRouter();
 
     const [name, setName] = useState(state.customer?.name || '');
     const [phone, setPhone] = useState<string | undefined>(state.customer?.phone || undefined);
     const [gender, setGender] = useState(state.customer?.gender || '');
     const [isLoading, setIsLoading] = useState(false);
 
-    const isFormValid = name.trim() && phone && gender;
+    const isFormValid = name.trim() && gender;
 
     const handleSaveCustomer = async () => {
         if (!name.trim()) {
@@ -72,13 +74,16 @@ export default function AddFirstCustomer() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
 
                 {/* Header */}
-                <View className="px-6 pt-4 bg-white">
+                <View className="px-6 pt-4 bg-white flex-row justify-between items-center">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
                         onPress={prevStep}
                         variant="ghost"
                         className="-ml-4"
                     />
+                    <TouchableOpacity onPress={() => { updateState({ step: 6 }); router.push('/onboarding/completion'); }}>
+                        <Typography color="primary" weight="bold" className="text-[16px]">Skip</Typography>
+                    </TouchableOpacity>
                 </View>
 
                 <ScrollView

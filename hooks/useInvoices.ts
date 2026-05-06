@@ -25,7 +25,7 @@ export function useInvoices(customerId?: string) {
             query = query.extend(Q.where('customer_id', customerId));
         }
 
-        const subscription = query.observe().subscribe(data => {
+        const subscription = query.observeWithColumns(['amount', 'status', 'updated_at']).subscribe(data => {
             setInvoices(data);
             setLoading(false);
         });

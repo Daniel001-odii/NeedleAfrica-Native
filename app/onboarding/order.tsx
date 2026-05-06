@@ -23,12 +23,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 import { Modal } from 'react-native';
 import { TypingText } from '../../components/ui/TypingText';
+import { useRouter } from 'expo-router';
 
 export default function CreateFirstOrder() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addOrder } = useOrders();
     const { user } = useAuth();
     const { isOnline } = useSync();
+    const router = useRouter();
 
     const [styleName, setStyleName] = useState(state.order?.styleName || '');
     const [amount, setAmount] = useState(state.order?.amount || '');
@@ -131,13 +133,16 @@ export default function CreateFirstOrder() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
 
                 {/* Header */}
-                <View className="px-6 pt-4 bg-white">
+                <View className="px-6 pt-4 bg-white flex-row justify-between items-center">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
                         onPress={prevStep}
                         variant="ghost"
                         className="-ml-4"
                     />
+                    <TouchableOpacity onPress={() => { updateState({ step: 6 }); router.push('/onboarding/completion'); }}>
+                        <Typography color="primary" weight="bold" className="text-[16px]">Skip</Typography>
+                    </TouchableOpacity>
                 </View>
 
                 <ScrollView

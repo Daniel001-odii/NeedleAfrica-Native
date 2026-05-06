@@ -75,7 +75,7 @@ export default function Extras() {
                         icon={<PenTool size={24} color="#8B5CF6" variant="Bulk" />}
                         title="Monogram"
                         desc="Embroidery inspirations"
-                        infoText="Browse unique monogram designs and embroidery patterns."
+                        infoText="Browse unique monogram designs and patterns. (Coming Soon)"
                     />
                 </View>
 

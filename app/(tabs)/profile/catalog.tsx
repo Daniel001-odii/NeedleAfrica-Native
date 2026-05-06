@@ -157,7 +157,7 @@ export default function BusinessSettings() {
         setIsSaving(true);
         try {
             const { default: axiosInstance } = await import('../../../lib/axios');
-            const res = await axiosInstance.put('/catalog', {
+            const res = await axiosInstance.patch('/catalog', {
                 catalogEnabled: false,
                 catalogThemeColor: selectedTheme,
             });
@@ -235,7 +235,7 @@ export default function BusinessSettings() {
 
             // 2. Update Catalog-specific settings
             const { default: axiosInstance } = await import('../../../lib/axios');
-            await axiosInstance.put('/catalog', {
+            await axiosInstance.patch('/catalog', {
                 id: catalogId,
                 catalogEnabled: userIsPro ? isEnabled : false,
                 showPricesInCatalog: userIsPro ? showPrices : false,
@@ -428,7 +428,7 @@ export default function BusinessSettings() {
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Visibility Settings</Typography>
                         <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                             <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
+                            <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
                                 <View className="flex-1 mr-4">
                                     <View className="flex-row items-center mb-1">
                                         <Typography weight="bold" className="text-[15px]">Catalog Visibility</Typography>
@@ -440,17 +440,17 @@ export default function BusinessSettings() {
                                     </View>
                                     <Typography variant="small" color="gray">Allow anyone with your link to view your products</Typography>
                                 </View>
-                                <Switch 
-                                    value={userIsPro ? isEnabled : false} 
+                                <Switch
+                                    value={userIsPro ? isEnabled : false}
                                     onValueChange={(val) => {
                                         if (!userIsPro) {
                                             Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to enable your public catalog' });
                                             return;
                                         }
                                         setIsEnabled(val);
-                                    }} 
-                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} 
-                                    thumbColor="#FFFFFF" 
+                                    }}
+                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                    thumbColor="#FFFFFF"
                                 />
                             </View>
                             <View className="p-4 flex-row items-center justify-between">
@@ -465,17 +465,17 @@ export default function BusinessSettings() {
                                     </View>
                                     <Typography variant="small" color="gray">Display prices to every visitor</Typography>
                                 </View>
-                                <Switch 
-                                    value={userIsPro ? showPrices : false} 
+                                <Switch
+                                    value={userIsPro ? showPrices : false}
                                     onValueChange={(val) => {
                                         if (!userIsPro) {
                                             Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
                                             return;
                                         }
                                         setShowPrices(val);
-                                    }} 
-                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }} 
-                                    thumbColor="#FFFFFF" 
+                                    }}
+                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                    thumbColor="#FFFFFF"
                                 />
                             </View>
                         </View>
@@ -492,7 +492,7 @@ export default function BusinessSettings() {
                                     </Typography>
                                     {!userIsPro && (
                                         <View className="absolute inset-0 items-center justify-center -top-2">
-                                           <Warning2 size={16} color="#9CA3AF" variant="Bulk" />
+                                            <Warning2 size={16} color="#9CA3AF" variant="Bulk" />
                                         </View>
                                     )}
                                 </View>
@@ -527,7 +527,7 @@ export default function BusinessSettings() {
                                         <Typography variant="small" color="gray" weight="medium" className="text-center mb-4 leading-relaxed">
                                             Public catalog storefront and link sharing are exclusively available to <Typography weight="black" className="text-amber-500">PRO</Typography> members.
                                         </Typography>
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             onPress={() => setIsSubscriptionModalVisible(true)}
                                             className="bg-amber-500 px-6 py-3 rounded-full flex-row items-center"
                                         >
@@ -675,12 +675,14 @@ function EmptyState({ onApply, isSaving, isDark }: { onApply: () => void, isSavi
     return (
         <View className="flex-1 justify-center p-8">
             <View className={`p-10 rounded-[48px] items-center ${isDark ? 'bg-zinc-900/50' : 'bg-white'}`}>
-                <View className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full items-center justify-center mb-8">
-                    <Magicpen size={48} color="#2563EB" variant="Bulk" />
-                </View>
-                <Typography variant="h2" weight="bold" className="text-center mb-4">No Catalog Yet</Typography>
+                <Image
+                    source={require('../../../assets/images/globe-image.png')}
+                    style={{ width: 200, height: 200 }}
+                    resizeMode="contain"
+                />
+                <Typography variant="h2" weight="bold" className="text-center mb-2 font-bold">You have no catalog yet</Typography>
                 <Typography variant="body" color="gray" className="text-center mb-10 leading-6">
-                    Create your personal catalog storefront to showcase your products and services to customers worldwide.
+                    Create your personal catalog storefront website to showcase your products and services to customers worldwide.
                 </Typography>
                 <Button
                     onPress={onApply}

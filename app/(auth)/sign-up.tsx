@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft, Shop } from 'iconsax-react-native';
+import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft, Shop, Call } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
@@ -18,6 +18,7 @@ export default function SignUp() {
     // const [businessName, setBusinessName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const { signUp, signInWithGoogle, signInWithApple, isActionLoading } = useAuth();
     const { isDark } = useTheme();
@@ -62,7 +63,7 @@ export default function SignUp() {
     };
 
     const handleSignUp = async () => {
-        if (!name || !email || !password /* || !businessName */) {
+        if (!name || !email || !password || !phoneNumber) {
             Toast.show({
                 type: 'error',
                 text1: 'Required Fields',
@@ -71,7 +72,7 @@ export default function SignUp() {
             return;
         }
         try {
-            await signUp(email, password, name, ''); // businessName handled in onboarding flow
+            await signUp(email, password, name, '', phoneNumber); // businessName handled in onboarding flow
             Toast.show({
                 type: 'success',
                 text1: 'Account Created',
@@ -134,6 +135,21 @@ export default function SignUp() {
                                 onChangeText={setEmail}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
+                            />
+                        </Surface>
+                    </View>
+
+                    <View className="mb-6">
+                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Phone Number</Typography>
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
+                            <Call size={20} color="#6B7280" variant="Bulk" />
+                            <TextInput
+                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
+                                placeholder="Your Phone Number"
+                                placeholderTextColor="#9CA3AF"
+                                value={phoneNumber}
+                                onChangeText={setPhoneNumber}
+                                keyboardType="phone-pad"
                             />
                         </Surface>
                     </View>

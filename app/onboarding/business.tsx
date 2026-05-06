@@ -51,11 +51,14 @@ const HEARD_ABOUT_US_OPTIONS = [
 ];
 
 export default function BusinessDetails() {
-    const { updateProfile } = useAuth();
+    const { user, updateProfile } = useAuth();
     const { state, updateState, nextStep, prevStep } = useOnboarding();
 
+    const isGoogleOrApple = user?.provider === 'GOOGLE' || user?.provider === 'APPLE';
+    const showPhoneInput = isGoogleOrApple || !user?.phoneNumber;
+
     const [businessType, setBusinessType] = useState(state.businessType || '');
-    const [phone, setPhone] = useState<string | undefined>(state.phoneNumber || undefined);
+    const [phone, setPhone] = useState<string | undefined>(user?.phoneNumber || state.phoneNumber || undefined);
     const [country, setCountry] = useState(state.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(state.country === 'Nigeria' ? 'NG' : (state.country ? undefined : 'NG'));
     const [noOfEmployees, setNoOfEmployees] = useState(state.noOfEmployees || '1-5');
@@ -188,21 +191,23 @@ export default function BusinessDetails() {
                         <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
 
                             {/* Phone Number */}
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
-                                <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
-                                    WhatsApp
-                                </Typography>
-                                <View className="flex-1 items-end">
-                                    <PhoneInput
-                                        style={PHONE_INPUT_STYLE}
-                                        placeholder="(+123) 456 7890"
-                                        placeholderTextColor="#D1D5DB"
-                                        defaultCountry="NG"
-                                        value={phone}
-                                        onChange={setPhone}
-                                    />
+                            {showPhoneInput && (
+                                <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
+                                    <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                        WhatsApp
+                                    </Typography>
+                                    <View className="flex-1 items-end">
+                                        <PhoneInput
+                                            style={PHONE_INPUT_STYLE}
+                                            placeholder="(+123) 456 7890"
+                                            placeholderTextColor="#D1D5DB"
+                                            defaultCountry="NG"
+                                            value={phone}
+                                            onChange={setPhone}
+                                        />
+                                    </View>
                                 </View>
-                            </View>
+                            )}
 
                             {/* Country Picker */}
                             <View className="flex-row items-center px-4 py-4">

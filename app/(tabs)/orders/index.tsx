@@ -263,11 +263,11 @@ export default function Orders() {
             </View>
 
             {/* Tabs */}
-            <View className="py-4">
+            <View className="py-2">
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerClassName="px-6"
+                    contentContainerClassName="px-6 py-4"
                 >
                     {TABS.map((tab) => {
                         const isActive = activeTab === tab;

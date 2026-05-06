@@ -54,20 +54,19 @@ export function StoreUpdateModal() {
 
     return (
         <Modal
-            animationType="slide"
-            transparent={false}
+            animationType="fade"
+            transparent={true}
             visible={needsUpdate && !dismissed}
             onRequestClose={() => { }}
             statusBarTranslucent={true}
         >
-            <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'} justify-center items-center p-10`}>
-                <View className="w-full max-w-sm items-center">
-                    <View className="items-center">
-                        {/* App Icon Container */}
-                        <View className="mb-10 mt-4 shadow-xl shadow-black/30">
-                            <View
-                                className="w-32 h-32 rounded-[40px] overflow-hidden items-center justify-center p-0 bg-[#004236]"
-                            >
+            <View className={`flex-1 ${isDark ? 'bg-black/80' : 'bg-black/40'} justify-center p-6`}>
+                <View className={`w-full p-8 rounded-[40px] ${isDark ? 'bg-[#1C1C1E] border border-white/10' : 'bg-white'} items-center shadow-2xl`}>
+                    
+                    {/* App Icon Container */}
+                    <View className="mb-8 mt-2 items-center justify-center relative">
+                        <View className={`p-4 rounded-[48px] ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                            <View className={`w-24 h-24 rounded-[32px] overflow-hidden items-center justify-center shadow-sm`}>
                                 <Image
                                     source={require('../../assets/app-icon.png')}
                                     className="w-full h-full"
@@ -75,39 +74,48 @@ export function StoreUpdateModal() {
                                 />
                             </View>
                         </View>
-
-                        <Typography variant="h2" weight="bold" className="text-center mb-2">
-                            Please update to the latest version
-                        </Typography>
-
-                        <Typography variant="small" color="gray" weight="semibold" className="text-center mb-6">
-                            {updateInfo?.version || "1.5.0"}
-                        </Typography>
-
-                        <Typography variant="body" color="gray" className="text-center leading-6 mb-10 px-2 opacity-80">
-                            {updateInfo?.updateMessage || "New version available. We strongly recommend to install update before using the app. Latest release contains important improvements related to functionality."}
-                        </Typography>
-
-                        <View className="w-full space-y-4">
-                            <Button
-                                onPress={handleUpdate}
-                                className="h-16 text-white rounded-full bg-blue-500 border-0 mb-3"
-                                textClassName=" font-bold"
-                            >
-                                <Typography className='text-white'> Open {Platform.OS === 'ios' ? 'App Store' : 'Play Store'}</Typography>
-
-                            </Button>
-
-                            <TouchableOpacity
-                                onPress={() => setDismissed(true)}
-                                className="h-12 items-center justify-center"
-                            >
-                                <Typography variant="body" weight="bold" className="text-blue-500">
-                                    Not Now
-                                </Typography>
-                            </TouchableOpacity>
+                        
+                        {/* Update Notification Badge */}
+                        <View className="absolute top-2 right-2 bg-blue-600 w-8 h-8 rounded-full border-[3px] border-white dark:border-[#1C1C1E] items-center justify-center">
+                            <Typography weight="black" color="white" className="text-[12px] mt-[-1px] font-black">1</Typography>
                         </View>
                     </View>
+
+                    <Typography variant="h1" weight="bold" className="text-center mb-4 text-3xl">
+                        A Fresh Update{'\n'}is Ready!
+                    </Typography>
+
+                    <View className={`px-4 py-1.5 rounded-full mb-5 ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
+                        <Typography variant="small" weight="bold" className="text-blue-600 dark:text-blue-400">
+                            Version {updateInfo?.version || "1.5.0"}
+                        </Typography>
+                    </View>
+
+                    <Typography variant="body" color="gray" className="text-center leading-relaxed mb-8 text-[15px] px-2">
+                        {updateInfo?.updateMessage || "We've added new features, crushed some bugs, and made Needle Africa even faster. Update now to enjoy the best experience."}
+                    </Typography>
+
+                    <View className="w-full space-y-3">
+                        <Button
+                            onPress={handleUpdate}
+                            className="w-full h-[56px] rounded-full bg-blue-600 border-0 flex-row items-center justify-center shadow-lg shadow-blue-500/30"
+                        >
+                            <View className="flex-row items-center">
+                                <RefreshCircle size={22} color="white" variant="Bulk" className="mr-2" />
+                                <Typography className="text-white font-bold text-[16px]">Update Now</Typography>
+                            </View>
+                        </Button>
+
+                        <TouchableOpacity
+                            onPress={() => setDismissed(true)}
+                            className="h-[48px] items-center justify-center"
+                        >
+                            <Typography variant="body" weight="bold" className="text-gray-400 text-[15px]">
+                                Remind Me Later
+                            </Typography>
+                        </TouchableOpacity>
+                    </View>
+
                 </View>
             </View>
         </Modal>

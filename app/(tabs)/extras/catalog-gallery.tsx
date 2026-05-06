@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera } from 'iconsax-react-native';
+import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
+import Svg, { Path } from 'react-native-svg';
+
 
 export default function CatalogGallery() {
     const { isDark } = useTheme();
     const router = useRouter();
-    
+
     const [items, setItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -98,10 +100,10 @@ export default function CatalogGallery() {
 
     const handleDeleteItem = async (id: string) => {
         try {
-             const { default: axiosInstance } = await import('../../../lib/axios');
-             await axiosInstance.delete(`/catalog/items/${id}`);
-             setItems(items.filter(i => i.id !== id));
-        } catch(error) {
+            const { default: axiosInstance } = await import('../../../lib/axios');
+            await axiosInstance.delete(`/catalog/items/${id}`);
+            setItems(items.filter(i => i.id !== id));
+        } catch (error) {
             Toast.show({ type: 'error', text1: 'Delete Error' });
         }
     };
@@ -138,7 +140,7 @@ export default function CatalogGallery() {
             {/* Disclaimer for Missing Storefront */}
             {!isLoading && !catalogId && (
                 <View className="px-5 pt-4">
-                    <Pressable 
+                    <Pressable
                         onPress={() => router.push('/(tabs)/profile/catalog' as any)}
                         className={`flex-row items-center p-4 rounded-[20px] ${isDark ? 'bg-amber-900/20 border border-amber-900/30' : 'bg-amber-50 border border-amber-100'}`}
                     >
@@ -153,66 +155,68 @@ export default function CatalogGallery() {
             )}
 
             <ScrollView contentContainerClassName="p-5 pb-24" showsVerticalScrollIndicator={false}>
-                
+
                 {/* Dashboard Stats (Lite) */}
-                <View className="flex-row gap-4 mb-8">
-                    <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
-                        <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Total Items</Typography>
-                        <Typography variant="h2" weight="bold">{items.length}</Typography>
+                {items.length > 0 && (
+                    <View className="flex-row gap-4 mb-8">
+                        <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
+                            <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Total Items</Typography>
+                            <Typography variant="h2" weight="bold">{items.length}</Typography>
+                        </View>
+                        <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
+                            <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Live Views</Typography>
+                            <Typography variant="h2" weight="bold">{catalogViews}</Typography>
+                        </View>
                     </View>
-                    <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
-                        <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Live Views</Typography>
-                        <Typography variant="h2" weight="bold">{catalogViews}</Typography>
-                    </View>
-                </View>
+                )}
 
                 {isLoading ? (
-                     <ActivityIndicator color="#3b82f6" />
+                    <ActivityIndicator color="#3b82f6" />
                 ) : (
-                items.length > 0 ? (
-                    <View>
-                        <View className="flex-row items-center justify-between mb-4 px-1">
-                            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
-                                Published Styles
-                            </Typography>
-                        </View>
+                    items.length > 0 ? (
+                        <View>
+                            <View className="flex-row items-center justify-between mb-4 px-1">
+                                <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                                    Published Styles
+                                </Typography>
+                            </View>
 
-                        {/* Tabular View (List) */}
-                        <View className={`rounded-[28px] overflow-hidden ${cardBaseStyle}`}>
-                            {items.map((item, index) => (
-                                <View 
-                                    key={item.id} 
-                                    className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
-                                >
-                                    <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
-                                        {item.images?.[0] ? <Image source={{uri: item.images[0]}} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
-                                    </View>
-                                    <View className="flex-1">
-                                        <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
-                                        <View className="flex-row items-center">
-                                            {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
-                                            <View className="bg-green-500/10 px-2 rounded-md">
-                                                <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
+                            {/* Tabular View (List) */}
+                            <View className={`rounded-[28px] overflow-hidden ${cardBaseStyle}`}>
+                                {items.map((item, index) => (
+                                    <View
+                                        key={item.id}
+                                        className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
+                                    >
+                                        <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
+                                            {item.images?.[0] ? <Image source={{ uri: item.images[0] }} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                                        </View>
+                                        <View className="flex-1">
+                                            <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
+                                            <View className="flex-row items-center">
+                                                {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
+                                                <View className="bg-green-500/10 px-2 rounded-md">
+                                                    <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
+                                                </View>
                                             </View>
                                         </View>
+                                        <View className="flex-row gap-2">
+                                            <TouchableOpacity onPress={() => handleDeleteItem(item.id)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                                <Trash size={16} color="#EF4444" variant="Bulk" />
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
-                                    <View className="flex-row gap-2">
-                                        <TouchableOpacity onPress={() => handleDeleteItem(item.id)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                            <Trash size={16} color="#EF4444" variant="Bulk" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
+                                ))}
+                            </View>
 
-                    </View>
-                ) : (
-                    <EmptyState onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} onReset={() => {}} isDark={isDark} />
-                ) )}
+                        </View>
+                    ) : (
+                        <EmptyState onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} onReset={() => { }} isDark={isDark} />
+                    ))}
             </ScrollView>
 
             {/* Floating Action Button (FAB) for Upload - Disabled if no catalog */}
-            <TouchableOpacity 
+            <TouchableOpacity
                 activeOpacity={catalogId ? 0.8 : 0.5}
                 onPress={() => catalogId ? setShowUploadModal(true) : Toast.show({ type: 'info', text1: 'Action Required', text2: 'Setup Storefront Settings first' })}
                 className={`absolute bottom-8 right-6 w-16 h-16 rounded-full items-center justify-center shadow-lg z-50 ${catalogId ? 'bg-blue-600 shadow-blue-500/50' : 'bg-gray-400 opacity-50 shadow-black/20'}`}
@@ -237,7 +241,7 @@ export default function CatalogGallery() {
                             <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Images ({images.length}/1)</Typography>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 h-28">
                                 {images.map((img, i) => (
-                                    <Image key={i} source={{uri: img}} className="h-28 w-24 rounded-2xl mr-3" />
+                                    <Image key={i} source={{ uri: img }} className="h-28 w-24 rounded-2xl mr-3" />
                                 ))}
                                 {images.length < 1 && (
                                     <TouchableOpacity onPress={handlePickImages} className={`h-28 w-24 rounded-2xl items-center justify-center border-2 border-dashed ${isDark ? 'border-gray-700 bg-zinc-800' : 'border-gray-300 bg-gray-100'}`}>
@@ -246,7 +250,7 @@ export default function CatalogGallery() {
                                     </TouchableOpacity>
                                 )}
                             </ScrollView>
-                            
+
                             <Button onPress={handleUploadItem} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8" textClassName="text-white text-[16px] font-bold">
                                 Upload Style
                             </Button>
@@ -265,19 +269,18 @@ export default function CatalogGallery() {
 function EmptyState({ onUpload, onReset, isDark }: { onUpload: () => void, onReset: () => void, isDark: boolean }) {
     return (
         <View className="items-center justify-center py-10 px-6">
-            <View className={`w-32 h-32 rounded-full items-center justify-center mb-8 ${isDark ? 'bg-zinc-900' : 'bg-white shadow-xl shadow-gray-200'}`}>
-                <ShoppingBag size={64} color="#3b82f6" variant="Bulk" opacity={0.8} />
-                <View className="absolute -bottom-1 -right-1 bg-blue-600 p-2 rounded-full border-4 border-gray-50 dark:border-zinc-950">
-                    <CloudAdd size={20} color="white" />
-                </View>
-            </View>
+            <Image
+                source={require('../../../assets/images/no-gallery.png')}
+                style={{ width: 200, height: 200 }}
+                resizeMode="contain"
+            />
 
             <Typography variant="h2" weight="bold" className="mb-3 text-center">Your Gallery is Empty</Typography>
             <Typography variant="body" color="gray" className="text-center mb-10 px-4 leading-6">
                 Start building your digital showroom! Upload your best designs to reach more clients and showcase them in your catalog.
             </Typography>
 
-            <Button 
+            <Button
                 onPress={onUpload}
                 className="w-full h-16 rounded-full bg-blue-600 border-0 mb-4"
                 textClassName="text-white text-[16px] font-bold"
@@ -286,8 +289,11 @@ function EmptyState({ onUpload, onReset, isDark }: { onUpload: () => void, onRes
                 <Typography color="white" weight="bold" className="text-[16px]">Upload First Style</Typography>
             </Button>
 
-            <TouchableOpacity onPress={onReset} className="py-2">
-                <Typography color="primary" weight="bold" className="text-[14px]">View Sample Gallery</Typography>
+            <TouchableOpacity onPress={() => Linking.openURL('https://catalog.needleafrica.com/cg/cmnm8rm9z0001lb04jwwf74cm')} className="py-2">
+                <View className='flex-row items-center gap-2'>
+                    <Typography color="gray" weight="bold" className="text-[14px]">View Sample Gallery</Typography>
+                    <ArrowRight size={16} color="gray" variant="Linear" />
+                </View>
             </TouchableOpacity>
         </View>
     );

@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
 const ENV = (process.env.EXPO_PUBLIC_APP_ENV as 'development' | 'staging' | 'production') || (__DEV__ ? 'development' : 'production'); // Use env variable if provided, otherwise fallback based on build mode
 
 const API_CONFIG = {
-    development: 'http://192.168.65.147:3000/api',
+    development: 'http://192.168.1.194:3000/api',
     staging: 'http://192.168.1.101:3000/api', // Pointing to local for both dev/staging as requested
     production: 'https://needle-africa-api.vercel.app/api'
 };
@@ -35,15 +35,26 @@ axiosInstance.interceptors.request.use(
     }
 );
 
+let logoutFn: (() => void) | null = null;
+
+export const setLogoutHandler = (fn: () => void) => {
+    logoutFn = fn;
+};
+
 // Response interceptor to handle token invalidation
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-            // Token is invalid or expired, clear auth data and redirect to login
-            await SecureStore.deleteItemAsync('auth_token');
-            await SecureStore.deleteItemAsync('user_data');
-            router.replace('/(auth)/login');
+            // Token is invalid or expired
+            if (logoutFn) {
+                logoutFn();
+            } else {
+                // Fallback if handler not set
+                await SecureStore.deleteItemAsync('auth_token');
+                await SecureStore.deleteItemAsync('user_data');
+                router.replace('/(auth)/login');
+            }
         }
         return Promise.reject(error);
     }

@@ -60,11 +60,30 @@ export default function OrderDetail() {
         setViewerVisible(true);
     };
 
+    // Helper function to format number with commas
+    const formatNumberWithCommas = (value: string): string => {
+        // Remove all non-digit characters
+        const cleanValue = value.replace(/\D/g, '');
+        // Format with commas
+        return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    // Helper function to handle amount input with formatting and character limit
+    const handleAmountInput = (value: string, setter: (value: string) => void, maxLength: number = 9) => {
+        // Remove commas and non-digit characters for processing
+        const cleanValue = value.replace(/\D/g, '');
+        // Limit to maxLength characters
+        const limitedValue = cleanValue.slice(0, maxLength);
+        // Format with commas for display
+        const formattedValue = formatNumberWithCommas(limitedValue);
+        setter(formattedValue);
+    };
+
     useEffect(() => {
         if (order) {
             setStyleName(order.styleName || '');
-            setAmount(order.amount?.toString() || '');
-            setAmountPaid(order.amountPaid?.toString() || '0');
+            setAmount(formatNumberWithCommas(order.amount?.toString() || ''));
+            setAmountPaid(formatNumberWithCommas(order.amountPaid?.toString() || '0'));
             setNotes(order.notes || '');
             setDeliveryDate(order.deliveryDate ? new Date(order.deliveryDate) : null);
             setFabricImage(order.fabricImage || null);
@@ -112,8 +131,8 @@ export default function OrderDetail() {
 
             await updateOrder(id as string, {
                 styleName,
-                amount: parseFloat(amount) || 0,
-                amountPaid: parseFloat(amountPaid) || 0,
+                amount: parseFloat(amount.replace(/,/g, '')) || 0,
+                amountPaid: parseFloat(amountPaid.replace(/,/g, '')) || 0,
                 notes,
                 deliveryDate: deliveryDate,
                 fabricImage: finalFabricImage || undefined,
@@ -370,17 +389,10 @@ export default function OrderDetail() {
                             <View className="flex-row gap-3">
                                 <Button
                                     onPress={handleStatusToggle}
-                                    className={`flex-[1.5] h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-600' : (isDark ? 'bg-white' : 'bg-dark')}`}
+                                    className={`flex-1 h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-600' : (isDark ? 'bg-white' : 'bg-dark')}`}
                                     textClassName={order.status === 'DELIVERED' ? 'text-white' : (isDark ? 'text-black' : 'text-white')}
                                 >
                                     {order.status === 'DELIVERED' ? 'Delivered' : 'Mark as Delivered'}
-                                </Button>
-                                <Button
-                                    onPress={() => router.push(`/(tabs)/orders/invoices/${order.id}` as any)}
-                                    className={`flex-1 h-16 rounded-full border-0 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}
-                                    textClassName={isDark ? 'text-indigo-400' : 'text-indigo-600'}
-                                >
-                                    Invoice
                                 </Button>
                             </View>
                         </>
@@ -442,7 +454,7 @@ export default function OrderDetail() {
                                         placeholder="E.g. 5000"
                                         placeholderTextColor="#9CA3AF"
                                         value={amount}
-                                        onChangeText={setAmount}
+                                        onChangeText={(v) => handleAmountInput(v, setAmount)}
                                         keyboardType="numeric"
                                     />
                                 </Surface>
@@ -456,7 +468,7 @@ export default function OrderDetail() {
                                         placeholder="E.g. 2500"
                                         placeholderTextColor="#9CA3AF"
                                         value={amountPaid}
-                                        onChangeText={setAmountPaid}
+                                        onChangeText={(v) => handleAmountInput(v, setAmountPaid)}
                                         keyboardType="numeric"
                                     />
                                 </Surface>

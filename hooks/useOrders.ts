@@ -27,23 +27,10 @@ export function useOrders(customerId?: string) {
             query = query.extend(Q.where('customer_id', customerId));
         }
 
-        const subscription = query.observe().subscribe(async (data) => {
-            // Enhance orders with customer data
-            const enhancedOrders = await Promise.all(data.map(async (order) => {
-                try {
-                    const customer = await order.customer?.fetch();
-                    return Object.assign(Object.create(order), {
-                        customerFullName: customer?.fullName || 'Unknown Customer'
-                    });
-                } catch (e) {
-                    return Object.assign(Object.create(order), {
-                        customerFullName: 'Unknown Customer'
-                    });
-                }
-            }));
-
-            // @ts-ignore - we are adding a dynamic property not in the WatermelonDB model type
-            setOrders(enhancedOrders);
+        const subscription = query.observeWithColumns(['amount', 'amount_paid', 'status', 'delivery_date', 'updated_at', 'deleted_at']).subscribe(data => {
+            // Force a new array reference with a shallow clone of the models
+            // This ensures React and useMemo see the change
+            setOrders([...data]);
             setLoading(false);
         });
 
@@ -54,6 +41,23 @@ export function useOrders(customerId?: string) {
         const unsubscribe = fetchOrders();
         return unsubscribe;
     }, [fetchOrders]);
+
+    // Enhance with customer names if needed, but do it in a way that doesn't 
+    // break the reactivity of the original model fields.
+    useEffect(() => {
+        if (orders.length > 0) {
+            orders.forEach(async (order) => {
+                if (!(order as any).customerFullName) {
+                    try {
+                        const customer = await order.customer?.fetch();
+                        (order as any).customerFullName = customer?.fullName || 'Unknown Customer';
+                    } catch (e) {
+                        (order as any).customerFullName = 'Unknown Customer';
+                    }
+                }
+            });
+        }
+    }, [orders]);
 
     const addOrder = async (data: {
         customerId: string;
