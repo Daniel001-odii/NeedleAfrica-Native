@@ -26,11 +26,14 @@ const PHONE_INPUT_STYLE = {
     width: '100%',
 };
 
+import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
+
 export default function AddFirstCustomer() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addCustomer } = useCustomers();
     const router = useRouter();
 
+    const [showIntro, setShowIntro] = useState(true);
     const [name, setName] = useState(state.customer?.name || '');
     const [phone, setPhone] = useState<string | undefined>(state.customer?.phone || undefined);
     const [gender, setGender] = useState(state.customer?.gender || '');
@@ -69,6 +72,26 @@ export default function AddFirstCustomer() {
         }
     };
 
+    const handleSkip = () => {
+        updateState({ step: 6 });
+        router.push('/onboarding/completion');
+    };
+
+    if (showIntro) {
+        return (
+            <OnboardingIntroScreen
+                title="Meet your clients."
+                subtitle="Add your very first client to build a profile. Organize measurements, keep records, and manage relationships in one place."
+                stepIndex={3}
+                buttonText="Create Client Profile"
+                onNext={() => setShowIntro(false)}
+                onBack={prevStep}
+                onSkip={handleSkip}
+                illustrationType="customer"
+            />
+        );
+    }
+
     return (
         <View className="flex-1 bg-white">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
@@ -77,11 +100,11 @@ export default function AddFirstCustomer() {
                 <View className="px-6 pt-4 bg-white flex-row justify-between items-center">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
-                        onPress={prevStep}
+                        onPress={() => setShowIntro(true)}
                         variant="ghost"
                         className="-ml-4"
                     />
-                    <TouchableOpacity onPress={() => { updateState({ step: 6 }); router.push('/onboarding/completion'); }}>
+                    <TouchableOpacity onPress={handleSkip}>
                         <Typography color="primary" weight="bold" className="text-[16px]">Skip</Typography>
                     </TouchableOpacity>
                 </View>
@@ -153,7 +176,7 @@ export default function AddFirstCustomer() {
                                         key={g}
                                         onPress={() => setGender(g)}
                                         className={`flex-1 h-12 rounded-[16px] items-center justify-center border ${isSelected
-                                            ? 'bg-blue-600 border-blue-600'
+                                            ? 'bg-brand-primary border-brand-primary'
                                             : 'bg-gray-50 border-gray-100'
                                             }`}
                                     >
@@ -178,15 +201,12 @@ export default function AddFirstCustomer() {
                         onPress={handleSaveCustomer}
                         isLoading={isLoading}
                         disabled={!isFormValid}
-                        className={`h-14 rounded-full border-0 ${!isFormValid ? 'bg-gray-200' : 'bg-blue-600'}`}
+                        className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
                         Save Customer
                     </Button>
 
-                    <View className="mt-5 items-center pb-2">
-                        <Typography color="gray" variant="small" weight="medium">Step 3 of 5</Typography>
-                    </View>
                 </View>
 
             </KeyboardAvoidingView>

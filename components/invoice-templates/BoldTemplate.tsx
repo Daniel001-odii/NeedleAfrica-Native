@@ -147,6 +147,12 @@ export const BoldTemplate = ({ user, invoice, customer, order }: InvoiceTemplate
                     <div class="notes">
                         <h4>NOTES</h4>
                         <p>${invoice?.notes || 'Payment due strictly within 7 days.'}</p>
+                        ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                            <h4 style="margin-top: 15px; margin-bottom: 5px;">PAYMENT DETAILS</h4>
+                            <p style="font-size: 13px; margin: 0 0 2px 0;">Bank: <strong>${user.bankName}</strong></p>
+                            <p style="font-size: 13px; margin: 0 0 2px 0;">Acct No: <strong>${user.accountNumber}</strong></p>
+                            <p style="font-size: 13px; margin: 0;">Name: <strong>${user.accountName}</strong></p>
+                        ` : ''}
                     </div>
                     <div class="totals-box">
                         <h3>TOTAL DUE</h3>

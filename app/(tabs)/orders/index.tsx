@@ -68,7 +68,7 @@ export default function Orders() {
         const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays < 0) return '#dc2626'; // Overdue Red
         if (diffDays <= 3) return '#f97316'; // Soon Orange
-        return '#6366f1';
+        return '#FF5678';
     };
 
     const getProgressValue = (order: any) => {
@@ -110,7 +110,7 @@ export default function Orders() {
 
     const handleToggleStatus = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === 'DELIVERED' ? 'PENDING' : 'DELIVERED';
-        
+
         const performToggle = async () => {
             try {
                 await updateOrderStatus(id, newStatus);
@@ -176,7 +176,7 @@ export default function Orders() {
         switch (variant) {
             case 'peach': return isDark ? '#fb923c' : '#c2410c';
             case 'green': return isDark ? '#4ade80' : '#15803d';
-            case 'lavender': return isDark ? '#a5b4fc' : '#4f46e5';
+            case 'lavender': return isDark ? '#ff8fa3' : '#FF5678';
             case 'blue': return isDark ? '#38bdf8' : '#0369a1';
             default: return isDark ? 'white' : 'black';
         }
@@ -233,7 +233,7 @@ export default function Orders() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-4">
@@ -249,11 +249,11 @@ export default function Orders() {
                     </View>
                     <View className="flex-row items-center gap-2">
                         <TouchableOpacity onPress={() => router.push('/(tabs)/orders/invoices/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                            <DocumentText size={18} color="#6366f1" />
+                            <DocumentText size={18} color="#FF5678" />
                             <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Invoice</Typography>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => router.push('/(tabs)/orders/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                            <Add size={20} color="#6366f1" />
+                            <Add size={20} color="#FF5678" />
                             <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
                         </TouchableOpacity>
                     </View>
@@ -272,7 +272,7 @@ export default function Orders() {
                         />
                     </Surface>
                     <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-xl ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-                        <FilterSearch size={22} color={isDark ? "#818cf8" : "#6366f1"} />
+                        <FilterSearch size={22} color={isDark ? "#ff8fa3" : "#FF5678"} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -324,7 +324,7 @@ export default function Orders() {
 
             {loading ? (
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator color={isDark ? "white" : "#6366f1"} />
+                    <ActivityIndicator color={isDark ? "white" : "#FF5678"} />
                 </View>
             ) : (
                 <FlatList
@@ -333,7 +333,7 @@ export default function Orders() {
                     contentContainerClassName="p-4 pt-2 pb-32"
                     showsVerticalScrollIndicator={false}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
                     }
                     renderItem={({ item: order }) => (
                         <Swipeable
@@ -411,9 +411,10 @@ export default function Orders() {
                     )}
                     ListEmptyComponent={
                         <View className="items-center justify-center py-20 px-10">
-                            <Surface variant="muted" className="w-20 h-20 items-center justify-center mb-6" rounded="full">
-                                <Box size={32} color="#8E8E93" variant="Bulk" />
-                            </Surface>
+                            <Image
+                                source={require('../../../assets/illustrations/orders.png')}
+                                style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
+                            />
                             <Typography variant="h3" weight="bold" className="text-center mb-2">No orders</Typography>
                             <Typography variant="body" color="gray" className="text-center">
                                 {search ? "Try a different search term" : "Add your first order to get started"}

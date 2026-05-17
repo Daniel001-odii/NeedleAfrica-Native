@@ -3,7 +3,7 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "1.9.5",
+    "version": "1.9.6",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,7 +13,7 @@
       "android"
     ],
     "splash": {
-      "image": "./assets/splash-image.png",
+      "image": "./assets/transparent.png",
       "resizeMode": "contain",
       "backgroundColor": "#FF5678"
     },
@@ -49,12 +49,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-image.png",
+          "image": "./assets/transparent.png",
           "imageWidth": 180,
           "resizeMode": "contain",
           "backgroundColor": "#FF5678",
           "dark": {
-            "image": "./assets/splash-image.png",
+            "image": "./assets/transparent.png",
             "backgroundColor": "#FF5678"
           }
         }

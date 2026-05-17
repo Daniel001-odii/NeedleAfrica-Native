@@ -43,6 +43,9 @@ export default function PersonalInformation() {
     const [noOfEmployees, setNoOfEmployees] = useState(user?.noOfEmployees || '1-5');
     const [businessType, setBusinessType] = useState(user?.businessType || '');
     const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
+    const [bankName, setBankName] = useState(user?.bankName || '');
+    const [accountNumber, setAccountNumber] = useState(user?.accountNumber || '');
+    const [accountName, setAccountName] = useState(user?.accountName || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
@@ -72,6 +75,9 @@ export default function PersonalInformation() {
             }
             if (user.noOfEmployees) setNoOfEmployees(user.noOfEmployees);
             if (user.businessType) setBusinessType(user.businessType);
+            setBankName(user.bankName || '');
+            setAccountNumber(user.accountNumber || '');
+            setAccountName(user.accountName || '');
         }
     }, [user]);
 
@@ -90,7 +96,10 @@ export default function PersonalInformation() {
                 address: address.trim(),
                 country,
                 noOfEmployees,
-                businessType
+                businessType,
+                bankName: bankName.trim(),
+                accountNumber: accountNumber.trim(),
+                accountName: accountName.trim()
             });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Profile updated successfully' });
             router.back();
@@ -151,7 +160,7 @@ export default function PersonalInformation() {
     const cardBaseStyle = isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
 
                 {/* Header */}
@@ -216,6 +225,36 @@ export default function PersonalInformation() {
                                 value={username}
                                 onChangeText={setUsername}
                                 placeholder="Choose username"
+                                isDark={isDark}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Section: Bank Details */}
+                    <View className="mb-6">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                            Bank Account Details
+                        </Typography>
+                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                            <ProfileRowInput
+                                label="Bank Name"
+                                value={bankName}
+                                onChangeText={setBankName}
+                                placeholder="e.g. GTBank"
+                                isDark={isDark}
+                            />
+                            <ProfileRowInput
+                                label="Account Number"
+                                value={accountNumber}
+                                onChangeText={setAccountNumber}
+                                placeholder="e.g. 0123456789"
+                                isDark={isDark}
+                            />
+                            <ProfileRowInput
+                                label="Account Name"
+                                value={accountName}
+                                onChangeText={setAccountName}
+                                placeholder="e.g. John Doe Enterprises"
                                 isDark={isDark}
                             />
                         </View>

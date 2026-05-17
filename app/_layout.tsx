@@ -47,6 +47,7 @@ function RootLayoutNav() {
         const inTemplates = segments[0] === 'measurement-templates';
         const inInvoices = segments[0] === 'invoices';
         const inNotifications = segments[0] === 'notifications';
+        const inCatalogExplainer = segments[0] === 'catalog-explainer';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -55,7 +56,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -94,7 +95,7 @@ function RootLayoutNav() {
             const timer = setTimeout(() => {
                 SplashScreen.hideAsync().catch(() => { });
                 setIsNavReady(true);
-            }, 600);
+            }, 4500);
             return () => clearTimeout(timer);
         }
     }, [isLoading]);
@@ -108,6 +109,7 @@ function RootLayoutNav() {
             <OfflineBanner />
             <Stack
                 screenOptions={{
+                    animation: "fade",
                     headerShown: false,
                     contentStyle: { backgroundColor: isDark ? '#000000' : 'white' },
                 }}
@@ -115,6 +117,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                <Stack.Screen name="catalog-explainer" options={{ headerShown: false, animation: 'fade', presentation: "card" }} />
                 <Stack.Screen name="notifications" options={{ presentation: 'modal', headerShown: false }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
@@ -159,11 +162,11 @@ export default function RootLayout() {
                         <DatabaseProvider database={database}>
                             <AuthProvider>
                                 <ThemeProvider>
-                                        <ConfirmProvider>
-                                            <OnboardingProvider>
-                                                <RootLayoutNav />
-                                            </OnboardingProvider>
-                                        </ConfirmProvider>
+                                    <ConfirmProvider>
+                                        <OnboardingProvider>
+                                            <RootLayoutNav />
+                                        </OnboardingProvider>
+                                    </ConfirmProvider>
                                 </ThemeProvider>
                             </AuthProvider>
                         </DatabaseProvider>

@@ -42,6 +42,9 @@ interface User {
     onboardingCompleted?: boolean;
     invoiceTemplate?: number;
     provider?: 'NEEDLEX' | 'GOOGLE' | 'APPLE';
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
 }
 
 interface AuthContextType {

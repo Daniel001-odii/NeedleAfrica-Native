@@ -150,6 +150,14 @@ export const CorporateTemplate = ({ user, invoice, customer, order }: InvoiceTem
                         <h4>Payment Terms</h4>
                         <p>${invoice?.notes || 'Please pay the invoice within 15 days online. Thank you for your business.'}</p>
                     </div>
+                    ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                    <div class="terms" style="text-align: right;">
+                        <h4>Bank Account Details</h4>
+                        <p style="width: auto; margin: 0 0 2px 0;">Bank: <strong>${user.bankName}</strong></p>
+                        <p style="width: auto; margin: 0 0 2px 0;">Acct No: <strong>${user.accountNumber}</strong></p>
+                        <p style="width: auto; margin: 0;">Name: <strong>${user.accountName}</strong></p>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
             

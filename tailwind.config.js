@@ -8,18 +8,30 @@ module.exports = {
         extend: {
             colors: {
                 brand: {
-                    primary: '#6366f1',
-                    secondary: '#1f2937',
+                    primary: '#FF5678',
+                    secondary: '#6B3A52',
+                },
+                indigo: {
+                    50: '#F6F2EF',
+                    100: '#EAE1DC',
+                    200: '#D5C4BC',
+                    300: '#B89B9E',
+                    400: '#ff8fa3',
+                    500: '#FF5678',
+                    600: '#FF5678',
+                    700: '#e2103b',
+                    800: '#6B3A52',
+                    900: '#21000A',
                 },
                 soft: {
-                    lavender: '#E9E7FF',
+                    lavender: '#F6F2EF',
                     peach: '#FFF0D9',
                     blue: '#E3F2FD',
                     green: '#E8F5E9',
                     pink: '#FCE4EC',
                 },
                 accent: {
-                    lavender: '#C5C1FF',
+                    lavender: '#EAE1DC',
                     peach: '#FFDCA8',
                     blue: '#B3E5FC',
                     green: '#C8E6C9',
@@ -32,7 +44,7 @@ module.exports = {
                     mint: '#12D39D',
                 },
                 dark: {
-                    DEFAULT: '#1C1C1E',
+                    DEFAULT: '#21000A',
                     50: '#F9FAFB',
                     100: '#F3F4F6',
                     200: '#E5E7EB',
@@ -41,22 +53,22 @@ module.exports = {
                     500: '#6B7280',
                     600: '#4B5563',
                     700: '#374151',
-                    800: '#1F2937',
-                    900: '#111827',
+                    800: '#21000A',
+                    900: '#000000',
                 },
                 muted: {
-                    DEFAULT: '#F4F4F4',
-                    dark: '#2C2C2E',
+                    DEFAULT: '#F6F2EF',
+                    dark: '#21000A',
                 },
                 background: {
-                    DEFAULT: '#FFFFFF',
+                    DEFAULT: '#F6F2EF',
                     dark: '#000000',
                 },
                 surface: {
-                    DEFAULT: '#FFFFFF',
-                    dark: '#1C1C1E',
-                    muted: '#F4F4F4',
-                    'muted-dark': '#2C2C2E',
+                    DEFAULT: '#F6F2EF',
+                    dark: '#21000A',
+                    muted: '#F6F2EF',
+                    'muted-dark': '#21000A',
                 },
                 text: {
                     DEFAULT: '#1C1C1E',
@@ -65,8 +77,8 @@ module.exports = {
                     'muted-dark': '#9CA3AF',
                 },
                 border: {
-                    DEFAULT: '#E5E7EB',
-                    dark: '#374151',
+                    DEFAULT: '#EAE1DC',
+                    dark: '#6B3A52',
                 },
             },
             // fontFamily: {

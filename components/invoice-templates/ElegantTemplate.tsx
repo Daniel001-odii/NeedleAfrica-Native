@@ -161,6 +161,11 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 
                 <div class="footer">
                     <p>${invoice?.notes || 'Thank you for your valued patronage.'}</p>
+                    ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                        <div style="margin-top: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #777777;">
+                            Payment Details: ${user.bankName} &nbsp;|&nbsp; Acct: ${user.accountNumber} &nbsp;|&nbsp; Name: ${user.accountName}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
             

@@ -23,10 +23,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { TypingText } from '../../components/ui/TypingText';
 
+import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
+
 export default function WorkspaceSetup() {
     const { user, updateProfile, logout } = useAuth();
     const { state, updateState, nextStep, resetOnboarding } = useOnboarding();
 
+    const [showIntro, setShowIntro] = useState(true);
     const [businessName, setBusinessName] = useState(state.businessName || user?.businessName || '');
     const [currency, setCurrency] = useState(state.currency || 'NGN');
     const [isCurrencyModalVisible, setIsCurrencyModalVisible] = useState(false);
@@ -61,6 +64,19 @@ export default function WorkspaceSetup() {
             setIsLoading(false);
         }
     };
+
+    if (showIntro) {
+        return (
+            <OnboardingIntroScreen
+                title="Your creative space awaits."
+                subtitle="Set up your workspace and choose your currency. Let's lay down the foundations of your studio."
+                stepIndex={1}
+                buttonText="Let's Start"
+                onNext={() => setShowIntro(false)}
+                illustrationType="workspace"
+            />
+        );
+    }
 
     return (
         <View className="flex-1 bg-white">
@@ -110,7 +126,7 @@ export default function WorkspaceSetup() {
                                     Default Currency
                                 </Typography>
                                 <View className="flex-row items-center">
-                                    <Typography weight="medium" className="text-[15px] mr-2 text-blue-600">
+                                    <Typography weight="medium" className="text-[15px] mr-2 text-brand-primary">
                                         {selectedCurrency.code} ({selectedCurrency.symbol})
                                     </Typography>
                                     <ArrowRight2 size={16} color="#9CA3AF" />
@@ -131,16 +147,14 @@ export default function WorkspaceSetup() {
                         onPress={handleContinue}
                         isLoading={isLoading}
                         disabled={!isFormValid}
-                        className={`h-14 rounded-full border-0 ${!isFormValid ? 'bg-gray-200' : 'bg-blue-600'}`}
+                        className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
                         Continue
                     </Button>
 
                     <View className="mt-5 items-center pb-2">
-                        <Typography color="gray" variant="small" weight="medium">Step 1 of 5</Typography>
-
-                        <View className="flex-row items-center mt-5 gap-4">
+                        <View className="flex-row items-center gap-4">
                             <TouchableOpacity onPress={resetOnboarding} className="px-2">
                                 <Typography color="primary" weight="bold" className="text-[13px]">
                                     Restart Setup
@@ -208,13 +222,13 @@ export default function WorkspaceSetup() {
                                             }}
                                             className={`flex-row items-center px-4 py-3 active:bg-gray-50 ${!isLast ? 'border-b border-gray-100' : ''}`}
                                         >
-                                            <View className="w-10 h-10 items-center justify-center bg-blue-50/50 rounded-xl mr-4 border border-blue-100/30">
+                                            <View className="w-10 h-10 items-center justify-center bg-brand-primary/10 rounded-xl mr-4 border border-brand-primary/20">
                                                 <Typography weight="bold" className="text-[16px] text-gray-700">
                                                     {item.symbol}
                                                 </Typography>
                                             </View>
                                             <View className="flex-1">
-                                                <Typography weight={isSelected ? "bold" : "semibold"} className={`text-[15px] ${isSelected ? 'text-blue-600' : 'text-gray-900'}`}>
+                                                <Typography weight={isSelected ? "bold" : "semibold"} className={`text-[15px] ${isSelected ? 'text-brand-primary' : 'text-gray-900'}`}>
                                                     {item.name}
                                                 </Typography>
                                                 <Typography color="gray" className="text-[12px] mt-0.5">
@@ -222,7 +236,7 @@ export default function WorkspaceSetup() {
                                                 </Typography>
                                             </View>
                                             {isSelected && (
-                                                <TickCircle size={22} color="#2563EB" variant="Bold" />
+                                                <TickCircle size={22} color="#FF5678" variant="Bold" />
                                             )}
                                         </TouchableOpacity>
                                     </View>

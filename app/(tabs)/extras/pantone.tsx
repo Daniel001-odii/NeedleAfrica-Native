@@ -364,7 +364,7 @@ export default function PantoneScreen() {
                 {/* Tips Section */}
                 <Surface variant={isDark ? "muted" : "lavender"} className="mt-10 p-6" rounded="3xl">
                     <View className="flex-row items-center mb-4">
-                        <Colorfilter size={24} color="#4F46E5" variant="Bulk" />
+                        <Colorfilter size={24} color="#FF5678" variant="Bulk" />
                         <Typography variant="body" weight="bold" className="ml-3">{currentInsight.title}</Typography>
                     </View>
                     <Typography variant="small" color="gray" className="leading-5 mb-3">

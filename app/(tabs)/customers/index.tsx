@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
@@ -116,7 +116,7 @@ function CustomersScreen() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-4">
@@ -131,7 +131,7 @@ function CustomersScreen() {
                         )}
                     </View>
                     <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                        <Add size={20} color="#6366f1" />
+                        <Add size={20} color="#FF5678" />
                         <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
                     </TouchableOpacity>
                 </View>
@@ -149,7 +149,7 @@ function CustomersScreen() {
                         />
                     </Surface>
                     <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-xl ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-                        <FilterSearch size={22} color={isDark ? "#818cf8" : "#6366f1"} />
+                        <FilterSearch size={22} color={isDark ? "#ff8fa3" : "#FF5678"} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -161,7 +161,7 @@ function CustomersScreen() {
                 contentContainerClassName="p-4 pt-6 pb-20"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
                 }
                 renderItem={({ item }) => (
                     <Swipeable
@@ -199,9 +199,10 @@ function CustomersScreen() {
                 ListEmptyComponent={
                     !loading ? (
                         <View className="items-center justify-center py-20 px-10">
-                            <Surface variant="muted" className="w-20 h-20 items-center justify-center mb-6" rounded="full">
-                                <User size={32} color="#8E8E93" variant="Bulk" />
-                            </Surface>
+                            <Image
+                                source={require('../../../assets/illustrations/customers.png')}
+                                style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
+                            />
                             <Typography variant="h3" weight="bold" className="text-center mb-2">No customers</Typography>
                             <Typography variant="body" color="gray" className="text-center">
                                 {search ? "Try a different search term" : "Add your first client to get started"}

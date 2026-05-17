@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, FlatList, Pressable, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Add, DocumentText, SearchNormal1, Setting2, Setting } from 'iconsax-react-native';
@@ -90,7 +90,7 @@ export default function InvoicesScreen() {
                                 hasBorder
                             >
                                 <Surface variant={isDark ? "muted" : "lavender"} className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-dark-700' : ''}`} rounded="xl">
-                                    <DocumentText size={24} color={isDark ? "#818CF8" : "black"} variant="Bulk" />
+                                    <DocumentText size={24} color={isDark ? "#ff8fa3" : "black"} variant="Bulk" />
                                 </Surface>
                                 <View className="flex-1">
                                     <View className="flex-row justify-between items-center mb-1">
@@ -113,9 +113,10 @@ export default function InvoicesScreen() {
                     )}
                     ListEmptyComponent={
                         <View className="items-center justify-center py-20 px-10">
-                            <Surface variant="muted" className={`w-24 h-24 items-center justify-center mb-6 ${isDark ? 'bg-surface-muted-dark border border-border-dark' : 'bg-gray-50'}`} rounded="full">
-                                <DocumentText size={36} color="#9CA3AF" variant="Bulk" />
-                            </Surface>
+                            <Image
+                                source={require('../../../../assets/illustrations/invoice.png')}
+                                style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
+                            />
                             <Typography variant="h3" weight="bold" className="text-center mb-2">No Invoices Yet</Typography>
                             <Typography variant="body" color="gray" className="text-center leading-relaxed mb-8">
                                 Create your first professional invoice by linking a customer and an order to track payments.

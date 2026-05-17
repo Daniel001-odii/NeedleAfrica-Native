@@ -18,13 +18,14 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
+import { VirtualTryOnIcon } from '../../../components/ui/CustomIcons';
 
 export default function Extras() {
     const router = useRouter();
     const { isDark } = useTheme();
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
 
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
@@ -55,20 +56,20 @@ export default function Extras() {
                 <View className="flex-row flex-wrap px-4 justify-between">
                     <ToolCard
                         icon={<DocumentText size={24} color="#10B981" variant="Bulk" />}
-                        title="Invoices"
+                        title="Invoice Editor"
                         desc="Billing and client receipts"
                         onPress={() => router.push('/(tabs)/orders/invoices' as any)}
                     />
                     <ToolCard
                         icon={<Colorfilter size={24} color="#0D9488" variant="Bulk" />}
-                        title="Pantone"
+                        title="Pantone Generator"
                         desc="Fashion color palettes"
                         onPress={() => router.push('/(tabs)/extras/pantone')}
                     />
                     <ToolCard
                         icon={<TrendUp size={24} color="#F43F5E" variant="Bulk" />}
-                        title="Style Ideas"
-                        desc="Latest runway trends"
+                        title="Fashion Inspos"
+                        desc="Pinterest in-app"
                         onPress={() => router.push('/(tabs)/extras/ideas' as any)}
                     />
                     <ToolCard
@@ -81,18 +82,18 @@ export default function Extras() {
 
                 {/* AI Innovations Section */}
                 <SectionLabel label="AI Labs" />
-                <View className="px-4 gap-y-3">
+                <View className="px-4 gap-y-3 pb-20">
                     <AiToolRow
-                        icon={<Mirror size={22} color="#6366f1" variant="Bulk" />}
+                        icon={<VirtualTryOnIcon size={24} color="#FF5678" />}
                         title="Virtual Try-on"
                         desc="Mock designs on client photos"
-                        infoText="Upload a client photo to see how designs look before cutting fabric."
+                        onPress={() => router.push('/(tabs)/extras/virtual-tryon')}
                     />
                     <AiToolRow
-                        icon={<Scan size={22} color="#FDB022" variant="Bulk" />}
-                        title="Fabric Scanner"
-                        desc="Identify material & care"
-                        infoText="AI analyzes fabric type and suggests best styling techniques."
+                        icon={<PenTool size={22} color="#FDB022" variant="Bulk" />}
+                        title="Sketch to Design"
+                        desc="Convert sketches to realistic fabric"
+                        onPress={() => router.push('/(tabs)/extras/sketch-to-design')}
                     />
                 </View>
 
@@ -136,7 +137,7 @@ function ToolCard({ icon, title, desc, onPress, infoText }: { icon: any, title: 
         <TouchableOpacity
             onPress={handlePress}
             activeOpacity={0.7}
-            className={`w-[48%] mb-4 p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white shadow-sm shadow-gray-100'}`}
+            className={`w-[48%] mb-4 p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
         >
             <View className={`w-12 h-12 items-center justify-center rounded-2xl mb-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
                 {icon}
@@ -147,13 +148,15 @@ function ToolCard({ icon, title, desc, onPress, infoText }: { icon: any, title: 
     );
 }
 
-function AiToolRow({ icon, title, desc, infoText }: { icon: any, title: string, desc: string, infoText: string }) {
+function AiToolRow({ icon, title, desc, onPress, infoText }: { icon: any, title: string, desc: string, onPress?: () => void, infoText?: string }) {
     const { isDark } = useTheme();
+    const handlePress = () => onPress ? onPress() : Alert.alert(title, infoText);
+
     return (
         <TouchableOpacity
-            onPress={() => Alert.alert(title, infoText)}
+            onPress={handlePress}
             activeOpacity={0.7}
-            className={`flex-row items-center p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white shadow-sm shadow-gray-100'}`}
+            className={`flex-row items-center p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
         >
             <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'}`}>
                 {icon}

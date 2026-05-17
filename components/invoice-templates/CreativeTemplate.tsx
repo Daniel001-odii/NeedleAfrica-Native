@@ -280,10 +280,15 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     
                     <div class="footer-bottom">
                         <div class="terms-box">
-                            <div class="terms-title">Terms & Conditions</div>
+                            <div class="terms-title">Terms & Conditions / Payment Info</div>
                             <div class="terms-text">
+                                ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                                    Bank: <strong>${user.bankName}</strong> &nbsp;|&nbsp; 
+                                    Acct No: <strong>${user.accountNumber}</strong> &nbsp;|&nbsp; 
+                                    Name: <strong>${user.accountName}</strong><br>
+                                ` : ''}
                                 Payment is due within 15 days from the date of the invoice.<br>
-                                Please make all cheques payable to ${user?.businessName || 'the business'}.
+                                Please make all payments to ${user?.businessName || 'the business'}.
                             </div>
                         </div>
                         <div class="signature-box">

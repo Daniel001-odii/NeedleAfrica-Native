@@ -242,7 +242,13 @@ export const ModernTemplate = ({ user, invoice, customer, order }: InvoiceTempla
                         </div>
                         <div class="footer-block">
                             <h4>Payment Info:</h4>
-                            <p>Please complete payment via provided Needle Africa payment link or bank transfer.</p>
+                            ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                                <p style="font-weight: 700; color: #111827; margin: 0 0 4px 0;">Bank: ${user.bankName}</p>
+                                <p style="font-weight: 700; color: #111827; margin: 0 0 4px 0;">Acct: ${user.accountNumber}</p>
+                                <p style="font-weight: 700; color: #111827; margin: 0;">Name: ${user.accountName}</p>
+                            ` : `
+                                <p>Please complete payment via provided Needle Africa payment link or bank transfer.</p>
+                            `}
                         </div>
                         <div class="footer-block">
                             <h4>Terms & Conditions:</h4>

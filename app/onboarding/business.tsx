@@ -50,6 +50,8 @@ const HEARD_ABOUT_US_OPTIONS = [
     'Other'
 ];
 
+import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
+
 export default function BusinessDetails() {
     const { user, updateProfile } = useAuth();
     const { state, updateState, nextStep, prevStep } = useOnboarding();
@@ -57,6 +59,7 @@ export default function BusinessDetails() {
     const isGoogleOrApple = user?.provider === 'GOOGLE' || user?.provider === 'APPLE';
     const showPhoneInput = isGoogleOrApple || !user?.phoneNumber;
 
+    const [showIntro, setShowIntro] = useState(true);
     const [businessType, setBusinessType] = useState(state.businessType || '');
     const [phone, setPhone] = useState<string | undefined>(user?.phoneNumber || state.phoneNumber || undefined);
     const [country, setCountry] = useState(state.country || 'Nigeria');
@@ -103,6 +106,20 @@ export default function BusinessDetails() {
         }
     };
 
+    if (showIntro) {
+        return (
+            <OnboardingIntroScreen
+                title="Tailored to your craft."
+                subtitle="Tell us about your specialization and team. We'll personalize NeedleX to perfectly match your studio's unique workflow."
+                stepIndex={2}
+                buttonText="Continue Setup"
+                onNext={() => setShowIntro(false)}
+                onBack={prevStep}
+                illustrationType="business"
+            />
+        );
+    }
+
     return (
         <View className="flex-1 bg-white">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
@@ -111,7 +128,7 @@ export default function BusinessDetails() {
                 <View className="px-6 pt-4 bg-white">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
-                        onPress={prevStep}
+                        onPress={() => setShowIntro(true)}
                         variant="ghost"
                         className="-ml-4"
                     />
@@ -145,7 +162,7 @@ export default function BusinessDetails() {
                                     Specialization
                                 </Typography>
                                 <View className="flex-row items-center">
-                                    <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-brand-primary' : 'text-gray-400'}`}>
                                         {businessType || 'Select'}
                                     </Typography>
                                     <ArrowRight2 size={16} color="#9CA3AF" />
@@ -165,7 +182,7 @@ export default function BusinessDetails() {
                                                 key={range}
                                                 onPress={() => setNoOfEmployees(range)}
                                                 className={`px-4 py-2.5 rounded-[12px] border ${isSelected
-                                                    ? 'bg-blue-600 border-blue-600'
+                                                    ? 'bg-brand-primary border-brand-primary'
                                                     : 'bg-gray-50 border-gray-100'
                                                     }`}
                                             >
@@ -252,7 +269,7 @@ export default function BusinessDetails() {
                                     How did you hear about us?
                                 </Typography>
                                 <View className="flex-row items-center">
-                                    <Typography weight="medium" className={`text-[15px] mr-2 ${joinedFrom ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    <Typography weight="medium" className={`text-[15px] mr-2 ${joinedFrom ? 'text-brand-primary' : 'text-gray-400'}`}>
                                         {joinedFrom || 'Select'}
                                     </Typography>
                                     <ArrowRight2 size={16} color="#9CA3AF" />
@@ -269,15 +286,12 @@ export default function BusinessDetails() {
                         onPress={handleContinue}
                         isLoading={isLoading}
                         disabled={!isFormValid}
-                        className={`h-14 rounded-full border-0 ${!isFormValid ? 'bg-gray-200' : 'bg-blue-600'}`}
+                        className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
                         Continue
                     </Button>
 
-                    <View className="mt-5 items-center pb-2">
-                        <Typography color="gray" variant="small" weight="medium">Step 2 of 5</Typography>
-                    </View>
                 </View>
 
             </KeyboardAvoidingView>
@@ -349,11 +363,11 @@ function SelectionModal({ visible, onClose, title, options, selected, onSelect }
                                     >
                                         <Typography
                                             weight={isSelected ? "bold" : "semibold"}
-                                            className={`text-[16px] ${isSelected ? "text-blue-600" : "text-gray-900"}`}
+                                            className={`text-[16px] ${isSelected ? "text-brand-primary" : "text-gray-900"}`}
                                         >
                                             {opt}
                                         </Typography>
-                                        {isSelected && <TickCircle size={22} color="#2563EB" variant="Bold" />}
+                                        {isSelected && <TickCircle size={22} color="#FF5678" variant="Bold" />}
                                     </TouchableOpacity>
                                 );
                             })}

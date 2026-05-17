@@ -220,11 +220,11 @@ export default function CreateInvoiceScreen() {
                                         <Pressable key={order.id} onPress={() => setSelectedOrderId(order.id)}>
                                             <Surface
                                                 variant="white"
-                                                className={`p-4 border ${selectedOrderId === order.id ? (isDark ? 'border-indigo-500' : 'border-[#4F46E5]') : (isDark ? 'border-border-dark' : 'border-gray-100')} flex-row items-center`}
+                                                className={`p-4 border ${selectedOrderId === order.id ? (isDark ? 'border-indigo-500' : 'border-[#FF5678]') : (isDark ? 'border-border-dark' : 'border-gray-100')} flex-row items-center`}
                                                 rounded="2xl"
                                                 hasBorder
                                             >
-                                                <View className={`w-10 h-10 ${selectedOrderId === order.id ? (isDark ? 'bg-indigo-600' : 'bg-[#4F46E5]') : (isDark ? 'bg-dark-800' : 'bg-gray-100')} rounded-full items-center justify-center mr-4`}>
+                                                <View className={`w-10 h-10 ${selectedOrderId === order.id ? (isDark ? 'bg-indigo-600' : 'bg-[#FF5678]') : (isDark ? 'bg-dark-800' : 'bg-gray-100')} rounded-full items-center justify-center mr-4`}>
                                                     <Box size={20} color={selectedOrderId === order.id ? 'white' : (isDark ? '#9CA3AF' : 'black')} variant="Bulk" />
                                                 </View>
                                                 <View className="flex-1">
@@ -233,7 +233,7 @@ export default function CreateInvoiceScreen() {
                                                         {user?.currency || 'NGN'} {(order.amount || 0).toLocaleString()}
                                                     </Typography>
                                                 </View>
-                                                {selectedOrderId === order.id && <TickCircle size={24} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bold" />}
+                                                {selectedOrderId === order.id && <TickCircle size={24} color={isDark ? "#ff8fa3" : "#FF5678"} variant="Bold" />}
                                             </Surface>
                                         </Pressable>
                                     ))}

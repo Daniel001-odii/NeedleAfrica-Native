@@ -127,7 +127,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
             Failed to load subscription status
           </Typography>
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-            <Refresh size={16} color="#6366f1" />
+            <Refresh size={16} color="#FF5678" />
           </TouchableOpacity>
         </View>
       </Surface>
@@ -157,10 +157,10 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
               </Typography>
             </View>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#6366f1" />
+              <ActivityIndicator size="small" color="#FF5678" />
             ) : (
               <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-                <Refresh size={16} color="#6366f1" />
+                <Refresh size={16} color="#FF5678" />
               </TouchableOpacity>
             )}
           </View>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF5678',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,

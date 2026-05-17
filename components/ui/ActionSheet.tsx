@@ -66,7 +66,7 @@ export function ActionSheet<T extends string>({
                                     {option.label}
                                 </Typography>
                                 {selectedValue === option.key && (
-                                    <TickCircle size={22} color="#6366f1" variant="Bold" />
+                                    <TickCircle size={22} color="#FF5678" variant="Bold" />
                                 )}
                             </TouchableOpacity>
                         ))}

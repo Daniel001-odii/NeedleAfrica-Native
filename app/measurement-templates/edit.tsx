@@ -165,7 +165,7 @@ export default function EditTemplateScreen() {
                                 onPress={handleAddField}
                             >
                                 <View className="flex-row items-center gap-1">
-                                    <Add size={18} color={isDark ? "#818CF8" : "#4F46E5"} />
+                                    <Add size={18} color={isDark ? "#ff8fa3" : "#FF5678"} />
                                     <Typography className={isDark ? "text-indigo-300" : "text-brand-primary"} weight="bold">Add Field</Typography>
                                 </View>
                             </Button>

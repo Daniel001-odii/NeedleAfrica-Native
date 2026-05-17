@@ -25,6 +25,8 @@ import { Modal } from 'react-native';
 import { TypingText } from '../../components/ui/TypingText';
 import { useRouter } from 'expo-router';
 
+import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
+
 export default function CreateFirstOrder() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addOrder } = useOrders();
@@ -32,6 +34,7 @@ export default function CreateFirstOrder() {
     const { isOnline } = useSync();
     const router = useRouter();
 
+    const [showIntro, setShowIntro] = useState(true);
     const [styleName, setStyleName] = useState(state.order?.styleName || '');
     const [amount, setAmount] = useState(state.order?.amount || '');
     const [amountPaid, setAmountPaid] = useState(state.order?.amountPaid || '');
@@ -128,6 +131,26 @@ export default function CreateFirstOrder() {
 
     const isFormValid = styleName.trim() && amount.trim();
 
+    const handleSkip = () => {
+        updateState({ step: 6 });
+        router.push('/onboarding/completion');
+    };
+
+    if (showIntro) {
+        return (
+            <OnboardingIntroScreen
+                title="Bring ideas to life."
+                subtitle="Create your first order, set a delivery date, and log payments. Turn your creative projects into tracking milestones."
+                stepIndex={5}
+                buttonText="Create Order"
+                onNext={() => setShowIntro(false)}
+                onBack={prevStep}
+                onSkip={handleSkip}
+                illustrationType="order"
+            />
+        );
+    }
+
     return (
         <View className="flex-1 bg-white">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
@@ -136,11 +159,11 @@ export default function CreateFirstOrder() {
                 <View className="px-6 pt-4 bg-white flex-row justify-between items-center">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
-                        onPress={prevStep}
+                        onPress={() => setShowIntro(true)}
                         variant="ghost"
                         className="-ml-4"
                     />
-                    <TouchableOpacity onPress={() => { updateState({ step: 6 }); router.push('/onboarding/completion'); }}>
+                    <TouchableOpacity onPress={handleSkip}>
                         <Typography color="primary" weight="bold" className="text-[16px]">Skip</Typography>
                     </TouchableOpacity>
                 </View>
@@ -187,11 +210,11 @@ export default function CreateFirstOrder() {
                                 <Typography weight="semibold" className="text-gray-900 text-[15px]">
                                     Delivery Date
                                 </Typography>
-                                <View className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-lg">
-                                    <Typography weight="bold" className="text-blue-600 mr-2">
+                                <View className="flex-row items-center bg-brand-primary/10 px-3 py-1.5 rounded-lg">
+                                    <Typography weight="bold" className="text-brand-primary mr-2">
                                         {formatDate(deliveryDate)}
                                     </Typography>
-                                    <Calendar size={16} color="#2563EB" variant="Bulk" />
+                                    <Calendar size={16} color="#FF5678" variant="Bulk" />
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -230,7 +253,7 @@ export default function CreateFirstOrder() {
                                 <View className="flex-1 flex-row items-center justify-end">
                                     <Typography weight="bold" className="text-gray-400 mr-1">{currencySymbol}</Typography>
                                     <TextInput
-                                        className="text-right font-bold text-blue-600 text-[18px] min-w-[60px]"
+                                        className="text-right font-bold text-brand-primary text-[18px] min-w-[60px]"
                                         placeholder="0"
                                         placeholderTextColor="#D1D5DB"
                                         keyboardType="numeric"
@@ -303,15 +326,12 @@ export default function CreateFirstOrder() {
                         onPress={handleCreateOrder}
                         isLoading={isLoading}
                         disabled={!isFormValid}
-                        className={`h-14 rounded-full border-0 ${!isFormValid ? 'bg-gray-200' : 'bg-blue-600'}`}
+                        className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
                         Complete Setup
                     </Button>
 
-                    <View className="mt-5 items-center pb-2">
-                        <Typography color="gray" variant="small" weight="medium">Step 5 of 5</Typography>
-                    </View>
                 </View>
 
                 {/* Date Picker Overlay */}

@@ -104,7 +104,7 @@ export default function Subscription() {
                                             'Custom branding options',
                                         ].map((feature, index) => (
                                             <View key={index} className="flex-row items-center mb-3">
-                                                <TickCircle size={20} color="#6366f1" variant="Bold" />
+                                                <TickCircle size={20} color="#FF5678" variant="Bold" />
                                                 <Typography variant="body" color="gray" className="ml-3 flex-1">
                                                     {feature}
                                                 </Typography>
@@ -127,7 +127,7 @@ export default function Subscription() {
                                 >
                                     <Surface variant="white" className="p-5 flex-row items-center" hasBorder>
                                         <View className="bg-indigo-50 p-2 rounded-lg">
-                                            <Crown size={24} color="#6366f1" />
+                                            <Crown size={24} color="#FF5678" />
                                         </View>
                                         <Typography variant="body" weight="bold" className="ml-4 flex-1">
                                             {isPro ? 'Manage Subscription' : 'Upgrade to Pro'}
@@ -141,7 +141,7 @@ export default function Subscription() {
                                 >
                                     <Surface variant="white" className="p-5 flex-row items-center" hasBorder>
                                         <View className="bg-indigo-50 p-2 rounded-lg">
-                                            <Refresh size={24} color="#6366f1" />
+                                            <Refresh size={24} color="#FF5678" />
                                         </View>
                                         <Typography variant="body" weight="bold" className="ml-4 flex-1">
                                             Restore Purchases
@@ -162,7 +162,7 @@ export default function Subscription() {
                             {/* Loading State */}
                             {isLoading && (
                                 <View className="items-center p-10">
-                                    <ActivityIndicator size="large" color="#6366f1" />
+                                    <ActivityIndicator size="large" color="#FF5678" />
                                     <Typography variant="body" color="white" className="mt-4 text-center opacity-80">
                                         Updating subscription info...
                                     </Typography>

@@ -62,7 +62,7 @@ export default function Profile() {
         : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <ScrollView
                 contentContainerClassName="p-5 pb-12 pt-6"
                 showsVerticalScrollIndicator={false}
@@ -101,19 +101,19 @@ export default function Profile() {
                     </Typography>
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
-                            icon={<User size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<User size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Personal Information"
                             onPress={() => router.push('/(tabs)/profile/personal')}
                             isDark={isDark}
                         />
                         <ProfileItem
-                            icon={<Setting2 size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<Setting2 size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Preferences"
                             onPress={() => router.push('/(tabs)/profile/preferences')}
                             isDark={isDark}
                         />
                         <ProfileItem
-                            icon={<Crown size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<Crown size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Subscription"
                             badge={userIsPro ? (planType === 'monthly' ? 'PRO' : 'PRO') : ''}
                             badgeColor={userIsPro ? 'bg-yellow-500' : 'bg-blue-600'}
@@ -136,7 +136,7 @@ export default function Profile() {
                     </View>
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
-                            icon={<Gallery size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<Gallery size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Catalog Storefront"
                             onPress={() => router.push('/(tabs)/profile/catalog')}
                             isDark={isDark}
@@ -152,7 +152,7 @@ export default function Profile() {
                     </Typography>
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
-                            icon={<CloudChange size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<CloudChange size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Backup Data"
                             onPress={() => router.push('/(tabs)/profile/backup')}
                             isDark={isDark}
@@ -168,13 +168,13 @@ export default function Profile() {
                     </Typography>
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
-                            icon={<MessageQuestion size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<MessageQuestion size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
                             isDark={isDark}
                         />
                         <ProfileItem
-                            icon={<People size={20} color={isDark ? "#818CF8" : "#3b82f6"} variant="Bulk" />}
+                            icon={<People size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Join our Community"
                             onPress={() => Linking.openURL('https://chat.whatsapp.com/FTIvYiBIyfE4ZLniuOJWmL?mode=gi_t')}
                             isDark={isDark}
@@ -187,7 +187,7 @@ export default function Profile() {
                         />
                         <ProfileItem
                             icon={
-                                <Svg width="20" height="20" color={isDark ? "#818CF8" : "#3b82f6"} viewBox="0 0 24 24">
+                                <Svg width="20" height="20" color={isDark ? "#ff8fa3" : "#3b82f6"} viewBox="0 0 24 24">
                                     <Path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12c0 1.6.376 3.112 1.043 4.453c.178.356.237.763.134 1.148l-.595 2.226a1.3 1.3 0 0 0 1.591 1.592l2.226-.596a1.63 1.63 0 0 1 1.149.133A9.96 9.96 0 0 0 12 22" opacity=".5" />
                                     <Path fill="currentColor" d="M7.825 12.85a.825.825 0 0 0 0 1.65h6.05a.825.825 0 0 0 0-1.65zm0-3.85a.825.825 0 0 0 0 1.65h8.8a.825.825 0 0 0 0-1.65z" />
                                 </Svg>

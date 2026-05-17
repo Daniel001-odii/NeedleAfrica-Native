@@ -19,7 +19,7 @@ export default function OnboardingLayout() {
                 {/* Simple Progress Bar */}
                 <View className="h-1 bg-gray-100 w-full">
                     <View
-                        className="h-full bg-blue-500"
+                        className="h-full bg-brand-primary"
                         style={{ width: `${Math.min(progress, 100)}%` }}
                     />
                 </View>

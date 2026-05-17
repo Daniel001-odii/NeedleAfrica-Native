@@ -20,6 +20,20 @@ export default function OnboardingCompletion() {
     const posthog = usePostHog();
 
     const firstName = user?.username?.split(' ')[0] || 'there';
+    const businessName = state.businessName || 'Your creative studio';
+
+    // Map selected specialties to beautiful text descriptions
+    const getSpecialtyDescription = () => {
+        if (!state.businessType) return 'designer styling';
+        const s = state.businessType.toLowerCase();
+        if (s.includes('bespoke') || s.includes('custom')) return 'custom-tailored bespoke fashion';
+        if (s.includes('traditional')) return 'stunning traditional attire';
+        if (s.includes('bridal')) return 'gorgeous bridal designs';
+        if (s.includes('suits')) return 'sharp premium suiting';
+        return `${s} styling`;
+    };
+
+    const specialtyText = getSpecialtyDescription();
 
     const handleFinish = async (target: 'dashboard' | 'invoice') => {
         posthog.capture('onboarding_completed', {
@@ -54,17 +68,17 @@ export default function OnboardingCompletion() {
                 <Animated.View entering={FadeInDown.delay(100).duration(600)} className="items-center mt-auto mb-6">
                     <Animated.View entering={FadeInDown.delay(300).springify().damping(12)} className="items-center justify-center mb-6">
                         <Image
-                            source={require('../../assets/images/green-check-mark.png')}
-                            style={{ width: 200, height: 200 }}
+                            source={require('../../assets/illustrations/completed.png')}
+                            style={{ width: 220, height: 220 }}
                             resizeMode="contain"
                         />
                     </Animated.View>
 
-                    <Typography variant="h1" weight="bold" className="text-center text-gray-900 mb-3">
-                        You're all set, {firstName}!
+                    <Typography variant="h1" weight="bold" className="text-center text-gray-900 mb-3 text-[26px] leading-8 px-4">
+                        Ready to create, {firstName}! ✨
                     </Typography>
-                    <Typography color="gray" className="text-center px-6 leading-6 text-base">
-                        {state.businessName || 'Your workspace'} is officially live.{'\n'}Time to craft some magic. ✨
+                    <Typography color="gray" className="text-center px-6 leading-6 text-base text-gray-500">
+                        <Typography weight="bold" className="text-brand-primary">{businessName}</Typography> is officially live and optimized for {specialtyText}. Your canvas is clean, let's craft some magic!
                     </Typography>
                 </Animated.View>
 
@@ -72,7 +86,7 @@ export default function OnboardingCompletion() {
                 <Animated.View entering={FadeInUp.delay(500).duration(600)} className="w-full gap-3 mt-auto pt-8">
                     <Button
                         onPress={() => handleFinish('dashboard')}
-                        className="h-14 rounded-full bg-blue-600 border-0"
+                        className="h-14 rounded-full bg-brand-primary border-0 shadow-none"
                     >
                         <View className="flex-row items-center justify-center w-full">
                             <Typography weight="bold" color="white" className="text-lg">Go to Dashboard</Typography>

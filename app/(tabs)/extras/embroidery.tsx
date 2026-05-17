@@ -167,7 +167,7 @@ export default function EmbroideryScreen() {
             <View className="absolute bottom-10 left-6 right-6">
                 <Surface variant={isDark ? "white" : "dark"} className="p-4 flex-row items-center justify-between shadow-2xl" rounded="full">
                     <View className="flex-row items-center ml-2">
-                        <MagicStar size={24} color={isDark ? "#4F46E5" : "#818CF8"} variant="Bulk" />
+                        <MagicStar size={24} color={isDark ? "#FF5678" : "#ff8fa3"} variant="Bulk" />
                         <Typography weight="bold" color={isDark ? "black" : "white"} className="ml-3">AI Pattern Generator</Typography>
                     </View>
                     <IconButton

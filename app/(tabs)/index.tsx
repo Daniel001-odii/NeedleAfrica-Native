@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -109,7 +109,7 @@ export default function Home() {
     const showTodo = hasNoClients || hasNoOrders;
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <ScrollView
                 contentContainerClassName="p-5 pb-12"
                 showsVerticalScrollIndicator={false}
@@ -144,12 +144,12 @@ export default function Home() {
                         <Pressable
                             onPress={() => router.push('/(tabs)/profile/catalog')}
                             style={{
-                                backgroundColor: isDark ? '#1C1C1E' : '#4F46E5', // Indigo for light mode, dark surface for dark mode
-                                borderRadius: 32,
+                                backgroundColor: isDark ? '#1C1C1E' : '#FF5678', // Indigo for light mode, dark surface for dark mode
+                                borderRadius: 10,
                                 padding: 15,
                                 borderWidth: isDark ? 1 : 0,
                                 borderColor: '#374151',
-                                shadowColor: '#4F46E5',
+                                shadowColor: '#FF5678',
                                 shadowOffset: { width: 0, height: 10 },
                                 shadowOpacity: isDark ? 0.3 : 0.4,
                                 shadowRadius: 20,
@@ -158,10 +158,7 @@ export default function Home() {
                             }}
                         >
                             <View className="flex-row items-center relative z-10">
-                                <View className={`w-14 h-14 rounded-[20px] ${isDark ? 'bg-indigo-500/20' : 'bg-white/20'} items-center justify-center mr-4`}>
-                                    <MagicStar size={26} color="#FFFFFF" variant="Bulk" />
-                                </View>
-                                <View className="flex-1 pr-4">
+                                <View className="flex-1 px-4">
                                     <View className="flex-row items-center mb-1">
                                         <Typography variant="body" weight="bold" color="white" className="text-[17px] mr-2">Free Business Website!</Typography>
                                         <View className="bg-[#FFD700] px-2 py-0.5 rounded-full">
@@ -194,7 +191,7 @@ export default function Home() {
                 <View className="mb-6">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4">
                         <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => router.push('/(tabs)/orders/new')} />
-                        <QuickActionPill icon={<Ruler size={22} color="#6366f1" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => router.push('/measurements/create')} />
+                        <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => router.push('/measurements/create')} />
                         <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => router.push('/measurement-templates/create')} />
                         <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => router.push('/(tabs)/customers/new')} />
                         <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => router.push('/(tabs)/orders/invoices/new')} />
@@ -240,7 +237,7 @@ export default function Home() {
                                     activeOpacity={0.6}
                                 >
                                     <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${isDark ? 'bg-indigo-500/15' : 'bg-indigo-50'}`}>
-                                        <Box size={16} color="#6366f1" variant="Bulk" />
+                                        <Box size={16} color="#FF5678" variant="Bulk" />
                                     </View>
                                     <View className="flex-1">
                                         <Typography weight="bold" className="text-[14px]">Create your first order</Typography>
@@ -254,7 +251,7 @@ export default function Home() {
                         <>
                             {/* 3. Operational Grid (High Density) */}
                             <View className="flex-row gap-3 mb-3">
-                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
                                     <View className={`w-9 h-9 rounded-2xl items-center justify-center ${isDark ? 'bg-orange-500/20' : 'bg-orange-50'}`}>
                                         <Box size={18} color="#f97316" variant="Bulk" />
                                     </View>
@@ -267,9 +264,9 @@ export default function Home() {
                                     </View>
                                 </View>
 
-                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
                                     <View className={`w-9 h-9 rounded-2xl items-center justify-center ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
-                                        <MagicStar size={18} color="#3b82f6" variant="Bulk" />
+                                        <DollarCircle size={18} color="#3b82f6" variant="Bulk" />
                                     </View>
                                     <View>
                                         <Typography variant="h3" weight="bold" className="text-lg">{formatCurrency(stats.revenue)}</Typography>
@@ -282,10 +279,10 @@ export default function Home() {
                             <View className="gap-3">
                                 <Pressable
                                     onPress={() => router.push('/(tabs)/orders/')}
-                                    className={`flex-row items-center p-5 rounded-[28px] ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200'}`}
+                                    className={`flex-row items-center p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
                                 >
                                     <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                                        <Timer1 size={22} color="#6366f1" variant="Bulk" />
+                                        <Timer1 size={22} color="#FF5678" variant="Bulk" />
                                     </View>
                                     <View className="flex-1">
                                         <Typography variant="small" color="gray" weight="bold" className="text-[10px] uppercase mb-0.5">Next Deadline</Typography>
@@ -301,7 +298,7 @@ export default function Home() {
 
                                 <Pressable
                                     onPress={() => router.push('/(tabs)/customers/')}
-                                    className={`flex-row items-center p-5 rounded-[28px] ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200'}`}
+                                    className={`flex-row items-center p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
                                 >
                                     <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
                                         <People size={22} color="#6B7280" variant="Bulk" />

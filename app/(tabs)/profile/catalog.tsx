@@ -42,7 +42,7 @@ const BUSINESS_TYPE_OPTIONS = [
 const PREDEFINED_THEMES = [
     { name: 'Needle Blue', color: '#3b82f6' },
     { name: 'Pure Black', color: '#000000' },
-    { name: 'Indigo', color: '#6366f1' },
+    { name: 'Indigo', color: '#FF5678' },
     { name: 'Forest', color: '#10B981' },
     { name: 'Rose', color: '#F43F5E' },
     { name: 'Luxury Gold', color: '#FDB022' },
@@ -105,7 +105,6 @@ export default function BusinessSettings() {
     const [tiktok, setTiktok] = useState('');
     const [selectedTheme, setSelectedTheme] = useState(PREDEFINED_THEMES[0].color);
 
-    const [showDisclaimer, setShowDisclaimer] = useState(false);
     const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
     const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -116,17 +115,15 @@ export default function BusinessSettings() {
     const catalogUrl = `https://catalog.needleafrica.com/cg/${encodeURIComponent(catalogId as string)}`;
 
     useEffect(() => {
-        const checkDisclaimer = async () => {
-            const hasSeen = await AsyncStorage.getItem('hasSeenBusinessDisclaimer');
-            if (!hasSeen) {
-                setShowDisclaimer(true);
-            }
-        };
-        checkDisclaimer();
-
         // Initial fetch
         fetchCatalogSettings();
     }, []);
+
+    useEffect(() => {
+        if (!isLoading && !catalogId) {
+            router.replace('/catalog-explainer/step1');
+        }
+    }, [isLoading, catalogId]);
 
     // Reactive check: if user drops from Pro, turn off catalog
     useEffect(() => {
@@ -186,10 +183,7 @@ export default function BusinessSettings() {
         }
     };
 
-    const closeDisclaimer = async () => {
-        await AsyncStorage.setItem('hasSeenBusinessDisclaimer', 'true');
-        setShowDisclaimer(false);
-    };
+
 
     useEffect(() => {
         if (user) {
@@ -291,7 +285,9 @@ export default function BusinessSettings() {
                     <SkeletonLoader isDark={isDark} />
                 </View>
             ) : !catalogId ? (
-                <EmptyState onApply={handleCreateCatalog} isSaving={isSaving} isDark={isDark} />
+                <View className="flex-1 p-5">
+                    <SkeletonLoader isDark={isDark} />
+                </View>
             ) : (
                 <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     {/* BRANDING */}
@@ -591,45 +587,6 @@ export default function BusinessSettings() {
                 </Pressable>
             </Modal>
 
-            {/* Modal: Business Growth Disclaimer */}
-            <Modal visible={showDisclaimer} animationType="fade" transparent={true}>
-                <View className="flex-1 bg-black/60 items-center justify-center p-6">
-                    <View className={`w-full rounded-[40px] overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'} shadow-2xl`}>
-                        <View className="p-8 items-center">
-                            <View className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full items-center justify-center mb-6">
-                                <Magicpen size={40} color="#2563EB" variant="Bulk" />
-                            </View>
-
-                            <Typography variant="h2" weight="bold" className="text-center mb-3">Your Digital Storefront</Typography>
-                            <Typography variant="body" color="gray" className="text-center mb-8 leading-6">
-                                Setting up your business profile allows you to showcase your craft to the world and accept orders directly through your storefront.
-                            </Typography>
-
-                            <View className="w-full gap-y-4 mb-8">
-                                <DisclaimerRow
-                                    icon={<StatusUp size={20} color="#2563EB" />}
-                                    title="Global Visibility"
-                                    desc="Your catalog is visible to anyone with your link."
-                                />
-                                <DisclaimerRow
-                                    icon={<ShieldTick size={20} color="#10B981" />}
-                                    title="Verify Ownership"
-                                    desc="Ensure all photos and information belong strictly to you."
-                                />
-                                <DisclaimerRow
-                                    icon={<Activity size={20} color="#FDB022" />}
-                                    title="Keep it Updated"
-                                    desc="Accurate info helps clients trust and book your services."
-                                />
-                            </View>
-
-                            <Button onPress={closeDisclaimer} className="w-full h-16 rounded-full bg-blue-600 border-0" textClassName="text-white font-bold text-lg">
-                                Got it, Let's Build!
-                            </Button>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
 
             <SubscriptionModal
                 visible={isSubscriptionModalVisible}
@@ -760,35 +717,4 @@ function SkeletonLoader({ isDark }: { isDark: boolean }) {
     );
 }
 
-function EmptyState({ onApply, isSaving, isDark }: { onApply: () => void, isSaving: boolean, isDark: boolean }) {
-    return (
-        <View className="flex-1 justify-center p-8">
-            <View className={`p-10 rounded-[48px] items-center ${isDark ? 'bg-zinc-900/50' : 'bg-white'}`}>
-                <Image
-                    source={require('../../../assets/images/globe-image.png')}
-                    style={{ width: 200, height: 200 }}
-                    resizeMode="contain"
-                />
-                <Typography variant="h2" weight="bold" className="text-center mb-2 font-bold">You have no catalog yet</Typography>
-                <Typography variant="body" color="gray" className="text-center mb-6 leading-6">
-                    Create your personal catalog storefront website to showcase your products and services to customers worldwide.
-                </Typography>
-                <Button
-                    onPress={onApply}
-                    isLoading={isSaving}
-                    className="w-full h-16 rounded-full bg-blue-600 border-0 mb-6"
-                    textClassName="text-white font-bold text-lg"
-                >
-                    Create My Catalog
-                </Button>
 
-                <TouchableOpacity onPress={() => Linking.openURL('https://catalog.needleafrica.com/cg/cmnm8rm9z0001lb04jwwf74cm')}>
-                    <View className='flex-row items-center gap-2'>
-                        <Typography color="gray" weight="bold" className="text-[14px]">View Sample Storefront</Typography>
-                        <ArrowRight size={16} color="gray" variant="Linear" />
-                    </View>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-}

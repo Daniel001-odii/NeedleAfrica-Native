@@ -271,7 +271,13 @@ export const MinimalTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                             <div class="term-box">
                                 <div class="term-title">Payment Method</div>
                                 <div class="term-desc">
-                                    Direct bank transfer. Please include invoice number in payment description.
+                                    ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                                        Bank Name: <strong>${user.bankName}</strong><br/>
+                                        Account Number: <strong>${user.accountNumber}</strong><br/>
+                                        Account Name: <strong>${user.accountName}</strong>
+                                    ` : `
+                                        Direct bank transfer. Please include invoice number in payment description.
+                                    `}
                                 </div>
                             </div>
                             <div class="term-box">

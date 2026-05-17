@@ -18,7 +18,7 @@ export default function PatternsList() {
                 <Svg width="100%" height="200" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <Defs>
                         <Pattern id="polka" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                            <Circle cx="10" cy="10" r="4" fill="#6366f1" opacity="0.8" />
+                            <Circle cx="10" cy="10" r="4" fill="#FF5678" opacity="0.8" />
                         </Pattern>
                     </Defs>
                     <Rect x="0" y="0" width="100%" height="100%" fill="#EEF2FF" />

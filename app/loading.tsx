@@ -26,13 +26,12 @@ export default function LoadingScreen() {
     }, [isHydrated]);
 
     return (
-        <View style={[styles.container, { backgroundColor: effectiveIsDark ? '#FF5678' : '#FF5678' }]}>
+        <View style={[styles.container, { backgroundColor: '#FF5678' }]}>
             <Image 
-                source={require('../assets/splash-image.png')} 
-                style={{ width: 180, height: 180, marginBottom: 40 }} 
+                source={require('../assets/animated-logo.gif')} 
+                style={{ width: 300, height: 300 }} 
                 resizeMode="contain"
             />
-            <ActivityIndicator size="large" color="#ffffff" />
         </View>
     );
 }

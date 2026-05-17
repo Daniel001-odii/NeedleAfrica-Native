@@ -292,10 +292,19 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             <div class="totals-row">
                 <div>
                     <p class="section-label text-green" style="margin-bottom: 15px;">Payment Method :</p>
-                    <p class="method-name text-gray">Paypal</p>
-                    <p class="method-detail text-yellow">Yourpaypalaccount</p>
-                    <p class="method-name text-gray">Bank Transfer</p>
-                    <p class="method-detail text-yellow">Yourbankaccount</p>
+                    ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                        <p class="method-name text-gray">Bank Name</p>
+                        <p class="method-detail text-yellow">${user.bankName}</p>
+                        <p class="method-name text-gray">Account Number</p>
+                        <p class="method-detail text-yellow">${user.accountNumber}</p>
+                        <p class="method-name text-gray">Account Name</p>
+                        <p class="method-detail text-yellow">${user.accountName}</p>
+                    ` : `
+                        <p class="method-name text-gray">Paypal</p>
+                        <p class="method-detail text-yellow">Yourpaypalaccount</p>
+                        <p class="method-name text-gray">Bank Transfer</p>
+                        <p class="method-detail text-yellow">Yourbankaccount</p>
+                    `}
                 </div>
                 <div class="totals-calc">
                     <div class="calc-row">

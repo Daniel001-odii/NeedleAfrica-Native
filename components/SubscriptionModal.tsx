@@ -256,7 +256,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                         'Early access to new features'
                                     ].map((feature, idx) => (
                                         <View key={idx} className="flex-row items-center mb-1.5">
-                                            <TickCircle size={20} color="#6366f1" variant="Bold" />
+                                            <TickCircle size={20} color="#FF5678" variant="Bold" />
                                             <Typography variant="body" color="white" className="ml-3 font-medium">{feature}</Typography>
                                         </View>
                                     ))}
@@ -296,7 +296,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
                                 {/* Single Premium Plan Card */}
                                 {loadingPackages ? (
-                                    <ActivityIndicator size="large" color="#6366f1" className="mt-8" />
+                                    <ActivityIndicator size="large" color="#FF5678" className="mt-8" />
                                 ) : (
                                     activePackage && (
                                         <View className="bg-white/5 rounded-[24px] p-5 border-white/10 mb-4">
@@ -309,7 +309,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                                         {selectedPlanType === 'YEARLY' ? 'The Best Value' : 'Flexibility First'}
                                                     </Typography>
                                                 </View>
-                                                <Crown size={32} color="#6366f1" variant="Bold" />
+                                                <Crown size={32} color="#FF5678" variant="Bold" />
                                             </View>
 
                                             <View className="mb-5">
@@ -367,7 +367,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                 {/* Current Plan Indicator for Pro Users */}
                                 {isPro && (
                                     <View>
-                                        {/* <Crown size={24} color="#6366f1" variant="Bold" /> */}
+                                        {/* <Crown size={24} color="#FF5678" variant="Bold" /> */}
                                         <Typography variant="body" color="white" className="text-center">
                                             You are currently on the <Typography variant="body" weight="bold" color="white">{subscriptionStatus?.planType === 'yearly' ? 'Yearly' : 'Monthly'}</Typography> plan
                                         </Typography>

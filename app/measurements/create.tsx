@@ -158,7 +158,7 @@ export default function CreateMeasurementScreen() {
                                         />
                                     </Surface>
                                     {loadingCustomers ? (
-                                        <ActivityIndicator color="#6366f1" />
+                                        <ActivityIndicator color="#FF5678" />
                                     ) : (
                                         <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
                                             {filteredCustomers.slice(0, 5).map((customer, index) => (
@@ -190,7 +190,7 @@ export default function CreateMeasurementScreen() {
                                 <Surface variant="lavender" className={`p-4 flex-row items-center justify-between ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="2xl">
                                     <View className="flex-row items-center">
                                         <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${isDark ? 'bg-white/10' : 'bg-white'}`}>
-                                            <UserIcon size={20} color={isDark ? "white" : "#6366f1"} variant="Bulk" />
+                                            <UserIcon size={20} color={isDark ? "white" : "#FF5678"} variant="Bulk" />
                                         </View>
                                         <View>
                                             <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>{selectedCustomer?.fullName}</Typography>

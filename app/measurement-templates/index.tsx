@@ -95,7 +95,7 @@ export default function MeasurementTemplatesScreen() {
                                         hasBorder={isDark}
                                     >
                                         <Surface variant="lavender" className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-soft-lavender'}`} rounded="full">
-                                            <DocumentText size={24} color={isDark ? "#818CF8" : "#4F46E5"} variant="Bold" />
+                                            <DocumentText size={24} color={isDark ? "#ff8fa3" : "#FF5678"} variant="Bold" />
                                         </Surface>
                                         <View className="flex-1">
                                             <Typography variant="body" weight="bold">{item.name}</Typography>

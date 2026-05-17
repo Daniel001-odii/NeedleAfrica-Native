@@ -147,7 +147,7 @@ export default function CreateTemplateScreen() {
                             <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
                                 <View className={`flex-row items-center px-5 py-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                     <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
-                                        <Ruler size={18} color="#6366f1" variant="Bulk" />
+                                        <Ruler size={18} color="#FF5678" variant="Bulk" />
                                     </View>
                                     <TextInput
                                         className={`flex-1 text-[16px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}

@@ -146,7 +146,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
     if (packageType.includes('yearly')) {
       return <Crown size={24} color="#FDB022" />;
     }
-    return <Star1 size={24} color="#6366f1" />;
+    return <Star1 size={24} color="#FF5678" />;
   };
 
   const getPackageBadge = (packageType: string) => {
@@ -186,7 +186,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
           {/* Premium Header */}
           <View className="relative">
             <LinearGradient
-              colors={['#818cf8', '#6366f1', '#4f46e5']}
+              colors={['#ff8fa3', '#FF5678', '#FF5678']}
               className="px-6 pt-12 pb-16 rounded-b-[40px]"
             >
               <View className="flex-row justify-between items-center mb-6">
@@ -208,7 +208,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
 
             {/* Absolute badge */}
             <View className="absolute -bottom-6 self-center bg-white px-6 py-3 rounded-2xl shadow-lg border border-indigo-100 flex-row items-center">
-              <ShieldTick size={20} color="#6366f1" />
+              <ShieldTick size={20} color="#FF5678" />
               <Typography variant="small" weight="bold" className="ml-2 text-indigo-900 uppercase tracking-widest">
                 Trusted by thousands
               </Typography>
@@ -219,7 +219,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
             {feature && (
               <Surface variant="lavender" className="p-4 rounded-xl border border-indigo-100 mb-6">
                 <View className="flex-row items-center">
-                  <Magicpen size={20} color="#6366f1" />
+                  <Magicpen size={20} color="#FF5678" />
                   <Typography variant="body" weight="medium" className="ml-3 text-indigo-900">
                     This feature requires a Pro subscription
                   </Typography>
@@ -234,7 +234,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
             <View className="flex-row flex-wrap justify-between">
               {[
                 { title: 'Unlimited Orders', icon: <Check size={20} color="#10B981" /> },
-                { title: 'AI Measurements', icon: <Magicpen size={20} color="#6366f1" /> },
+                { title: 'AI Measurements', icon: <Magicpen size={20} color="#FF5678" /> },
                 { title: 'Custom Invoices', icon: <Check size={20} color="#10B981" /> },
                 { title: 'Team Access', icon: <Check size={20} color="#10B981" /> },
                 { title: 'Priority Support', icon: <Check size={20} color="#10B981" /> },
@@ -252,7 +252,7 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
 
           {loadingPackages ? (
             <View className="items-center py-20">
-              <ActivityIndicator size="large" color="#6366f1" />
+              <ActivityIndicator size="large" color="#FF5678" />
               <Typography variant="body" color="gray" className="mt-4">
                 Fetching premium plans...
               </Typography>
