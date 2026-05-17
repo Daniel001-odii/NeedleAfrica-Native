@@ -38,9 +38,9 @@ const RevenueHeroCard = ({
                 {/* Your existing content */}
                 <View className="flex-row items-center mb-2">
                     <View className="flex-row items-center flex-1">
-                        <View className={`w-6 h-6 rounded-full ${isDark ? 'bg-blue-400/20' : 'bg-white/20'} items-center justify-center mr-2`}>
+                        {/* <View className={`w-6 h-6 rounded-full ${isDark ? 'bg-blue-400/20' : 'bg-white/20'} items-center justify-center mr-2`}>
                             <Wallet size={12} color={isDark ? "#60A5FA" : "white"} variant="Bold" />
-                        </View>
+                        </View> */}
                         <Typography variant="small" weight="bold" color="white" className="opacity-80 mr-2">
                             Total Revenue
                         </Typography>
