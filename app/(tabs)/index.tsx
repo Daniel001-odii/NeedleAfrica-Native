@@ -103,7 +103,13 @@ export default function Home() {
         }).format(amount);
     };
 
-    const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
     const hasNoClients = !customersLoading && customers.length === 0;
     const hasNoOrders = !ordersLoading && orders.length === 0;
     const showTodo = hasNoClients || hasNoOrders;
@@ -118,8 +124,12 @@ export default function Home() {
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">
                     <View>
-                        <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>Hello, {user?.username?.split(' ')[0] || 'Tailor'}</Typography>
-                        <Typography variant="caption" weight="bold" color="gray">{today}</Typography>
+                        <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
+                            {user?.businessName || 'My Atelier'}
+                        </Typography>
+                        <Typography variant="caption" weight="bold" color="gray">
+                            {getGreeting()}, {user?.username || 'Tailor'}
+                        </Typography>
                     </View>
 
                     <IconButton
