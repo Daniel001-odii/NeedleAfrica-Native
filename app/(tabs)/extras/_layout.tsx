@@ -6,7 +6,7 @@ export default function ExtrasLayout() {
             screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: 'white' },
-                animation: 'slide_from_right',
+                animation: 'fade',
             }}
         >
             <Stack.Screen name="index" />

@@ -26,6 +26,18 @@ export default function CatalogGallery() {
     const [showWebView, setShowWebView] = useState(false);
     const [webViewLoading, setWebViewLoading] = useState(true);
     const [webViewKey, setWebViewKey] = useState(0);
+    const [webViewUrl, setWebViewUrl] = useState('');
+
+    const handleOpenOwnStorefront = () => {
+        if (!catalogId) return;
+        setWebViewUrl(`https://catalog.needleafrica.com/cg/${catalogId}`);
+        setShowWebView(true);
+    };
+
+    const handleOpenSampleStorefront = () => {
+        setWebViewUrl('https://catalog.needleafrica.com/cg/cmnn5zgkr0001js04pmveqepo');
+        setShowWebView(true);
+    };
 
     // Form State
     const [name, setName] = useState('');
@@ -143,24 +155,9 @@ export default function CatalogGallery() {
                 </View>
             </View>
 
-            {/* Disclaimer for Missing Storefront */}
-            {!isLoading && !catalogId && (
-                <View className="px-5 pt-4">
-                    <Pressable
-                        onPress={() => router.push('/(tabs)/profile/catalog' as any)}
-                        className={`flex-row items-center p-4 rounded-[20px] ${isDark ? 'bg-amber-900/20 border border-amber-900/30' : 'bg-amber-50 border border-amber-100'}`}
-                    >
-                        <Magicpen size={24} color="#D97706" variant="Bulk" className="mr-3" />
-                        <View className="flex-1">
-                            <Typography weight="bold" className="text-amber-700 dark:text-amber-500 text-[14px]">Initialize Storefront Required</Typography>
-                            <Typography variant="small" className="text-amber-600/80 dark:text-amber-500/80">Setup your storefront profile before uploading styles.</Typography>
-                        </View>
-                        <Setting4 size={20} color="#D97706" variant="Linear" />
-                    </Pressable>
-                </View>
-            )}
 
-            <ScrollView contentContainerClassName="p-5 pb-24" showsVerticalScrollIndicator={false}>
+
+            <ScrollView contentContainerClassName={items.length > 0 ? "p-5 pb-24" : "flex-1 justify-center p-8 pb-32"} showsVerticalScrollIndicator={false}>
 
                 {/* Dashboard Stats (Lite) */}
                 {items.length > 0 && (
@@ -217,23 +214,30 @@ export default function CatalogGallery() {
 
                         </View>
                     ) : (
-                        <EmptyState onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} onReset={() => { }} isDark={isDark} />
+                        <EmptyState 
+                            onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} 
+                            onViewSample={handleOpenSampleStorefront} 
+                            isDark={isDark} 
+                            isCatalogSetup={!!catalogId}
+                        />
                     ))}
             </ScrollView>
 
             {/* Floating Action Button (FAB) for Upload - Disabled if no catalog */}
-            <TouchableOpacity
-                activeOpacity={catalogId ? 0.8 : 0.5}
-                onPress={() => catalogId ? setShowUploadModal(true) : Toast.show({ type: 'info', text1: 'Action Required', text2: 'Setup Storefront Settings first' })}
-                className={`w-16 h-16 rounded-full items-center justify-center shadow-lg z-50 ${catalogId ? 'bg-blue-600 shadow-blue-500/50' : 'bg-gray-400 opacity-50 shadow-black/20'}`}
-                style={{
-                    position: 'absolute',
-                    right: 20,
-                    bottom: insets.bottom + 20,
-                }}
-            >
-                <Add size={32} color="white" variant="Linear" />
-            </TouchableOpacity>
+            {catalogId && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setShowUploadModal(true)}
+                    className="w-16 h-16 rounded-full items-center justify-center z-50 bg-blue-600"
+                    style={{
+                        position: 'absolute',
+                        right: 20,
+                        bottom: insets.bottom + 20,
+                    }}
+                >
+                    <Add size={32} color="white" variant="Linear" />
+                </TouchableOpacity>
+            )}
 
             {/* Upload Modal */}
             <Modal visible={showUploadModal} transparent animationType="slide">
@@ -280,29 +284,29 @@ export default function CatalogGallery() {
                 <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
                     <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-100'}`}>
                         <View className="flex-row items-center">
-                            <IconButton 
-                                icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />} 
-                                onPress={() => setShowWebView(false)} 
-                                variant="ghost" 
+                            <IconButton
+                                icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />}
+                                onPress={() => setShowWebView(false)}
+                                variant="ghost"
                             />
                             <Typography variant="h3" weight="bold" className="ml-2">Live Storefront</Typography>
                         </View>
                         <View className="flex-row items-center">
-                            <IconButton 
-                                icon={<Refresh2 size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />} 
+                            <IconButton
+                                icon={<Refresh2 size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />}
                                 onPress={() => {
                                     setWebViewLoading(true);
                                     setWebViewKey(prev => prev + 1);
-                                }} 
-                                variant="ghost" 
+                                }}
+                                variant="ghost"
                             />
                         </View>
                     </View>
-                    
+
                     <View className="flex-1 relative">
                         <WebView
                             key={webViewKey}
-                            source={{ uri: `https://catalog.needleafrica.com/cg/${catalogId}` }}
+                            source={{ uri: webViewUrl }}
                             style={{ flex: 1, backgroundColor: isDark ? '#09090b' : '#ffffff' }}
                             onLoadStart={() => setWebViewLoading(true)}
                             onLoadEnd={() => setWebViewLoading(false)}
@@ -323,7 +327,7 @@ export default function CatalogGallery() {
             {/* FLOATING EYE BUTTON */}
             {catalogId && (
                 <TouchableOpacity
-                    onPress={() => setShowWebView(true)}
+                    onPress={handleOpenOwnStorefront}
                     activeOpacity={0.8}
                     style={{
                         position: 'absolute',
@@ -335,11 +339,6 @@ export default function CatalogGallery() {
                         borderRadius: 28,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.15,
-                        shadowRadius: 12,
-                        elevation: 8,
                         zIndex: 999,
                         borderWidth: 1,
                         borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
@@ -356,30 +355,37 @@ export default function CatalogGallery() {
 // Specialized Empty State Component
 // ----------------------------------------------------------------------
 
-function EmptyState({ onUpload, onReset, isDark }: { onUpload: () => void, onReset: () => void, isDark: boolean }) {
+function EmptyState({ onUpload, onViewSample, isDark, isCatalogSetup }: { onUpload: () => void, onViewSample: () => void, isDark: boolean, isCatalogSetup: boolean }) {
     return (
-        <View className="items-center justify-center py-10 px-6">
+        <View className="items-center justify-center px-4">
             <Image
-                source={require('../../assets/images/no-gallery.png')}
-                style={{ width: 200, height: 200 }}
+                source={require('../../assets/illustrations/gallery.png')}
+                style={{ width: 220, height: 220, marginBottom: 28 }}
                 resizeMode="contain"
             />
 
-            <Typography variant="h2" weight="bold" className="mb-3 text-center">Your Gallery is Empty</Typography>
-            <Typography variant="body" color="gray" className="text-center mb-10 px-4 leading-6">
-                Start building your digital showroom! Upload your best designs to reach more clients and showcase them in your catalog.
+            <Typography variant="h2" weight="bold" className="mb-3 text-center text-[22px] leading-8">
+                {isCatalogSetup ? "Your Gallery is Empty" : "Setup Digital Storefront"}
+            </Typography>
+            
+            <Typography variant="body" color="gray" className="text-center mb-8 px-2 text-[14px] leading-[22px]">
+                {isCatalogSetup 
+                    ? "Start building your digital showroom! Upload your best designs to reach more clients and showcase them in your catalog." 
+                    : "Create your professional storefront in seconds. Share your gallery link and easily take orders directly from your clients."}
             </Typography>
 
             <Button
                 onPress={onUpload}
-                className="w-full h-16 rounded-full bg-blue-600 border-0 mb-4"
+                className="w-full h-16 rounded-full bg-blue-600 border-0 mb-6"
                 textClassName="text-white text-[16px] font-bold"
             >
-                <Add size={20} color="white" className="mr-2" />
-                <Typography color="white" weight="bold" className="text-[16px]">Upload First Style</Typography>
+                {isCatalogSetup ? <Add size={20} color="white" className="mr-2" /> : <Setting4 size={20} color="white" className="mr-2" />}
+                <Typography color="white" weight="bold" className="text-[16px]">
+                    {isCatalogSetup ? "Upload First Style" : "Activate Storefront"}
+                </Typography>
             </Button>
 
-            <TouchableOpacity onPress={() => Linking.openURL('https://catalog.needleafrica.com/cg/cmnm8rm9z0001lb04jwwf74cm')} className="py-2">
+            <TouchableOpacity onPress={onViewSample} className="py-2">
                 <View className='flex-row items-center gap-2'>
                     <Typography color="gray" weight="bold" className="text-[14px]">View Sample Gallery</Typography>
                     <ArrowRight size={16} color="gray" variant="Linear" />

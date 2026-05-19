@@ -132,11 +132,18 @@ export default function Home() {
                         </Typography>
                     </View>
 
-                    <IconButton
-                        icon={<Notification size={20} color={isDark ? 'white' : 'black'} variant="Linear" />}
-                        onPress={() => router.push('/notifications')}
-                        variant="glass"
-                    />
+                    <View className="flex-row items-center gap-2">
+                        <IconButton
+                            icon={<Gallery size={20} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                            onPress={() => router.push('/extras/catalog-gallery')}
+                            variant="glass"
+                        />
+                        <IconButton
+                            icon={<Notification size={20} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                            onPress={() => router.push('/notifications')}
+                            variant="glass"
+                        />
+                    </View>
                 </View>
 
                 {/* 1. Wallet Hero Card (The "Balance") */}
@@ -205,7 +212,6 @@ export default function Home() {
                         <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => router.push('/measurement-templates/create')} />
                         <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => router.push('/(tabs)/customers/new')} />
                         <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => router.push('/(tabs)/orders/invoices/new')} />
-                        <QuickActionPill icon={<Gallery size={22} color="#ec4899" variant="Bulk" />} label="Catalog" bg="bg-pink-50 dark:bg-pink-900/20" onPress={() => router.push('/(tabs)/profile/catalog')} />
                     </ScrollView>
                 </View>
 

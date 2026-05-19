@@ -122,7 +122,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="catalog-explainer" options={{ headerShown: false, animation: 'fade', presentation: "card" }} />
                 <Stack.Screen name="ai-lab" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="extras" options={{ headerShown: false, animation: 'slide_from_right' }} />
-                <Stack.Screen name="notifications" options={{ presentation: 'modal', headerShown: false }} />
+                <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (

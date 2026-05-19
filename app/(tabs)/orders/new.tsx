@@ -400,10 +400,11 @@ export default function NewOrder() {
                     <View className="mb-12">
                         <Button
                             onPress={handleCreateOrder}
-                            className={`h-16 rounded-[18px] ${isDark ? 'bg-white' : 'bg-zinc-900'} shadow-lg shadow-black/10`}
-                            textClassName={isDark ? 'text-black font-bold text-lg' : 'text-white font-bold text-lg'}
+                            className="h-16 rounded-full bg-blue-500"
+                            textClassName="text-white font-bold text-lg"
                             isLoading={isCreating}
                             disabled={isCreating}
+                            style={{ borderWidth: 0 }}
                         >
                             Create Order
                         </Button>

@@ -50,7 +50,7 @@ export default function NotificationsScreen() {
                 <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-zinc-800">
                     <View className="flex-row items-center">
                         <IconButton
-                            icon={<Add size={24} color={isDark ? 'white' : 'black'} style={{ transform: [{ rotate: '45deg' }] }} />}
+                            icon={<ArrowLeft size={24} color={isDark ? 'white' : 'black'} />}
                             onPress={() => router.back()}
                             variant="ghost"
                             className="-ml-4"

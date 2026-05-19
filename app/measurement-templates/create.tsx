@@ -112,13 +112,16 @@ export default function CreateTemplateScreen() {
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                     
                     {/* Header Strip */}
-                    <View className="px-6 pt-2 pb-2">
+                    <View className="px-6 pt-2 pb-2 flex-row justify-between items-center">
                         <IconButton
                             icon={<ArrowLeft size={24} color={isDark ? "white" : "#1F2937"} />}
                             onPress={() => router.back()}
                             variant="ghost"
                             className="-ml-4"
                         />
+                        <TouchableOpacity onPress={() => router.push('/measurement-templates')}>
+                            <Typography variant="small" weight="bold" color="primary">Manage Templates</Typography>
+                        </TouchableOpacity>
                     </View>
 
                     <ScrollView
