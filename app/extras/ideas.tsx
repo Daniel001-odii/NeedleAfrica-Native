@@ -16,13 +16,14 @@ import { ArrowLeft, SearchNormal1, CloseCircle } from 'iconsax-react-native';
 import { FlashList } from '@shopify/flash-list';
 const MasonryFlashList = FlashList as any;
 import { WebView } from 'react-native-webview';
-import { Typography } from '../../../components/ui/Typography';
-import { IconButton } from '../../../components/ui/IconButton';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { StoreReviewService } from '../../../services/StoreReviewService';
-import { PinterestIcon, UnsplashIcon } from '../../../components/ui/CustomIcons';
-import axiosInstance from '../../../lib/axios';
+import { Typography } from '../../components/ui/Typography';
+import { IconButton } from '../../components/ui/IconButton';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { StoreReviewService } from '../../services/StoreReviewService';
+import { PinterestIcon, UnsplashIcon } from '../../components/ui/CustomIcons';
+import axiosInstance from '../../lib/axios';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 2;
@@ -256,7 +257,7 @@ export default function StyleInspirations() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-gray-50'}`} edges={['top']}>
             {/* Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center ${isDark ? 'border-b border-zinc-800' : 'border-b border-gray-100'}`}>
                 <IconButton
@@ -452,6 +453,6 @@ export default function StyleInspirations() {
                     )}
                 </View>
             )}
-        </View>
+        </SafeAreaView>
     );
 }

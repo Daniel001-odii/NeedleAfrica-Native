@@ -10,9 +10,6 @@ export default function ExtrasLayout() {
             }}
         >
             <Stack.Screen name="index" />
-            <Stack.Screen name="ideas" />
-            <Stack.Screen name="virtual-tryon" />
-            <Stack.Screen name="sketch-to-design" />
         </Stack>
     );
 }

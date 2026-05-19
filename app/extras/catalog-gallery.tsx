@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share } from 'iconsax-react-native';
-import { Typography } from '../../../components/ui/Typography';
-import { IconButton } from '../../../components/ui/IconButton';
-import { Button } from '../../../components/ui/Button';
-import { useTheme } from '../../../contexts/ThemeContext';
+import { Typography } from '../../components/ui/Typography';
+import { IconButton } from '../../components/ui/IconButton';
+import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
 
 export default function CatalogGallery() {
     const { isDark } = useTheme();
@@ -41,7 +40,7 @@ export default function CatalogGallery() {
 
     const fetchData = async () => {
         try {
-            const { default: axiosInstance } = await import('../../../lib/axios');
+            const { default: axiosInstance } = await import('../../lib/axios');
             const itemsRes = await axiosInstance.get('/catalog/items');
             setItems(itemsRes.data || []);
             const catalogRes = await axiosInstance.get('/catalog');
@@ -87,7 +86,7 @@ export default function CatalogGallery() {
         }
         setIsSaving(true);
         try {
-            const { default: axiosInstance } = await import('../../../lib/axios');
+            const { default: axiosInstance } = await import('../../lib/axios');
             await axiosInstance.post('/catalog/items', {
                 name,
                 price,
@@ -107,7 +106,7 @@ export default function CatalogGallery() {
 
     const handleDeleteItem = async (id: string) => {
         try {
-            const { default: axiosInstance } = await import('../../../lib/axios');
+            const { default: axiosInstance } = await import('../../lib/axios');
             await axiosInstance.delete(`/catalog/items/${id}`);
             setItems(items.filter(i => i.id !== id));
         } catch (error) {
@@ -126,7 +125,7 @@ export default function CatalogGallery() {
     const inputClass = `px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[15px] mb-4`;
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
             {/* Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -349,7 +348,7 @@ export default function CatalogGallery() {
                     <Eye size={28} color="#2563EB" variant="Bulk" />
                 </TouchableOpacity>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -361,7 +360,7 @@ function EmptyState({ onUpload, onReset, isDark }: { onUpload: () => void, onRes
     return (
         <View className="items-center justify-center py-10 px-6">
             <Image
-                source={require('../../../assets/images/no-gallery.png')}
+                source={require('../../assets/images/no-gallery.png')}
                 style={{ width: 200, height: 200 }}
                 resizeMode="contain"
             />

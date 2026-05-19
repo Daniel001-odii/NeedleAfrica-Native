@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'iconsax-react-native';
 import Svg, { Rect, Circle, Line, Defs, Pattern, Path } from 'react-native-svg';
-import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
+import { Typography } from '../../components/ui/Typography';
+import { Surface } from '../../components/ui/Surface';
 
 export default function PatternsList() {
     const router = useRouter();
@@ -76,7 +76,7 @@ export default function PatternsList() {
     ];
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             <View className="flex-row items-center p-4 border-b border-gray-100">
                 <TouchableOpacity onPress={() => router.back()} className="mr-4 p-2 bg-gray-50 rounded-full">
                     <ArrowLeft size={24} color="black" />

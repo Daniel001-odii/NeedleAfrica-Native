@@ -4,11 +4,11 @@ import { useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Refresh, Copy, Heart, Share, Colorfilter } from 'iconsax-react-native';
-import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
-import { IconButton } from '../../../components/ui/IconButton';
-import { Button } from '../../../components/ui/Button';
-import { useTheme } from '../../../contexts/ThemeContext';
+import { Typography } from '../../components/ui/Typography';
+import { Surface } from '../../components/ui/Surface';
+import { IconButton } from '../../components/ui/IconButton';
+import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../contexts/ThemeContext';
 import Toast from 'react-native-toast-message';
 import { usePostHog } from 'posthog-react-native';
 import { captureRef } from 'react-native-view-shot';
@@ -268,7 +268,7 @@ export default function PantoneScreen() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`} edges={['top']}>
             {/* Header */}
             <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -321,7 +321,6 @@ export default function PantoneScreen() {
                                 <Typography variant="caption" color="gray">Discover seasonal pairings for your next creation</Typography>
                             </View>
                             <View className="flex-row gap-2">
-                                {/* <IconButton icon={<Heart size={20} color={isDark ? "white" : "black"} />} variant="ghost" /> */}
                                 <IconButton
                                     icon={
                                         <Svg width="24" height="24" viewBox="0 0 24 24">
@@ -397,6 +396,6 @@ export default function PantoneScreen() {
                     <Refresh size={24} color={isDark ? "black" : "white"} />
                 </TouchableOpacity>
             </Animated.View>
-        </View>
+        </SafeAreaView>
     );
 }

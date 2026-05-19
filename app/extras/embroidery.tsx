@@ -3,11 +3,11 @@ import { View, ScrollView, Image, TouchableOpacity, FlatList, Dimensions, Pressa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, PenTool, MagicStar, Heart, Gallery, Filter } from 'iconsax-react-native';
-import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
-import { IconButton } from '../../../components/ui/IconButton';
-import { Button } from '../../../components/ui/Button';
-import { useTheme } from '../../../contexts/ThemeContext';
+import { Typography } from '../../components/ui/Typography';
+import { Surface } from '../../components/ui/Surface';
+import { IconButton } from '../../components/ui/IconButton';
+import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48 - 16) / 2;
@@ -77,7 +77,7 @@ export default function EmbroideryScreen() {
         : PATTERNS.filter(p => p.category === selectedCategory);
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`} edges={['top']}>
             {/* Header */}
             <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -176,6 +176,6 @@ export default function EmbroideryScreen() {
                     />
                 </Surface>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }

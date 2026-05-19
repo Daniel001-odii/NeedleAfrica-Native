@@ -36,7 +36,7 @@ export default function Extras() {
                 <View className="px-4 mt-6">
                     <TouchableOpacity
                         activeOpacity={0.9}
-                        onPress={() => router.push('/(tabs)/extras/catalog-gallery' as any)}
+                        onPress={() => router.push('/extras/catalog-gallery' as any)}
                         className={`overflow-hidden rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-blue-600 shadow-xl shadow-blue-200'}`}
                     >
                         <View className="p-6 z-10 w-3/4">
@@ -67,7 +67,7 @@ export default function Extras() {
                         icon={<Colorfilter size={24} color="#0D9488" variant="Bulk" />}
                         title="Pantone Generator"
                         desc="Fashion color palettes"
-                        onPress={() => router.push('/(tabs)/extras/pantone')}
+                        onPress={() => router.push('/extras/pantone')}
                     />
                     <ToolCard
                         icon={
@@ -89,7 +89,7 @@ export default function Extras() {
                         }
                         title="Style Inspo"
                         desc="Browse fashion ideas"
-                        onPress={() => router.push('/(tabs)/extras/ideas' as any)}
+                        onPress={() => router.push('/extras/ideas' as any)}
                     />
                     <ToolCard
                         icon={<PenTool size={24} color="#8B5CF6" variant="Bulk" />}
