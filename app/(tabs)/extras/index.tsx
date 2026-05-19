@@ -12,17 +12,20 @@ import {
     Setting4,
     Receipt21,
     MoneySend,
-    Gallery
+    Gallery,
+    Lock
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useRevenueCat } from '../../../hooks/useRevenueCat';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
-import { VirtualTryOnIcon } from '../../../components/ui/CustomIcons';
+import { VirtualTryOnIcon, UnsplashIcon, PinterestIcon } from '../../../components/ui/CustomIcons';
 
 export default function Extras() {
     const router = useRouter();
     const { isDark } = useTheme();
+    const { isPro } = useRevenueCat();
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -67,9 +70,25 @@ export default function Extras() {
                         onPress={() => router.push('/(tabs)/extras/pantone')}
                     />
                     <ToolCard
-                        icon={<TrendUp size={24} color="#F43F5E" variant="Bulk" />}
-                        title="Fashion Inspos"
-                        desc="Pinterest in-app"
+                        icon={
+                            <View style={{ width: 28, height: 28, position: 'relative' }}>
+                                <PinterestIcon size={20} color="#E60023" style={{ position: 'absolute', top: 0, left: 0 }} />
+                                <View style={{
+                                    position: 'absolute',
+                                    bottom: -2,
+                                    right: -2,
+                                    backgroundColor: isDark ? '#27272a' : '#f9fafb',
+                                    borderRadius: 6,
+                                    padding: 2,
+                                    borderWidth: 1.5,
+                                    borderColor: isDark ? '#18181b' : '#ffffff'
+                                }}>
+                                    <UnsplashIcon size={11} color={isDark ? '#ffffff' : '#000000'} />
+                                </View>
+                            </View>
+                        }
+                        title="Style Inspo"
+                        desc="Browse fashion ideas"
                         onPress={() => router.push('/(tabs)/extras/ideas' as any)}
                     />
                     <ToolCard
@@ -81,19 +100,21 @@ export default function Extras() {
                 </View>
 
                 {/* AI Innovations Section */}
-                <SectionLabel label="AI Labs" />
+                <SectionLabel label="AI Labs" showBadge />
                 <View className="px-4 gap-y-3 pb-20">
                     <AiToolRow
                         icon={<VirtualTryOnIcon size={24} color="#FF5678" />}
                         title="Virtual Try-on"
                         desc="Mock designs on client photos"
                         onPress={() => router.push('/(tabs)/extras/virtual-tryon')}
+                        isLocked={!isPro}
                     />
                     <AiToolRow
                         icon={<PenTool size={22} color="#FDB022" variant="Bulk" />}
                         title="Sketch to Design"
                         desc="Convert sketches to realistic fabric"
                         onPress={() => router.push('/(tabs)/extras/sketch-to-design')}
+                        isLocked={!isPro}
                     />
                 </View>
 
@@ -121,11 +142,18 @@ function QuickStat({ icon, label, value }: { icon: any, label: string, value: st
     );
 }
 
-function SectionLabel({ label }: { label: string }) {
+function SectionLabel({ label, showBadge }: { label: string, showBadge?: boolean }) {
     return (
-        <Typography variant="caption" color="gray" weight="bold" className="mt-10 mb-4 ml-6 uppercase tracking-widest">
-            {label}
-        </Typography>
+        <View className="flex-row items-center mt-10 mb-4 ml-6">
+            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">
+                {label}
+            </Typography>
+            {showBadge && (
+                <View className="ml-2.5 px-2 py-0.5 bg-indigo-500 rounded-lg">
+                    <Typography weight="bold" className="text-[9px] text-white">PRO</Typography>
+                </View>
+            )}
+        </View>
     );
 }
 
@@ -148,7 +176,7 @@ function ToolCard({ icon, title, desc, onPress, infoText }: { icon: any, title: 
     );
 }
 
-function AiToolRow({ icon, title, desc, onPress, infoText }: { icon: any, title: string, desc: string, onPress?: () => void, infoText?: string }) {
+function AiToolRow({ icon, title, desc, onPress, infoText, isLocked }: { icon: any, title: string, desc: string, onPress?: () => void, infoText?: string, isLocked?: boolean }) {
     const { isDark } = useTheme();
     const handlePress = () => onPress ? onPress() : Alert.alert(title, infoText);
 
@@ -158,15 +186,12 @@ function AiToolRow({ icon, title, desc, onPress, infoText }: { icon: any, title:
             activeOpacity={0.7}
             className={`flex-row items-center p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
         >
-            <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'}`}>
+            <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 ${isLocked ? 'bg-zinc-500/10' : (isDark ? 'bg-indigo-500/10' : 'bg-indigo-50')}`}>
                 {icon}
             </View>
             <View className="flex-1">
                 <View className="flex-row items-center mb-0.5">
-                    <Typography weight="bold" className="text-[15px]">{title}</Typography>
-                    <View className="ml-2 px-2 py-0.5 bg-indigo-500 rounded-lg">
-                        <Typography weight="bold" className="text-[9px] text-white">AI LABS</Typography>
-                    </View>
+                    <Typography weight="bold" className={`text-[15px] ${isLocked ? 'opacity-80' : ''}`}>{title}</Typography>
                 </View>
                 <Typography variant="small" color="gray" numberOfLines={1}>{desc}</Typography>
             </View>

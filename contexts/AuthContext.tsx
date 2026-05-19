@@ -45,6 +45,7 @@ interface User {
     bankName?: string;
     accountNumber?: string;
     accountName?: string;
+    styleInspoPreference?: 'unsplash' | 'pinterest';
 }
 
 interface AuthContextType {

@@ -227,9 +227,9 @@ export default function CustomerDetail() {
                             <View className="px-4 mt-4 mb-10">
                                 <Button
                                     onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
-                                    className="h-16 bg-[#007AFF] rounded-[18px] border-none shadow-lg shadow-blue-500/30"
+                                    className="h-16 bg-[#007AFF] rounded-full border-none shadow-none!"
                                     textClassName="font-bold text-[17px]"
-                                    style={{ borderWidth: 0 }}
+                                    style={{ borderWidth: 0, boxShadow: 'none' }}
                                 >
                                     <ShoppingCart size={20} color="white" variant="Bold" />
                                     <Typography weight="bold" color="white" className="ml-2">Create New Order</Typography>

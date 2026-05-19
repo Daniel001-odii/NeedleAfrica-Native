@@ -6,7 +6,7 @@ import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useSync } from '../../../hooks/useSync';
-import { User, Call, InfoCircle, ArrowLeft } from 'iconsax-react-native';
+import { User, Call, InfoCircle, ArrowLeft, UserCirlceAdd, UserAdd } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
 import { Button } from '../../../components/ui/Button';
@@ -20,7 +20,8 @@ import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useMeasurementTemplates, MeasurementTemplate } from '../../../hooks/useMeasurementTemplates';
 import Measurement from '../../../database/watermelon/models/Measurement';
-import { DocumentText, Add, CloseSquare } from 'iconsax-react-native';
+import { DocumentText, Add, CloseSquare, BookSquare } from 'iconsax-react-native';
+import * as Contacts from 'expo-contacts';
 
 export default function NewCustomer() {
     const { isDark } = useTheme();
@@ -57,6 +58,42 @@ export default function NewCustomer() {
     const [mValues, setMValues] = useState<Record<string, string>>({});
     const unit = user?.measurementUnit || 'inch';
 
+    const handleImportContact = async () => {
+        try {
+            if (Platform.OS === 'android') {
+                const { status } = await Contacts.requestPermissionsAsync();
+                if (status !== 'granted') {
+                    Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Please grant contacts permission.' });
+                    return;
+                }
+            }
+
+            const contact = await Contacts.presentContactPickerAsync();
+            if (contact) {
+                const name = contact.name || [contact.firstName, contact.lastName].filter(Boolean).join(' ');
+
+                let phone = '';
+                if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                    let rawPhone = contact.phoneNumbers[0].number || '';
+                    rawPhone = rawPhone.replace(/[^\d+]/g, '');
+                    if (rawPhone.startsWith('0')) {
+                        phone = '+234' + rawPhone.substring(1);
+                    } else if (rawPhone.length > 0 && !rawPhone.startsWith('+')) {
+                        phone = '+' + rawPhone;
+                    } else {
+                        phone = rawPhone;
+                    }
+                }
+
+                if (name) setFullName(name);
+                if (phone) setPhoneNumber(phone);
+            }
+        } catch (error) {
+            console.error('Error importing contact:', error);
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to import contact' });
+        }
+    };
+
     const handleSubmit = async (addMeasurementsFlag?: boolean | any) => {
         const _wantsMeasurements = typeof addMeasurementsFlag === 'boolean' ? addMeasurementsFlag : wantsMeasurements;
         setWantsMeasurements(_wantsMeasurements);
@@ -83,7 +120,7 @@ export default function NewCustomer() {
         try {
             setIsSubmitting(true);
             const customer = await addCustomer({ fullName, phoneNumber, gender, notes });
-            
+
             // Save measurements if template selected
             if (selectedTemplate && customer?.id && user?.id) {
                 const hasValues = Object.values(mValues).some(v => v.trim().length > 0);
@@ -92,7 +129,7 @@ export default function NewCustomer() {
                         title: mTitle || selectedTemplate.name || 'Initial Measurements',
                         values: mValues
                     });
-                    posthog.capture('measurement_captured', { 
+                    posthog.capture('measurement_captured', {
                         context: 'customer_creation',
                         template_name: selectedTemplate.name || 'Unknown'
                     });
@@ -102,14 +139,14 @@ export default function NewCustomer() {
             posthog.capture('customer_created', { gender, has_phone: !!phoneNumber });
             performSync().catch(console.error);
             Toast.show({ type: 'success', text1: 'Saved', text2: 'Customer and measurements added' });
-            
+
             router.replace('/(tabs)/customers/');
         } catch (error) {
-            confirm({ 
-                title: 'Error', 
-                message: 'Failed to save customer', 
-                confirmText: 'OK', 
-                onConfirm: () => { } 
+            confirm({
+                title: 'Error',
+                message: 'Failed to save customer',
+                confirmText: 'OK',
+                onConfirm: () => { }
             });
         } finally {
             setIsSubmitting(false);
@@ -146,7 +183,17 @@ export default function NewCustomer() {
                 <ScrollView contentContainerClassName="py-6 px-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                     {/* Basic Info Section */}
-                    <SectionLabel>Personal Information</SectionLabel>
+                    <View className="flex-row justify-between items-center mb-2 mx-4">
+                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest opacity-60">
+                            Personal Information
+                        </Typography>
+                        <TouchableOpacity onPress={handleImportContact} className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${isDark ? 'bg-zinc-800' : 'bg-blue-500/10'}`}>
+                            <UserAdd size={14} color={isDark ? '#60a5fa' : '#2563eb'} variant="Bulk" />
+                            <Typography variant="caption" className={isDark ? 'text-blue-400' : 'text-blue-600'} weight="bold">
+                                Add contact
+                            </Typography>
+                        </TouchableOpacity>
+                    </View>
                     <Surface variant="white" rounded="2xl" className="mb-6 overflow-hidden">
                         <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-50'}`}>
                             <User size={18} color="#94a3b8" variant="Bulk" />
@@ -247,7 +294,7 @@ export default function NewCustomer() {
                                     onChangeText={setMTitle}
                                 />
                             </View>
-                            
+
                             <View className="flex-row flex-wrap gap-3">
                                 {selectedTemplate.fields.map((field: string) => (
                                     <View key={field} style={{ width: '47%' }} className={`p-3 rounded-xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-zinc-100'}`}>

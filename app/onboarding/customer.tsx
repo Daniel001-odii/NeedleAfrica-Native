@@ -10,13 +10,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
-import { ArrowLeft } from 'iconsax-react-native';
+import { ArrowLeft, BookSquare, UserAdd, UserCirlceAdd } from 'iconsax-react-native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useCustomers } from '../../hooks/useCustomers';
 import { IconButton } from '../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import { TypingText } from '../../components/ui/TypingText';
+import * as Contacts from 'expo-contacts';
 
 const PHONE_INPUT_STYLE = {
     fontSize: 16,
@@ -38,6 +39,42 @@ export default function AddFirstCustomer() {
     const [phone, setPhone] = useState<string | undefined>(state.customer?.phone || undefined);
     const [gender, setGender] = useState(state.customer?.gender || '');
     const [isLoading, setIsLoading] = useState(false);
+
+    const handleImportContact = async () => {
+        try {
+            if (Platform.OS === 'android') {
+                const { status } = await Contacts.requestPermissionsAsync();
+                if (status !== 'granted') {
+                    Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Please grant contacts permission.' });
+                    return;
+                }
+            }
+
+            const contact = await Contacts.presentContactPickerAsync();
+            if (contact) {
+                const fullName = contact.name || [contact.firstName, contact.lastName].filter(Boolean).join(' ');
+
+                let phoneNumber = '';
+                if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                    let rawPhone = contact.phoneNumbers[0].number || '';
+                    rawPhone = rawPhone.replace(/[^\d+]/g, '');
+                    if (rawPhone.startsWith('0')) {
+                        phoneNumber = '+234' + rawPhone.substring(1);
+                    } else if (rawPhone.length > 0 && !rawPhone.startsWith('+')) {
+                        phoneNumber = '+' + rawPhone;
+                    } else {
+                        phoneNumber = rawPhone;
+                    }
+                }
+
+                if (fullName) setName(fullName);
+                if (phoneNumber) setPhone(phoneNumber);
+            }
+        } catch (error) {
+            console.error('Error importing contact:', error);
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to import contact' });
+        }
+    };
 
     const isFormValid = name.trim() && gender;
 
@@ -123,9 +160,17 @@ export default function AddFirstCustomer() {
 
                     {/* Group 1: Contact Information */}
                     <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Contact Details
-                        </Typography>
+                        <View className="flex-row justify-between items-center mb-2 px-4">
+                            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                                Contact Details
+                            </Typography>
+                            <TouchableOpacity onPress={handleImportContact} className="bg-brand-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1.5">
+                                <UserAdd size={14} color="#FF5678" variant="Bulk" />
+                                <Typography variant="caption" color="primary" weight="bold">
+                                    Add contact
+                                </Typography>
+                            </TouchableOpacity>
+                        </View>
                         <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
 
                             {/* Full Name Inline */}

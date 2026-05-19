@@ -3,7 +3,7 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "1.9.6",
+    "version": "1.9.8",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -83,7 +83,13 @@
       "expo-font",
       "@react-native-community/datetimepicker",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow NeedleX to access your contacts to easily add clients."
+        }
+      ]
     ],
     "extra": {
       "eas": {
