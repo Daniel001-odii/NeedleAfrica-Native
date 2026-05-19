@@ -48,6 +48,7 @@ function RootLayoutNav() {
         const inInvoices = segments[0] === 'invoices';
         const inNotifications = segments[0] === 'notifications';
         const inCatalogExplainer = segments[0] === 'catalog-explainer';
+        const inAiLab = segments[0] === 'ai-lab';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -56,7 +57,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -118,6 +119,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                 <Stack.Screen name="catalog-explainer" options={{ headerShown: false, animation: 'fade', presentation: "card" }} />
+                <Stack.Screen name="ai-lab" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="notifications" options={{ presentation: 'modal', headerShown: false }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>

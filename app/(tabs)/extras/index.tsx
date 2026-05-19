@@ -106,14 +106,14 @@ export default function Extras() {
                         icon={<VirtualTryOnIcon size={24} color="#FF5678" />}
                         title="Virtual Try-on"
                         desc="Mock designs on client photos"
-                        onPress={() => router.push('/(tabs)/extras/virtual-tryon')}
+                        onPress={() => router.push('/ai-lab/virtual-tryon')}
                         isLocked={!isPro}
                     />
                     <AiToolRow
                         icon={<PenTool size={22} color="#FDB022" variant="Bulk" />}
                         title="Sketch to Design"
                         desc="Convert sketches to realistic fabric"
-                        onPress={() => router.push('/(tabs)/extras/sketch-to-design')}
+                        onPress={() => router.push('/ai-lab/sketch-to-design')}
                         isLocked={!isPro}
                     />
                 </View>

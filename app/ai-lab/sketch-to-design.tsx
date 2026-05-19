@@ -1,31 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, Animated } from 'react-native';
+import { View, ScrollView, Image, TouchableOpacity, TextInput, ActivityIndicator, Alert, Dimensions, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, Magicpen, Share, Refresh, TickCircle, Crown, Star1 } from 'iconsax-react-native';
+import { ArrowLeft, Camera, Magicpen, Share, Refresh, PenTool, Colorfilter, Setting4, TickCircle, Crown, Star1 } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Typography } from '../../../components/ui/Typography';
-import { IconButton } from '../../../components/ui/IconButton';
-import { Button } from '../../../components/ui/Button';
-import { useTheme } from '../../../contexts/ThemeContext';
-import axiosInstance from '../../../lib/axios';
+import { Typography } from '../../components/ui/Typography';
+import { IconButton } from '../../components/ui/IconButton';
+import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../contexts/ThemeContext';
+import axiosInstance from '../../lib/axios';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import Toast from 'react-native-toast-message';
-import { VirtualTryOnIcon, SelectDesignIcon } from '../../../components/ui/CustomIcons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRevenueCat } from '../../../hooks/useRevenueCat';
-import { SubscriptionModal } from '../../../components/SubscriptionModal';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { useRevenueCat } from '../../hooks/useRevenueCat';
+import { SubscriptionModal } from '../../components/SubscriptionModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CAROUSEL_IMAGES = [
-    require('../../../assets/ai-lab/v-tryon.png'),
-    require('../../../assets/ai-lab/v-tryon2.png'),
-    require('../../../assets/ai-lab/v-tryon3.png'),
+    require('../../assets/ai-lab/sketch2image.png'),
+    require('../../assets/ai-lab/sketch2image2.png'),
+    require('../../assets/ai-lab/sketch2image3.png'),
 ];
 
-export default function VirtualTryOn() {
+export default function SketchToDesign() {
     const { isDark } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -66,13 +65,18 @@ export default function VirtualTryOn() {
         }
     }, [activeSlide, isPro]);
 
-    // Try-on States
-    const [personImage, setPersonImage] = useState<string | null>(null);
-    const [garmentImage, setGarmentImage] = useState<string | null>(null);
+    // Sketch States
+    const [sketchImage, setSketchImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [resultImage, setResultImage] = useState<string | null>(null);
 
-    const pickImage = async (type: 'person' | 'garment') => {
+    // Options
+    const [fabricType, setFabricType] = useState('');
+    const [colorScheme, setColorScheme] = useState('');
+    const [style, setStyle] = useState('');
+    const [details, setDetails] = useState('');
+
+    const pickSketch = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -82,17 +86,16 @@ export default function VirtualTryOn() {
         });
 
         if (!result.canceled && result.assets[0].uri) {
-            if (type === 'person') setPersonImage(result.assets[0].uri);
-            else setGarmentImage(result.assets[0].uri);
+            setSketchImage(result.assets[0].uri);
         }
     };
 
     const handleGenerate = async () => {
-        if (!personImage || !garmentImage) {
+        if (!sketchImage) {
             Toast.show({
                 type: 'error',
-                text1: 'Images Required',
-                text2: 'Please select both a person image and a garment image.',
+                text1: 'Sketch Required',
+                text2: 'Please upload a hand-drawn sketch first.',
             });
             return;
         }
@@ -100,22 +103,20 @@ export default function VirtualTryOn() {
         setIsLoading(true);
         try {
             const formData = new FormData();
-
+            
             // @ts-ignore
-            formData.append('personImage', {
-                uri: personImage,
-                name: 'person.jpg',
+            formData.append('sketchImage', {
+                uri: sketchImage,
+                name: 'sketch.jpg',
                 type: 'image/jpeg',
             });
 
-            // @ts-ignore
-            formData.append('garmentImage', {
-                uri: garmentImage,
-                name: 'garment.jpg',
-                type: 'image/jpeg',
-            });
+            if (fabricType) formData.append('fabricType', fabricType);
+            if (colorScheme) formData.append('colorScheme', colorScheme);
+            if (style) formData.append('style', style);
+            if (details) formData.append('additionalDetails', details);
 
-            const response = await axiosInstance.post('/ai/tryon', formData, {
+            const response = await axiosInstance.post('/ai/sketch-to-design', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -124,10 +125,10 @@ export default function VirtualTryOn() {
             if (response.data.success && response.data.result) {
                 setResultImage(`data:image/jpeg;base64,${response.data.result}`);
             } else {
-                throw new Error(response.data.error || 'Failed to generate try-on');
+                throw new Error(response.data.error || 'Failed to convert sketch');
             }
         } catch (error: any) {
-            console.error('Try-on error:', error);
+            console.error('Sketch error:', error);
             Alert.alert('Error', error.response?.data?.error || error.message);
         } finally {
             setIsLoading(false);
@@ -144,14 +145,16 @@ export default function VirtualTryOn() {
             }
 
             const base64Data = resultImage.split(',')[1];
-            const filename = `${FileSystem.cacheDirectory}tryon_${Date.now()}.jpg`;
+            const filename = `${FileSystem.cacheDirectory}design_${Date.now()}.jpg`;
             await FileSystem.writeAsStringAsync(filename, base64Data, { encoding: 'base64' });
-            await Sharing.shareAsync(filename, { mimeType: 'image/jpeg', dialogTitle: 'Share your try-on' });
+            await Sharing.shareAsync(filename, { mimeType: 'image/jpeg', dialogTitle: 'Share your design' });
         } catch (error: any) {
             console.error('Share error:', error);
             Alert.alert('Error', 'Failed to share image: ' + error.message);
         }
     };
+
+    const inputClass = `px-5 py-4 rounded-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-100 text-gray-900'} font-semibold text-[15px] mb-4`;
 
     // --- RENDER INTRODUCTORY & PAYWALL VIEW FOR FREE USERS ---
     if (!isPro) {
@@ -159,7 +162,7 @@ export default function VirtualTryOn() {
         const IMAGE_HEIGHT = IMAGE_WIDTH * 1.02;
 
         return (
-            <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`}>
+            <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
                 {/* Header */}
                 <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}>
                     <IconButton
@@ -167,14 +170,14 @@ export default function VirtualTryOn() {
                         onPress={() => router.back()}
                         variant="ghost"
                     />
-                    <Typography variant="h3" weight="bold" className="ml-1">Virtual Try-on</Typography>
+                    <Typography variant="h3" weight="bold" className="ml-1">Sketch to Design</Typography>
                 </View>
 
                 <ScrollView contentContainerClassName="p-6 pb-36" showsVerticalScrollIndicator={false}>
                     {/* Explanatory Typography */}
-                    <Typography variant="h2" weight="black" className="mb-2 text-2xl text-left font-bold">Bring Designs to Life</Typography>
+                    <Typography variant="h2" weight="black" className="mb-2 text-2xl text-left font-bold">From Pencil to Pattern</Typography>
                     <Typography variant="body" color="gray" className="mb-8 text-left leading-6">
-                        Render fabrics and patterns onto realistic model figures instantly with advanced AI.
+                        Convert hand-drawn drawings and outlines into photographic fashion renders instantly using AI.
                     </Typography>
 
                     {/* Visual Graphic Carousel Showcase Container */}
@@ -203,7 +206,7 @@ export default function VirtualTryOn() {
                             {CAROUSEL_IMAGES.map((_, idx) => (
                                 <View
                                     key={idx}
-                                    className={`h-2 rounded-full ${idx === activeSlide ? 'w-6 bg-indigo-600' : 'w-2 bg-gray-300 dark:bg-zinc-800'}`}
+                                    className={`h-2 rounded-full ${idx === activeSlide ? 'w-6 bg-amber-500' : 'w-2 bg-gray-300 dark:bg-zinc-800'}`}
                                 />
                             ))}
                         </View>
@@ -218,7 +221,7 @@ export default function VirtualTryOn() {
                     <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() => setIsSubModalVisible(true)}
-                        className="h-16 rounded-full bg-indigo-600 flex-row items-center justify-center"
+                        className="h-16 rounded-full bg-amber-500 flex-row items-center justify-center"
                         style={{ elevation: 0, shadowOpacity: 0 }}
                     >
                         <Crown size={20} color="white" variant="Bold" />
@@ -231,21 +234,21 @@ export default function VirtualTryOn() {
                     visible={isSubModalVisible}
                     onClose={() => setIsSubModalVisible(false)}
                 />
-            </View>
+            </SafeAreaView>
         );
     }
 
     // --- RENDER ORIGINAL AI WORKSPACE FOR PRO MEMBERS ---
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
             <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
                     variant="ghost"
                 />
-                <Typography variant="h3" weight="bold" className="ml-1">Virtual Try-on</Typography>
-                <View className="ml-3 px-2 py-0.5 bg-indigo-500 rounded-lg">
+                <Typography variant="h3" weight="bold" className="ml-1">Sketch to Design</Typography>
+                <View className="ml-3 px-2 py-0.5 bg-amber-500 rounded-lg">
                     <Typography weight="bold" className="text-[9px] text-white">PRO</Typography>
                 </View>
             </View>
@@ -254,50 +257,74 @@ export default function VirtualTryOn() {
                 {!resultImage ? (
                     <>
                         <Typography variant="body" color="gray" className="mb-6">
-                            Upload a photo of a person and a garment to see how they look together.
+                            Convert your hand-drawn sketches into realistic fashion designs using AI.
                         </Typography>
 
-                        <View className="gap-y-6 mb-8">
-                            <View>
-                                <Typography variant="caption" weight="bold" color="gray" className="mb-2 uppercase">Person Photo</Typography>
-                                <TouchableOpacity
-                                    onPress={() => pickImage('person')}
-                                    className={`w-full aspect-[16/9] rounded-3xl items-center justify-center border-2 border-dashed ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'} overflow-hidden`}
-                                >
-                                    {personImage ? (
-                                        <Image source={{ uri: personImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <>
-                                            <VirtualTryOnIcon size={40} color={isDark ? '#ff8fa3' : '#FF5678'} />
-                                            <Typography variant="small" color="gray" className="mt-2">Select Person</Typography>
-                                        </>
-                                    )}
-                                </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={pickSketch}
+                            className={`w-full aspect-[16/9] rounded-[32px] items-center justify-center border-2 border-dashed ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'} overflow-hidden mb-8`}
+                        >
+                            {sketchImage ? (
+                                <Image source={{ uri: sketchImage }} className="w-full h-full" resizeMode="cover" />
+                            ) : (
+                                <>
+                                    <View className="w-20 h-20 rounded-full bg-amber-500/10 items-center justify-center mb-4">
+                                        <PenTool size={40} color="#F59E0B" variant="Bulk" />
+                                    </View>
+                                    <Typography variant="h3" weight="bold">Upload Sketch</Typography>
+                                    <Typography variant="small" color="gray" className="mt-1">Tap to select from gallery</Typography>
+                                </>
+                            )}
+                        </TouchableOpacity>
+
+                        <View className="gap-y-1">
+                            <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase tracking-widest">Customization (Optional)</Typography>
+                            
+                            <View className="flex-row items-center mb-4">
+                                <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+                                    <Magicpen size={20} color="#FF5678" variant="Bulk" />
+                                </View>
+                                <TextInput 
+                                    placeholder="Fabric Type (e.g. Silk, Ankara, Denim)" 
+                                    value={fabricType} 
+                                    onChangeText={setFabricType} 
+                                    placeholderTextColor="#94a3b8"
+                                    className={`flex-1 ${inputClass} mb-0`} 
+                                />
                             </View>
 
-                            <View>
-                                <Typography variant="caption" weight="bold" color="gray" className="mb-2 uppercase">Garment Photo</Typography>
-                                <TouchableOpacity
-                                    onPress={() => pickImage('garment')}
-                                    className={`w-full aspect-[16/9] rounded-3xl items-center justify-center border-2 border-dashed ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'} overflow-hidden`}
-                                >
-                                    {garmentImage ? (
-                                        <Image source={{ uri: garmentImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <>
-                                            <SelectDesignIcon size={40} color={isDark ? '#ff8fa3' : '#FF5678'} />
-                                            <Typography variant="small" color="gray" className="mt-2">Select Design</Typography>
-                                        </>
-                                    )}
-                                </TouchableOpacity>
+                            <View className="flex-row items-center mb-4">
+                                <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+                                    <Colorfilter size={20} color="#10B981" variant="Bulk" />
+                                </View>
+                                <TextInput 
+                                    placeholder="Color Scheme (e.g. Emerald & Gold)" 
+                                    value={colorScheme} 
+                                    onChangeText={setColorScheme} 
+                                    placeholderTextColor="#94a3b8"
+                                    className={`flex-1 ${inputClass} mb-0`} 
+                                />
+                            </View>
+
+                            <View className="flex-row items-center mb-6">
+                                <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+                                    <Setting4 size={20} color="#F43F5E" variant="Bulk" />
+                                </View>
+                                <TextInput 
+                                    placeholder="Style (e.g. Elegant Evening Gown)" 
+                                    value={style} 
+                                    onChangeText={setStyle} 
+                                    placeholderTextColor="#94a3b8"
+                                    className={`flex-1 ${inputClass} mb-0`} 
+                                />
                             </View>
                         </View>
                     </>
                 ) : (
                     <View className="items-center">
-                        <Typography variant="h2" weight="bold" className="mb-2">Your Result</Typography>
+                        <Typography variant="h2" weight="bold" className="mb-2">Design Ready</Typography>
                         <Typography variant="body" color="gray" className="mb-6 text-center">
-                            AI has generated a preview of the person wearing the garment.
+                            Your sketch has been transformed into a photorealistic design.
                         </Typography>
 
                         <View className={`w-full aspect-[16/9] rounded-[32px] overflow-hidden mb-8 ${isDark ? 'bg-zinc-900' : 'bg-white shadow-xl shadow-gray-200'}`}>
@@ -305,44 +332,51 @@ export default function VirtualTryOn() {
                         </View>
 
                         <View className="flex-row gap-4 w-full">
-                            <TouchableOpacity
+                            <TouchableOpacity 
                                 onPress={() => setResultImage(null)}
-                                className={`flex-1 h-14 rounded-full flex-row items-center justify-center ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100'}`}
+                                className={`flex-1 h-14 rounded-full flex-row items-center justify-center ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border-gray-100'}`}
                                 style={{ elevation: 0, shadowOpacity: 0 }}
                             >
                                 <Refresh size={20} color={isDark ? '#e4e4e7' : '#3f3f46'} />
-                                <Typography className="ml-2 font-bold">Try Again</Typography>
+                                <Typography className="ml-2 font-bold">New Sketch</Typography>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
+                            <TouchableOpacity 
                                 onPress={handleShare}
-                                className="flex-1 h-14 rounded-full bg-indigo-600 flex-row items-center justify-center"
+                                className="flex-1 h-14 rounded-full bg-amber-500 flex-row items-center justify-center"
                                 style={{ elevation: 0, shadowOpacity: 0 }}
                             >
                                 <Share size={20} color="white" variant="Bold" />
-                                <Typography color="white" className="ml-2 font-bold">Share Result</Typography>
+                                <Typography color="white" className="ml-2 font-bold">Share Design</Typography>
                             </TouchableOpacity>
                         </View>
                     </View>
                 )}
             </ScrollView>
 
+
             {!resultImage && (
-                <View
+                <View 
                     style={{ paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 20 }}
                     className={`pt-4 border-t ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}
                 >
-                    <Button
-                        onPress={handleGenerate}
+                    <Button 
+                        onPress={handleGenerate} 
                         isLoading={isLoading}
-                        className="h-16 rounded-full bg-indigo-600 border-0 shadow-none"
+                        className="h-16 rounded-full bg-amber-500 border-0 shadow-none"
                         textClassName="text-white font-bold text-lg"
                         style={{ elevation: 0, shadowOpacity: 0 }}
                     >
-                        Generate Try-on
+                        Generate Design
                     </Button>
                 </View>
             )}
-        </View>
+
+            {/* Global Premium Subscription Modal */}
+            <SubscriptionModal
+                visible={isSubModalVisible}
+                onClose={() => setIsSubModalVisible(false)}
+            />
+        </SafeAreaView>
     );
 }
