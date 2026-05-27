@@ -384,13 +384,6 @@ function EmptyState({ onUpload, onViewSample, isDark, isCatalogSetup }: { onUplo
                     {isCatalogSetup ? "Upload First Style" : "Activate Storefront"}
                 </Typography>
             </Button>
-
-            <TouchableOpacity onPress={onViewSample} className="py-2">
-                <View className='flex-row items-center gap-2'>
-                    <Typography color="gray" weight="bold" className="text-[14px]">View Sample Gallery</Typography>
-                    <ArrowRight size={16} color="gray" variant="Linear" />
-                </View>
-            </TouchableOpacity>
         </View>
     );
 }

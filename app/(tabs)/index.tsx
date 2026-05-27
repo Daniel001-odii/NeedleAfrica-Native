@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -14,8 +14,17 @@ import { database } from '../../database/watermelon';
 import Svg, { Path } from 'react-native-svg';
 import { OnboardingChecklist } from '../../components/OnboardingChecklist';
 import RevenueHeroCard from '../../components/RevenueHeroCard';
+import { useCatalog } from '../../hooks/useCatalog';
+import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist';
 
 
+
+
+export function HugeiconsArrowRight01(props: any) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 24 24">{/* Icon from Huge Icons by Hugeicons - undefined */}<Path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 6s6 4.419 6 6s-6 6-6 6" /></Svg>
+    )
+}
 
 export default function Home() {
     const { user } = useAuth();
@@ -23,12 +32,16 @@ export default function Home() {
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
     const { isDark } = useTheme();
+    const { needsVisibility } = useCatalog();
     const [balanceVisible, setBalanceVisible] = useState(true);
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(true);
 
+    const todoChecklist = useTodoChecklist();
+
     const onRefresh = useCallback(async () => {
         await performSync();
-    }, [performSync]);
+        todoChecklist.refresh();
+    }, [performSync, todoChecklist.refresh]);
 
     // Stat Calculations
     const stats = useMemo(() => {
@@ -125,24 +138,31 @@ export default function Home() {
                 <View className="flex-row justify-between items-center mb-6">
                     <View>
                         <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
-                            {user?.businessName || 'My Atelier'}
+                          Hi, {user?.username || 'Tailor'} 👋
                         </Typography>
                         <Typography variant="caption" weight="bold" color="gray">
-                            {getGreeting()}, {user?.username || 'Tailor'}
+                            {getGreeting()}.
                         </Typography>
                     </View>
 
                     <View className="flex-row items-center gap-2">
                         <IconButton
-                            icon={<Gallery size={20} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                            icon={<Gallery size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
                             onPress={() => router.push('/extras/catalog-gallery')}
-                            variant="glass"
+                            variant="ghost"
+                            className='bg-gray-300/20 p-3'
                         />
-                        <IconButton
-                            icon={<Notification size={20} color={isDark ? 'white' : 'black'} variant="Linear" />}
-                            onPress={() => router.push('/notifications')}
-                            variant="glass"
-                        />
+                        <View>
+                            <IconButton
+                                icon={<MessageText size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                                onPress={() => router.push('/notifications')}
+                                variant="ghost"
+                                className='bg-gray-300/20 p-3'
+                            />
+                            {needsVisibility && (
+                                <View className="absolute top-1 right-1 w-3 h-3 rounded-full bg-red-500" />
+                            )}
+                        </View>
                     </View>
                 </View>
 
@@ -155,13 +175,12 @@ export default function Home() {
                     formatCurrency={formatCurrency}
                 />
 
-                {/* App Feature Banner: Free Fashion Website */}
+                {/* App Feature Banner: Free Business Website */}
                 {catalogBannerVisible && (
                     <View className="mb-6">
-                        <Pressable
-                            onPress={() => router.push('/(tabs)/profile/catalog')}
+                        <View
                             style={{
-                                backgroundColor: isDark ? '#1C1C1E' : '#FF5678', // Indigo for light mode, dark surface for dark mode
+                                backgroundColor: '#FF5678',
                                 borderRadius: 10,
                                 padding: 15,
                                 borderWidth: isDark ? 1 : 0,
@@ -174,10 +193,10 @@ export default function Home() {
                                 overflow: 'hidden'
                             }}
                         >
-                            <View className="flex-row items-center relative z-10">
-                                <View className="flex-1 px-4">
+                            <View className="flex-row items-center relative z-10 px-1">
+                                <View className="flex-1">
                                     <View className="flex-row items-center mb-1">
-                                        <Typography variant="body" weight="bold" color="white" className="text-[17px] mr-2">Free Business Website!</Typography>
+                                        <Typography variant="body" weight="bold" color="white" className="text-[17px] mr-2">Free website for your business! </Typography>
                                         <View className="bg-[#FFD700] px-2 py-0.5 rounded-full">
                                             <Typography variant="small" weight="black" color="black" className="text-[9px] uppercase tracking-tighter">NEW</Typography>
                                         </View>
@@ -186,20 +205,19 @@ export default function Home() {
                                         Get your professional storefront in seconds. Share your link and start taking orders now.
                                     </Typography>
                                 </View>
-                            </View>
 
-                            <TouchableOpacity
-                                onPress={() => setCatalogBannerVisible(false)}
-                                hitSlop={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                                className="absolute top-4 right-4 bg-white/10 w-7 h-7 rounded-full items-center justify-center z-20"
-                            >
-                                <Typography color="white" className="text-[12px] opacity-80" weight="bold">✕</Typography>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/profile/catalog')}
+                                    className="bg-white/20 w-10 h-10 rounded-full items-center justify-center ml-3"
+                                >
+                                    <ArrowRight size={20} color="white" variant="Linear" />
+                                </TouchableOpacity>
+                            </View>
 
                             {/* Sleek Background Glow Effect */}
                             <View className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/10 rounded-full" />
                             <View className="absolute -top-16 -left-16 w-48 h-48 bg-white/5 rounded-full" />
-                        </Pressable>
+                        </View>
                     </View>
                 )}
 
@@ -215,15 +233,74 @@ export default function Home() {
                     </ScrollView>
                 </View>
 
-                {!user?.onboardingCompleted && <OnboardingChecklist />}
+                {/* Todo Checklist Section */}
+                {todoChecklist.isVisible && (
+                    <View className={`mb-6 rounded-[24px] overflow-hidden ${isDark ? 'bg-[#1C1C1E] border border-zinc-800' : 'bg-white shadow-sm shadow-gray-200 border border-gray-100'}`}>
+                        {/* Header */}
+                        <View className={`px-5 py-3.5 flex-row items-center justify-between ${isDark ? 'border-b border-zinc-800' : 'border-b border-gray-100'}`}>
+                            <View className="flex-row items-center gap-2">
+                                <View className={`w-6 h-6 rounded-full items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-50'}`}>
+                                    <TickCircle size={14} color="#818CF8" variant="Bold" />
+                                </View>
+                                <Typography weight="bold" className={`text-[13px] ${isDark ? 'text-zinc-200' : 'text-gray-900'}`}>
+                                    Getting Started
+                                </Typography>
+                            </View>
+                            <Typography variant="small" color="gray" weight="bold" className="text-[11px]">
+                                {todoChecklist.completedCount}/{todoChecklist.totalCount}
+                            </Typography>
+                        </View>
 
+                        {/* Checklist Items */}
+                        {todoChecklist.items
+                            .filter(item => !item.completed)
+                            .slice(0, 4)
+                            .map((item, index) => {
+                                const remainingItems = todoChecklist.items.filter(i => !i.completed);
+                                const isLast = index === Math.min(remainingItems.length - 1, 3);
+                                return (
+                                    <TouchableOpacity
+                                        key={item.id}
+                                        onPress={() => {
+                                            todoChecklist.toggleItem(item.id);
+                                            router.push(item.route as any);
+                                        }}
+                                        className={`flex-row items-center px-5 py-4 ${!isLast ? (isDark ? 'border-b border-zinc-800/50' : 'border-b border-gray-50') : ''}`}
+                                        activeOpacity={0.6}
+                                    >
+                                        {/* Checkbox */}
+                                        <TouchableOpacity
+                                            onPress={() => todoChecklist.toggleItem(item.id)}
+                                            className={`w-6 h-6 rounded-lg items-center justify-center mr-3 border-2 ${
+                                                isDark ? 'border-zinc-600' : 'border-gray-300'
+                                            }`}
+                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                        >
+                                            <View className={`w-3.5 h-3.5 rounded-sm ${isDark ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+                                        </TouchableOpacity>
+                                        <View className="flex-1">
+                                            <Typography weight="bold" className="text-[14px]">{item.label}</Typography>
+                                            <Typography variant="small" color="gray" className="text-[12px]">{item.description}</Typography>
+                                        </View>
+                                        <ArrowRight size={14} color="#9CA3AF" />
+                                    </TouchableOpacity>
+                                );
+                            })}
 
+                        {/* Dismiss all link */}
+                        <TouchableOpacity
+                            onPress={todoChecklist.dismissAll}
+                            className={`px-5 py-3 items-center ${isDark ? 'border-t border-zinc-800/50' : 'border-t border-gray-50'}`}
+                            activeOpacity={0.6}
+                        >
+                            <Typography variant="small" color="gray" weight="bold" className="text-[11px]">
+                                Dismiss all
+                            </Typography>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 {/* Getting Started To-Do (shown when no clients or orders) */}
-                {/*   {showTodo && (
-                    
-                )} */}
-
                 {
                     showTodo ? (
                         <View className={`mb-6 rounded-[24px] overflow-hidden ${isDark ? 'bg-[#1C1C1E] border border-zinc-800' : 'bg-white shadow-sm shadow-gray-200'}`}>
@@ -265,65 +342,64 @@ export default function Home() {
                         </View>
                     ) : (
                         <>
-                            {/* 3. Operational Grid (High Density) */}
+                            {/* 3. Metrics Row (compact height) */}
                             <View className="flex-row gap-3 mb-3">
-                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
-                                    <View className={`w-9 h-9 rounded-2xl items-center justify-center ${isDark ? 'bg-orange-500/20' : 'bg-orange-50'}`}>
-                                        <Box size={18} color="#f97316" variant="Bulk" />
-                                    </View>
-                                    <View>
-                                        <View className="flex-row items-baseline">
-                                            <Typography variant="h2" weight="bold" className="text-3xl">{stats.pendingCount}</Typography>
-                                            <Typography color="gray" weight="bold" className="ml-1 text-[10px] uppercase">Active</Typography>
+                                <View className={`flex-1 p-4 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
+                                    <View className="flex-row items-center justify-between mb-2">
+                                        <View className={`w-8 h-8 rounded-2xl items-center justify-center ${isDark ? 'bg-orange-500/20' : 'bg-orange-50'}`}>
+                                            <Box size={16} color="#f97316" variant="Bulk" />
                                         </View>
-                                        <Typography variant="small" color="gray" weight="medium" className="text-[10px]">+{stats.newToday} since morning</Typography>
+                                        <Typography color="gray" weight="bold" className="text-[10px] uppercase">Active</Typography>
                                     </View>
+                                    <Typography variant="h2" weight="bold" className="text-2xl">{stats.pendingCount}</Typography>
+                                    <Typography variant="small" color="gray" weight="medium" className="text-[10px]">+{stats.newToday} today</Typography>
                                 </View>
 
-                                <View className={`flex-1 p-5 rounded-[28px] justify-between h-40 border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
-                                    <View className={`w-9 h-9 rounded-2xl items-center justify-center ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
-                                        <DollarCircle size={18} color="#3b82f6" variant="Bulk" />
+                                <View className={`flex-1 p-4 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}>
+                                    <View className="flex-row items-center justify-between mb-2">
+                                        <View className={`w-8 h-8 rounded-2xl items-center justify-center ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
+                                            <DollarCircle size={16} color="#3b82f6" variant="Bulk" />
+                                        </View>
+                                        <Typography color="gray" weight="bold" className="text-[10px] uppercase">/ Week</Typography>
                                     </View>
-                                    <View>
-                                        <Typography variant="h3" weight="bold" className="text-lg">{formatCurrency(stats.revenue)}</Typography>
-                                        <Typography color="gray" weight="bold" className="text-[10px] uppercase">Income / Week</Typography>
-                                    </View>
+                                    <Typography variant="h3" weight="bold" className="text-lg">{formatCurrency(stats.revenue)}</Typography>
+                                    <Typography variant="small" color="gray" weight="medium" className="text-[10px]">Income</Typography>
                                 </View>
                             </View>
 
-                            {/* 4. Strategic Cards (Full Width) */}
-                            <View className="gap-3">
+                            {/* 4. Strategic Cards (same row) */}
+                            <View className="flex-row gap-3 mb-3">
                                 <Pressable
                                     onPress={() => router.push('/(tabs)/orders/')}
-                                    className={`flex-row items-center p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
+                                    className={`flex-1 p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
                                 >
-                                    <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                                        <Timer1 size={22} color="#FF5678" variant="Bulk" />
+                                    <View className="flex-row items-start justify-between mb-3">
+                                        <View className={`w-10 h-10 rounded-full items-center justify-center ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                                            <Timer1 size={20} color="#FF5678" variant="Bulk" />
+                                        </View>
+                                        <ArrowRight size={16} color="#9CA3AF" variant="Linear" style={{ transform: [{ rotate: '-45deg' }] }} />
                                     </View>
-                                    <View className="flex-1">
-                                        <Typography variant="small" color="gray" weight="bold" className="text-[10px] uppercase mb-0.5">Next Deadline</Typography>
-                                        <Typography variant="body" weight="bold" numberOfLines={1}>
-                                            {stats.nextDeadline ? stats.nextDeadline.styleName : 'No pending tasks'}
-                                        </Typography>
-                                        <Typography variant="small" color={stats.dueSoon > 0 ? 'red' : 'gray'} weight="semibold" className="text-[11px]">
-                                            {stats.nextDeadline ? `Due ${new Date(stats.nextDeadline.deliveryDate!).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}` : 'Free schedule'}
-                                        </Typography>
-                                    </View>
-                                    <ArrowRight size={16} color="#9CA3AF" />
+                                    <Typography variant="small" color="gray" weight="bold" className="text-[10px] uppercase mb-0.5">Next Deadline</Typography>
+                                    <Typography variant="body" weight="bold" numberOfLines={1}>
+                                        {stats.nextDeadline ? stats.nextDeadline.styleName : 'All clear'}
+                                    </Typography>
+                                    <Typography variant="small" color={stats.dueSoon > 0 ? 'red' : 'gray'} weight="semibold" className="text-[11px] mt-0.5">
+                                        {stats.nextDeadline ? `Due ${new Date(stats.nextDeadline.deliveryDate!).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}` : 'No deadlines'}
+                                    </Typography>
                                 </Pressable>
 
                                 <Pressable
                                     onPress={() => router.push('/(tabs)/customers/')}
-                                    className={`flex-row items-center p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
+                                    className={`flex-1 p-5 rounded-[28px] border border-gray-200 dark:border-zinc-800 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white'}`}
                                 >
-                                    <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                        <People size={22} color="#6B7280" variant="Bulk" />
+                                    <View className="flex-row items-start justify-between mb-3">
+                                        <View className={`w-10 h-10 rounded-full items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+                                            <People size={20} color="#6B7280" variant="Bulk" />
+                                        </View>
+                                        <ArrowRight size={16} color="#9CA3AF" variant="Linear" style={{ transform: [{ rotate: '-45deg' }] }} />
                                     </View>
-                                    <View className="flex-1">
-                                        <Typography variant="body" weight="bold">{stats.totalCustomers} Active Clients</Typography>
-                                        <Typography variant="small" color="gray" weight="medium">Maintain your measurement base</Typography>
-                                    </View>
-                                    <ArrowRight size={16} color="#9CA3AF" />
+                                    <Typography variant="h2" weight="bold" className="text-2xl mb-0.5">{stats.totalCustomers}</Typography>
+                                    <Typography variant="small" color="gray" weight="medium">Active Clients</Typography>
                                 </Pressable>
                             </View>
                         </>

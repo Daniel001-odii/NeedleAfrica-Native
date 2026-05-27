@@ -3,10 +3,9 @@ import { View, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Pl
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
-import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
-import { ArrowLeft, Add, Trash, Ruler } from 'iconsax-react-native';
+import { ArrowLeft, Add, Trash, ArrowRight2 } from 'iconsax-react-native';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
 import { useResourceLimits } from '../../hooks/useResourceLimits';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -26,7 +25,7 @@ export default function CreateTemplateScreen() {
     const { isDark } = useTheme();
 
     const [name, setName] = useState('');
-    const [fields, setFields] = useState<string[]>(['', '', '', '']); // Start with 4 empty fields
+    const [fields, setFields] = useState<string[]>(['', '', '', '']);
     const [submitting, setSubmitting] = useState(false);
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [limitModalData, setLimitModalData] = useState({
@@ -76,7 +75,6 @@ export default function CreateTemplateScreen() {
             return;
         }
 
-        // Check resource limits for free tier
         if (isFree) {
             const limitCheck = canCreate('templates');
             if (!limitCheck.allowed && !proceedAnyway) {
@@ -107,21 +105,18 @@ export default function CreateTemplateScreen() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 bg-white`}>
             <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                     
-                    {/* Header Strip */}
-                    <View className="px-6 pt-2 pb-2 flex-row justify-between items-center">
+                    {/* Simple Header */}
+                    <View className="px-6 pt-3 pb-2 flex-row justify-between items-center">
                         <IconButton
-                            icon={<ArrowLeft size={24} color={isDark ? "white" : "#1F2937"} />}
+                            icon={<ArrowLeft size={24} color="#1F2937" />}
                             onPress={() => router.back()}
                             variant="ghost"
                             className="-ml-4"
                         />
-                        <TouchableOpacity onPress={() => router.push('/measurement-templates')}>
-                            <Typography variant="small" weight="bold" color="primary">Manage Templates</Typography>
-                        </TouchableOpacity>
                     </View>
 
                     <ScrollView
@@ -129,11 +124,11 @@ export default function CreateTemplateScreen() {
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
-                        <View className="mb-10 mt-2">
+                        <View className="mb-8 mt-2">
                             <TypingText 
                                 variant="h1" 
                                 weight="bold" 
-                                className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`} 
+                                className="mb-2 text-gray-900" 
                                 text="New Template" 
                                 speed={30} 
                             />
@@ -142,81 +137,84 @@ export default function CreateTemplateScreen() {
                             </Typography>
                         </View>
 
-                        {/* Section 1: Template Identity */}
+                        {/* Section 1: Template Name */}
                         <View className="mb-8">
                             <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                                 Template Details
                             </Typography>
-                            <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
-                                <View className={`flex-row items-center px-5 py-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                    <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
-                                        <Ruler size={18} color="#FF5678" variant="Bulk" />
-                                    </View>
+                            <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+                                <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
+                                    <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                        Name
+                                    </Typography>
                                     <TextInput
-                                        className={`flex-1 text-[16px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                        placeholder="Template Name (e.g. Kaftan)"
-                                        placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
+                                        className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                        placeholder="e.g. Kaftan, Shirt..."
+                                        placeholderTextColor="#D1D5DB"
                                         value={name}
                                         onChangeText={setName}
                                     />
                                 </View>
                             </View>
-                            <Typography variant="caption" color="gray" className="ml-5 mt-2 opacity-60">
-                                Give your template a name that describes the style.
-                            </Typography>
                         </View>
 
-                        {/* Section 2: Fields Configuration */}
+                        {/* Section 2: Measurement Fields */}
                         <View className="mb-8">
-                            <View className="flex-row justify-between items-center ml-4 mb-2 pr-2">
+                            <View className="flex-row items-center justify-between ml-4 mb-2">
                                 <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
                                     Measurement Fields ({fields.length})
                                 </Typography>
-                                <TouchableOpacity onPress={handleAddField}>
-                                    <Typography variant="caption" weight="bold" className={isDark ? "text-indigo-400" : "text-blue-600"}>
-                                        + ADD FIELD
-                                    </Typography>
-                                </TouchableOpacity>
                             </View>
 
-                            <View className={`rounded-[24px] overflow-hidden border ${isDark ? 'bg-surface-dark border-border-dark' : 'bg-white border-gray-100 shadow-sm'}`}>
+                            <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
                                 {fields.map((field, index) => {
                                     const isLast = index === fields.length - 1;
                                     return (
-                                        <View key={index} className={`flex-row items-center px-5 py-3.5 ${!isLast ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}>
-                                            <Typography weight="bold" color="gray" className="w-6 text-[12px] opacity-40">
-                                                {index + 1}
+                                        <View key={index} className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${!isLast ? 'border-b border-gray-50' : ''}`}>
+                                            <TouchableOpacity onPress={() => handleRemoveField(index)} className="mr-3 p-1">
+                                                <View className="w-5 h-5 rounded-full bg-red-500 items-center justify-center">
+                                                    <View className="w-2.5 h-[2px] bg-white rounded-full" />
+                                                </View>
+                                            </TouchableOpacity>
+                                            <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                                Field {index + 1}
                                             </Typography>
                                             <TextInput
-                                                className={`flex-1 text-[15px] font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                                placeholder={`Field Name (e.g. Waist, Length)`}
-                                                placeholderTextColor={isDark ? "#4B5563" : "#D1D5DB"}
+                                                className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                                placeholder="e.g. Waist, Length..."
+                                                placeholderTextColor="#D1D5DB"
                                                 value={field}
                                                 onChangeText={(text) => handleFieldChange(text, index)}
                                             />
-                                            {fields.length > 1 && (
-                                                <TouchableOpacity 
-                                                    onPress={() => handleRemoveField(index)}
-                                                    className={`p-2 rounded-full ${isDark ? 'bg-red-900/10' : 'bg-red-50'}`}
-                                                >
-                                                    <Trash size={16} color="#EF4444" />
-                                                </TouchableOpacity>
-                                            )}
                                         </View>
                                     );
                                 })}
+
+                                {/* Add Field Inline Row */}
+                                <TouchableOpacity
+                                    onPress={handleAddField}
+                                    className="flex-row items-center px-4 py-1.5 min-h-[56px] active:bg-gray-50"
+                                >
+                                    <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center mr-3">
+                                        <View className="w-2.5 h-[2px] bg-white rounded-full absolute" />
+                                        <View className="w-[2px] h-2.5 bg-white rounded-full absolute" />
+                                    </View>
+                                    <Typography weight="semibold" className="text-brand-primary text-[16px]">
+                                        Add custom field
+                                    </Typography>
+                                </TouchableOpacity>
                             </View>
                         </View>
 
                     </ScrollView>
 
-                    {/* Sticky Action Bar */}
-                    <View className={`px-6 py-4 border-t ${isDark ? 'bg-background-dark border-border-dark' : 'bg-white border-gray-100'}`}>
+                    {/* Bottom Action Bar */}
+                    <View className="p-6 bg-white pt-2 border-t border-gray-50">
                         <Button
                             onPress={handleSave}
                             isLoading={submitting}
                             disabled={!name.trim() || fields.filter(f => f.trim()).length === 0}
-                            className={`h-16 rounded-full border-0 ${(!name.trim() || fields.filter(f => f.trim()).length === 0) ? (isDark ? 'bg-zinc-800' : 'bg-gray-100') : 'bg-blue-600'}`}
+                            className={`h-14 rounded-full border-0 shadow-none ${(!name.trim() || fields.filter(f => f.trim()).length === 0) ? 'bg-gray-200' : 'bg-brand-primary'}`}
                             textClassName={`text-lg font-bold ${(!name.trim() || fields.filter(f => f.trim()).length === 0) ? 'text-gray-400' : 'text-white'}`}
                         >
                             Save Template

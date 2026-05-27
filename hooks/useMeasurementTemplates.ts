@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { Q } from '@nozbe/watermelondb';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import MeasurementTemplate from '../database/watermelon/models/MeasurementTemplate';
 import { useAuth } from '../contexts/AuthContext';
 import { useSync } from './useSync';
+import { PRESET_MEASUREMENT_TEMPLATES } from '../constants/presetMeasurementTemplates';
 export { MeasurementTemplate };
+
+const presetSeedKey = (userId: string) => `@preset_templates_seeded_${userId}`;
 
 export function useMeasurementTemplates() {
     const database = useDatabase();
@@ -12,6 +16,35 @@ export function useMeasurementTemplates() {
     const { sync } = useSync();
     const [templates, setTemplates] = useState<MeasurementTemplate[]>([]);
     const [loading, setLoading] = useState(true);
+    const seedingRef = useRef(false);
+
+    const seedPresetTemplates = useCallback(async () => {
+        if (!user || seedingRef.current) return;
+
+        const alreadySeeded = await AsyncStorage.getItem(presetSeedKey(user.id));
+        if (alreadySeeded) return;
+
+        const existing = await database.get<MeasurementTemplate>('measurement_templates').query(
+            Q.where('user_id', user.id),
+            Q.where('deleted_at', Q.eq(null))
+        ).fetchCount();
+
+        if (existing > 0) {
+            await AsyncStorage.setItem(presetSeedKey(user.id), 'true');
+            return;
+        }
+
+        seedingRef.current = true;
+        try {
+            for (const preset of PRESET_MEASUREMENT_TEMPLATES) {
+                await MeasurementTemplate.createSyncable(database, user.id, preset);
+            }
+            await AsyncStorage.setItem(presetSeedKey(user.id), 'true');
+            sync().catch(console.error);
+        } finally {
+            seedingRef.current = false;
+        }
+    }, [database, user, sync]);
 
     const fetchTemplates = useCallback(() => {
         if (!user) return () => { };
@@ -29,6 +62,12 @@ export function useMeasurementTemplates() {
 
         return () => subscription.unsubscribe();
     }, [database, user]);
+
+    useEffect(() => {
+        if (user) {
+            seedPresetTemplates().catch(console.error);
+        }
+    }, [user, seedPresetTemplates]);
 
     useEffect(() => {
         const unsubscribe = fetchTemplates();

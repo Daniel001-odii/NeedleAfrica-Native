@@ -14,7 +14,8 @@ import {
     ArrowRight2,
     People,
     Gallery,
-    Star
+    Star,
+    Chart2
 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
@@ -139,6 +140,12 @@ export default function Profile() {
                             icon={<Gallery size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Catalog Storefront"
                             onPress={() => router.push('/(tabs)/profile/catalog')}
+                            isDark={isDark}
+                        />
+                        <ProfileItem
+                            icon={<Chart2 size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
+                            title="Business Analytics"
+                            onPress={() => router.push('/(tabs)/profile/analytics')}
                             isDark={isDark}
                             isLast
                         />

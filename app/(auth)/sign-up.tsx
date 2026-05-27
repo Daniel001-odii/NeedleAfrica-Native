@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft, Shop, Call } from 'iconsax-react-native';
+import { Sms, Lock, User, Eye, EyeSlash, ArrowLeft } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +12,8 @@ import { AppleSignInButton } from '../../components/auth/AppleSignInButton';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 
 import Toast from 'react-native-toast-message';
+import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
+import PhoneInput from 'react-phone-number-input/react-native-input';
 
 export default function SignUp() {
     const [name, setName] = useState('');
@@ -19,6 +21,7 @@ export default function SignUp() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState<CountryCode>('NG');
     const [showPassword, setShowPassword] = useState(false);
     const { signUp, signInWithGoogle, signInWithApple, isActionLoading } = useAuth();
     const { isDark } = useTheme();
@@ -141,16 +144,38 @@ export default function SignUp() {
 
                     <View className="mb-6">
                         <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Phone Number</Typography>
-                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-4 h-16">
-                            <Call size={20} color="#6B7280" variant="Bulk" />
-                            <TextInput
-                                className="flex-1 ml-3 h-full font-semibold text-dark dark:text-white"
-                                placeholder="Your Phone Number"
-                                placeholderTextColor="#9CA3AF"
-                                value={phoneNumber}
-                                onChangeText={setPhoneNumber}
-                                keyboardType="phone-pad"
+                        <Surface variant="muted" rounded="2xl" className="flex-row items-center px-2 h-16">
+                            <CountryPicker
+                                countryCode={countryCode}
+                                withFilter
+                                withFlag
+                                withCallingCodeButton
+                                withEmoji
+                                onSelect={(country) => setCountryCode(country.cca2)}
+                                theme={isDark ? {
+                                    onBackgroundTextColor: '#ffffff',
+                                    backgroundColor: '#1C1C1E',
+                                    filterPlaceholderTextColor: '#9CA3AF',
+                                } : {
+                                    onBackgroundTextColor: '#111827',
+                                }}
+                                containerButtonStyle={{ paddingHorizontal: 10 }}
                             />
+                            <View className={`w-px h-8 mx-1 ${isDark ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+                            <View className="flex-1 h-full justify-center pr-3">
+                                <PhoneInput
+                                    style={{
+                                        color: isDark ? 'white' : '#111827',
+                                        fontWeight: '600',
+                                        fontSize: 16,
+                                    }}
+                                    placeholder="801 234 5678"
+                                    placeholderTextColor="#9CA3AF"
+                                    country={countryCode}
+                                    value={phoneNumber}
+                                    onChange={(val) => setPhoneNumber(val || '')}
+                                />
+                            </View>
                         </Surface>
                     </View>
 

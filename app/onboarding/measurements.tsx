@@ -14,6 +14,7 @@ import { Ruler, ArrowRight2, MagicStar, Star, ArrowLeft } from 'iconsax-react-na
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useMeasurements } from '../../hooks/useMeasurements';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
+import { useAuth } from '../../contexts/AuthContext';
 import { IconButton } from '../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
 import { TypingText } from '../../components/ui/TypingText';
@@ -64,6 +65,7 @@ export function HugeiconsDress03({ color = '#8B5CF6' }: { color?: string }) {
 import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
 
 export default function AddMeasurements() {
+    const { user, updateProfile } = useAuth();
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addMeasurement } = useMeasurements();
     const { addTemplate } = useMeasurementTemplates();
@@ -77,6 +79,7 @@ export default function AddMeasurements() {
     const [isAddingField, setIsAddingField] = useState(false);
     const [newFieldName, setNewFieldName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [unit, setUnit] = useState<'in' | 'cm'>(user?.measurementUnit || 'in');
 
     const handleSelectTemplate = (template: any) => {
         setSelectedTemplate(template);
@@ -114,6 +117,8 @@ export default function AddMeasurements() {
 
         setIsLoading(true);
         try {
+            await updateProfile({ measurementUnit: unit });
+
             const createdTemplate = await addTemplate({
                 name: selectedTemplate.name,
                 fields: fields
@@ -128,7 +133,7 @@ export default function AddMeasurements() {
 
                 updateState({
                     template: { id: createdTemplate.id, name: createdTemplate.name, fields: fields },
-                    measurement: { values: measurementValues },
+                    measurement: { values: measurementValues, unit },
                     step: 4
                 });
 
@@ -249,9 +254,29 @@ export default function AddMeasurements() {
                     </View>
 
                     <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            {selectedTemplate?.name} Details
-                        </Typography>
+                        <View className="flex-row items-center justify-between ml-4 mb-2">
+                            <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                                {selectedTemplate?.name} Details
+                            </Typography>
+                            <View className="flex-row bg-gray-100 rounded-lg p-0.5 mr-2">
+                                <TouchableOpacity 
+                                    onPress={() => setUnit('in')}
+                                    className={`px-3 py-1 rounded-md ${unit === 'in' ? 'bg-white shadow-sm' : ''}`}
+                                >
+                                    <Typography weight="bold" className={`text-[11px] ${unit === 'in' ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        INCH
+                                    </Typography>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    onPress={() => setUnit('cm')}
+                                    className={`px-3 py-1 rounded-md ${unit === 'cm' ? 'bg-white shadow-sm' : ''}`}
+                                >
+                                    <Typography weight="bold" className={`text-[11px] ${unit === 'cm' ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        CM
+                                    </Typography>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                         <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
 
                             {/* Measurement Fields */}
@@ -278,7 +303,7 @@ export default function AddMeasurements() {
                                             onChangeText={(val) => setMeasurementValues(prev => ({ ...prev, [field]: val }))}
                                         />
                                         <Typography weight="medium" className="text-gray-400 ml-2 text-[15px]">
-                                            in
+                                            {unit}
                                         </Typography>
                                     </View>
                                 </View>

@@ -1,31 +1,25 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
-    Mirror,
-    Scan,
     DocumentText,
     PenTool,
-    TrendUp,
     Colorfilter,
-    ArrowRight2,
-    Setting4,
-    Receipt21,
-    MoneySend,
     Gallery,
-    Lock
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useRevenueCat } from '../../../hooks/useRevenueCat';
 import { Typography } from '../../../components/ui/Typography';
-import { IconButton } from '../../../components/ui/IconButton';
 import { VirtualTryOnIcon, UnsplashIcon, PinterestIcon } from '../../../components/ui/CustomIcons';
 
 export default function Extras() {
     const router = useRouter();
     const { isDark } = useTheme();
     const { isPro } = useRevenueCat();
+
+    const handleAiPress = (feature: 'virtual-tryon' | 'sketch-to-design') => {
+        router.push(feature === 'virtual-tryon' ? '/ai-lab/virtual-tryon' : '/ai-lab/sketch-to-design');
+    };
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -61,7 +55,7 @@ export default function Extras() {
                         icon={<DocumentText size={24} color="#10B981" variant="Bulk" />}
                         title="Invoice Editor"
                         desc="Billing and client receipts"
-                        onPress={() => router.push('/(tabs)/orders/invoices' as any)}
+                        onPress={() => router.push('/(tabs)/orders/invoices/settings' as any)}
                     />
                     <ToolCard
                         icon={<Colorfilter size={24} color="#0D9488" variant="Bulk" />}
@@ -94,27 +88,27 @@ export default function Extras() {
                     <ToolCard
                         icon={<PenTool size={24} color="#8B5CF6" variant="Bulk" />}
                         title="Monogram"
-                        desc="Embroidery inspirations"
-                        infoText="Browse unique monogram designs and patterns. (Coming Soon)"
+                        desc="Design your custom monogram"
+                        onPress={() => router.push('/extras/monogram' as any)}
                     />
                 </View>
 
-                {/* AI Innovations Section */}
+                {/* AI Labs Section */}
                 <SectionLabel label="AI Labs" showBadge />
-                <View className="px-4 gap-y-3 pb-20">
-                    <AiToolRow
+                <View className="flex-row flex-wrap px-4 justify-between">
+                    <ToolCard
                         icon={<VirtualTryOnIcon size={24} color="#FF5678" />}
                         title="Virtual Try-on"
                         desc="Mock designs on client photos"
-                        onPress={() => router.push('/ai-lab/virtual-tryon')}
-                        isLocked={!isPro}
+                        onPress={() => handleAiPress('virtual-tryon')}
+                        infoText="Available on Pro plan"
                     />
-                    <AiToolRow
-                        icon={<PenTool size={22} color="#FDB022" variant="Bulk" />}
+                    <ToolCard
+                        icon={<PenTool size={24} color="#FDB022" variant="Bulk" />}
                         title="Sketch to Design"
                         desc="Convert sketches to realistic fabric"
-                        onPress={() => router.push('/ai-lab/sketch-to-design')}
-                        isLocked={!isPro}
+                        onPress={() => handleAiPress('sketch-to-design')}
+                        infoText="Available on Pro plan"
                     />
                 </View>
 
@@ -176,26 +170,3 @@ function ToolCard({ icon, title, desc, onPress, infoText }: { icon: any, title: 
     );
 }
 
-function AiToolRow({ icon, title, desc, onPress, infoText, isLocked }: { icon: any, title: string, desc: string, onPress?: () => void, infoText?: string, isLocked?: boolean }) {
-    const { isDark } = useTheme();
-    const handlePress = () => onPress ? onPress() : Alert.alert(title, infoText);
-
-    return (
-        <TouchableOpacity
-            onPress={handlePress}
-            activeOpacity={0.7}
-            className={`flex-row items-center p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
-        >
-            <View className={`w-12 h-12 items-center justify-center rounded-2xl mr-4 ${isLocked ? 'bg-zinc-500/10' : (isDark ? 'bg-indigo-500/10' : 'bg-indigo-50')}`}>
-                {icon}
-            </View>
-            <View className="flex-1">
-                <View className="flex-row items-center mb-0.5">
-                    <Typography weight="bold" className={`text-[15px] ${isLocked ? 'opacity-80' : ''}`}>{title}</Typography>
-                </View>
-                <Typography variant="small" color="gray" numberOfLines={1}>{desc}</Typography>
-            </View>
-            <ArrowRight2 size={16} color="#9CA3AF" />
-        </TouchableOpacity>
-    );
-}

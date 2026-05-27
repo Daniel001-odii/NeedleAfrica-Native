@@ -202,8 +202,9 @@ export default function EditMeasurementScreen() {
                                 onPress={handleSave}
                                 style={{
                                     borderWidth: 0,
+                                    boxShadow: 'none'
                                 }}
-                                className={`h-14 text-white rounded-2xl bg-blue-500 rounded-full`}
+                                className={`h-14 text-white rounded-2xl bg-blue-500 rounded-full shadow-none!`}
                                 isLoading={submitting}
                             >
                                 Save Changes

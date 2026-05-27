@@ -4,7 +4,7 @@ import { WebView } from 'react-native-webview';
 import ViewShot from 'react-native-view-shot';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, DocumentDownload, ExportCurve, Printer, Trash } from 'iconsax-react-native';
+import { ArrowLeft, ExportCurve, Trash } from 'iconsax-react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -245,26 +245,20 @@ export default function InvoiceDetailScreen() {
                     </ViewShot>
                 </View>
 
-                <View className="flex-row gap-4">
+                <View className="flex-row gap-3 items-center">
                     <Button
                         onPress={handleDownload}
                         isLoading={isExporting}
                         className={`flex-1 h-16 rounded-full border-0 shadow-lg ${isDark ? 'bg-blue-500 shadow-white/5' : 'bg-dark shadow-dark/5'}`}
                     >
-                        <View className="flex-row items-center">
-                            <DocumentDownload size={20} color={"white"} className="mr-3" />
-                            <Typography weight="bold" color="white">Download</Typography>
-                        </View>
+                        <Typography weight="bold" color="white">Download</Typography>
                     </Button>
                     <Button
                         onPress={handleShare}
                         isLoading={isExporting}
-                        className={`flex-1 h-16 rounded-full border-2 ${isDark ? 'border-border-dark bg-transparent' : 'border-gray-200 bg-white'}`}
+                        className={`w-16 h-16 rounded-full border-2 p-0 ${isDark ? 'border-border-dark bg-transparent' : 'border-gray-200 bg-transparent'}`}
                     >
-                        <View className="flex-row items-center">
-                            <ExportCurve size={20} color={isDark ? "white" : "black"} className="mr-3" />
-                            <Typography weight="bold" color={isDark ? "white" : "black"}>Share</Typography>
-                        </View>
+                        <ExportCurve size={22} color={isDark ? 'white' : 'black'} />
                     </Button>
                 </View>
             </ScrollView>

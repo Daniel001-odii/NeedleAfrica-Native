@@ -13,6 +13,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import Toast from 'react-native-toast-message';
 
+
 const TABS = ['All', 'Pending', 'Delivered'] as const;
 type TabType = typeof TABS[number];
 
@@ -31,6 +32,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { ProgressSquare } from '../../../components/ui/ProgressSquare';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
+import { Button } from '../../../components/ui/Button';
 
 export default function Orders() {
     const [activeTab, setActiveTab] = useState<TabType>('All');
@@ -248,9 +250,9 @@ export default function Orders() {
                         )}
                     </View>
                     <View className="flex-row items-center gap-2">
-                        <TouchableOpacity onPress={() => router.push('/(tabs)/orders/invoices/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/orders/invoices')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
                             <DocumentText size={18} color="#FF5678" />
-                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Invoice</Typography>
+                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>my invoices</Typography>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => router.push('/(tabs)/orders/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
                             <Add size={20} color="#FF5678" />
@@ -416,9 +418,21 @@ export default function Orders() {
                                 style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
                             />
                             <Typography variant="h3" weight="bold" className="text-center mb-2">No orders</Typography>
-                            <Typography variant="body" color="gray" className="text-center">
+                            <Typography variant="body" color="gray" className="text-center mb-8">
                                 {search ? "Try a different search term" : "Add your first order to get started"}
                             </Typography>
+                            {!search && (
+                                <Button
+                                    onPress={() => router.push('/(tabs)/orders/new')}
+                                    className={`px-8 h-14 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
+                                    textClassName={isDark ? 'text-dark' : 'text-white'}
+                                >
+                                    <View className="flex-row items-center">
+                                        <Add size={20} color={isDark ? 'black' : 'white'} className="mr-2" />
+                                        <Typography weight="bold" className={isDark ? 'text-dark' : 'text-white'}>New Order</Typography>
+                                    </View>
+                                </Button>
+                            )}
                         </View>
                     }
                 />

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, FlatList, Pressable, ActivityIndicator, RefreshControl, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, FlatList, Pressable, ActivityIndicator, RefreshControl, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, DocumentText, SearchNormal1, Setting2, Setting } from 'iconsax-react-native';
+import { ArrowLeft, Add, DocumentText, Setting, Trash } from 'iconsax-react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -11,12 +10,16 @@ import { useInvoices } from '../../../../hooks/useInvoices';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import { useResourceLimits } from '../../../../hooks/useResourceLimits';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useConfirm } from '../../../../contexts/ConfirmContext';
+import Toast from 'react-native-toast-message';
 
 export default function InvoicesScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const { isDark } = useTheme();
-    const { invoices, loading, refresh } = useInvoices();
+    const { confirm } = useConfirm();
+    const { invoices, loading, refresh, deleteInvoice } = useInvoices();
     const [refreshing, setRefreshing] = useState(false);
     const { getLimitStatus } = useResourceLimits();
 
@@ -28,6 +31,34 @@ export default function InvoicesScreen() {
         await refresh();
         setRefreshing(false);
     };
+
+    const handleDelete = (id: string, invoiceNumber: string) => {
+        confirm({
+            title: 'Delete Invoice',
+            message: `Are you sure you want to delete ${invoiceNumber}?`,
+            confirmText: 'Delete',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await deleteInvoice(id);
+                    Toast.show({ type: 'success', text1: 'Invoice deleted' });
+                } catch {
+                    Toast.show({ type: 'error', text1: 'Failed to delete invoice' });
+                }
+            },
+        });
+    };
+
+    const renderRightActions = (id: string, invoiceNumber: string) => (
+        <View className="pl-4 mb-3 justify-center items-center">
+            <TouchableOpacity
+                onPress={() => handleDelete(id, invoiceNumber)}
+                className="bg-red-500 justify-center items-center w-16 h-16 rounded-2xl"
+            >
+                <Trash size={24} color="white" variant="Bold" />
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
@@ -82,34 +113,40 @@ export default function InvoicesScreen() {
                         />
                     }
                     renderItem={({ item: invoice }) => (
-                        <Pressable onPress={() => router.push(`/(tabs)/orders/invoices/${invoice.id}`)}>
-                            <Surface
-                                variant="white"
-                                className={`p-4 mb-3 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'} flex-row items-center`}
-                                rounded="2xl"
-                                hasBorder
-                            >
-                                <Surface variant={isDark ? "muted" : "lavender"} className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-dark-700' : ''}`} rounded="xl">
-                                    <DocumentText size={24} color={isDark ? "#ff8fa3" : "black"} variant="Bulk" />
+                        <Swipeable
+                            renderRightActions={() => renderRightActions(invoice.id, invoice.invoiceNumber || 'Invoice')}
+                            friction={2}
+                            rightThreshold={40}
+                        >
+                            <Pressable onPress={() => router.push(`/(tabs)/orders/invoices/${invoice.id}`)}>
+                                <Surface
+                                    variant="white"
+                                    className={`p-4 mb-3 border ${isDark ? 'bg-surface-dark border-border-dark' : 'border-gray-100'} flex-row items-center`}
+                                    rounded="2xl"
+                                    hasBorder
+                                >
+                                    <Surface variant={isDark ? "muted" : "lavender"} className={`w-12 h-12 items-center justify-center mr-4 ${isDark ? 'bg-dark-700' : ''}`} rounded="xl">
+                                        <DocumentText size={24} color={isDark ? "#ff8fa3" : "black"} variant="Bulk" />
+                                    </Surface>
+                                    <View className="flex-1">
+                                        <View className="flex-row justify-between items-center mb-1">
+                                            <Typography variant="body" weight="bold">{invoice.invoiceNumber}</Typography>
+                                            <Typography variant="body" weight="bold">
+                                                {user?.currency || 'NGN'} {(invoice.amount || 0).toLocaleString()}
+                                            </Typography>
+                                        </View>
+                                        <View className="flex-row justify-between items-center">
+                                            <Typography variant="caption" color="gray">
+                                                {new Date(invoice.createdAt || 0).toLocaleDateString()}
+                                            </Typography>
+                                            <Surface variant="muted" className="px-2 py-0.5" rounded="full">
+                                                <Typography variant="small" weight="bold" className="text-[10px]">PAID</Typography>
+                                            </Surface>
+                                        </View>
+                                    </View>
                                 </Surface>
-                                <View className="flex-1">
-                                    <View className="flex-row justify-between items-center mb-1">
-                                        <Typography variant="body" weight="bold">{invoice.invoiceNumber}</Typography>
-                                        <Typography variant="body" weight="bold">
-                                            {user?.currency || 'NGN'} {(invoice.amount || 0).toLocaleString()}
-                                        </Typography>
-                                    </View>
-                                    <View className="flex-row justify-between items-center">
-                                        <Typography variant="caption" color="gray">
-                                            {new Date(invoice.createdAt || 0).toLocaleDateString()}
-                                        </Typography>
-                                        <Surface variant="muted" className="px-2 py-0.5" rounded="full">
-                                            <Typography variant="small" weight="bold" className="text-[10px]">PAID</Typography>
-                                        </Surface>
-                                    </View>
-                                </View>
-                            </Surface>
-                        </Pressable>
+                            </Pressable>
+                        </Swipeable>
                     )}
                     ListEmptyComponent={
                         <View className="items-center justify-center py-20 px-10">

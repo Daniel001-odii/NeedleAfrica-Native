@@ -3,7 +3,7 @@ import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, Touchabl
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
-import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, InfoCircle } from 'iconsax-react-native';
+import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, InfoCircle, Task } from 'iconsax-react-native';
 import { Surface } from '../../../components/ui/Surface';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
@@ -130,10 +130,16 @@ function CustomersScreen() {
                             </View>
                         )}
                     </View>
-                    <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                        <Add size={20} color="#FF5678" />
-                        <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
-                    </TouchableOpacity>
+                    <View className="flex-row items-center gap-2">
+                        <TouchableOpacity onPress={() => router.push('/measurement-templates')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                            <Task size={18} color="#FF5678" />
+                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>My Templates</Typography>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                            <Add size={20} color="#FF5678" />
+                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Search Bar & Filter */}
@@ -204,9 +210,21 @@ function CustomersScreen() {
                                 style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
                             />
                             <Typography variant="h3" weight="bold" className="text-center mb-2">No customers</Typography>
-                            <Typography variant="body" color="gray" className="text-center">
+                            <Typography variant="body" color="gray" className="text-center mb-8">
                                 {search ? "Try a different search term" : "Add your first client to get started"}
                             </Typography>
+                            {!search && (
+                                <Button
+                                    onPress={() => router.push('/(tabs)/customers/new')}
+                                    className={`px-8 h-14 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
+                                    textClassName={isDark ? 'text-dark' : 'text-white'}
+                                >
+                                    <View className="flex-row items-center">
+                                        <Add size={20} color={isDark ? 'black' : 'white'} className="mr-2" />
+                                        <Typography weight="bold" className={isDark ? 'text-dark' : 'text-white'}>New Customer</Typography>
+                                    </View>
+                                </Button>
+                            )}
                         </View>
                     ) : null
                 }

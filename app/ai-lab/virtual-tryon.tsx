@@ -20,9 +20,8 @@ import { SubscriptionModal } from '../../components/SubscriptionModal';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CAROUSEL_IMAGES = [
-    require('../../assets/ai-lab/v-tryon.png'),
-    require('../../assets/ai-lab/v-tryon2.png'),
-    require('../../assets/ai-lab/v-tryon3.png'),
+    require('../../assets/ai-lab/virtualTryon1.png'),
+    require('../../assets/ai-lab/virtualTryon2.png'),
 ];
 
 export default function VirtualTryOn() {
@@ -36,11 +35,9 @@ export default function VirtualTryOn() {
     const [activeSlide, setActiveSlide] = useState(0);
 
     // Endless Auto Fade Opacities
-    const opacities = useRef([
-        new Animated.Value(1),
-        new Animated.Value(0),
-        new Animated.Value(0),
-    ]).current;
+    const opacities = useRef(
+        CAROUSEL_IMAGES.map((_, idx) => new Animated.Value(idx === 0 ? 1 : 0))
+    ).current;
 
     // Auto Switch interval
     useEffect(() => {
@@ -155,83 +152,76 @@ export default function VirtualTryOn() {
 
     // --- RENDER INTRODUCTORY & PAYWALL VIEW FOR FREE USERS ---
     if (!isPro) {
-        const IMAGE_WIDTH = SCREEN_WIDTH - 80;
-        const IMAGE_HEIGHT = IMAGE_WIDTH * 1.02;
-
         return (
-            <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
-                {/* Header */}
-                <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}>
-                    <IconButton
-                        icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
-                        onPress={() => router.back()}
-                        variant="ghost"
+            <View className="flex-1" style={{ backgroundColor: '#000' }}>
+                {/* Full-screen fading carousel background */}
+                {CAROUSEL_IMAGES.map((img, idx) => (
+                    <Animated.Image
+                        key={idx}
+                        source={img}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: opacities[idx],
+                        }}
+                        resizeMode="cover"
                     />
-                    <Typography variant="h3" weight="bold" className="ml-1">Virtual Try-on</Typography>
-                </View>
+                ))}
 
-                <ScrollView contentContainerClassName="p-6 pb-36" showsVerticalScrollIndicator={false}>
-                    {/* Explanatory Typography */}
-                    <Typography variant="h2" weight="black" className="mb-2 text-2xl text-left font-bold">Bring Designs to Life</Typography>
-                    <Typography variant="body" color="gray" className="mb-8 text-left leading-6">
-                        Render fabrics and patterns onto realistic model figures instantly with advanced AI.
-                    </Typography>
+                {/* Dark overlay for readability */}
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.05)']}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
 
-                    {/* Visual Graphic Carousel Showcase Container */}
-                    <View className="mb-8 items-center">
-                        <View style={{ width: IMAGE_WIDTH, height: IMAGE_HEIGHT, position: 'relative' }}>
-                            {CAROUSEL_IMAGES.map((img, idx) => (
-                                <Animated.Image
-                                    key={idx}
-                                    source={img}
-                                    style={{
-                                        width: IMAGE_WIDTH,
-                                        height: IMAGE_HEIGHT,
-                                        borderRadius: 24,
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        opacity: opacities[idx],
-                                    }}
-                                    resizeMode="contain"
-                                />
-                            ))}
+                <SafeAreaView edges={['top']} className="flex-1">
+                    {/* Header */}
+                    <View className="px-4 pt-2 pb-2 flex-row items-center" style={{ zIndex: 10 }}>
+                        <IconButton
+                            icon={<ArrowLeft size={22} color="white" />}
+                            onPress={() => router.back()}
+                            variant="ghost"
+                        />
+                        <Typography variant="h3" weight="bold" className="ml-1" color="white">Virtual Try-on</Typography>
+                    </View>
+
+                    <View className="flex-1 justify-between px-6" style={{ zIndex: 10 }}>
+                        {/* Explanatory Typography */}
+                        <View className="mt-8">
+                            <Typography variant="h1" weight="bold" color="white" className="text-3xl font-bold">
+                                Bring Designs to Life
+                            </Typography>
+                            <Typography variant="body" color="white" className="opacity-80 mt-3 leading-6">
+                                Render fabrics and patterns onto realistic model figures instantly with advanced AI.
+                            </Typography>
                         </View>
 
-                        {/* Paging Indicators */}
-                        <View className="flex-row gap-2 mt-4 justify-center">
-                            {CAROUSEL_IMAGES.map((_, idx) => (
-                                <View
-                                    key={idx}
-                                    className={`h-2 rounded-full ${idx === activeSlide ? 'w-6 bg-indigo-600' : 'w-2 bg-gray-300 dark:bg-zinc-800'}`}
-                                />
-                            ))}
+                        {/* Fixed Paywall Button Footer */}
+                        <View style={{ paddingBottom: Math.max(insets.bottom + 20, 40) }}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => setIsSubModalVisible(true)}
+                                className="h-16 rounded-full bg-indigo-600 flex-row items-center justify-center"
+                                style={{ elevation: 0, shadowOpacity: 0 }}
+                            >
+                                <Crown size={20} color="white" variant="Bold" />
+                                <Typography color="white" className="ml-2 font-bold text-lg">Unlock with Pro</Typography>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </ScrollView>
-
-                {/* Fixed Paywall Button Footer */}
-                <View
-                    style={{ paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 20 }}
-                    className={`pt-4 ${isDark ? 'bg-zinc-950' : 'bg-white'}`}
-                >
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => setIsSubModalVisible(true)}
-                        className="h-16 rounded-full bg-indigo-600 flex-row items-center justify-center"
-                        style={{ elevation: 0, shadowOpacity: 0 }}
-                    >
-                        <Crown size={20} color="white" variant="Bold" />
-                        <Typography color="white" className="ml-2 font-bold text-lg">Unlock with Pro</Typography>
-                    </TouchableOpacity>
-                </View>
+                </SafeAreaView>
 
                 {/* Global Premium Subscription Modal */}
                 <SubscriptionModal
                     visible={isSubModalVisible}
                     onClose={() => setIsSubModalVisible(false)}
                 />
-            </SafeAreaView>
+            </View>
         );
     }
 

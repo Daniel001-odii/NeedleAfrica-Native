@@ -24,13 +24,16 @@ export default function OnboardingCompletion() {
 
     // Map selected specialties to beautiful text descriptions
     const getSpecialtyDescription = () => {
-        if (!state.businessType) return 'designer styling';
+        if (!state.businessType) return 'unique designs';
         const s = state.businessType.toLowerCase();
-        if (s.includes('bespoke') || s.includes('custom')) return 'custom-tailored bespoke fashion';
-        if (s.includes('traditional')) return 'stunning traditional attire';
-        if (s.includes('bridal')) return 'gorgeous bridal designs';
-        if (s.includes('suits')) return 'sharp premium suiting';
-        return `${s} styling`;
+        if (s.includes('bespoke') || s.includes('custom')) return 'bespoke creations';
+        if (s.includes('bridal')) return 'bridal designs';
+        if (s.includes('ready-to-wear')) return 'ready-to-wear collections';
+        if (s.includes('uniform') || s.includes('corporate')) return 'professional uniforms';
+        if (s.includes('tailor')) return 'expert tailoring';
+        if (s.includes('seamstress')) return 'beautiful creations';
+        if (s.includes('student') || s.includes('intern')) return 'fashion journey';
+        return 'unique designs';
     };
 
     const specialtyText = getSpecialtyDescription();
@@ -75,10 +78,10 @@ export default function OnboardingCompletion() {
                     </Animated.View>
 
                     <Typography variant="h1" weight="bold" className="text-center text-gray-900 mb-3 text-[26px] leading-8 px-4">
-                        Ready to create, {firstName}! ✨
+                        Your digital studio is ready, {firstName}! 🧵
                     </Typography>
-                    <Typography color="gray" className="text-center px-6 leading-6 text-base text-gray-500">
-                        <Typography weight="bold" className="text-brand-primary">{businessName}</Typography> is officially live and optimized for {specialtyText}. Your canvas is clean, let's craft some magic!
+                    <Typography color="gray" className="text-center px-6 leading-6 text-[15px] text-gray-500">
+                        <Typography weight="bold" className="text-brand-primary text-[15px]">{businessName}</Typography> is set up for your {specialtyText}. Keep your measurements, orders, and invoices organized in one place, so you can focus on creating.
                     </Typography>
                 </Animated.View>
 
@@ -98,7 +101,7 @@ export default function OnboardingCompletion() {
                         onPress={() => handleFinish('invoice')}
                         className="h-14 items-center justify-center rounded-full bg-gray-50 border border-gray-100 mt-1"
                     >
-                        <Typography weight="semibold" className="text-gray-700">View First Order</Typography>
+                        <Typography weight="semibold" className="text-gray-700">Create your first order</Typography>
                     </TouchableOpacity>
                 </Animated.View>
             </ScrollView>

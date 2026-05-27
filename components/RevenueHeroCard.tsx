@@ -24,7 +24,8 @@ const RevenueHeroCard = ({
                 style={{
                     borderRadius: 28,
                     overflow: 'hidden',
-                    backgroundColor: isDark ? '#1C1C1E' : '#3B82F6',
+                    // backgroundColor: isDark ? '#1C1C1E' : '#3B82F6',
+                    backgroundColor: '#3B82F6',
                     padding: 18,
                     borderWidth: isDark ? 1 : 0,
                     borderColor: '#374151',
@@ -46,8 +47,8 @@ const RevenueHeroCard = ({
                         </Typography>
                         <Pressable onPress={() => setBalanceVisible(!balanceVisible)} hitSlop={12}>
                             {balanceVisible ?
-                                <Eye size={16} color="white" variant="Bulk" className="opacity-60" /> :
-                                <EyeSlash size={16} color="white" variant="Bulk" className="opacity-60" />
+                                <Eye size={16} color="white" variant="Bold" className="opacity-60" /> :
+                                <EyeSlash size={16} color="white" variant="Bold" className="opacity-60" />
                             }
                         </Pressable>
                     </View>

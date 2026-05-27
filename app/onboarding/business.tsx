@@ -66,18 +66,21 @@ export default function BusinessDetails() {
     const [countryCode, setCountryCode] = useState<any>(state.country === 'Nigeria' ? 'NG' : (state.country ? undefined : 'NG'));
     const [noOfEmployees, setNoOfEmployees] = useState(state.noOfEmployees || '1-5');
     const [joinedFrom, setJoinedFrom] = useState(state.joinedFrom || '');
+    const [otherDiscoverySource, setOtherDiscoverySource] = useState('');
 
     const [showTypeModal, setShowTypeModal] = useState(false);
     const [showHeardModal, setShowHeardModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const isFormValid = !!(businessType && phone && country && joinedFrom);
+    const isFormValid = !!(businessType && phone && country && joinedFrom && (joinedFrom === 'Other' ? otherDiscoverySource.trim() : true));
 
     const handleContinue = async () => {
         if (!isFormValid) {
             Toast.show({ type: 'error', text1: 'Required', text2: 'Please fill in the essential fields' });
             return;
         }
+
+        const finalJoinedFrom = joinedFrom === 'Other' && otherDiscoverySource.trim() ? otherDiscoverySource.trim() : joinedFrom;
 
         setIsLoading(true);
         try {
@@ -86,7 +89,7 @@ export default function BusinessDetails() {
                 phoneNumber: phone || '',
                 country,
                 noOfEmployees,
-                joinedFrom
+                joinedFrom: finalJoinedFrom
             });
 
             updateState({
@@ -94,7 +97,7 @@ export default function BusinessDetails() {
                 phoneNumber: phone || '',
                 country,
                 noOfEmployees,
-                joinedFrom,
+                joinedFrom: finalJoinedFrom,
                 step: 2
             });
 
@@ -263,7 +266,7 @@ export default function BusinessDetails() {
                         <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
                             <TouchableOpacity
                                 onPress={() => setShowHeardModal(true)}
-                                className="flex-row items-center justify-between px-4 py-4 active:bg-gray-50"
+                                className={`flex-row items-center justify-between px-4 py-4 active:bg-gray-50 ${joinedFrom === 'Other' ? 'border-b border-gray-50' : ''}`}
                             >
                                 <Typography weight="semibold" className="text-gray-900 text-[15px]">
                                     How did you hear about us?
@@ -275,6 +278,17 @@ export default function BusinessDetails() {
                                     <ArrowRight2 size={16} color="#9CA3AF" />
                                 </View>
                             </TouchableOpacity>
+                            {joinedFrom === 'Other' && (
+                                <View className="px-4 py-3">
+                                    <TextInput
+                                        value={otherDiscoverySource}
+                                        onChangeText={setOtherDiscoverySource}
+                                        placeholder="Please specify"
+                                        placeholderTextColor="#9CA3AF"
+                                        className="text-[15px] font-medium text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100"
+                                    />
+                                </View>
+                            )}
                         </View>
                     </View>
 

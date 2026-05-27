@@ -51,10 +51,12 @@ export function useCustomerMeasurements(customerId: string) {
     };
 
     const updateMeasurement = async (id: string, title: string, values: any) => {
-        const measurement = await database.get<Measurement>('measurements').find(id);
-        await measurement.update(record => {
-            record.title = title;
-            record.valuesJson = JSON.stringify(values);
+        await database.write(async () => {
+            const measurement = await database.get<Measurement>('measurements').find(id);
+            await measurement.update(record => {
+                record.title = title;
+                record.valuesJson = JSON.stringify(values);
+            });
         });
         sync().catch(console.error);
     };
