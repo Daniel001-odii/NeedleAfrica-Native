@@ -1,13 +1,12 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import * as SplashScreen from 'expo-splash-screen';
 
 export default function LoadingScreen() {
-    const { isDark, isHydrated } = useTheme();
-
-    // Fallback to light mode immediately while waiting for context hydration
-    const effectiveIsDark = isHydrated ? isDark : false;
+    const { isHydrated } = useTheme();
+    const animationRef = useRef<LottieView>(null);
 
     // ONLY hide the native splash screen after the React theme is hydrated
     // This ensures we always transition from native splash to the correct React background color.
@@ -27,9 +26,12 @@ export default function LoadingScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: '#FF5678' }]}>
-            <Image 
-                source={require('../assets/animated-logo.gif')} 
-                style={{ width: 300, height: 300 }} 
+            <LottieView
+                ref={animationRef}
+                source={require('../assets/NeedleXLogo_Lottie.json')}
+                style={{ width: 300, height: 300 }}
+                autoPlay
+                loop
                 resizeMode="contain"
             />
         </View>

@@ -143,7 +143,7 @@ export default function SignUp() {
                     </View>
 
                     <View className="mb-6">
-                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Phone Number</Typography>
+                        <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase">Phone Number (Whatsapp)</Typography>
                         <Surface variant="muted" rounded="2xl" className="flex-row items-center px-2 h-16">
                             <CountryPicker
                                 countryCode={countryCode}
