@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
 import { Q } from '@nozbe/watermelondb';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { useEffect, useState } from 'react';

@@ -11,6 +11,7 @@ export default function ExtrasLayout() {
         >
             <Stack.Screen name="index" />
             <Stack.Screen name="monogram" />
+            <Stack.Screen name="templates-library" />
         </Stack>
     );
 }

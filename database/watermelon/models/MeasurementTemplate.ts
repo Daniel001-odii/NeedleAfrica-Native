@@ -8,6 +8,7 @@ export default class MeasurementTemplate extends Model {
     @text('user_id') userId?: string;
     @text('name') name?: string;
     @text('fields_json') fieldsJson?: string;
+    @field('is_public') isPublic?: boolean;
     @field('deleted_at') deletedAt?: number | null;
 
     @readonly @date('created_at') createdAt!: Date;
@@ -24,12 +25,14 @@ export default class MeasurementTemplate extends Model {
     static async createSyncable(database: any, userId: string, data: {
         name: string;
         fields: any[];
+        isPublic?: boolean;
     }) {
         return await database.write(async () => {
             return await database.get('measurement_templates').create((record: any) => {
                 record.userId = userId;
                 record.name = data.name;
                 record.fieldsJson = JSON.stringify(data.fields || []);
+                record.isPublic = data.isPublic === true;
             });
         });
     }

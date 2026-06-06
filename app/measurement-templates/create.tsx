@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
-import { ArrowLeft, Add, Trash, ArrowRight2 } from 'iconsax-react-native';
+import { ArrowLeft, Add, Trash, ArrowRight2, Global, InfoCircle, ArrowDown2, ArrowUp2 } from 'iconsax-react-native';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
 import { useResourceLimits } from '../../hooks/useResourceLimits';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -37,6 +37,8 @@ export default function CreateTemplateScreen() {
         isNearLimit: false,
     });
     const [proceedAnyway, setProceedAnyway] = useState(false);
+    const [isPublic, setIsPublic] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     const handleAddField = () => {
         setFields([...fields, '']);
@@ -88,7 +90,8 @@ export default function CreateTemplateScreen() {
         try {
             await addTemplate({
                 name: name.trim(),
-                fields: validFields
+                fields: validFields,
+                isPublic
             });
             router.back();
         } catch (error) {
@@ -105,14 +108,14 @@ export default function CreateTemplateScreen() {
     };
 
     return (
-        <View className={`flex-1 bg-white`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                     
                     {/* Simple Header */}
                     <View className="px-6 pt-3 pb-2 flex-row justify-between items-center">
                         <IconButton
-                            icon={<ArrowLeft size={24} color="#1F2937" />}
+                            icon={<ArrowLeft size={24} color={isDark ? "white" : "#1F2937"} />}
                             onPress={() => router.back()}
                             variant="ghost"
                             className="-ml-4"
@@ -125,32 +128,33 @@ export default function CreateTemplateScreen() {
                         keyboardShouldPersistTaps="handled"
                     >
                         <View className="mb-8 mt-2">
-                            <TypingText 
+                            {/* <TypingText 
                                 variant="h1" 
                                 weight="bold" 
-                                className="mb-2 text-gray-900" 
+                                className="mb-2 text-black" 
                                 text="New Template" 
                                 speed={30} 
-                            />
-                            <Typography color="gray" variant="subtitle" className="leading-5">
+                            /> */}
+                            <Typography color={isDark ? 'white' : 'black'} className='font-bold text-3xl mb-2'>New Measurement Template</Typography>
+                            <Typography color="gray" variant="subtitle" className={`leading-5 ${isDark ? 'text-zinc-400' : ''}`}>
                                 Create a reusable set of measurement fields for your designs.
                             </Typography>
                         </View>
 
                         {/* Section 1: Template Name */}
                         <View className="mb-8">
-                            <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                            <Typography variant="caption" color="gray" weight="bold" className={`ml-4 mb-2 uppercase tracking-wider text-[11px] ${isDark ? 'text-zinc-400' : ''}`}>
                                 Template Details
                             </Typography>
-                            <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
-                                <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
-                                    <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                            <View className={`rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                <View className={`flex-row items-center px-4 py-4 ${isDark ? 'border-b border-white/5' : 'border-b border-gray-50'}`}>
+                                    <Typography weight="semibold" className={`w-1/3 text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         Name
                                     </Typography>
                                     <TextInput
-                                        className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                        className={`flex-1 text-right font-semibold text-[16px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                         placeholder="e.g. Kaftan, Shirt..."
-                                        placeholderTextColor="#D1D5DB"
+                                        placeholderTextColor={isDark ? "#52525b" : "#D1D5DB"}
                                         value={name}
                                         onChangeText={setName}
                                     />
@@ -161,28 +165,28 @@ export default function CreateTemplateScreen() {
                         {/* Section 2: Measurement Fields */}
                         <View className="mb-8">
                             <View className="flex-row items-center justify-between ml-4 mb-2">
-                                <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                                <Typography variant="caption" color="gray" weight="bold" className={`uppercase tracking-wider text-[11px] ${isDark ? 'text-zinc-400' : ''}`}>
                                     Measurement Fields ({fields.length})
                                 </Typography>
                             </View>
 
-                            <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+                            <View className={`rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
                                 {fields.map((field, index) => {
                                     const isLast = index === fields.length - 1;
                                     return (
-                                        <View key={index} className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${!isLast ? 'border-b border-gray-50' : ''}`}>
+                                        <View key={index} className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${!isLast ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}>
                                             <TouchableOpacity onPress={() => handleRemoveField(index)} className="mr-3 p-1">
                                                 <View className="w-5 h-5 rounded-full bg-red-500 items-center justify-center">
                                                     <View className="w-2.5 h-[2px] bg-white rounded-full" />
                                                 </View>
                                             </TouchableOpacity>
-                                            <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                            <Typography weight="semibold" className={`w-1/3 text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 Field {index + 1}
                                             </Typography>
                                             <TextInput
-                                                className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                                className={`flex-1 text-right font-semibold text-[16px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                                 placeholder="e.g. Waist, Length..."
-                                                placeholderTextColor="#D1D5DB"
+                                                placeholderTextColor={isDark ? "#52525b" : "#D1D5DB"}
                                                 value={field}
                                                 onChangeText={(text) => handleFieldChange(text, index)}
                                             />
@@ -193,7 +197,7 @@ export default function CreateTemplateScreen() {
                                 {/* Add Field Inline Row */}
                                 <TouchableOpacity
                                     onPress={handleAddField}
-                                    className="flex-row items-center px-4 py-1.5 min-h-[56px] active:bg-gray-50"
+                                    className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
                                 >
                                     <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center mr-3">
                                         <View className="w-2.5 h-[2px] bg-white rounded-full absolute" />
@@ -206,10 +210,63 @@ export default function CreateTemplateScreen() {
                             </View>
                         </View>
 
+                        {/* Advanced Section — Visibility */}
+                        <View className="mb-8">
+                            <TouchableOpacity
+                                onPress={() => setShowAdvanced(!showAdvanced)}
+                                className={`flex-row items-center justify-between px-4 py-3 rounded-2xl ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-50'}`}
+                                activeOpacity={0.7}
+                            >
+                                <Typography weight="semibold" className={`text-[14px] ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>
+                                    Advanced
+                                </Typography>
+                                {showAdvanced ? (
+                                    <ArrowUp2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
+                                ) : (
+                                    <ArrowDown2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
+                                )}
+                            </TouchableOpacity>
+
+                            {showAdvanced && (
+                                <View className={`mt-3 rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                    <View className="flex-row items-center justify-between px-4 py-4">
+                                        <View className="flex-row items-center flex-1 mr-3">
+                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'}`}>
+                                                <Global size={20} color={isDark ? "#34D399" : "#10B981"} />
+                                            </View>
+                                            <View className="flex-1">
+                                                <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                    Share to Marketplace
+                                                </Typography>
+                                                <Typography variant="small" color="gray" className={isDark ? 'text-zinc-400' : ''}>
+                                                    Make this template available for other tailors & designers
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                        <Switch
+                                            value={isPublic}
+                                            onValueChange={setIsPublic}
+                                            trackColor={{ false: isDark ? '#3f3f46' : '#e5e7eb', true: '#10B981' }}
+                                            thumbColor="#ffffff"
+                                        />
+                                    </View>
+
+                                    <View className={`mx-4 mb-4 p-3 rounded-xl flex-row items-start ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                                        <InfoCircle size={16} color={isDark ? "#60a5fa" : "#3b82f6"} style={{ marginTop: 1, marginRight: 8 }} />
+                                        <View className="flex-1">
+                                            <Typography variant="small" weight="medium" className={`text-[12px] leading-[18px] ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                                Public templates appear in the Templates Library for the community to browse and add to their collection. Only your template name and fields will be visible — your personal data stays private.
+                                            </Typography>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+
                     </ScrollView>
 
                     {/* Bottom Action Bar */}
-                    <View className="p-6 bg-white pt-2 border-t border-gray-50">
+                    <View className={`p-6 pt-2 border-t ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-50'}`}>
                         <Button
                             onPress={handleSave}
                             isLoading={submitting}

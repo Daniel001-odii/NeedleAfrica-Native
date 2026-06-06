@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { performSync as syncRecords } from '../database/watermelon/sync';
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
 import { useAuth } from '../contexts/AuthContext';
 
 // Global lock to prevent concurrent sync calls across multiple instances of useSync

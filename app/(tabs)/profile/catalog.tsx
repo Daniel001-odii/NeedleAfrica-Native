@@ -33,6 +33,19 @@ import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Convert local-format Nigerian phone (e.g. "08156074667") to E.164 ("+2348156074667").
+// `react-phone-number-input` requires its `value` to be in E.164 format.
+// Falls back to the original value if already international or unrecognized.
+function toE164(raw: string): string {
+  if (!raw) return '';
+  if (raw.startsWith('+')) return raw;
+  // Nigerian mobile numbers: 0[789]xxxxxxxx — strip leading 0, prepend +234
+  if (/^0[789]\d{9}$/.test(raw)) {
+    return '+234' + raw.slice(1);
+  }
+  return raw;
+}
+
 const BUSINESS_TYPE_OPTIONS = [
     'Tailor', 'Fashion Designer', 'Seamstress', 'Pattern Maker', 'Bespoke / Made-to-Measure Brand',
     'Ready-to-Wear Brand', 'Fashion Brand (Bespoke + Ready-to-Wear)', 'Bridal Designer',
@@ -91,7 +104,7 @@ export default function BusinessSettings() {
     const [businessName, setBusinessName] = useState(user?.businessName || '');
     const [headline, setHeadline] = useState('');
     const [brandDescription, setBrandDescription] = useState('');
-    const [phone, setPhone] = useState(user?.phoneNumber || '');
+    const [phone, setPhone] = useState(toE164(user?.phoneNumber || ''));
     const [address, setAddress] = useState(user?.address || '');
     const [country, setCountry] = useState(user?.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
@@ -125,13 +138,6 @@ export default function BusinessSettings() {
         }
     }, [isLoading, catalogId]);
 
-    // Reactive check: if user drops from Pro, turn off catalog
-    useEffect(() => {
-        if (!userIsPro && isEnabled) {
-            setIsEnabled(false);
-            if (showPrices) setShowPrices(false);
-        }
-    }, [userIsPro]);
 
     const fetchCatalogSettings = async () => {
         setIsLoading(true);
@@ -141,7 +147,7 @@ export default function BusinessSettings() {
             if (res.data && res.data.id) {
                 setCatalogId(res.data.id);
                 setCatalogViews(res.data.views || 0);
-                setIsEnabled(userIsPro ? (res.data.catalogEnabled || false) : false);
+                setIsEnabled(res.data.catalogEnabled || false);
                 setShowPrices(userIsPro ? (res.data.showPricesInCatalog ?? true) : false);
                 setHeadline(res.data.businessHeadline || '');
                 setBrandDescription(res.data.businessDescription || '');
@@ -188,7 +194,7 @@ export default function BusinessSettings() {
     useEffect(() => {
         if (user) {
             setBusinessName(user.businessName || '');
-            setPhone(user.phoneNumber || '');
+            setPhone(toE164(user.phoneNumber || ''));
             setAddress(user.address || '');
             if (user.country) {
                 setCountry(user.country);
@@ -243,7 +249,7 @@ export default function BusinessSettings() {
             const { default: axiosInstance } = await import('../../../lib/axios');
             await axiosInstance.patch('/catalog', {
                 id: catalogId,
-                catalogEnabled: userIsPro ? isEnabled : false,
+                catalogEnabled: isEnabled,
                 showPricesInCatalog: userIsPro ? showPrices : false,
                 businessHeadline: headline.trim(),
                 businessDescription: brandDescription.trim(),
@@ -270,7 +276,7 @@ export default function BusinessSettings() {
         <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
-                    <IconButton icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />} onPress={() => router.back()} variant="ghost" />
+                    <IconButton icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />} onPress={() => router.push("/profile")} variant="ghost" />
                     <Typography variant="h3" weight="bold" className="ml-2">Catalog Storefront</Typography>
                 </View>
                 {catalogId && (
@@ -440,23 +446,14 @@ export default function BusinessSettings() {
                                 <View className="flex-1 mr-4">
                                     <View className="flex-row items-center mb-1">
                                         <Typography weight="bold" className="text-[15px]">Catalog Visibility</Typography>
-                                        {!userIsPro && (
-                                            <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-                                                <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
-                                            </View>
-                                        )}
                                     </View>
-                                    <Typography variant="small" color="gray">Allow anyone with your link to view your products</Typography>
+                                    <Typography variant="small" color="gray">
+                                        {userIsPro ? 'Allow anyone with your link to view your products' : 'Freemium: up to 3 items. Pro: unlimited catalog items'}
+                                    </Typography>
                                 </View>
                                 <Switch
-                                    value={userIsPro ? isEnabled : false}
-                                    onValueChange={(val) => {
-                                        if (!userIsPro) {
-                                            Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to enable your public catalog' });
-                                            return;
-                                        }
-                                        setIsEnabled(val);
-                                    }}
+                                    value={isEnabled}
+                                    onValueChange={(val) => setIsEnabled(val)}
                                     trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
                                     thumbColor="#FFFFFF"
                                 />
@@ -465,21 +462,22 @@ export default function BusinessSettings() {
                                 <View className="flex-1 mr-4">
                                     <View className="flex-row items-center mb-1">
                                         <Typography weight="bold" className="text-[15px]">Show Price Tags</Typography>
-                                        {!userIsPro && (
+                                       {/*  {!userIsPro && (
                                             <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
                                                 <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
                                             </View>
-                                        )}
+                                        )} */}
                                     </View>
                                     <Typography variant="small" color="gray">Display prices to every visitor</Typography>
                                 </View>
                                 <Switch
-                                    value={userIsPro ? showPrices : false}
+                                    // value={userIsPro ? showPrices : false}
+                                    value={showPrices}
                                     onValueChange={(val) => {
-                                        if (!userIsPro) {
+                                       /*  if (!userIsPro) {
                                             Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
                                             return;
-                                        }
+                                        } */
                                         setShowPrices(val);
                                     }}
                                     trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
@@ -489,61 +487,33 @@ export default function BusinessSettings() {
                         </View>
                     </View>
 
-                    {/* STORE LINK (If Enabled) */}
+                    {/* STORE LINK */}
                     {catalogId && (
                         <View className="mb-8">
                             <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Your Store Link</Typography>
                             <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
-                                <View className="relative">
-                                    <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'} ${!userIsPro ? 'opacity-20' : ''}`}>
-                                        {userIsPro ? `https://catalog.needleafrica.com/cg/${catalogId}` : 'https://catalog.needleafrica.com/cg/••••••••••••••••'}
-                                    </Typography>
-                                    {!userIsPro && (
-                                        <View className="absolute inset-0 items-center justify-center -top-2">
-                                            <Warning2 size={16} color="#9CA3AF" variant="Bulk" />
-                                        </View>
-                                    )}
-                                </View>
+                                <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    https://catalog.needleafrica.com/cg/{catalogId}
+                                </Typography>
 
                                 <View className="flex-row gap-x-3">
                                     <TouchableOpacity
                                         onPress={async () => {
-                                            if (!userIsPro) return;
                                             await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${catalogId}`);
                                             Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
                                         }}
-                                        disabled={!userIsPro}
-                                        className={`flex-1 flex-row items-center justify-center h-14 rounded-2xl ${userIsPro ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-white/5 opacity-50'}`}
+                                        className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30"
                                     >
-                                        <Typography weight="bold" className={userIsPro ? 'text-blue-600' : 'text-gray-400'}>Copy Link</Typography>
+                                        <Typography weight="bold" className="text-blue-600">Copy Link</Typography>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
-                                        onPress={() => {
-                                            if (!userIsPro) return;
-                                            Linking.openURL(`https://catalog.needleafrica.com/cg/${catalogId}`);
-                                        }}
-                                        disabled={!userIsPro}
-                                        className={`flex-1 flex-row items-center justify-center h-14 rounded-2xl ${userIsPro ? 'bg-gray-100 dark:bg-white/10' : 'bg-gray-100 dark:bg-white/5 opacity-50'}`}
+                                        onPress={() => Linking.openURL(`https://catalog.needleafrica.com/cg/${catalogId}`)}
+                                        className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-gray-100 dark:bg-white/10"
                                     >
-                                        <Typography weight="bold" className={userIsPro ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'}>Preview Store</Typography>
+                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Preview Store</Typography>
                                     </TouchableOpacity>
                                 </View>
-
-                                {!userIsPro && (
-                                    <View className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 items-center">
-                                        <Typography variant="small" color="gray" weight="medium" className="text-center mb-4 leading-relaxed">
-                                            Public catalog storefront and link sharing are exclusively available to <Typography weight="black" className="text-amber-500">PRO</Typography> members.
-                                        </Typography>
-                                        <TouchableOpacity
-                                            onPress={() => setIsSubscriptionModalVisible(true)}
-                                            className="bg-amber-500 px-6 py-3 rounded-full flex-row items-center"
-                                        >
-                                            <Typography weight="bold" className="text-white text-[12px] uppercase tracking-widest mr-2">Upgrade to Pro</Typography>
-                                            <ArrowLeft size={14} color="white" style={{ transform: [{ rotate: '180deg' }] }} />
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
                             </View>
                         </View>
                     )}
@@ -716,5 +686,3 @@ function SkeletonLoader({ isDark }: { isDark: boolean }) {
         </ScrollView>
     );
 }
-
-

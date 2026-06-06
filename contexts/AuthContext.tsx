@@ -5,11 +5,14 @@ import axiosInstance from '../lib/axios';
 import { Platform } from 'react-native';
 import { NotificationService } from '../services/NotificationService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import appleAuth from '@invertase/react-native-apple-authentication';
+// import appleAuth from '@invertase/react-native-apple-authentication';
+// ADD THIS INSTEAD:
+import appleAuth from './AppleAuthWrapper'; // No extension needed, Metro handles it!
 import { revenueCatService } from '../services/RevenueCatService';
 import { posthog } from '../posthogConfig';
 import Constants from 'expo-constants';
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
+// import { database } from '../database/watermelon';
 
 interface User {
     id: string;
@@ -69,6 +72,32 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Add these helper functions before your AuthProvider
+const setStorageItemAsync = async (key: string, value: string) => {
+    if (Platform.OS === 'web') {
+        try { localStorage.setItem(key, value); } catch (e) { console.error(e); }
+    } else {
+        await SecureStore.setItemAsync(key, value);
+    }
+};
+
+const getStorageItemAsync = async (key: string) => {
+    if (Platform.OS === 'web') {
+        try { return localStorage.getItem(key); } catch (e) { console.error(e); return null; }
+    } else {
+        return await SecureStore.getItemAsync(key);
+    }
+};
+
+const deleteStorageItemAsync = async (key: string) => {
+    if (Platform.OS === 'web') {
+        try { localStorage.removeItem(key); } catch (e) { console.error(e); }
+    } else {
+        await SecureStore.deleteItemAsync(key);
+    }
+};
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -178,6 +207,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signInWithApple = async () => {
         setIsActionLoading(true);
         try {
+            // Add this guard for the web
+            if (Platform.OS === 'web') {
+                throw new Error('Apple Sign-In is not currently supported on the web.');
+            }
+
             // Start the sign-in request
             const appleAuthRequestResponse = await appleAuth.performRequest({
                 requestedOperation: appleAuth.Operation.LOGIN,

@@ -5,6 +5,7 @@ import {
     PenTool,
     Colorfilter,
     Gallery,
+    Ruler,
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -90,6 +91,12 @@ export default function Extras() {
                         title="Monogram"
                         desc="Design your custom monogram"
                         onPress={() => router.push('/extras/monogram' as any)}
+                    />
+                    <ToolCard
+                        icon={<Ruler size={24} color="#F97316" variant="Bulk" />}
+                        title="Templates Library"
+                        desc="Ready-made measurement presets"
+                        onPress={() => router.push('/extras/templates-library' as any)}
                     />
                 </View>
 

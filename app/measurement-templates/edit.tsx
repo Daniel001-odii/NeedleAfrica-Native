@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Surface } from '../../components/ui/Surface';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
-import { ArrowLeft, Add, Trash } from 'iconsax-react-native';
+import { ArrowLeft, Add, Trash, Global, InfoCircle, ArrowDown2, ArrowUp2 } from 'iconsax-react-native';
 import { useMeasurementTemplates } from '../../hooks/useMeasurementTemplates';
 import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../contexts/ConfirmContext';
@@ -23,12 +23,15 @@ export default function EditTemplateScreen() {
 
     const [name, setName] = useState('');
     const [fields, setFields] = useState<string[]>([]);
+    const [isPublic, setIsPublic] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
         if (template) {
             setName(template.name || '');
             setFields(template.fields);
+            setIsPublic(template.isPublic === true);
         }
     }, [template]);
 
@@ -73,7 +76,8 @@ export default function EditTemplateScreen() {
         try {
             await updateTemplate(templateId!, {
                 name: name.trim(),
-                fields: validFields
+                fields: validFields,
+                isPublic
             });
             Toast.show({
                 type: 'success',
@@ -124,7 +128,7 @@ export default function EditTemplateScreen() {
     if (!templateId) return null;
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <SafeAreaView className="flex-1" edges={['top']}>
                 <View className="flex-1 p-6">
                     {/* Header */}
@@ -145,56 +149,128 @@ export default function EditTemplateScreen() {
                         />
                     </View>
 
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        <Typography variant="h3" weight="bold" className="mb-2">Template Name</Typography>
-                        <Surface variant="muted" className={`px-4 py-3 mb-6 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
-                            <TextInput
-                                className={`text-base font-medium ${isDark ? 'text-white' : 'text-dark'}`}
-                                placeholder="e.g. Shirt, Trousers, Gown"
-                                placeholderTextColor="#9CA3AF"
-                                value={name}
-                                onChangeText={setName}
-                            />
-                        </Surface>
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-10">
+                        {/* Template Name */}
+                        <View className="mb-8">
+                            <Typography variant="caption" color="gray" weight="bold" className={`ml-4 mb-2 uppercase tracking-wider text-[11px] ${isDark ? 'text-zinc-400' : ''}`}>
+                                Template Details
+                            </Typography>
+                            <View className={`rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                <View className="flex-row items-center px-4 py-4">
+                                    <Typography weight="semibold" className={`w-1/3 text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        Name
+                                    </Typography>
+                                    <TextInput
+                                        className={`flex-1 text-right font-semibold text-[16px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                        placeholder="e.g. Kaftan, Shirt..."
+                                        placeholderTextColor={isDark ? "#52525b" : "#D1D5DB"}
+                                        value={name}
+                                        onChangeText={setName}
+                                    />
+                                </View>
+                            </View>
+                        </View>
 
-                        <View className="flex-row justify-between items-center mb-4">
-                            <Typography variant="h3" weight="bold">Measurement Fields</Typography>
-                            <Button
-                                variant="ghost"
-                                className="px-0"
-                                onPress={handleAddField}
+                        {/* Measurement Fields */}
+                        <View className="mb-8">
+                            <Typography variant="caption" color="gray" weight="bold" className={`ml-4 mb-2 uppercase tracking-wider text-[11px] ${isDark ? 'text-zinc-400' : ''}`}>
+                                Measurement Fields ({fields.length})
+                            </Typography>
+
+                            <View className={`rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                {fields.map((field, index) => {
+                                    const isLast = index === fields.length - 1;
+                                    return (
+                                        <View key={index} className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${!isLast ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}>
+                                            <TouchableOpacity onPress={() => handleRemoveField(index)} className="mr-3 p-1">
+                                                <View className="w-5 h-5 rounded-full bg-red-500 items-center justify-center">
+                                                    <View className="w-2.5 h-[2px] bg-white rounded-full" />
+                                                </View>
+                                            </TouchableOpacity>
+                                            <Typography weight="semibold" className={`w-1/3 text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                Field {index + 1}
+                                            </Typography>
+                                            <TextInput
+                                                className={`flex-1 text-right font-semibold text-[16px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                                placeholder="e.g. Waist, Length..."
+                                                placeholderTextColor={isDark ? "#52525b" : "#D1D5DB"}
+                                                value={field}
+                                                onChangeText={(text) => handleFieldChange(text, index)}
+                                            />
+                                        </View>
+                                    );
+                                })}
+
+                                {/* Add Field Inline Row */}
+                                <TouchableOpacity
+                                    onPress={handleAddField}
+                                    className={`flex-row items-center px-4 py-1.5 min-h-[56px] ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
+                                >
+                                    <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center mr-3">
+                                        <View className="w-2.5 h-[2px] bg-white rounded-full absolute" />
+                                        <View className="w-[2px] h-2.5 bg-white rounded-full absolute" />
+                                    </View>
+                                    <Typography weight="semibold" className="text-brand-primary text-[16px]">
+                                        Add custom field
+                                    </Typography>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Advanced Section — Visibility */}
+                        <View className="mb-8">
+                            <TouchableOpacity
+                                onPress={() => setShowAdvanced(!showAdvanced)}
+                                className={`flex-row items-center justify-between px-4 py-3 rounded-2xl ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-50'}`}
+                                activeOpacity={0.7}
                             >
-                                <View className="flex-row items-center gap-1">
-                                    <Add size={18} color={isDark ? "#ff8fa3" : "#FF5678"} />
-                                    <Typography className={isDark ? "text-indigo-300" : "text-brand-primary"} weight="bold">Add Field</Typography>
+                                <Typography weight="semibold" className={`text-[14px] ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>
+                                    Advanced
+                                </Typography>
+                                {showAdvanced ? (
+                                    <ArrowUp2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
+                                ) : (
+                                    <ArrowDown2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
+                                )}
+                            </TouchableOpacity>
+
+                            {showAdvanced && (
+                                <View className={`mt-3 rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                    <View className="flex-row items-center justify-between px-4 py-4">
+                                        <View className="flex-row items-center flex-1 mr-3">
+                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'}`}>
+                                                <Global size={20} color={isDark ? "#34D399" : "#10B981"} />
+                                            </View>
+                                            <View className="flex-1">
+                                                <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                    Share to Marketplace
+                                                </Typography>
+                                                <Typography variant="small" color="gray" className={isDark ? 'text-zinc-400' : ''}>
+                                                    Make this template available for other tailors & designers
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                        <Switch
+                                            value={isPublic}
+                                            onValueChange={setIsPublic}
+                                            trackColor={{ false: isDark ? '#3f3f46' : '#e5e7eb', true: '#10B981' }}
+                                            thumbColor="#ffffff"
+                                        />
+                                    </View>
+
+                                    <View className={`mx-4 mb-4 p-3 rounded-xl flex-row items-start ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                                        <InfoCircle size={16} color={isDark ? "#60a5fa" : "#3b82f6"} style={{ marginTop: 1, marginRight: 8 }} />
+                                        <View className="flex-1">
+                                            <Typography variant="small" weight="medium" className={`text-[12px] leading-[18px] ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                                Public templates appear in the Templates Library for the community to browse. Only your template name and fields will be visible.
+                                            </Typography>
+                                        </View>
+                                    </View>
                                 </View>
-                            </Button>
+                            )}
                         </View>
 
-                        <View className="gap-3 mb-8">
-                            {fields.map((field, index) => (
-                                <View key={index} className="flex-row items-center gap-2">
-                                    <Surface variant="muted" className={`flex-1 px-4 py-3 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'border-gray-100'}`} rounded="xl" hasBorder>
-                                        <TextInput
-                                            className={`text-base font-medium ${isDark ? 'text-white' : 'text-dark'}`}
-                                            placeholder={`Field ${index + 1} (e.g. Length, Waist)`}
-                                            placeholderTextColor="#9CA3AF"
-                                            value={field}
-                                            onChangeText={(text) => handleFieldChange(text, index)}
-                                        />
-                                    </Surface>
-                                    {fields.length > 1 && (
-                                        <IconButton
-                                            icon={<Trash size={20} color="#EF4444" />}
-                                            variant="ghost"
-                                            className={isDark ? "bg-red-900/20" : "bg-red-50"}
-                                            onPress={() => handleRemoveField(index)}
-                                        />
-                                    )}
-                                </View>
-                            ))}
-                        </View>
-
+                        {/* Save Button */}
                         <Button
                             variant="primary"
                             className={`w-full h-14 rounded-full mb-10 ${isDark ? 'bg-white' : 'bg-dark'}`}

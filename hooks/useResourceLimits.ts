@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
 import { Q } from '@nozbe/watermelondb';
 import { useAuth } from '../contexts/AuthContext';
 

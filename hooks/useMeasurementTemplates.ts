@@ -74,7 +74,7 @@ export function useMeasurementTemplates() {
         return unsubscribe;
     }, [fetchTemplates]);
 
-    const addTemplate = async (data: { name: string; fields: string[] }) => {
+    const addTemplate = async (data: { name: string; fields: string[]; isPublic?: boolean }) => {
         if (!user) return;
         const template = await MeasurementTemplate.createSyncable(database, user.id, data);
         sync().catch(console.error);
@@ -87,12 +87,15 @@ export function useMeasurementTemplates() {
         sync().catch(console.error);
     };
  
-    const updateTemplate = async (id: string, data: { name: string; fields: string[] }) => {
+    const updateTemplate = async (id: string, data: { name: string; fields: string[]; isPublic?: boolean }) => {
         await database.write(async () => {
             const template = await database.get<MeasurementTemplate>('measurement_templates').find(id);
             await template.update(record => {
                 record.name = data.name;
                 record.fieldsJson = JSON.stringify(data.fields);
+                if (data.isPublic !== undefined) {
+                    record.isPublic = data.isPublic;
+                }
             });
         });
         sync().catch(console.error);

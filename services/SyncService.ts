@@ -1,4 +1,4 @@
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
 import Customer from '../database/watermelon/models/Customer';
 import Measurement from '../database/watermelon/models/Measurement';
 import Order from '../database/watermelon/models/Order';

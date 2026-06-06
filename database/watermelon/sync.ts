@@ -1,5 +1,5 @@
 import { synchronize } from '@nozbe/watermelondb/sync';
-import { database } from './index';
+import { database } from './index.native';
 import axiosInstance from '../../lib/axios';
 
 export async function performSync() {

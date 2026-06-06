@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { database } from '../database/watermelon';
+import { database } from '../database/watermelon/index.native';
 import { Q } from '@nozbe/watermelondb';
 import { useAuth } from '../contexts/AuthContext';
 

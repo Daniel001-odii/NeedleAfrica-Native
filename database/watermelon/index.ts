@@ -1,36 +1,58 @@
+import { Platform } from 'react-native';
 import { Database } from '@nozbe/watermelondb';
-import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
 import schema from './schema';
-import migrations from './migrations'; // We'll create an empty migrations file
 import Customer from './models/Customer';
 import Measurement from './models/Measurement';
 import MeasurementTemplate from './models/MeasurementTemplate';
 import Order from './models/Order';
 import Invoice from './models/Invoice';
 
-const adapter = new SQLiteAdapter({
-    schema,
-    // (Optional) Database name
-    dbName: 'NeedleAfrica_v3',
-    // (Optional) Migrations
-    migrations,
-    // (Optional) Synchronous mode (experimental)
-    // Set jsi to false if you are testing in Expo Go or having trouble with Dev Builds
-    jsi: false,
-    // (Optional) What to do if the database is broken
-    onSetUpError: error => {
-        // Database failed to load -- display an error message or see why it failed
-    }
-});
+let databaseInstance: Database;
 
-export const database = new Database({
-    adapter,
-    modelClasses: [
-        Customer,
-        Measurement,
-        MeasurementTemplate,
-        Order,
-        Invoice,
-    ],
-});
+const modelClasses = [
+    Customer,
+    Measurement,
+    MeasurementTemplate,
+    Order,
+    Invoice,
+];
+
+if (Platform.OS === 'web') {
+    // 1. Web Fallback Strategy
+    // Uses the built-in LokiJS adapter to give you a functioning local database in the browser
+    const LokiJSAdapter = require('@nozbe/watermelondb/adapters/lokijs').default;
+    
+    const webAdapter = new LokiJSAdapter({
+        schema,
+        useWebWorker: false,
+        useIncrementalIndexedDB: true,
+    });
+
+    databaseInstance = new Database({
+        adapter: webAdapter,
+        modelClasses,
+    });
+} else {
+    // 2. Mobile Strategy (iOS / Android)
+    // Using require ensures the SQLite files are never loaded or executed on the web
+    const SQLiteAdapter = require('@nozbe/watermelondb/adapters/sqlite').default;
+    const migrations = require('./migrations').default;
+
+    const nativeAdapter = new SQLiteAdapter({
+        schema,
+        dbName: 'NeedleAfrica_v3',
+        migrations,
+        jsi: false,
+        onSetUpError: (error: any) => {
+            console.error("WatermelonDB Mobile Setup Error: ", error);
+        }
+    });
+
+    databaseInstance = new Database({
+        adapter: nativeAdapter,
+        modelClasses,
+    });
+}
+
+export const database = databaseInstance;

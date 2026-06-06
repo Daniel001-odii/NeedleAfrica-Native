@@ -138,14 +138,14 @@ export default function Profile() {
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
                             icon={<Gallery size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
-                            title="Catalog Storefront"
+                            title="Catalog-Website Settings"
                             onPress={() => router.push('/(tabs)/profile/catalog')}
                             isDark={isDark}
                         />
                         <ProfileItem
                             icon={<Chart2 size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Business Analytics"
-                            onPress={() => router.push('/(tabs)/profile/analytics')}
+                            subtitle="Coming soon"
                             isDark={isDark}
                             isLast
                         />

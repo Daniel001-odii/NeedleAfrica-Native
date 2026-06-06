@@ -3,14 +3,15 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "1.9.85",
+    "version": "1.9.86",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "platforms": [
       "ios",
-      "android"
+      "android",
+      "web"
     ],
     "splash": {
       "image": "./assets/transparent.png",

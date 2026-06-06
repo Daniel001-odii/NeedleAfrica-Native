@@ -120,5 +120,16 @@ export default schemaMigrations({
                 }),
             ],
         },
+        {
+            toVersion: 8,
+            steps: [
+                addColumns({
+                    table: 'measurement_templates',
+                    columns: [
+                        { name: 'is_public', type: 'boolean' },
+                    ],
+                }),
+            ],
+        },
     ],
 });

@@ -12,6 +12,16 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import CountryPicker, { getAllCountries } from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 
+// Convert local-format Nigerian phone (e.g. "08156074667") to E.164 ("+2348156074667").
+function toE164(raw: string): string {
+  if (!raw) return '';
+  if (raw.startsWith('+')) return raw;
+  if (/^0[789]\d{9}$/.test(raw)) {
+    return '+234' + raw.slice(1);
+  }
+  return raw;
+}
+
 const BUSINESS_TYPE_OPTIONS = [
     'Tailor',
     'Fashion Designer',
@@ -36,7 +46,7 @@ export default function PersonalInformation() {
     const [username, setUsername] = useState(user?.username || '');
     const [businessName, setBusinessName] = useState(user?.businessName || '');
     const [email] = useState(user?.email || '');
-    const [phone, setPhone] = useState(user?.phoneNumber || '');
+    const [phone, setPhone] = useState(toE164(user?.phoneNumber || ''));
     const [address, setAddress] = useState(user?.address || '');
     const [country, setCountry] = useState(user?.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
@@ -61,7 +71,7 @@ export default function PersonalInformation() {
         if (user) {
             setUsername(user.username || '');
             setBusinessName(user.businessName || '');
-            setPhone(user.phoneNumber || '');
+            setPhone(toE164(user.phoneNumber || ''));
             setAddress(user.address || '');
             if (user.country) {
                 setCountry(user.country);

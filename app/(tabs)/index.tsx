@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity } from 'react-native';
 import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,21 +10,13 @@ import { useSync } from '../../hooks/useSync';
 import { useOrders } from '../../hooks/useOrders';
 import { useCustomers } from '../../hooks/useCustomers';
 import { useTheme } from '../../contexts/ThemeContext';
-import { database } from '../../database/watermelon';
-import Svg, { Path } from 'react-native-svg';
+import { database } from '../../database/watermelon/index.native';
 import { OnboardingChecklist } from '../../components/OnboardingChecklist';
 import RevenueHeroCard from '../../components/RevenueHeroCard';
 import { useCatalog } from '../../hooks/useCatalog';
 import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist';
-
-
-
-
-export function HugeiconsArrowRight01(props: any) {
-    return (
-        <Svg width="1em" height="1em" viewBox="0 0 24 24">{/* Icon from Huge Icons by Hugeicons - undefined */}<Path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 6s6 4.419 6 6s-6 6-6 6" /></Svg>
-    )
-}
+import { CatalogVisibilityModal } from '../../components/CatalogVisibilityModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
     const { user } = useAuth();
@@ -32,11 +24,51 @@ export default function Home() {
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
     const { isDark } = useTheme();
-    const { needsVisibility } = useCatalog();
+    const { needsVisibility, isActivated, catalog, loading: catalogLoading } = useCatalog();
     const [balanceVisible, setBalanceVisible] = useState(true);
-    const [catalogBannerVisible, setCatalogBannerVisible] = useState(true);
+    const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
+    const [catalogModalVisible, setCatalogModalVisible] = useState(true);
 
     const todoChecklist = useTodoChecklist();
+
+    // Determine if user is on freemium plan
+    const isFreemium =
+        !user?.subscriptionPlan ||
+        user.subscriptionPlan === 'FREE';
+
+    // Check if catalog modal should be shown
+    // Conditions: freemium plan, catalog exists, catalog NOT enabled
+    useEffect(() => {
+        const checkModal = async () => {
+            if (catalogLoading) return;
+
+            // Only show for freemium users who have a catalog but haven't enabled visibility
+            const shouldShow =
+                isFreemium &&
+                isActivated &&
+                !catalog?.catalogEnabled;
+
+            if (shouldShow) {
+                try {
+                    const dismissed = await AsyncStorage.getItem('catalog_visibility_modal_dismissed');
+                    if (!dismissed) {
+                        setCatalogModalVisible(true);
+                    }
+                } catch {
+                    setCatalogModalVisible(true);
+                }
+            }
+        };
+
+        checkModal();
+    }, [catalogLoading, isFreemium, isActivated, catalog?.catalogEnabled]);
+
+    const onDismissCatalogModal = async () => {
+       /*  try {
+            await AsyncStorage.setItem('catalog_visibility_modal_dismissed', 'true');
+        } catch {} */
+        setCatalogModalVisible(false);
+    };
 
     const onRefresh = useCallback(async () => {
         await performSync();
@@ -233,73 +265,7 @@ export default function Home() {
                     </ScrollView>
                 </View>
 
-                {/* Todo Checklist Section */}
-                {todoChecklist.isVisible && (
-                    <View className={`mb-6 rounded-[24px] overflow-hidden ${isDark ? 'bg-[#1C1C1E] border border-zinc-800' : 'bg-white shadow-sm shadow-gray-200 border border-gray-100'}`}>
-                        {/* Header */}
-                        <View className={`px-5 py-3.5 flex-row items-center justify-between ${isDark ? 'border-b border-zinc-800' : 'border-b border-gray-100'}`}>
-                            <View className="flex-row items-center gap-2">
-                                <View className={`w-6 h-6 rounded-full items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-50'}`}>
-                                    <TickCircle size={14} color="#818CF8" variant="Bold" />
-                                </View>
-                                <Typography weight="bold" className={`text-[13px] ${isDark ? 'text-zinc-200' : 'text-gray-900'}`}>
-                                    Getting Started
-                                </Typography>
-                            </View>
-                            <Typography variant="small" color="gray" weight="bold" className="text-[11px]">
-                                {todoChecklist.completedCount}/{todoChecklist.totalCount}
-                            </Typography>
-                        </View>
-
-                        {/* Checklist Items */}
-                        {todoChecklist.items
-                            .filter(item => !item.completed)
-                            .slice(0, 4)
-                            .map((item, index) => {
-                                const remainingItems = todoChecklist.items.filter(i => !i.completed);
-                                const isLast = index === Math.min(remainingItems.length - 1, 3);
-                                return (
-                                    <TouchableOpacity
-                                        key={item.id}
-                                        onPress={() => {
-                                            todoChecklist.toggleItem(item.id);
-                                            router.push(item.route as any);
-                                        }}
-                                        className={`flex-row items-center px-5 py-4 ${!isLast ? (isDark ? 'border-b border-zinc-800/50' : 'border-b border-gray-50') : ''}`}
-                                        activeOpacity={0.6}
-                                    >
-                                        {/* Checkbox */}
-                                        <TouchableOpacity
-                                            onPress={() => todoChecklist.toggleItem(item.id)}
-                                            className={`w-6 h-6 rounded-lg items-center justify-center mr-3 border-2 ${
-                                                isDark ? 'border-zinc-600' : 'border-gray-300'
-                                            }`}
-                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                        >
-                                            <View className={`w-3.5 h-3.5 rounded-sm ${isDark ? 'bg-zinc-600' : 'bg-gray-300'}`} />
-                                        </TouchableOpacity>
-                                        <View className="flex-1">
-                                            <Typography weight="bold" className="text-[14px]">{item.label}</Typography>
-                                            <Typography variant="small" color="gray" className="text-[12px]">{item.description}</Typography>
-                                        </View>
-                                        <ArrowRight size={14} color="#9CA3AF" />
-                                    </TouchableOpacity>
-                                );
-                            })}
-
-                        {/* Dismiss all link */}
-                        <TouchableOpacity
-                            onPress={todoChecklist.dismissAll}
-                            className={`px-5 py-3 items-center ${isDark ? 'border-t border-zinc-800/50' : 'border-t border-gray-50'}`}
-                            activeOpacity={0.6}
-                        >
-                            <Typography variant="small" color="gray" weight="bold" className="text-[11px]">
-                                Dismiss all
-                            </Typography>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
+            
                 {/* Getting Started To-Do (shown when no clients or orders) */}
                 {
                     showTodo ? (
@@ -411,6 +377,13 @@ export default function Home() {
 
 
             </ScrollView>
+
+            {/* Catalog Visibility Modal for Freemium Users */}
+            <CatalogVisibilityModal
+                visible={catalogModalVisible}
+                onClose={onDismissCatalogModal}
+                onSuccess={onDismissCatalogModal}
+            />
         </View>
     );
 }
@@ -428,4 +401,3 @@ function QuickActionPill({ icon, label, bg, onPress }: any) {
         </Pressable>
     );
 }
-
