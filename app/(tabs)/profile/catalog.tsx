@@ -30,6 +30,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
+import { CatalogVisibilityModal } from '../../../components/CatalogVisibilityModal';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -92,6 +93,7 @@ export default function BusinessSettings() {
     const insets = useSafeAreaInsets();
 
     const [catalogId, setCatalogId] = useState<string | null>(null);
+    const [nxFormattedId, setNxFormattedId] = useState<string | null>(null);
     const [catalogViews, setCatalogViews] = useState(0);
     const [isEnabled, setIsEnabled] = useState(false);
     const [showPrices, setShowPrices] = useState(true);
@@ -122,10 +124,11 @@ export default function BusinessSettings() {
     const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [shareCardModalVisible, setShareCardModalVisible] = useState(false);
 
     const userIsPro = user?.subscriptionPlan !== 'FREE' && user?.subscriptionStatus === 'ACTIVE';
 
-    const catalogUrl = `https://catalog.needleafrica.com/cg/${encodeURIComponent(catalogId as string)}`;
+    const catalogUrl = `https://catalog.needleafrica.com/cg/${encodeURIComponent((nxFormattedId || catalogId) as string)}`;
 
     useEffect(() => {
         // Initial fetch
@@ -146,6 +149,7 @@ export default function BusinessSettings() {
             const res = await axiosInstance.get('/catalog');
             if (res.data && res.data.id) {
                 setCatalogId(res.data.id);
+                setNxFormattedId(res.data.nxFormattedId || null);
                 setCatalogViews(res.data.views || 0);
                 setIsEnabled(res.data.catalogEnabled || false);
                 setShowPrices(userIsPro ? (res.data.showPricesInCatalog ?? true) : false);
@@ -493,13 +497,13 @@ export default function BusinessSettings() {
                             <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Your Store Link</Typography>
                             <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
                                 <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                    https://catalog.needleafrica.com/cg/{catalogId}
+                                    https://catalog.needleafrica.com/cg/{nxFormattedId || catalogId}
                                 </Typography>
 
                                 <View className="flex-row gap-x-3">
                                     <TouchableOpacity
                                         onPress={async () => {
-                                            await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${catalogId}`);
+                                            await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${nxFormattedId || catalogId}`);
                                             Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
                                         }}
                                         className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30"
@@ -508,10 +512,11 @@ export default function BusinessSettings() {
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
-                                        onPress={() => Linking.openURL(`https://catalog.needleafrica.com/cg/${catalogId}`)}
+                                        onPress={() => setShareCardModalVisible(true)}
                                         className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-gray-100 dark:bg-white/10"
                                     >
-                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Preview Store</Typography>
+                                        <Share size={18} color={isDark ? 'white' : '#111827'} variant="Linear" style={{ marginRight: 8 }} />
+                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Share Card</Typography>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -612,6 +617,13 @@ export default function BusinessSettings() {
                     </View>
                 </SafeAreaView>
             </Modal>
+
+            {/* SHARE CARD MODAL */}
+            <CatalogVisibilityModal
+                visible={shareCardModalVisible}
+                onClose={() => setShareCardModalVisible(false)}
+                skipToShare={true}
+            />
 
             {/* FLOATING EYE BUTTON */}
             {catalogId && (

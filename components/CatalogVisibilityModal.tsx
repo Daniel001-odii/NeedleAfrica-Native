@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Typography } from './ui/Typography';
 import Toast from 'react-native-toast-message';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { G, Path } from 'react-native-svg';
 import axiosInstance from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Confetti } from './Confetti';
@@ -28,6 +28,7 @@ interface CatalogVisibilityModalProps {
     visible: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    skipToShare?: boolean;
 }
 
 export function HugeiconsTick02(props: any) {
@@ -42,6 +43,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
     visible,
     onClose,
     onSuccess,
+    skipToShare = false,
 }) => {
     const insets = useSafeAreaInsets();
     const { user } = useAuth();
@@ -49,12 +51,19 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
     const [isSuccessState, setIsSuccessState] = useState(false);
     const [catalogData, setCatalogData] = useState<any>(null);
     const [sharingLoading, setSharingLoading] = useState(false);
+    const [selectedColor, setSelectedColor] = useState('#E84C3D');
+    const [backgroundImage, setBackgroundImage] = useState<'share1' | 'share2'>('share2');
 
     const viewShotRef = useRef<ViewShot>(null);
+
+    const PREDEFINED_COLORS = ['#E84C3D', '#2ECC71', '#3498DB', '#F39C12', '#9B59B6'];
 
     useEffect(() => {
         if (visible) {
             fetchCatalogDetails();
+            if (skipToShare) {
+                setIsSuccessState(true);
+            }
         }
     }, [visible]);
 
@@ -166,7 +175,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
         return `@${cleanFallback}`;
     };
 
-    const catalogId = catalogData?.id || 'store';
+    const catalogId = catalogData?.nxFormattedId || catalogData?.id || 'store';
     const catalogUrl = `https://catalog.needleafrica.com/cg/${catalogId}`;
     const truncatedUrl = `catalog.needleafrica.com/cg/${catalogId}`;
 
@@ -280,17 +289,34 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
                             <View className="flex-1 justify-between px-6 py-4">
                                 {/* Success Header */}
-                                <View className="items-center mb-4 mt-2">
-                                    {/* <View className="w-12 h-12 bg-green-500/10 rounded-full items-center justify-center mb-3">
-                                        <HugeiconsTick02 className="text-green-500 text-2xl" />
-                                    </View> */}
-                                    <Typography variant="h2" weight="bold" color="white" className="text-center text-xl">
-                                        Your Catalog is Live!
-                                    </Typography>
-                                    <Typography variant="body" color="white" className="text-center opacity-70 text-xs mt-1 px-4 leading-4">
-                                        Congratulations! Your digital storefront is now open to the world. Share your unique link and start taking orders.
-                                    </Typography>
-                                </View>
+                                {skipToShare ? (
+                                    <View className="flex-row justify-end items-center mb-4 mt-2">
+                                        <TouchableOpacity onPress={onClose} className="p-2 rounded-full bg-white/10">
+                                            <Svg width="24" height="24" viewBox="0 0 24 24">
+                                                <Path
+                                                    fill="none"
+                                                    stroke="white"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="1.5"
+                                                    d="M18 6L6 18m12 0L6 6"
+                                                />
+                                            </Svg>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <View className="items-center mb-4 mt-2">
+                                        {/* <View className="w-12 h-12 bg-green-500/10 rounded-full items-center justify-center mb-3">
+                                            <HugeiconsTick02 className="text-green-500 text-2xl" />
+                                        </View> */}
+                                        <Typography variant="h2" weight="bold" color="white" className="text-center text-xl">
+                                            Your Catalog is Live!
+                                        </Typography>
+                                        <Typography variant="body" color="white" className="text-center opacity-70 text-xs mt-1 px-4 leading-4">
+                                            Congratulations! Your digital storefront is now open to the world. Share your unique link and start taking orders.
+                                        </Typography>
+                                    </View>
+                                )}
 
                                 {/* Visual Preview Card Wrapper */}
                                 <View className="items-center justify-center my-3">
@@ -300,13 +326,16 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                         style={{
                                             width: 300,
                                             height: 375,
-                                            borderRadius: 16,
                                             overflow: 'hidden',
-                                            backgroundColor: '#1C1C1E',
+                                            backgroundColor: selectedColor,
                                         }}
                                     >
                                         <ImageBackground
-                                            source={require('../assets/images/social_share_1.png')}
+                                            source={
+                                                backgroundImage === 'share2'
+                                                    ? require('../assets/images/social_share_2.png')
+                                                    : require('../assets/images/social_share_1.png')
+                                            }
                                             style={{ width: '100%', height: '100%' }}
                                             resizeMode="cover"
                                         >
@@ -314,26 +343,25 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             {/* Position range: Y: 17.7% to 20.6%, X: 20.1% to 79.7% */}
                                             <View style={{
                                                 position: 'absolute',
-                                                top: '8%',
+                                                top: '6%',
                                                 left: '20.1%',
                                                 width: '59.6%',
-                                                height: '4.5%',
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                overflow: 'visible'
+                                                
                                             }}>
                                                 <Image
                                                     source={logoSource}
-                                                    style={{ width: 14, height: 14, borderRadius: 7, marginRight: 5 }}
+                                                    style={{ width: 25, height: 25, borderRadius: 7, marginRight: 5 }}
                                                 />
                                                 <Typography
                                                     variant="small"
                                                     weight="bold"
                                                     color="white"
-                                                    style={{ fontSize: 15 }}
+                                                    style={{ fontSize: 30 }}
                                                     numberOfLines={1}
-                                                    className=' pt-1'
+                                                    className=' pt-5'
                                                 >
                                                     {storeName}
                                                 </Typography>
@@ -343,7 +371,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             {/* Position range: Y: 33.8% to 62.1%, X: 24.2% to 75.9% */}
                                             <View style={{
                                                 position: 'absolute',
-                                                top: '40%',
+                                                top: '36%',
                                                 left: '24.2%',
                                                 width: '51.7%',
                                                 height: '28.3%',
@@ -352,11 +380,10 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             }}>
                                                 <QRCodeStyled
                                                     data={catalogUrl} // Use 'data' instead of 'value'
-                                                    size={125}        // Replaces 'pieceSize'. Sets total QR dimension
+                                                    size={135}        // Replaces 'pieceSize'. Sets total QR dimension
                                                     pieceCornerType="rounded"
                                                     logo={{
                                                         href: logoSource,
-                                                        padding: 4,   // Creates the cutout ring around your logo
                                                     }}
                                                     pieceBorderRadius={2}
                                                     outerEyesOptions={{
@@ -373,17 +400,16 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             {/* Position range: Y: 73.1% to 79.5%, X: 32% to 75.0% */}
                                             <View style={{
                                                 position: 'absolute',
-                                                top: '73.1%',
-                                                left: '34.0%',
-                                                width: '40.0%',
+                                                top: '75.0%',
+                                                left: '31.0%',
                                                 height: '6.4%',
                                                 justifyContent: 'center',
                                             }}>
                                                 <Typography
                                                     variant="small"
                                                     weight="semibold"
-                                                    color="gray"
-                                                    style={{ fontSize: 7.5 }}
+                                                    color={backgroundImage === 'share2' ? "white" : "black"}
+                                                    style={{ fontSize: 6 }}
                                                     numberOfLines={1}
                                                     ellipsizeMode="tail"
                                                 >
@@ -395,7 +421,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             {/* Position range: Y: 84.0% to 88.0%, X: 12.0% to 48.0% */}
                                             <View style={{
                                                 position: 'absolute',
-                                                top: '86.0%',
+                                                top: '86.5%',
                                                 left: '12.0%',
                                                 width: '36.0%',
                                                 height: '4.0%',
@@ -416,7 +442,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             {/* Position range: Y: 84.0% to 88.0%, X: 64.0% to 92.0% */}
                                             <View style={{
                                                 position: 'absolute',
-                                                top: '86.0%',
+                                                top: '86.8%',
                                                 left: '60.0%',
                                                 width: '28.0%',
                                                 height: '4.0%',
@@ -426,7 +452,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                                     variant="small"
                                                     weight="bold"
                                                     color="white"
-                                                    style={{ fontSize: 10 }}
+                                                    style={{ fontSize: 8 }}
                                                     numberOfLines={1}
                                                 >
                                                     {formattedPhone}
@@ -434,6 +460,52 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                             </View>
                                         </ImageBackground>
                                     </ViewShot>
+
+                                    {/* Color Picker & Background Toggle */}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 16 }}>
+                                        {PREDEFINED_COLORS.map((color) => {
+                                            const isSelected = selectedColor === color && backgroundImage === 'share2';
+                                            return (
+                                                <TouchableOpacity
+                                                    key={color}
+                                                    activeOpacity={0.7}
+                                                    onPress={() => {
+                                                        setSelectedColor(color);
+                                                        setBackgroundImage('share2');
+                                                    }}
+                                                    style={{
+                                                        width: 32,
+                                                        height: 32,
+                                                        borderRadius: 16,
+                                                        backgroundColor: color,
+                                                        borderWidth: isSelected ? 3 : 0,
+                                                        borderColor: 'white',
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                        <TouchableOpacity
+                                            activeOpacity={0.7}
+                                            onPress={() => {
+                                                setBackgroundImage('share1');
+                                            }}
+                                            style={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: 16,
+                                                backgroundColor: '#222222',
+                                                borderWidth: backgroundImage === 'share1' ? 3 : 0,
+                                                borderColor: 'white',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                overflow: 'hidden',
+                                            }}
+                                        >
+                                           <Svg width="20" height="20" viewBox="0 0 24 24"><G fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                                            <Path d="m3 16l4.47-4.47a1.81 1.81 0 0 1 2.56 0L14 15.5m1.5 1.5L14 15.5m7 .5l-2.47-2.47a1.81 1.81 0 0 0-2.56 0L14 15.5M15.5 8a.5.5 0 0 0 0-1m0 1a.5.5 0 0 1 0-1m0 1V7"/>
+                                            <Path d="M3.698 19.747C2.5 18.345 2.5 16.23 2.5 12s0-6.345 1.198-7.747q.256-.3.555-.555C5.655 2.5 7.77 2.5 12 2.5s6.345 0 7.747 1.198q.3.256.555.555C21.5 5.655 21.5 7.77 21.5 12s0 6.345-1.198 7.747q-.256.3-.555.555C18.345 21.5 16.23 21.5 12 21.5s-6.345 0-7.747-1.198q-.3-.256-.555-.555"/></G></Svg>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
 
                                 {/* Action Buttons */}
@@ -462,15 +534,27 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                         )}
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity
-                                        activeOpacity={0.8}
-                                        onPress={handleCloseSuccess}
-                                        className="h-14 rounded-full items-center justify-center bg-white/10"
-                                    >
-                                        <Typography variant="subtitle" weight="bold" color="white">
-                                            Go to Dashboard
-                                        </Typography>
-                                    </TouchableOpacity>
+                                    {skipToShare ? (
+                                        <TouchableOpacity
+                                            activeOpacity={0.8}
+                                            onPress={onClose}
+                                            className="h-14 rounded-full items-center justify-center bg-white/10"
+                                        >
+                                            <Typography variant="subtitle" weight="bold" color="white">
+                                                Close
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity
+                                            activeOpacity={0.8}
+                                            onPress={handleCloseSuccess}
+                                            className="h-14 rounded-full items-center justify-center bg-white/10"
+                                        >
+                                            <Typography variant="subtitle" weight="bold" color="white">
+                                                Go to Dashboard
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             </View>
                         </SafeAreaView>
