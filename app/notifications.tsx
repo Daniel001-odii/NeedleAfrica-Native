@@ -8,7 +8,7 @@ import { IconButton } from '../components/ui/IconButton';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCatalog } from '../hooks/useCatalog';
-import { SubscriptionModal } from '../components/SubscriptionModal';
+import { CatalogVisibilityModal } from '../components/CatalogVisibilityModal';
 
 interface AppNotification {
     id: string;
@@ -50,7 +50,7 @@ export default function NotificationsScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const { catalog, needsVisibility, loading: catalogLoading } = useCatalog();
-    const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+    const [isCatalogModalVisible, setIsCatalogModalVisible] = useState(false);
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
     const markAsRead = useCallback((id: string) => {
@@ -74,7 +74,7 @@ export default function NotificationsScreen() {
                     if (userIsPro) {
                         router.push('/(tabs)/profile/catalog');
                     } else {
-                        setIsSubscriptionModalVisible(true);
+                        setIsCatalogModalVisible(true);
                     }
                 },
             });
@@ -164,9 +164,9 @@ export default function NotificationsScreen() {
                 </ScrollView>
             </SafeAreaView>
 
-            <SubscriptionModal
-                visible={isSubscriptionModalVisible}
-                onClose={() => setIsSubscriptionModalVisible(false)}
+            <CatalogVisibilityModal
+                visible={isCatalogModalVisible}
+                onClose={() => setIsCatalogModalVisible(false)}
             />
         </View>
     );

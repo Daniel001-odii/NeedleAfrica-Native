@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated } from 'react-native';
 import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
@@ -27,9 +27,34 @@ export default function Home() {
     const { needsVisibility, isActivated, catalog, loading: catalogLoading } = useCatalog();
     const [balanceVisible, setBalanceVisible] = useState(true);
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
-    const [catalogModalVisible, setCatalogModalVisible] = useState(true);
+    const [catalogModalVisible, setCatalogModalVisible] = useState(false);
 
     const todoChecklist = useTodoChecklist();
+
+    // Animated waving hand
+    const waveAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        const animation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(waveAnim, {
+                    toValue: 1,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(waveAnim, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        animation.start();
+        return () => animation.stop();
+    }, []);
+    const waveRotation = waveAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['-20deg', '20deg'],
+    });
 
     // Determine if user is on freemium plan
     const isFreemium =
@@ -49,24 +74,21 @@ export default function Home() {
                 !catalog?.catalogEnabled;
 
             if (shouldShow) {
-                try {
-                    const dismissed = await AsyncStorage.getItem('catalog_visibility_modal_dismissed');
-                    if (!dismissed) {
-                        setCatalogModalVisible(true);
-                    }
-                } catch {
-                    setCatalogModalVisible(true);
-                }
+                setCatalogModalVisible(true);
             }
         };
 
         checkModal();
     }, [catalogLoading, isFreemium, isActivated, catalog?.catalogEnabled]);
 
-    const onDismissCatalogModal = async () => {
-       /*  try {
+    const onDismissCatalogModal = () => {
+        setCatalogModalVisible(false);
+    };
+
+    const onDontShowCatalogModalAgain = async () => {
+        try {
             await AsyncStorage.setItem('catalog_visibility_modal_dismissed', 'true');
-        } catch {} */
+        } catch {}
         setCatalogModalVisible(false);
     };
 
@@ -155,9 +177,10 @@ export default function Home() {
         return 'Good evening';
     };
 
+    const hasNoCatalog = !catalogLoading && !isActivated;
     const hasNoClients = !customersLoading && customers.length === 0;
     const hasNoOrders = !ordersLoading && orders.length === 0;
-    const showTodo = hasNoClients || hasNoOrders;
+    const showTodo = hasNoCatalog || hasNoClients || hasNoOrders;
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -170,7 +193,10 @@ export default function Home() {
                 <View className="flex-row justify-between items-center mb-6">
                     <View>
                         <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
-                          Hi, {user?.username || 'Tailor'} 👋
+                          Hi, {user?.username || 'Tailor'}{' '}
+                          <Animated.Text style={{ transform: [{ rotate: waveRotation }] }}>
+                            👋
+                          </Animated.Text>
                         </Typography>
                         <Typography variant="caption" weight="bold" color="gray">
                             {getGreeting()}.
@@ -273,6 +299,22 @@ export default function Home() {
                             <View className={`px-5 py-3 ${isDark ? 'border-b border-zinc-800' : 'border-b border-gray-100'}`}>
                                 <Typography weight="bold" className={`text-[13px] ${isDark ? 'text-zinc-300' : 'text-gray-900'}`}>Getting Started</Typography>
                             </View>
+                            {hasNoCatalog && (
+                                <TouchableOpacity
+                                    onPress={() => router.push('/catalog-explainer/step1')}
+                                    className={`flex-row items-center px-5 py-4 ${(hasNoClients || hasNoOrders) ? (isDark ? 'border-b border-zinc-800' : 'border-b border-gray-50') : ''}`}
+                                    activeOpacity={0.6}
+                                >
+                                    <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${isDark ? 'bg-green-500/15' : 'bg-green-50'}`}>
+                                        <Gallery size={16} color="#10B981" variant="Bulk" />
+                                    </View>
+                                    <View className="flex-1">
+                                        <Typography weight="bold" className="text-[14px]">Create your catalog</Typography>
+                                        <Typography variant="small" color="gray" className="text-[12px]">Launch your free online storefront</Typography>
+                                    </View>
+                                    <ArrowRight size={14} color="#9CA3AF" />
+                                </TouchableOpacity>
+                            )}
                             {hasNoClients && (
                                 <TouchableOpacity
                                     onPress={() => router.push('/(tabs)/customers/new')}
@@ -383,6 +425,7 @@ export default function Home() {
                 visible={catalogModalVisible}
                 onClose={onDismissCatalogModal}
                 onSuccess={onDismissCatalogModal}
+                onDontShowAgain={onDontShowCatalogModalAgain}
             />
         </View>
     );

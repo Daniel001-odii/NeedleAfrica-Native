@@ -1,7 +1,8 @@
 import { Tabs, router } from 'expo-router';
 import { View, Image } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { Home, User, People, Calendar, MagicStar } from 'iconsax-react-native';
+import { Home, User, People, Calendar } from 'iconsax-react-native';
+import Svg, { G, Path } from 'react-native-svg';
 import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -78,7 +79,9 @@ export default function TabLayout() {
                         options={{
                             title: 'Extras',
                             tabBarIcon: ({ color, focused }) => (
-                                <MagicStar size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                <Svg width="22" height="22" viewBox="0 0 24 24">
+                                    <Path fill={focused ? color : 'none'} stroke={color} stroke-width="1.5" d="M15.5 6.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm6.5 11a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm-13 0a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z" />
+                                </Svg>
                             ),
                         }}
                     />

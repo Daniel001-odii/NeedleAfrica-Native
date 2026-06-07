@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share } from 'iconsax-react-native';
+import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share, Crown1 } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path } from 'react-native-svg';
@@ -14,11 +15,16 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function CatalogGallery() {
     const { isDark } = useTheme();
+    const { user } = useAuth();
     const router = useRouter();
 
     const [items, setItems] = useState<any[]>([]);
+    const isFreemium = !user?.subscriptionPlan || user.subscriptionPlan === 'FREE';
+    const FREEMIUM_LIMIT = 3;
     const [isLoading, setIsLoading] = useState(true);
     const [showUploadModal, setShowUploadModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<any>(null);
     const [catalogViews, setCatalogViews] = useState(0);
     const [catalogId, setCatalogId] = useState<string | null>(null);
     const insets = useSafeAreaInsets();
@@ -116,6 +122,42 @@ export default function CatalogGallery() {
         }
     };
 
+    const handleOpenEditItem = (item: any) => {
+        setEditingItem(item);
+        setName(item.name || '');
+        setPrice(item.price ? String(item.price) : '');
+        setDescription(item.description || '');
+        setImages(item.images || []);
+        setShowEditModal(true);
+    };
+
+    const handleUpdateItem = async () => {
+        if (!editingItem) return;
+        if (!name || images.length === 0) {
+            Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Name and at least 1 image are required.' });
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const { default: axiosInstance } = await import('../../lib/axios');
+            await axiosInstance.patch(`/catalog/items/${editingItem.id}`, {
+                name,
+                price,
+                description,
+                images
+            });
+            Toast.show({ type: 'success', text1: 'Success', text2: 'Item updated successfully' });
+            setShowEditModal(false);
+            setEditingItem(null);
+            resetForm();
+            fetchData();
+        } catch (error: any) {
+            Toast.show({ type: 'error', text1: 'Update Error', text2: error.response?.data?.error || error.message });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleDeleteItem = async (id: string) => {
         try {
             const { default: axiosInstance } = await import('../../lib/axios');
@@ -167,7 +209,7 @@ export default function CatalogGallery() {
                             <Typography variant="h2" weight="bold">{items.length}</Typography>
                         </View>
                         <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
-                            <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Live Views</Typography>
+                            <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Catalog Views</Typography>
                             <Typography variant="h2" weight="bold">{catalogViews}</Typography>
                         </View>
                     </View>
@@ -186,31 +228,75 @@ export default function CatalogGallery() {
 
                             {/* Tabular View (List) */}
                             <View className={`rounded-[28px] overflow-hidden ${cardBaseStyle}`}>
-                                {items.map((item, index) => (
-                                    <View
-                                        key={item.id}
-                                        className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
-                                    >
-                                        <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
-                                            {item.images?.[0] ? <Image source={{ uri: item.images[0] }} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
-                                        </View>
-                                        <View className="flex-1">
-                                            <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
-                                            <View className="flex-row items-center">
-                                                {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
-                                                <View className="bg-green-500/10 px-2 rounded-md">
-                                                    <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
+                                {items.map((item, index) => {
+                                    const isBeyondFreemiumLimit = isFreemium && index >= FREEMIUM_LIMIT;
+                                    return (
+                                        <TouchableOpacity
+                                            key={item.id}
+                                            activeOpacity={0.6}
+                                            onPress={() => handleOpenEditItem(item)}
+                                            className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
+                                            style={{ opacity: isBeyondFreemiumLimit ? 0.35 : 1 }}
+                                        >
+                                            <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
+                                                {item.images?.[0] ? <Image source={{ uri: item.images[0] }} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                                            </View>
+                                            <View className="flex-1">
+                                                <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
+                                                <View className="flex-row items-center">
+                                                    {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
+                                                    <View className="flex-row items-center mr-3">
+                                                        <Eye size={12} color="#9CA3AF" variant="Linear" />
+                                                        <Typography variant="small" color="gray" className="ml-1 text-[11px]">{item.views ?? 0}</Typography>
+                                                    </View>
+                                                    <View className="bg-green-500/10 px-2 rounded-md">
+                                                        <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
+                                                    </View>
                                                 </View>
                                             </View>
-                                        </View>
-                                        <View className="flex-row gap-2">
-                                            <TouchableOpacity onPress={() => handleDeleteItem(item.id)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                                <Trash size={16} color="#EF4444" variant="Bulk" />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                ))}
+                                            <View className="flex-row gap-2">
+                                                <TouchableOpacity onPress={() => handleDeleteItem(item.id)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                                    <Trash size={16} color="#EF4444" variant="Bulk" />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
+
+                            {/* Freemium Upgrade Disclaimer */}
+                            {isFreemium && items.length > FREEMIUM_LIMIT && (
+                                <View
+                                    className="mt-4 p-4 rounded-2xl items-center"
+                                    style={{
+                                        backgroundColor: isDark ? '#1C1C1E' : '#FFF7ED',
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#FDB02233' : '#FDB022',
+                                    }}
+                                >
+                                    <View className="flex-row items-center mb-2">
+                                        <Crown1 size={18} color="#FDB022" variant="Bold" style={{ marginRight: 6 }} />
+                                        <Typography weight="bold" className="text-[13px]" style={{ color: '#FDB022' }}>
+                                            Freemium Limit
+                                        </Typography>
+                                    </View>
+                                    <Typography variant="small" color="gray" className="text-center text-[12px] mb-3 leading-[18px]">
+                                        Only your first {FREEMIUM_LIMIT} items are visible on your catalog website. Upgrade to Pro to showcase all {items.length} items.
+                                    </Typography>
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(tabs)/profile/subscription' as any)}
+                                        activeOpacity={0.8}
+                                        style={{
+                                            backgroundColor: '#FDB022',
+                                            paddingHorizontal: 24,
+                                            paddingVertical: 10,
+                                            borderRadius: 20,
+                                        }}
+                                    >
+                                        <Typography weight="bold" color="white" className="text-[13px]">Upgrade to Pro</Typography>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
 
                         </View>
                     ) : (
@@ -268,6 +354,41 @@ export default function CatalogGallery() {
 
                             <Button onPress={handleUploadItem} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8" textClassName="text-white text-[16px] font-bold">
                                 Upload Style
+                            </Button>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Edit Modal */}
+            <Modal visible={showEditModal} transparent animationType="slide">
+                <View className="flex-1 bg-black/60 justify-end">
+                    <View className={`rounded-t-[32px] p-6 pt-8 ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'} h-[85%]`}>
+                        <View className="flex-row justify-between items-center mb-6">
+                            <Typography variant="h2" weight="bold">Edit Style</Typography>
+                            <TouchableOpacity onPress={() => { setShowEditModal(false); setEditingItem(null); resetForm(); }}>
+                                <CloseCircle size={28} color="#6B7280" variant="Bold" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <TextInput placeholder="Style Name" value={name} onChangeText={setName} className={inputClass} />
+                            <TextInput placeholder="Price Amount" value={price} onChangeText={setPrice} keyboardType="numeric" className={inputClass} />
+                            <TextInput placeholder="Description (Optional)" value={description} onChangeText={setDescription} multiline className={`${inputClass} min-h-[100px] text-left pt-4`} />
+                            <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Images ({images.length}/1)</Typography>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 h-28">
+                                {images.map((img, i) => (
+                                    <Image key={i} source={{ uri: img }} className="h-28 w-24 rounded-2xl mr-3" />
+                                ))}
+                                {images.length < 1 && (
+                                    <TouchableOpacity onPress={handlePickImages} className={`h-28 w-24 rounded-2xl items-center justify-center border-2 border-dashed ${isDark ? 'border-gray-700 bg-zinc-800' : 'border-gray-300 bg-gray-100'}`}>
+                                        <Camera size={24} color="#9CA3AF" />
+                                        <Typography variant="small" color="gray" className="mt-1 text-[10px]">Add Photo</Typography>
+                                    </TouchableOpacity>
+                                )}
+                            </ScrollView>
+
+                            <Button onPress={handleUpdateItem} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8" textClassName="text-white text-[16px] font-bold">
+                                Update Style
                             </Button>
                         </ScrollView>
                     </View>

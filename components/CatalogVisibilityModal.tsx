@@ -29,6 +29,7 @@ interface CatalogVisibilityModalProps {
     onClose: () => void;
     onSuccess?: () => void;
     skipToShare?: boolean;
+    onDontShowAgain?: () => void;
 }
 
 export function HugeiconsTick02(props: any) {
@@ -44,6 +45,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
     onClose,
     onSuccess,
     skipToShare = false,
+    onDontShowAgain,
 }) => {
     const insets = useSafeAreaInsets();
     const { user } = useAuth();
@@ -53,6 +55,7 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
     const [sharingLoading, setSharingLoading] = useState(false);
     const [selectedColor, setSelectedColor] = useState('#E84C3D');
     const [backgroundImage, setBackgroundImage] = useState<'share1' | 'share2'>('share2');
+    const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false);
 
     const viewShotRef = useRef<ViewShot>(null);
 
@@ -134,8 +137,12 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
     };
 
     const handleCloseSuccess = () => {
-        onSuccess?.();
-        onClose();
+        if (dontShowAgainChecked) {
+            onDontShowAgain?.();
+        } else {
+            onSuccess?.();
+            onClose();
+        }
         setIsSuccessState(false);
     };
 
@@ -276,7 +283,39 @@ export const CatalogVisibilityModal: React.FC<CatalogVisibilityModalProps> = ({
                                                 )}
                                             </TouchableOpacity>
 
-                                            <Typography variant="small" color="white" className="text-center opacity-40 mt-4 px-4 leading-4">
+                                            {/* Don't show again checkbox */}
+                                            <View className="mt-4">
+                                                <TouchableOpacity
+                                                    activeOpacity={0.7}
+                                                    onPress={() => setDontShowAgainChecked(!dontShowAgainChecked)}
+                                                    className="flex-row items-center justify-center"
+                                                >
+                                                    <View
+                                                        style={{
+                                                            width: 18,
+                                                            height: 18,
+                                                            borderRadius: 4,
+                                                            borderWidth: 2,
+                                                            borderColor: 'white',
+                                                            backgroundColor: dontShowAgainChecked ? 'white' : 'transparent',
+                                                            marginRight: 8,
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                        }}
+                                                    >
+                                                        {dontShowAgainChecked && (
+                                                            <Svg width="12" height="12" viewBox="0 0 24 24">
+                                                                <Path fill="none" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="m5 14l3.5 3.5L19 6.5" />
+                                                            </Svg>
+                                                        )}
+                                                    </View>
+                                                    <Typography variant="small" color="white" className="opacity-60">
+                                                        Don't show this again
+                                                    </Typography>
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            <Typography variant="small" color="white" className="text-center opacity-40 mt-2 px-4 leading-4">
                                                 You can manage your catalog visibility anytime from your profile settings.
                                             </Typography>
                                         </View>

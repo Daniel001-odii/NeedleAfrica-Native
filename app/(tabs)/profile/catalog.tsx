@@ -14,6 +14,7 @@ import {
     ShieldTick,
     Activity,
     Eye,
+    Gallery,
     Refresh2,
     ArrowRight
 } from 'iconsax-react-native';
@@ -33,6 +34,38 @@ import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { CatalogVisibilityModal } from '../../../components/CatalogVisibilityModal';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Normalize social media input: strip URLs, @ prefixes, trailing slashes — keep only the handle
+function normalizeSocialHandle(input: string): string {
+  if (!input) return '';
+  let cleaned = input.trim();
+
+  // Strip common URL patterns for each platform
+  const urlPatterns = [
+    /^https?:\/\/(www\.)?instagram\.com\//i,
+    /^https?:\/\/(www\.)?twitter\.com\//i,
+    /^https?:\/\/(www\.)?x\.com\//i,
+    /^https?:\/\/(www\.)?facebook\.com\//i,
+    /^https?:\/\/(www\.)?tiktok\.com\/@?/i,
+    /^instagram\.com\//i,
+    /^twitter\.com\//i,
+    /^x\.com\//i,
+    /^facebook\.com\//i,
+    /^tiktok\.com\/@?/i,
+  ];
+
+  for (const pattern of urlPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+
+  // Strip leading @
+  cleaned = cleaned.replace(/^@+/, '');
+
+  // Strip trailing slashes
+  cleaned = cleaned.replace(/\/+$/, '');
+
+  return cleaned;
+}
 
 // Convert local-format Nigerian phone (e.g. "08156074667") to E.164 ("+2348156074667").
 // `react-phone-number-input` requires its `value` to be in E.164 format.
@@ -387,6 +420,7 @@ export default function BusinessSettings() {
                                 <TextInput
                                     className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                     placeholder="@handle" value={instagram} onChangeText={setInstagram}
+                                    onBlur={() => setInstagram(normalizeSocialHandle(instagram))}
                                 />
                             </View>
                             <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
@@ -395,6 +429,7 @@ export default function BusinessSettings() {
                                 <TextInput
                                     className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                     placeholder="@handle" value={twitter} onChangeText={setTwitter}
+                                    onBlur={() => setTwitter(normalizeSocialHandle(twitter))}
                                 />
                             </View>
                             <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
@@ -403,6 +438,7 @@ export default function BusinessSettings() {
                                 <TextInput
                                     className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                     placeholder="page name" value={facebook} onChangeText={setFacebook}
+                                    onBlur={() => setFacebook(normalizeSocialHandle(facebook))}
                                 />
                             </View>
                             <View className="flex-row items-center px-4 py-4">
@@ -411,6 +447,7 @@ export default function BusinessSettings() {
                                 <TextInput
                                     className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
                                     placeholder="@handle" value={tiktok} onChangeText={setTiktok}
+                                    onBlur={() => setTiktok(normalizeSocialHandle(tiktok))}
                                 />
                             </View>
                         </View>
@@ -627,29 +664,57 @@ export default function BusinessSettings() {
 
             {/* FLOATING EYE BUTTON */}
             {catalogId && (
-                <TouchableOpacity
-                    onPress={() => setShowWebView(true)}
-                    activeOpacity={0.8}
-                    style={{
-                        position: 'absolute',
-                        right: 20,
-                        bottom: insets.bottom + 20,
-                        backgroundColor: '#2563EB',
-                        width: 56,
-                        height: 56,
-                        borderRadius: 28,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        elevation: 10,
-                        zIndex: 999
-                    }}
-                >
-                    <Eye size={28} color="white" variant="Bulk" />
-                </TouchableOpacity>
+                <>
+                    <TouchableOpacity
+                        onPress={() => router.push('/extras/catalog-gallery' as any)}
+                        activeOpacity={0.8}
+                        style={{
+                            position: 'absolute',
+                            right: 20,
+                            bottom: insets.bottom + 88,
+                            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+                            width: 56,
+                            height: 56,
+                            borderRadius: 28,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                            elevation: 10,
+                            zIndex: 999,
+                            borderWidth: isDark ? 1 : 0,
+                            borderColor: isDark ? '#333' : undefined,
+                        }}
+                    >
+                        <Gallery size={28} color={isDark ? 'white' : '#2563EB'} variant="Bulk" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => setShowWebView(true)}
+                        activeOpacity={0.8}
+                        style={{
+                            position: 'absolute',
+                            right: 20,
+                            bottom: insets.bottom + 20,
+                            backgroundColor: '#2563EB',
+                            width: 56,
+                            height: 56,
+                            borderRadius: 28,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                            elevation: 10,
+                            zIndex: 999
+                        }}
+                    >
+                        <Eye size={28} color="white" variant="Bulk" />
+                    </TouchableOpacity>
+                </>
             )}
         </View>
     );
