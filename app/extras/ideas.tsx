@@ -179,10 +179,7 @@ export default function StyleInspirations() {
         if (tab === activeTab) return;
         setActiveTab(tab);
 
-        // 1. Prompt store review using the professional auto-check (triggers dialog elegantly)
-        StoreReviewService.requestReview(false);
-
-        // 2. Persist the selection to the database asynchronously
+        // Persist the selection to the database asynchronously
         try {
             await updateProfile({ styleInspoPreference: tab });
         } catch (err) {

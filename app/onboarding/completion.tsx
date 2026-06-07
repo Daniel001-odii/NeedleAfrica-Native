@@ -7,7 +7,6 @@ import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
-import { StoreReviewService } from '../../services/StoreReviewService';
 import Animated, {
     FadeInDown,
     FadeInUp,
@@ -45,11 +44,6 @@ export default function OnboardingCompletion() {
             template_name: state.template?.name || 'Unknown',
             order_style: state.order?.styleName || 'Unknown'
         });
-
-        // Request app review after onboarding
-        setTimeout(() => {
-            StoreReviewService.requestReview().catch(console.error);
-        }, 1500);
 
         await completeOnboarding();
         await resetOnboarding();
