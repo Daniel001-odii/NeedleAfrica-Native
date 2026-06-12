@@ -280,6 +280,49 @@ export default function Home() {
                 )}
 
 
+                {/* Learn Banner: Not sure how to use NeedleX? */}
+                <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/profile/learn')}
+                    activeOpacity={0.9}
+                    className="mb-6"
+                >
+                    <View
+                        style={{
+                            backgroundColor: '#10B981',
+                            borderRadius: 10,
+                            padding: 15,
+                            shadowColor: '#10B981',
+                            shadowOffset: { width: 0, height: 10 },
+                            shadowOpacity: isDark ? 0.3 : 0.4,
+                            shadowRadius: 20,
+                            elevation: 10,
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <View className="flex-row items-center relative z-10 px-1">
+                            <View className="flex-1">
+                                <View className="flex-row items-center mb-1">
+                                    <Typography variant="body" weight="bold" color="white" className="text-[17px] mr-2">Not sure how to use NeedleX? </Typography>
+                                    <View className="bg-[#FFD700] px-2 py-0.5 rounded-full">
+                                        <Typography variant="small" weight="black" color="black" className="text-[9px] uppercase tracking-tighter">GUIDES</Typography>
+                                    </View>
+                                </View>
+                                <Typography variant="small" color="white" className="opacity-80 text-[13px] leading-[19px] font-medium">
+                                    Watch tutorials, read guides, and get the most out of your tailoring business.
+                                </Typography>
+                            </View>
+
+                            <View className="bg-white/20 w-10 h-10 rounded-full items-center justify-center ml-3">
+                                <ArrowRight size={20} color="white" variant="Linear" />
+                            </View>
+                        </View>
+
+                        {/* Background Glow Effect */}
+                        <View className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/10 rounded-full" />
+                        <View className="absolute -top-16 -left-16 w-48 h-48 bg-white/5 rounded-full" />
+                    </View>
+                </TouchableOpacity>
+
                 {/* 2. Quick Actions Strip */}
                 <View className="mb-6">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4">

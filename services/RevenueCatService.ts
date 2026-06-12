@@ -269,24 +269,27 @@ class RevenueCatService {
   }
 
   /**
-   * Sync RevenueCat status with the app backend
+   * Sync RevenueCat status with the app backend.
+   * Uses the dedicated /revenuecat-sync endpoint which activates the user
+   * based on their authenticated session and entitlement check, rather than
+   * relying on product ID matching (which can fail for platform-specific IDs).
    */
   async syncWithBackend(customerInfo: CustomerInfo): Promise<void> {
     try {
-      const activeSubscriptions = customerInfo.activeSubscriptions;
-      console.log('Active subscriptions for sync:', activeSubscriptions);
-
-      if (activeSubscriptions.length === 0) {
-        console.warn('No active subscriptions found in customerInfo. Skipping backend sync.');
+      // Check active entitlements (more reliable than product IDs)
+      const entitlement = customerInfo?.entitlements?.active?.[ENTITLEMENTS.NEEDLE_AFRICA_PRO];
+      
+      if (!entitlement) {
+        console.warn('No PRO entitlement found in customerInfo. Skipping backend sync.');
         return;
       }
 
-      // Use the first active subscription (product identifier) as a reference for the backend
-      const reference = activeSubscriptions[0];
+      console.log(`RevenueCat sync: Found PRO entitlement (product: ${entitlement.productIdentifier})`);
+      console.log(`Sending sync request to backend with entitlement: ${ENTITLEMENTS.NEEDLE_AFRICA_PRO}`);
 
-      console.log(`Sending sync request to backend with reference (product ID): ${reference}`);
-      const result = await subscriptionService.verify(reference);
-      console.log('Backend sync result:', result);
+      // Call the dedicated sync endpoint — it's auth-based so no product ID needed
+      await subscriptionService.revenueCatSync(ENTITLEMENTS.NEEDLE_AFRICA_PRO);
+      console.log('Backend sync successful');
     } catch (error) {
       console.error('Failed to sync with backend:', error);
       throw error;

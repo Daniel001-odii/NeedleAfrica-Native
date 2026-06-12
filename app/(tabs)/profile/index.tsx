@@ -8,17 +8,16 @@ import {
     Setting2,
     User,
     MessageQuestion,
-    Logout,
     CloudChange,
     Crown,
     ArrowRight2,
     People,
     Gallery,
     Star,
-    Chart2
+    Chart2,
+    Book1
 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Typography } from '../../../components/ui/Typography';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -26,8 +25,7 @@ import Svg, { Path } from 'react-native-svg';
 import { StoreReviewService } from '../../../services/StoreReviewService';
 
 export default function Profile() {
-    const { user, logout, refreshUser } = useAuth();
-    const { confirm } = useConfirm();
+    const { user, refreshUser } = useAuth();
     const router = useRouter();
     const { isDark } = useTheme();
 
@@ -46,16 +44,6 @@ export default function Profile() {
     useEffect(() => {
         refreshUser();
     }, []);
-
-    const handleLogout = () => {
-        confirm({
-            title: 'Log Out',
-            message: 'Are you sure you want to log out? You will need to sign in again to access your account.',
-            confirmText: 'Log Out',
-            type: 'danger',
-            onConfirm: logout
-        });
-    };
 
     // Shared style for the grouping cards
     const cardBaseStyle = isDark
@@ -187,6 +175,12 @@ export default function Profile() {
                             isDark={isDark}
                         />
                         <ProfileItem
+                            icon={<Book1 size={20} color="#10B981" variant="Bulk" />}
+                            title="Learn"
+                            onPress={() => router.push('/(tabs)/profile/learn')}
+                            isDark={isDark}
+                        />
+                        <ProfileItem
                             icon={<Star size={20} color="#FDB022" variant="Bulk" />}
                             title="Rate Needle Africa"
                             onPress={() => StoreReviewService.requestReview(true)}
@@ -206,15 +200,6 @@ export default function Profile() {
                         />
                     </View>
                 </View>
-
-                {/* Logout Action */}
-                <Pressable
-                    onPress={handleLogout}
-                    className={`h-14 rounded-[24px] flex-row items-center justify-center gap-2 mb-8 ${cardBaseStyle} active:opacity-70`}
-                >
-                    <Logout size={20} color="#EF4444" variant="Bulk" />
-                    <Typography weight="bold" className="text-red-500 text-[16px]">Log Out</Typography>
-                </Pressable>
 
                 {/* App Version & Legal */}
                 <View className="items-center pb-4 opacity-60">

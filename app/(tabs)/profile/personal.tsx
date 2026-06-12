@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, TouchableOpacity, Pressable, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Trash, Warning2, CloseCircle, ArrowRight2, TickCircle } from 'iconsax-react-native';
+import { ArrowLeft, Trash, Logout, Warning2, CloseCircle, ArrowRight2, TickCircle } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
@@ -38,7 +38,7 @@ const BUSINESS_TYPE_OPTIONS = [
 ];
 
 export default function PersonalInformation() {
-    const { user, updateProfile, deleteAccount, changePassword } = useAuth();
+    const { user, updateProfile, deleteAccount, changePassword, logout } = useAuth();
     const router = useRouter();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
@@ -53,9 +53,6 @@ export default function PersonalInformation() {
     const [noOfEmployees, setNoOfEmployees] = useState(user?.noOfEmployees || '1-5');
     const [businessType, setBusinessType] = useState(user?.businessType || '');
     const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
-    const [bankName, setBankName] = useState(user?.bankName || '');
-    const [accountNumber, setAccountNumber] = useState(user?.accountNumber || '');
-    const [accountName, setAccountName] = useState(user?.accountName || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
@@ -85,9 +82,6 @@ export default function PersonalInformation() {
             }
             if (user.noOfEmployees) setNoOfEmployees(user.noOfEmployees);
             if (user.businessType) setBusinessType(user.businessType);
-            setBankName(user.bankName || '');
-            setAccountNumber(user.accountNumber || '');
-            setAccountName(user.accountName || '');
         }
     }, [user]);
 
@@ -107,9 +101,6 @@ export default function PersonalInformation() {
                 country,
                 noOfEmployees,
                 businessType,
-                bankName: bankName.trim(),
-                accountNumber: accountNumber.trim(),
-                accountName: accountName.trim()
             });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Profile updated successfully' });
             router.back();
@@ -240,36 +231,6 @@ export default function PersonalInformation() {
                         </View>
                     </View>
 
-                    {/* Section: Bank Details */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Bank Account Details
-                        </Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                            <ProfileRowInput
-                                label="Bank Name"
-                                value={bankName}
-                                onChangeText={setBankName}
-                                placeholder="e.g. GTBank"
-                                isDark={isDark}
-                            />
-                            <ProfileRowInput
-                                label="Account Number"
-                                value={accountNumber}
-                                onChangeText={setAccountNumber}
-                                placeholder="e.g. 0123456789"
-                                isDark={isDark}
-                            />
-                            <ProfileRowInput
-                                label="Account Name"
-                                value={accountName}
-                                onChangeText={setAccountName}
-                                placeholder="e.g. John Doe Enterprises"
-                                isDark={isDark}
-                            />
-                        </View>
-                    </View>
-
                     {/* Primary Safe/Save Button */}
                     <Button
                         onPress={handleSave}
@@ -286,6 +247,26 @@ export default function PersonalInformation() {
                             Danger Zone
                         </Typography>
                         <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                            <TouchableOpacity
+                                onPress={() =>
+                                    confirm({
+                                        title: 'Log Out',
+                                        message: 'Are you sure you want to log out? You will need to sign in again to access your account.',
+                                        confirmText: 'Log Out',
+                                        type: 'danger',
+                                        onConfirm: logout
+                                    })
+                                }
+                                className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10 border-b border-gray-50 dark:border-white/5"
+                            >
+                                <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-3 ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
+                                    <Logout size={18} color="#EF4444" variant="Bulk" />
+                                </View>
+                                <View className="flex-1">
+                                    <Typography weight="bold" className="text-red-500 text-[15px]">Log Out</Typography>
+                                    <Typography variant="small" color="red" className="opacity-60 text-[12px] mt-0.5">Sign out of your account</Typography>
+                                </View>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => setShowDeleteModal(true)}
                                 className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10"

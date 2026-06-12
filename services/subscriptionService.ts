@@ -81,6 +81,16 @@ class SubscriptionService {
   }
 
   /**
+   * Sync RevenueCat subscription status after purchase.
+   * Uses the authenticated user's session to activate PRO without needing webhooks.
+   */
+  async revenueCatSync(entitlementId: string): Promise<void> {
+    await axiosInstance.post('/subscriptions/revenuecat-sync', {
+      entitlementId,
+    });
+  }
+
+  /**
    * Cancel current subscription
    */
   async cancel(): Promise<{ message: string }> {

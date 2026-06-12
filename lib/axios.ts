@@ -6,9 +6,18 @@ import Constants from 'expo-constants';
 // Environment switcher
 const ENV = (process.env.EXPO_PUBLIC_APP_ENV as 'development' | 'staging' | 'production') || (__DEV__ ? 'development' : 'production'); // Use env variable if provided, otherwise fallback based on build mode
 
+
+
+const hostUri = Constants.expoConfig?.hostUri;
+// e.g. "192.168.1.23:8081"
+
+const ip = hostUri?.split(":")[0];
+
+// export const API_URL = `http://${ip}:8000/api`;
+
 const API_CONFIG = {
-    development: 'http://172.20.10.2:3000/api',
-    staging: 'http://192.168.1.189:3000/api', // Pointing to local for both dev/staging as requested
+    development: `http://${ip}:3000/api`,
+    staging: `http://${ip}:3000/api`, // Pointing to local for both dev/staging as requested
     production: 'https://needle-africa-api.vercel.app/api'
 };
 

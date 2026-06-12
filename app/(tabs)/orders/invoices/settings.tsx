@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, ScrollView, TouchableOpacity, Image, Platform, KeyboardAvoidingView, TextInput, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, Building, Call, Location, DocumentText, MagicStar, Brush, Eye, Crown, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, Camera, Building, Call, Location, DocumentText, MagicStar, Brush, Eye, Crown, CloseCircle, Bank, Card } from 'iconsax-react-native';
 import { Modal } from 'react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -32,6 +32,9 @@ export default function InvoiceSettingsScreen() {
         address: user?.address || '',
         profilePicture: user?.profilePicture || '',
         invoiceTemplate: user?.invoiceTemplate || 0,
+        bankName: user?.bankName || '',
+        accountNumber: user?.accountNumber || '',
+        accountName: user?.accountName || '',
     });
 
     const handlePickImage = async () => {
@@ -135,6 +138,34 @@ export default function InvoiceSettingsScreen() {
                             onChangeText={(t: string) => setForm({ ...form, address: t })}
                             placeholder="Street, City, Country"
                             multiline
+                            last
+                        />
+                    </View>
+
+                    {/* Bank Details Group */}
+                    <SectionLabel label="Bank Account Details" />
+                    <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                        <InputRow
+                            label="Bank Name"
+                            icon={<Bank size={18} color="#3b82f6" variant="Bulk" />}
+                            value={form.bankName}
+                            onChangeText={(t: string) => setForm({ ...form, bankName: t })}
+                            placeholder="e.g. GTBank"
+                        />
+                        <InputRow
+                            label="Account Number"
+                            icon={<Card size={18} color="#3b82f6" variant="Bulk" />}
+                            value={form.accountNumber}
+                            onChangeText={(t: string) => setForm({ ...form, accountNumber: t })}
+                            placeholder="e.g. 0123456789"
+                            keyboardType="number-pad"
+                        />
+                        <InputRow
+                            label="Account Name"
+                            icon={<DocumentText size={18} color="#3b82f6" variant="Bulk" />}
+                            value={form.accountName}
+                            onChangeText={(t: string) => setForm({ ...form, accountName: t })}
+                            placeholder="e.g. John Doe Enterprises"
                             last
                         />
                     </View>

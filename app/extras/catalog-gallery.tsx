@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Image, TouchableOpacity, Pressable, Platform, Modal, TextInput, ActivityIndicator, Linking, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share, Crown1 } from 'iconsax-react-native';
+import { ArrowLeft, Add, Gallery, Setting4, Magicpen, CloudAdd, ArchiveTick, Trash, Edit2, ShoppingBag, CloseCircle, Camera, ArrowRight, Eye, Refresh2, Share, Crown1, Menu } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 export default function CatalogGallery() {
     const { isDark } = useTheme();
@@ -25,6 +26,9 @@ export default function CatalogGallery() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingItem, setDeletingItem] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [catalogViews, setCatalogViews] = useState(0);
     const [catalogId, setCatalogId] = useState<string | null>(null);
     const insets = useSafeAreaInsets();
@@ -158,15 +162,44 @@ export default function CatalogGallery() {
         }
     };
 
-    const handleDeleteItem = async (id: string) => {
+    const handleDeletePrompt = (item: any) => {
+        setDeletingItem(item);
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deletingItem) return;
+        setIsDeleting(true);
         try {
             const { default: axiosInstance } = await import('../../lib/axios');
-            await axiosInstance.delete(`/catalog/items/${id}`);
-            setItems(items.filter(i => i.id !== id));
+            await axiosInstance.delete(`/catalog/items/${deletingItem.id}`);
+            setItems(items.filter(i => i.id !== deletingItem.id));
+            setShowDeleteModal(false);
+            setDeletingItem(null);
+            Toast.show({ type: 'success', text1: 'Deleted', text2: `${deletingItem.name} has been removed.` });
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Delete Error' });
+        } finally {
+            setIsDeleting(false);
         }
     };
+
+    const handleDragEnd = useCallback(async ({ data }: { data: any[] }) => {
+        // Optimistically update local state
+        setItems(data);
+
+        // Persist the new order to the backend
+        try {
+            const { default: axiosInstance } = await import('../../lib/axios');
+            const orderedIds = data.map((item: any) => item.id);
+            await axiosInstance.put('/catalog/items/reorder', { orderedIds });
+        } catch (error: any) {
+            console.error('Reorder error:', error);
+            Toast.show({ type: 'error', text1: 'Reorder Failed', text2: 'Could not save the new order. Please try again.' });
+            // Re-fetch to restore correct order
+            fetchData();
+        }
+    }, []);
 
     const resetForm = () => {
         setName('');
@@ -177,6 +210,91 @@ export default function CatalogGallery() {
 
     const cardBaseStyle = isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
     const inputClass = `px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[15px] mb-4`;
+
+    const renderItem = useCallback(({ item, drag, isActive, getIndex }: RenderItemParams<any>) => {
+        const index = getIndex() ?? 0;
+        const isBeyondFreemiumLimit = isFreemium && index >= FREEMIUM_LIMIT;
+        return (
+            <ScaleDecorator>
+                <TouchableOpacity
+                    activeOpacity={0.6}
+                    onPress={() => handleOpenEditItem(item)}
+                    className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
+                    style={{ opacity: isBeyondFreemiumLimit ? 0.35 : 1, backgroundColor: isActive ? (isDark ? '#27272a' : '#f4f4f5') : 'transparent' }}
+                >
+                    {/* Drag Handle */}
+                    <TouchableOpacity
+                        onLongPress={drag}
+                        delayLongPress={100}
+                        className="mr-3 p-1"
+                        activeOpacity={0.6}
+                    >
+                        <Menu size={20} color={isDark ? '#71717a' : '#a1a1aa'} variant="Bold" />
+                    </TouchableOpacity>
+
+                    <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
+                        {item.images?.[0] ? <Image source={{ uri: item.images[0] }} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                    </View>
+                    <View className="flex-1">
+                        <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
+                        <View className="flex-row items-center">
+                            {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
+                            <View className="flex-row items-center mr-3">
+                                <Eye size={12} color="#9CA3AF" variant="Linear" />
+                                <Typography variant="small" color="gray" className="ml-1 text-[11px]">{item.views ?? 0}</Typography>
+                            </View>
+                            <View className="bg-green-500/10 px-2 rounded-md">
+                                <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
+                            </View>
+                        </View>
+                    </View>
+                    <View className="flex-row gap-2">
+                        <TouchableOpacity onPress={() => handleDeletePrompt(item)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                            <Trash size={16} color="#EF4444" variant="Bulk" />
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </ScaleDecorator>
+        );
+    }, [isDark, isFreemium, items.length]);
+
+    const ListFooterComponent = useCallback(() => {
+        if (isFreemium && items.length > FREEMIUM_LIMIT) {
+            return (
+                <View
+                    className="mt-4 p-4 rounded-2xl items-center"
+                    style={{
+                        backgroundColor: isDark ? '#1C1C1E' : '#FFF7ED',
+                        borderWidth: 1,
+                        borderColor: isDark ? '#FDB02233' : '#FDB022',
+                    }}
+                >
+                    <View className="flex-row items-center mb-2">
+                        <Crown1 size={18} color="#FDB022" variant="Bold" style={{ marginRight: 6 }} />
+                        <Typography weight="bold" className="text-[13px]" style={{ color: '#FDB022' }}>
+                            Freemium Limit
+                        </Typography>
+                    </View>
+                    <Typography variant="small" color="gray" className="text-center text-[12px] mb-3 leading-[18px]">
+                        Only your first {FREEMIUM_LIMIT} items are visible on your catalog website. Upgrade to Pro to showcase all {items.length} items.
+                    </Typography>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(tabs)/profile/subscription' as any)}
+                        activeOpacity={0.8}
+                        style={{
+                            backgroundColor: '#FDB022',
+                            paddingHorizontal: 24,
+                            paddingVertical: 10,
+                            borderRadius: 20,
+                        }}
+                    >
+                        <Typography weight="bold" color="white" className="text-[13px]">Upgrade to Pro</Typography>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+        return null;
+    }, [isFreemium, items.length, isDark]);
 
     return (
         <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
@@ -197,12 +315,13 @@ export default function CatalogGallery() {
                 </View>
             </View>
 
-
-
-            <ScrollView contentContainerClassName={items.length > 0 ? "p-5 pb-24" : "flex-1 justify-center p-8 pb-32"} showsVerticalScrollIndicator={false}>
-
-                {/* Dashboard Stats (Lite) */}
-                {items.length > 0 && (
+            {isLoading ? (
+                <View className="flex-1 items-center justify-center pb-32">
+                    <ActivityIndicator color="#3b82f6" />
+                </View>
+            ) : items.length > 0 ? (
+                <View className="flex-1 px-5 pb-24">
+                    {/* Dashboard Stats */}
                     <View className="flex-row gap-4 mb-8">
                         <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
                             <Typography variant="caption" color="gray" weight="bold" className="uppercase text-[10px] mb-1">Total Items</Typography>
@@ -213,101 +332,37 @@ export default function CatalogGallery() {
                             <Typography variant="h2" weight="bold">{catalogViews}</Typography>
                         </View>
                     </View>
-                )}
 
-                {isLoading ? (
-                    <ActivityIndicator color="#3b82f6" />
-                ) : (
-                    items.length > 0 ? (
-                        <View>
-                            <View className="flex-row items-center justify-between mb-4 px-1">
-                                <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
-                                    Published Styles
-                                </Typography>
-                            </View>
+                    <View className="flex-row items-center justify-between mb-4 px-1">
+                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider text-[11px]">
+                            Published Styles
+                        </Typography>
+                        <Typography variant="small" color="gray" className="text-[10px]">
+                            Hold & drag to reorder
+                        </Typography>
+                    </View>
 
-                            {/* Tabular View (List) */}
-                            <View className={`rounded-[28px] overflow-hidden ${cardBaseStyle}`}>
-                                {items.map((item, index) => {
-                                    const isBeyondFreemiumLimit = isFreemium && index >= FREEMIUM_LIMIT;
-                                    return (
-                                        <TouchableOpacity
-                                            key={item.id}
-                                            activeOpacity={0.6}
-                                            onPress={() => handleOpenEditItem(item)}
-                                            className={`flex-row items-center p-4 ${index !== items.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
-                                            style={{ opacity: isBeyondFreemiumLimit ? 0.35 : 1 }}
-                                        >
-                                            <View className={`w-14 h-14 rounded-2xl overflow-hidden mr-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'} items-center justify-center`}>
-                                                {item.images?.[0] ? <Image source={{ uri: item.images[0] }} className="w-full h-full" /> : <Gallery size={24} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
-                                            </View>
-                                            <View className="flex-1">
-                                                <Typography weight="bold" className="text-[15px] mb-0.5">{item.name}</Typography>
-                                                <View className="flex-row items-center">
-                                                    {item.price && <Typography variant="small" weight="bold" color="primary" className="mr-3">{item.currency} {item.price}</Typography>}
-                                                    <View className="flex-row items-center mr-3">
-                                                        <Eye size={12} color="#9CA3AF" variant="Linear" />
-                                                        <Typography variant="small" color="gray" className="ml-1 text-[11px]">{item.views ?? 0}</Typography>
-                                                    </View>
-                                                    <View className="bg-green-500/10 px-2 rounded-md">
-                                                        <Typography className="text-[10px] text-green-600 font-bold uppercase">{item.status}</Typography>
-                                                    </View>
-                                                </View>
-                                            </View>
-                                            <View className="flex-row gap-2">
-                                                <TouchableOpacity onPress={() => handleDeleteItem(item.id)} className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                                    <Trash size={16} color="#EF4444" variant="Bulk" />
-                                                </TouchableOpacity>
-                                            </View>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            {/* Freemium Upgrade Disclaimer */}
-                            {isFreemium && items.length > FREEMIUM_LIMIT && (
-                                <View
-                                    className="mt-4 p-4 rounded-2xl items-center"
-                                    style={{
-                                        backgroundColor: isDark ? '#1C1C1E' : '#FFF7ED',
-                                        borderWidth: 1,
-                                        borderColor: isDark ? '#FDB02233' : '#FDB022',
-                                    }}
-                                >
-                                    <View className="flex-row items-center mb-2">
-                                        <Crown1 size={18} color="#FDB022" variant="Bold" style={{ marginRight: 6 }} />
-                                        <Typography weight="bold" className="text-[13px]" style={{ color: '#FDB022' }}>
-                                            Freemium Limit
-                                        </Typography>
-                                    </View>
-                                    <Typography variant="small" color="gray" className="text-center text-[12px] mb-3 leading-[18px]">
-                                        Only your first {FREEMIUM_LIMIT} items are visible on your catalog website. Upgrade to Pro to showcase all {items.length} items.
-                                    </Typography>
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(tabs)/profile/subscription' as any)}
-                                        activeOpacity={0.8}
-                                        style={{
-                                            backgroundColor: '#FDB022',
-                                            paddingHorizontal: 24,
-                                            paddingVertical: 10,
-                                            borderRadius: 20,
-                                        }}
-                                    >
-                                        <Typography weight="bold" color="white" className="text-[13px]">Upgrade to Pro</Typography>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-
-                        </View>
-                    ) : (
-                        <EmptyState 
-                            onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} 
-                            onViewSample={handleOpenSampleStorefront} 
-                            isDark={isDark} 
-                            isCatalogSetup={!!catalogId}
+                    <View className={`rounded-[28px] overflow-hidden ${cardBaseStyle}`}>
+                        <DraggableFlatList
+                            data={items}
+                            onDragEnd={handleDragEnd}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderItem}
+                            scrollEnabled={true}
+                            ListFooterComponent={ListFooterComponent}
                         />
-                    ))}
-            </ScrollView>
+                    </View>
+                </View>
+            ) : (
+                <View className="flex-1 justify-center p-8 pb-32">
+                    <EmptyState 
+                        onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} 
+                        onViewSample={handleOpenSampleStorefront} 
+                        isDark={isDark} 
+                        isCatalogSetup={!!catalogId}
+                    />
+                </View>
+            )}
 
             {/* Floating Action Button (FAB) for Upload - Disabled if no catalog */}
             {catalogId && (
@@ -391,6 +446,45 @@ export default function CatalogGallery() {
                                 Update Style
                             </Button>
                         </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* DELETE CONFIRMATION MODAL (bottom sheet) */}
+            <Modal visible={showDeleteModal} transparent animationType="slide">
+                <View className="flex-1 bg-black/60 justify-end p-2 pb-8">
+                    <View className={`rounded-[32px] p-6 pt-8 ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'}`}>
+                        <View className="items-center mb-6 mt-2">
+                            <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${isDark ? 'bg-red-500/20' : 'bg-red-50'}`}>
+                                <Trash size={28} color="#EF4444" variant="Bulk" />
+                            </View>
+                            <Typography variant="h3" weight="bold" className="text-center mb-2">
+                                Delete Style?
+                            </Typography>
+                            <Typography variant="body" color="gray" className="text-center text-[14px] leading-[20px] px-2">
+                                Are you sure you want to delete "{deletingItem?.name}"? This action cannot be undone.
+                            </Typography>
+                        </View>
+                        <View className="flex-row gap-3 mt-4">
+                            <TouchableOpacity
+                                onPress={() => { setShowDeleteModal(false); setDeletingItem(null); }}
+                                className={`flex-1 h-14 rounded-full items-center justify-center border ${isDark ? 'border-zinc-700 bg-zinc-800' : 'border-gray-200 bg-gray-50'}`}
+                                disabled={isDeleting}
+                            >
+                                <Typography weight="bold" className="text-[15px]">Cancel</Typography>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={handleConfirmDelete}
+                                className="flex-1 h-14 rounded-full items-center justify-center bg-red-500"
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Typography weight="bold" color="white" className="text-[15px]">Delete</Typography>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

@@ -16,8 +16,8 @@ export default class Measurement extends Model {
     @text('values_json') valuesJson?: string;
     @field('deleted_at') deletedAt?: number | null;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @readonly @date('created_at') createdAt?: Date;
+    @readonly @date('updated_at') updatedAt?: Date;
 
     @relation('customers', 'customer_id') customer!: Relation<Customer>;
 
