@@ -1,3 +1,15 @@
+/* module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      ['babel-preset-expo', { jsxImportSource: 'nativewind' }]
+    ],
+    plugins: [
+      'react-native-worklets/plugin' // keep worklets at the bottom
+    ],
+  };
+};
+ */
 module.exports = function (api) {
     api.cache(true);
     return {
@@ -12,17 +24,3 @@ module.exports = function (api) {
         ],
     };
 };
-
-/* module.exports = function (api) {
-  api.cache(true);
-
-  return {
-    presets: ['babel-preset-expo'],
-    plugins: [
-      ['@babel/plugin-proposal-decorators', { legacy: true }],
-      ['@babel/plugin-proposal-class-properties', { loose: true }],
-      '@babel/plugin-transform-private-methods',
-      '@babel/plugin-transform-private-property-in-object',
-    ],
-  };
-}; */

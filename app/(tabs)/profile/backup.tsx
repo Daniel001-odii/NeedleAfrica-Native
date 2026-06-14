@@ -62,7 +62,7 @@ export default function BackupData() {
                 <View className="flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
-                        onPress={() => router.back()}
+                        onPress={() => router.push("/profile")}
                         variant="ghost"
                     />
                     <Typography variant="h3" weight="bold" className="ml-2">Backup & Sync</Typography>

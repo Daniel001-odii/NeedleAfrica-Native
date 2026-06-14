@@ -22,11 +22,11 @@ export default class Invoice extends Model {
     @text('notes') notes?: string | null;
     @field('deleted_at') deletedAt?: number | null;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @readonly @date('created_at') createdAt?: Date;
+    @readonly @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
-    @relation('orders', 'order_id') order!: Relation<Order>;
+    @relation('customers', 'customer_id') customer: Relation<Customer>;
+    @relation('orders', 'order_id') order: Relation<Order>;
 
     static async createSyncable(database: any, userId: string, data: {
         customerId: string;

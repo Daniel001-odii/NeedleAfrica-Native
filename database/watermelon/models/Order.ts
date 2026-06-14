@@ -31,10 +31,10 @@ export default class Order extends Model {
     @text('style_image') styleImage?: string | null;
     @field('deleted_at') deletedAt?: number | null;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @readonly @date('created_at') createdAt?: Date;
+    @readonly @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
+    @relation('customers', 'customer_id') customer: Relation<Customer>;
 
     get balance(): number {
         return (this.amount || 0) - (this.amountPaid || 0);

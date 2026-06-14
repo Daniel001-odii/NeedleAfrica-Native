@@ -11,8 +11,8 @@ export default class MeasurementTemplate extends Model {
     @field('is_public') isPublic?: boolean;
     @field('deleted_at') deletedAt?: number | null;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @readonly @date('created_at') createdAt?: Date;
+    @readonly @date('updated_at') updatedAt?: Date;
 
     get fields() {
         try {

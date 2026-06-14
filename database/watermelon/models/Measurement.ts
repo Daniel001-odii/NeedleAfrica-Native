@@ -19,7 +19,7 @@ export default class Measurement extends Model {
     @readonly @date('created_at') createdAt?: Date;
     @readonly @date('updated_at') updatedAt?: Date;
 
-    @relation('customers', 'customer_id') customer!: Relation<Customer>;
+    @relation('customers', 'customer_id') customer: Relation<Customer>;
 
     get values() {
         try {

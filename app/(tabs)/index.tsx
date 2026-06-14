@@ -17,6 +17,7 @@ import { useCatalog } from '../../hooks/useCatalog';
 import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist';
 import { CatalogVisibilityModal } from '../../components/CatalogVisibilityModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
 
 export default function Home() {
     const { user } = useAuth();
@@ -28,6 +29,9 @@ export default function Home() {
     const [balanceVisible, setBalanceVisible] = useState(true);
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
     const [catalogModalVisible, setCatalogModalVisible] = useState(false);
+    
+    const { unreadCount } = useUnreadOrderRequests();
+    const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
     const todoChecklist = useTodoChecklist();
 
@@ -217,8 +221,12 @@ export default function Home() {
                                 variant="ghost"
                                 className='bg-gray-300/20 p-3'
                             />
-                            {needsVisibility && (
-                                <View className="absolute top-1 right-1 w-3 h-3 rounded-full bg-red-500" />
+                            {(totalUnread > 0) && (
+                                <View className="absolute top-0 right-0 min-w-[18px] h-[18px] rounded-full bg-red-500 items-center justify-center px-1 border-2 border-white dark:border-black">
+                                    <Typography variant="small" weight="bold" color="white" className="text-[10px] leading-tight">
+                                        {totalUnread > 99 ? '99+' : totalUnread}
+                                    </Typography>
+                                </View>
                             )}
                         </View>
                     </View>

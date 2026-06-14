@@ -40,7 +40,7 @@ export default function LearnScreen() {
             <View className="flex-1 relative">
                 <WebView
                     key={webViewKey}
-                    source={{ uri: 'https://needleafrica.com/learn' }}
+                    source={{ uri: 'https://needleafrica.com/learn?source=app' }}
                     style={{ flex: 1, backgroundColor: isDark ? '#09090b' : '#ffffff' }}
                     onLoadStart={() => setWebViewLoading(true)}
                     onLoadEnd={() => setWebViewLoading(false)}

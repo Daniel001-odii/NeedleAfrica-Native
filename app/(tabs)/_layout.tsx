@@ -1,16 +1,22 @@
 import { Tabs, router } from 'expo-router';
-import { View, Image } from 'react-native';
+import { View, Image, Text } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Home, User, People, Calendar } from 'iconsax-react-native';
 import Svg, { G, Path } from 'react-native-svg';
 import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
+import { useCatalog } from '../../hooks/useCatalog';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
     const { user } = useAuth();
     const { isDark } = useTheme();
+    const { unreadCount } = useUnreadOrderRequests();
+    const { needsVisibility } = useCatalog();
+
+    const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
@@ -49,7 +55,16 @@ export default function TabLayout() {
                         options={{
                             title: 'Home',
                             tabBarIcon: ({ color, focused }) => (
-                                <Home size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                <View>
+                                    <Home size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                    {totalUnread > 0 && (
+                                        <View className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full bg-red-500 border-2 border-white dark:border-black items-center justify-center px-0.5">
+                                            <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white', lineHeight: 11 }}>
+                                                {totalUnread > 99 ? '99+' : totalUnread}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                             ),
                         }}
                     />

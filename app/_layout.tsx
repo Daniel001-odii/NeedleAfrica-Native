@@ -50,6 +50,7 @@ function RootLayoutNav() {
         const inCatalogExplainer = segments[0] === 'catalog-explainer';
         const inAiLab = segments[0] === 'ai-lab';
         const inExtras = segments[0] === 'extras';
+        const inOrderRequestDetails = segments[0] === 'order-request-details';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -58,7 +59,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }

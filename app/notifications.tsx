@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { View, ScrollView, ActivityIndicator, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Notification } from 'iconsax-react-native';
+import OrderRequestIcon from '../assets/icons/OrderRequestIcon';
 import { router } from 'expo-router';
 import { Typography } from '../components/ui/Typography';
 import { IconButton } from '../components/ui/IconButton';
@@ -9,16 +10,19 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCatalog } from '../hooks/useCatalog';
 import { CatalogVisibilityModal } from '../components/CatalogVisibilityModal';
+import { OrderRequestService, OrderRequest } from '../services/OrderRequestService';
+import { useUnreadOrderRequests } from '../hooks/useUnreadOrderRequests';
 
 interface AppNotification {
     id: string;
     message: string;
     time: string;
     read: boolean;
+    timestamp?: number;
     onPress?: () => void;
 }
 
-function NotificationAvatar({ logoUri, fallbackLabel }: { logoUri?: string | null; fallbackLabel: string }) {
+function NotificationAvatar({ logoUri, fallbackLabel, type }: { logoUri?: string | null; fallbackLabel: string; type?: 'order-request' | 'default' }) {
     if (logoUri) {
         return (
             <Image
@@ -30,6 +34,14 @@ function NotificationAvatar({ logoUri, fallbackLabel }: { logoUri?: string | nul
         );
     }
 
+    if (type === 'order-request') {
+        return (
+            <View style={{ width: 48, height: 48 }} className="items-center justify-center rounded-full bg-black">
+                <OrderRequestIcon size={24} color="white" />
+            </View>
+        );
+    }
+
     const initials = fallbackLabel
         .split(/\s+/)
         .slice(0, 2)
@@ -38,8 +50,8 @@ function NotificationAvatar({ logoUri, fallbackLabel }: { logoUri?: string | nul
         .toLowerCase();
 
     return (
-        <View style={{ width: 48, height: 48, backgroundColor: '#000000' }} className="items-center justify-center rounded-full">
-            <Typography weight="bold" color="white" className="text-[15px] lowercase">
+        <View style={{ width: 48, height: 48 }} className="items-center justify-center rounded-full bg-black">
+            <Typography weight="bold" color="white" className="text-[15px] uppercase">
                 {initials || 'na'}
             </Typography>
         </View>
@@ -51,10 +63,19 @@ export default function NotificationsScreen() {
     const { user } = useAuth();
     const { catalog, needsVisibility, loading: catalogLoading } = useCatalog();
     const [isCatalogModalVisible, setIsCatalogModalVisible] = useState(false);
-    const [readIds, setReadIds] = useState<Set<string>>(new Set());
+    
+    // For local non-persisted notifications
+    const [localReadIds, setLocalReadIds] = useState<Set<string>>(new Set());
+    
+    const { orderRequests, readIds, markAsRead, refresh } = useUnreadOrderRequests();
+    const [isLoadingRequests, setIsLoadingRequests] = useState(true);
 
-    const markAsRead = useCallback((id: string) => {
-        setReadIds((prev) => new Set(prev).add(id));
+    React.useEffect(() => {
+        setIsLoadingRequests(false);
+    }, [orderRequests]);
+
+    const markLocalAsRead = useCallback((id: string) => {
+        setLocalReadIds((prev) => new Set(prev).add(id));
     }, []);
 
     const userIsPro = user?.subscriptionPlan !== 'FREE' && user?.subscriptionStatus === 'ACTIVE';
@@ -68,9 +89,9 @@ export default function NotificationsScreen() {
                 id: 'catalog-visibility',
                 message: "Turn on your catalog's visibility to start getting orders from customers.",
                 time: 'Now',
-                read: readIds.has('catalog-visibility'),
+                read: localReadIds.has('catalog-visibility'),
                 onPress: () => {
-                    markAsRead('catalog-visibility');
+                    markLocalAsRead('catalog-visibility');
                     if (userIsPro) {
                         router.push('/(tabs)/profile/catalog');
                     } else {
@@ -80,8 +101,36 @@ export default function NotificationsScreen() {
             });
         }
 
+        orderRequests.forEach((req) => {
+            const date = new Date(req.createdAt);
+            // Simple time string formatting
+            const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            items.push({
+                id: `order-req-${req.id}`,
+                message: `New Order Request from ${req.fullName}`,
+                time: timeStr,
+                timestamp: date.getTime(),
+                read: readIds.has(req.id),
+                onPress: () => {
+                    markAsRead(req.id);
+                    router.push({
+                        pathname: '/order-request-details',
+                        params: { data: JSON.stringify(req) }
+                    });
+                }
+            });
+        });
+
+        // Sort items by timestamp descending
+        items.sort((a, b) => {
+            const timeA = a.timestamp || 0;
+            const timeB = b.timestamp || 0;
+            return timeB - timeA;
+        });
+
         return items;
-    }, [needsVisibility, userIsPro, readIds, markAsRead]);
+    }, [needsVisibility, userIsPro, localReadIds, markLocalAsRead, orderRequests, readIds]);
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -105,7 +154,7 @@ export default function NotificationsScreen() {
                     contentContainerClassName="pb-20"
                     showsVerticalScrollIndicator={false}
                 >
-                    {catalogLoading ? (
+                    {catalogLoading || isLoadingRequests ? (
                         <View className="items-center justify-center py-20">
                             <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#FF5678'} />
                         </View>
@@ -123,6 +172,7 @@ export default function NotificationsScreen() {
                                     <NotificationAvatar
                                         logoUri={catalogPhoto}
                                         fallbackLabel={user?.businessName || user?.username || 'Needle'}
+                                        type={note.id.startsWith('order-req-') ? 'order-request' : 'default'}
                                     />
 
                                     <View className="flex-1 mx-4">

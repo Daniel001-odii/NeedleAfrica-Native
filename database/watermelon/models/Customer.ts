@@ -28,10 +28,10 @@ export default class Customer extends Model {
     @text('notes') notes?: string | null;
     @field('deleted_at') deletedAt?: number | null;
 
-    @readonly @date('created_at') createdAt!: Date;
-    @readonly @date('updated_at') updatedAt!: Date;
+    @readonly @date('created_at') createdAt?: Date;
+    @readonly @date('updated_at') updatedAt?: Date;
 
-    @children('measurements') measurements!: Query<Measurement>;
+    @children('measurements') measurements: Query<Measurement>;
     @children('orders') orders!: Query<Order>;
 
     static async createSyncable(database: any, userId: string, data: Partial<Customer>) {
