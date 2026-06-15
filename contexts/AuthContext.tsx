@@ -20,6 +20,7 @@ interface User {
     username: string;
     businessName: string;
     phoneNumber?: string;
+    whatsappNumber?: string;
     address?: string;
     profilePicture?: string;
     role: string;

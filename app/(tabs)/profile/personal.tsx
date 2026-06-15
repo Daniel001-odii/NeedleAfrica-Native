@@ -47,6 +47,7 @@ export default function PersonalInformation() {
     const [businessName, setBusinessName] = useState(user?.businessName || '');
     const [email] = useState(user?.email || '');
     const [phone, setPhone] = useState(toE164(user?.phoneNumber || ''));
+    const [whatsappNumber, setWhatsappNumber] = useState(toE164(user?.whatsappNumber || ''));
     const [address, setAddress] = useState(user?.address || '');
     const [country, setCountry] = useState(user?.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
@@ -69,6 +70,7 @@ export default function PersonalInformation() {
             setUsername(user.username || '');
             setBusinessName(user.businessName || '');
             setPhone(toE164(user.phoneNumber || ''));
+            setWhatsappNumber(toE164(user.whatsappNumber || ''));
             setAddress(user.address || '');
             if (user.country) {
                 setCountry(user.country);
@@ -97,10 +99,8 @@ export default function PersonalInformation() {
                 username: username.trim(),
                 businessName: businessName.trim(),
                 phoneNumber: phone,
+                whatsappNumber: whatsappNumber || undefined,
                 address: address.trim(),
-                country,
-                noOfEmployees,
-                businessType,
             });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Profile updated successfully' });
             router.back();
@@ -241,10 +241,10 @@ export default function PersonalInformation() {
                         Save Account Settings
                     </Button>
 
-                    {/* Section: Account Actions */}
+                    {/* Section: Log Out */}
                     <View className="mb-6">
-                        <Typography variant="caption" color="red" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Danger Zone
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                            Session
                         </Typography>
                         <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                             <TouchableOpacity
@@ -257,16 +257,25 @@ export default function PersonalInformation() {
                                         onConfirm: logout
                                     })
                                 }
-                                className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10 border-b border-gray-50 dark:border-white/5"
+                                className="flex-row items-center p-4 active:bg-gray-50 dark:active:bg-white/5"
                             >
-                                <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-3 ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                                    <Logout size={18} color="#EF4444" variant="Bulk" />
+                                <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-3 ${isDark ? 'bg-gray-500/10' : 'bg-gray-50'}`}>
+                                    <Logout size={18} color={isDark ? '#9CA3AF' : '#6B7280'} variant="Bulk" />
                                 </View>
                                 <View className="flex-1">
-                                    <Typography weight="bold" className="text-red-500 text-[15px]">Log Out</Typography>
-                                    <Typography variant="small" color="red" className="opacity-60 text-[12px] mt-0.5">Sign out of your account</Typography>
+                                    <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Log Out</Typography>
+                                    <Typography variant="small" color="gray" className="text-[12px] mt-0.5">Sign out of your account</Typography>
                                 </View>
                             </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Section: Danger Zone */}
+                    <View className="mb-6">
+                        <Typography variant="caption" color="red" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                            Danger Zone
+                        </Typography>
+                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                             <TouchableOpacity
                                 onPress={() => setShowDeleteModal(true)}
                                 className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10"
