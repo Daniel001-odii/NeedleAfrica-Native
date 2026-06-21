@@ -217,57 +217,43 @@ export default function EditTemplateScreen() {
                             </View>
                         </View>
 
-                        {/* Advanced Section — Visibility */}
+                        {/* Visibility Section — Always visible */}
                         <View className="mb-8">
-                            <TouchableOpacity
-                                onPress={() => setShowAdvanced(!showAdvanced)}
-                                className={`flex-row items-center justify-between px-4 py-3 rounded-2xl ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-50'}`}
-                                activeOpacity={0.7}
-                            >
-                                <Typography weight="semibold" className={`text-[14px] ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>
-                                    Advanced
-                                </Typography>
-                                {showAdvanced ? (
-                                    <ArrowUp2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
-                                ) : (
-                                    <ArrowDown2 size={16} color={isDark ? "#a1a1aa" : "#9ca3af"} />
-                                )}
-                            </TouchableOpacity>
-
-                            {showAdvanced && (
-                                <View className={`mt-3 rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
-                                    <View className="flex-row items-center justify-between px-4 py-4">
-                                        <View className="flex-row items-center flex-1 mr-3">
-                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'}`}>
-                                                <Global size={20} color={isDark ? "#34D399" : "#10B981"} />
-                                            </View>
-                                            <View className="flex-1">
-                                                <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                    Share to Marketplace
-                                                </Typography>
-                                                <Typography variant="small" color="gray" className={isDark ? 'text-zinc-400' : ''}>
-                                                    Make this template available for other tailors & designers
-                                                </Typography>
-                                            </View>
+                            <Typography variant="caption" color="gray" weight="bold" className={`ml-4 mb-2 uppercase tracking-wider text-[11px] ${isDark ? 'text-zinc-400' : ''}`}>
+                                Visibility
+                            </Typography>
+                            <View className={`rounded-[24px] overflow-hidden ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+                                <View className="flex-row items-center justify-between px-4 py-4">
+                                    <View className="flex-row items-center flex-1 mr-3">
+                                        <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'}`}>
+                                            <Global size={20} color={isDark ? "#34D399" : "#10B981"} />
                                         </View>
-                                        <Switch
-                                            value={isPublic}
-                                            onValueChange={setIsPublic}
-                                            trackColor={{ false: isDark ? '#3f3f46' : '#e5e7eb', true: '#10B981' }}
-                                            thumbColor="#ffffff"
-                                        />
-                                    </View>
-
-                                    <View className={`mx-4 mb-4 p-3 rounded-xl flex-row items-start ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-                                        <InfoCircle size={16} color={isDark ? "#60a5fa" : "#3b82f6"} style={{ marginTop: 1, marginRight: 8 }} />
                                         <View className="flex-1">
-                                            <Typography variant="small" weight="medium" className={`text-[12px] leading-[18px] ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                                Public templates appear in the Templates Library for the community to browse. Only your template name and fields will be visible.
+                                            <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                Share to Marketplace
+                                            </Typography>
+                                            <Typography variant="small" color="gray" className={isDark ? 'text-zinc-400' : ''}>
+                                                Make this template available for other tailors & designers
                                             </Typography>
                                         </View>
                                     </View>
+                                    <Switch
+                                        value={isPublic}
+                                        onValueChange={setIsPublic}
+                                        trackColor={{ false: isDark ? '#3f3f46' : '#e5e7eb', true: '#10B981' }}
+                                        thumbColor="#ffffff"
+                                    />
                                 </View>
-                            )}
+
+                                <View className={`mx-4 mb-4 p-3 rounded-xl flex-row items-start ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                                    <InfoCircle size={16} color={isDark ? "#60a5fa" : "#3b82f6"} style={{ marginTop: 1, marginRight: 8 }} />
+                                    <View className="flex-1">
+                                        <Typography variant="small" weight="medium" className={`text-[12px] leading-[18px] ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                            Public templates appear in the Templates Library for the community to browse. Only your template name and fields will be visible.
+                                        </Typography>
+                                    </View>
+                                </View>
+                            </View>
                         </View>
 
                         {/* Save Button */}

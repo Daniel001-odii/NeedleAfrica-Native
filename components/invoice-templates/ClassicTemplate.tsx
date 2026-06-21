@@ -2,10 +2,10 @@ interface InvoiceTemplateProps {
     user: any;
     invoice: any;
     customer: any;
-    order: any;
+    orders: any[];
 }
 
-export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTemplateProps) => {
+export const ClassicTemplate = ({ user, invoice, customer, orders }: InvoiceTemplateProps) => {
     return `
     <!DOCTYPE html>
 <html>
@@ -31,7 +31,7 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             }
             body { 
                 font-family: 'Plus Jakarta Sans', Arial, sans-serif; 
-                color: #333333; 
+                color: #222222; 
                 background-color: #ffffff; 
                 margin: 0; 
                 padding: 0;
@@ -59,31 +59,31 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 top: 0;
                 width: 680px;
                 height: 100%;
-                padding: 40px 60px 40px 40px;
+                padding: 35px 50px 55px 35px;
                 display: flex;
                 flex-direction: column;
                 z-index: 2;
             }
             
-            /* Typography & Colors */
-            .text-purple { color: #b581c7; }
-            .text-green { color: #38c983; }
-            .text-yellow { color: #ffcc33; }
-            .text-orange { color: #f58233; }
-            .text-gray { color: #a0a0a0; }
-            .text-dark { color: #333333; }
+            /* Typography & Colors - High Contrast for Print */
+            .text-purple { color: #8c4a9e; }
+            .text-green { color: #1b9a5e; }
+            .text-yellow { color: #c49000; }
+            .text-orange { color: #d96216; }
+            .text-gray { color: #555555; }
+            .text-dark { color: #222222; }
             
             h1.title {
-                font-size: 64px;
+                font-size: 56px;
                 font-weight: 800;
                 margin: 0;
                 line-height: 1;
-                letter-spacing: 1px;
+                letter-spacing: 0.5px;
             }
             .invoice-no {
                 font-size: 14px;
                 font-weight: 800;
-                margin: 10px 0 0 0;
+                margin: 8px 0 0 0;
                 letter-spacing: 1px;
                 text-transform: uppercase;
             }
@@ -91,13 +91,14 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             .header-info-row {
                 display: flex;
                 justify-content: space-between;
-                margin-top: 30px;
-                margin-bottom: 25px;
+                margin-top: 25px;
+                margin-bottom: 20px;
             }
             .section-label {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 800;
-                margin: 0 0 5px 0;
+                margin: 0 0 4px 0;
+                letter-spacing: 0.5px;
             }
             .invoice-to-name {
                 font-size: 18px;
@@ -107,43 +108,47 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             .company-info {
                 text-align: right;
                 font-size: 12px;
-                line-height: 1.6;
+                line-height: 1.5;
             }
             .company-info p { margin: 0; }
             
-            /* Table */
+            /* Table Layout */
             .items-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
+                table-layout: fixed;
             }
             .items-table th {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 800;
                 text-align: left;
-                padding-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #e5e7eb;
             }
             .items-table td {
-                padding: 12px 0;
+                padding: 10px 0;
                 font-size: 13px;
                 font-weight: 600;
+                border-bottom: 1px solid #f3f4f6;
+                word-wrap: break-word;
             }
             
             /* Totals & Payment */
             .totals-row {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
             }
-            .method-name { font-size: 12px; margin: 0 0 2px 0; font-weight: 600; }
-            .method-detail { font-size: 12px; margin: 0 0 15px 0; font-weight: 600; }
+            .method-name { font-size: 11px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase; }
+            .method-detail { font-size: 12px; margin: 0 0 10px 0; font-weight: 600; }
             
             .calc-row {
                 display: flex;
                 justify-content: space-between;
                 width: 220px;
-                margin-bottom: 12px;
-                font-size: 14px;
+                margin-bottom: 10px;
+                font-size: 13px;
                 font-weight: 800;
             }
             
@@ -152,13 +157,14 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: auto; /* Pushes footer to bottom */
+                margin-bottom: auto; /* Dynamically pushes footer downward */
+                gap: 15px;
             }
-            .terms { width: 55%; }
+            .terms { width: 50%; }
             .terms-text {
                 font-size: 11px;
-                line-height: 1.6;
-                margin: 5px 0 0 0;
+                line-height: 1.5;
+                margin: 4px 0 0 0;
                 font-weight: 600;
             }
             
@@ -167,58 +173,59 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 align-items: center;
                 background-color: #ffcc33;
                 border-radius: 50px;
-                padding: 6px 30px 6px 6px;
-                gap: 20px;
+                padding: 6px 24px 6px 6px;
+                gap: 15px;
             }
             .total-badge {
                 background-color: #222222;
                 color: #ffffff;
                 border-radius: 50%;
-                width: 60px;
-                height: 60px;
+                width: 50px;
+                height: 50px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: 800;
-                font-size: 15px;
+                font-size: 13px;
             }
             .total-amount {
-                font-size: 36px;
+                font-size: 28px;
                 font-weight: 800;
                 color: #222222;
                 letter-spacing: -1px;
             }
             
-            /* Footer */
+            /* Footer Layout */
             .footer {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-end;
+                margin-top: 5px;
             }
             .contact-area {
                 display: flex;
-                gap: 20px;
+                gap: 15px;
                 align-items: flex-end;
             }
             .contact-info p {
-                margin: 4px 0;
+                margin: 3px 0;
                 font-size: 11px;
                 font-weight: 600;
             }
             .contact-info span {
                 font-weight: 800;
-                margin-right: 5px;
+                margin-right: 4px;
             }
             .signature-area {
                 text-align: center;
             }
             .sign-name {
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: 800;
                 margin: 0 0 2px 0;
             }
             .sign-title {
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 600;
                 margin: 0;
             }
@@ -273,25 +280,27 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         <th class="text-green" style="width: 10%;">No.</th>
                         <th class="text-green" style="width: 45%;">Description</th>
                         <th class="text-green" style="width: 15%;">Price</th>
-                        <th class="text-green" style="width: 15%; text-align: center;">Quantity</th>
+                        <th class="text-green" style="width: 15%; text-align: center;">Qty</th>
                         <th class="text-green" style="width: 15%; text-align: right;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
+                    ${orders.map((order: any, idx: number) => `
                     <tr>
-                        <td class="text-gray">01</td>
-                        <td class="text-gray" style="color: #82d1a3;">${order?.styleName || 'Logo Design'}</td>
-                        <td class="text-gray">${invoice?.currency || '$'} ${(invoice?.amount || 250).toLocaleString()}</td>
-                        <td class="text-gray" style="text-align: center;">1</td>
-                        <td class="text-gray" style="text-align: right;">${invoice?.currency || '$'} ${(invoice?.amount || 250).toLocaleString()}</td>
+                        <td class="text-gray">${String(idx + 1).padStart(2, '0')}</td>
+                        <td class="text-gray" style="color: #222222; font-weight: 700;">${order?.styleName || 'Logo Design'}</td>
+                        <td class="text-gray">${invoice?.currency || '$'} ${(order?.amount || 0).toLocaleString()}</td>
+                        <td class="text-gray" style="text-align: center;">${order.qty || 1}</td>
+                        <td class="text-gray" style="text-align: right;">${invoice?.currency || '$'} ${((order?.amount || 0) * (order.qty || 1)).toLocaleString()}</td>
                     </tr>
+                    `).join('')}
                 </tbody>
             </table>
             
             <!-- Totals & Payment -->
             <div class="totals-row">
                 <div>
-                    <p class="section-label text-green" style="margin-bottom: 15px;">Payment Method :</p>
+                    <p class="section-label text-green" style="margin-bottom: 12px;">Payment Method :</p>
                     ${user?.bankName && user?.accountNumber && user?.accountName ? `
                         <p class="method-name text-gray">Bank Name</p>
                         <p class="method-detail text-yellow">${user.bankName}</p>
@@ -300,20 +309,18 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         <p class="method-name text-gray">Account Name</p>
                         <p class="method-detail text-yellow">${user.accountName}</p>
                     ` : `
-                        <p class="method-name text-gray">Paypal</p>
-                        <p class="method-detail text-yellow">Yourpaypalaccount</p>
                         <p class="method-name text-gray">Bank Transfer</p>
-                        <p class="method-detail text-yellow">Yourbankaccount</p>
+                        <p class="method-detail text-yellow">Please complete payment via Needle Link</p>
                     `}
                 </div>
                 <div class="totals-calc">
                     <div class="calc-row">
                         <span class="text-green">Sub Total</span>
-                        <span class="text-dark">${invoice?.currency || '$'} ${(invoice?.amount || 2050).toLocaleString()}</span>
+                        <span class="text-dark">${invoice?.currency || '$'} ${(invoice?.amount || 250).toLocaleString()}</span>
                     </div>
                     <div class="calc-row">
-                        <span class="text-green">Taxes (10%)</span>
-                        <span class="text-dark">${invoice?.currency || '$'} 100</span>
+                        <span class="text-green">Taxes (0%)</span>
+                        <span class="text-dark">${invoice?.currency || '$'} 0</span>
                     </div>
                 </div>
             </div>
@@ -322,12 +329,12 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             <div class="terms-total-row">
                 <div class="terms">
                     <p class="section-label text-green">Terms & Condition</p>
-                    <p class="terms-text text-gray">${invoice?.notes || 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.'}</p>
+                    <p class="terms-text text-gray">${user?.invoiceTerms || 'Please pay within 15 days of receiving this invoice.'}</p>
                 </div>
                 <div>
                     <div class="total-pill">
                         <div class="total-badge">Total</div>
-                        <div class="total-amount">${invoice?.currency || '$'} ${(invoice?.amount || 2150).toLocaleString()}</div>
+                        <div class="total-amount">${invoice?.currency || '$'} ${(invoice?.amount || 250).toLocaleString()}</div>
                     </div>
                 </div>
             </div>
@@ -335,25 +342,8 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             <!-- Footer -->
             <div class="footer">
                 <div class="contact-area">
-                    <!-- Generic QR Code SVG -->
-                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="#ffffff"/>
-                        <path d="M10 10H40V40H10V10ZM20 20V30H30V20H20Z" fill="#222222"/>
-                        <path d="M60 10H90V40H60V10ZM70 20V30H80V20H70Z" fill="#222222"/>
-                        <path d="M10 60H40V90H10V60ZM20 70V80H30V70H20Z" fill="#222222"/>
-                        <rect x="60" y="60" width="10" height="10" fill="#222222"/>
-                        <rect x="80" y="60" width="10" height="10" fill="#222222"/>
-                        <rect x="60" y="80" width="10" height="10" fill="#222222"/>
-                        <rect x="80" y="80" width="10" height="10" fill="#222222"/>
-                        <rect x="70" y="70" width="10" height="10" fill="#222222"/>
-                        <rect x="45" y="10" width="10" height="30" fill="#222222"/>
-                        <rect x="45" y="60" width="10" height="30" fill="#222222"/>
-                        <rect x="10" y="45" width="30" height="10" fill="#222222"/>
-                        <rect x="60" y="45" width="30" height="10" fill="#222222"/>
-                        <rect x="45" y="45" width="10" height="10" fill="#222222"/>
-                    </svg>
                     <div class="contact-info">
-                        <p class="section-label text-green" style="margin-bottom: 8px;">Contact</p>
+                        <p class="section-label text-green" style="margin-bottom: 4px;">Contact</p>
                         <p class="text-gray"><span class="text-orange">P :</span> ${user?.phoneNumber || '+00 354 345 342'}</p>
                         <p class="text-gray"><span class="text-orange">E :</span> ${user?.email || 'youremail@mail.com'}</p>
                         <p class="text-gray"><span class="text-orange">A :</span> ${user?.address || 'West Earlburgh, US'}</p>
@@ -361,7 +351,7 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 </div>
                 <div class="signature-area">
                     <!-- Generic Signature SVG -->
-                    <svg width="140" height="60" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="110" height="45" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20 60C40 40 60 20 80 40C100 60 120 20 140 30C160 40 170 50 180 40" stroke="#222222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M60 50L160 50" stroke="#222222" stroke-width="4" stroke-linecap="round"/>
                     </svg>
@@ -370,7 +360,7 @@ export const ClassicTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 </div>
             </div>
         </div>
-        <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX</div>
+        <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX <br/> NeedleAfrica.com</div>
     </body>
 </html>
     `;

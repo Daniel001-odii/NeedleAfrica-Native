@@ -161,7 +161,7 @@ export default function NewCustomer() {
     );
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* Standard Refined Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -190,7 +190,7 @@ export default function NewCustomer() {
                         <TouchableOpacity onPress={handleImportContact} className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${isDark ? 'bg-zinc-800' : 'bg-blue-500/10'}`}>
                             <UserAdd size={14} color={isDark ? '#60a5fa' : '#2563eb'} variant="Bulk" />
                             <Typography variant="caption" className={isDark ? 'text-blue-400' : 'text-blue-600'} weight="bold">
-                                Add contact
+                                Add from contact
                             </Typography>
                         </TouchableOpacity>
                     </View>
@@ -303,7 +303,7 @@ export default function NewCustomer() {
                                             className={`font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
                                             placeholder="0"
                                             placeholderTextColor="#94a3b8"
-                                            keyboardType="numeric"
+                                            keyboardType="decimal-pad"
                                             value={mValues[field]}
                                             onChangeText={(val) => setMValues(prev => ({ ...prev, [field]: val }))}
                                         />

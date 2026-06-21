@@ -1,26 +1,31 @@
-/* module.exports = function (api) {
+module.exports = function (api) {
   api.cache(true);
+
+  function classFeaturesPreset() {
+    return {
+      plugins: [
+        ["@babel/plugin-transform-class-properties", { loose: true }],
+        ["@babel/plugin-transform-private-methods", { loose: true }],
+        ["@babel/plugin-transform-private-property-in-object", { loose: true }],
+      ],
+    };
+  }
+
   return {
     presets: [
-      ['babel-preset-expo', { jsxImportSource: 'nativewind' }]
+      classFeaturesPreset,
+      [
+        "babel-preset-expo",
+        {
+          jsxImportSource: "nativewind",
+          decorators: {
+            legacy: true,
+          },
+        },
+      ],
     ],
     plugins: [
-      'react-native-worklets/plugin' // keep worklets at the bottom
+      "react-native-worklets/plugin",
     ],
   };
-};
- */
-module.exports = function (api) {
-    api.cache(true);
-    return {
-        presets: [
-            ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-            "nativewind/babel",
-        ],
-        plugins: [
-            ['@babel/plugin-proposal-decorators', { legacy: true }],
-            ['@babel/plugin-transform-runtime', { helpers: true, regenerator: true }],
-            'react-native-worklets/plugin'
-        ],
-    };
 };

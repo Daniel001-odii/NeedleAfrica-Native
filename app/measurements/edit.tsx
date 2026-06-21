@@ -186,7 +186,7 @@ export default function EditMeasurementScreen() {
                                                 placeholderTextColor={isDark ? "#636366" : "#AEAEB2"}
                                                 value={String(values[field] || '')}
                                                 onChangeText={(text) => handleValueChange(field, text)}
-                                                keyboardType="numeric"
+                                                keyboardType="default"
                                             />
                                         </View>
                                         {index < array.length - 1 && (

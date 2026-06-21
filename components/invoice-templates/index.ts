@@ -5,3 +5,4 @@ export { CreativeTemplate } from './CreativeTemplate';
 export { ElegantTemplate } from './ElegantTemplate';
 export { BoldTemplate } from './BoldTemplate';
 export { CorporateTemplate } from './CorporateTemplate';
+export { EditorialTemplate } from './EditorialTemplate';

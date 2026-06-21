@@ -273,7 +273,7 @@ export default function CreateMeasurementScreen() {
                                                             placeholderTextColor="#9CA3AF"
                                                             value={values[field] || ''}
                                                             onChangeText={(text) => handleValueChange(field, text)}
-                                                            keyboardType="numeric"
+                                                            keyboardType="decimal-pad"
                                                         />
                                                     </View>
                                                 ))}

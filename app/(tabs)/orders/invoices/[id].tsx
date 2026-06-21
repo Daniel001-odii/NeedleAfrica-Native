@@ -29,10 +29,10 @@ export default function InvoiceDetailScreen() {
 
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [customer, setCustomer] = useState<any>(null);
-    const [order, setOrder] = useState<any>(null);
+    const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
-    
+
     const viewShotRef = useRef<ViewShot>(null);
 
     // Calculate preview dimensions so it fits on screen all at once (A4 aspect ratio)
@@ -52,8 +52,28 @@ export default function InvoiceDetailScreen() {
                     const cust = await inv!.customer!.fetch();
                     setCustomer(cust);
 
-                    const ord = await inv!.order!.fetch();
-                    setOrder(ord);
+                    // Fetch multiple orders via orderIds (fallback to single orderId)
+                    const orderIds = inv.orderIds || (inv.orderId ? [inv.orderId] : []);
+                    if (orderIds.length > 0) {
+                        const ordersCollection = database.get('orders');
+                        const quantitiesMap = inv.orderQuantitiesMap;
+                        const fetchedOrders = await Promise.all(
+                            orderIds.map((oid: string) =>
+                                ordersCollection.find(oid).catch(() => null)
+                            )
+                        );
+                        const ordersWithQty = fetchedOrders.filter(Boolean).map((order: any) => ({
+                            id: order.id,
+                            styleName: order.styleName,
+                            amount: order.amount,
+                            status: order.status,
+                            fabricImage: order.fabricImage,
+                            styleImage: order.styleImage,
+                            notes: order.notes,
+                            qty: quantitiesMap[order.id] || 1,
+                        }));
+                        setOrders(ordersWithQty);
+                    }
                 }
             } catch (error) {
                 console.error(error);
@@ -72,22 +92,22 @@ export default function InvoiceDetailScreen() {
     }, [id, database]);
 
     const htmlContent = useMemo(() => {
-        if (!invoice || !customer || !order || !user) return '';
+        if (!invoice || !customer || orders.length === 0 || !user) return '';
 
         const templateId = user.invoiceTemplate || 0;
         const templates = [
-            ModernTemplate, 
-            ClassicTemplate, 
-            MinimalTemplate, 
-            CreativeTemplate, 
-            ElegantTemplate, 
-            BoldTemplate, 
+            ModernTemplate,
+            ClassicTemplate,
+            MinimalTemplate,
+            CreativeTemplate,
+            ElegantTemplate,
+            BoldTemplate,
             CorporateTemplate
         ];
         const SelectedTemplate = templates[templateId] || ModernTemplate;
 
-        return SelectedTemplate({ user, invoice, customer, order });
-    }, [invoice, customer, order, user]);
+        return SelectedTemplate({ user, invoice, customer, orders });
+    }, [invoice, customer, orders, user]);
 
     const scale = previewWidth / 800;
     const previewHtml = useMemo(() => {

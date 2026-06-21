@@ -2,10 +2,10 @@ export interface InvoiceTemplateProps {
     user: any;
     invoice: any;
     customer: any;
-    order: any;
+    orders: any[];
 }
 
-export const BoldTemplate = ({ user, invoice, customer, order }: InvoiceTemplateProps) => {
+export const BoldTemplate = ({ user, invoice, customer, orders }: InvoiceTemplateProps) => {
     return `
     <!DOCTYPE html>
     <html>
@@ -135,32 +135,33 @@ export const BoldTemplate = ({ user, invoice, customer, order }: InvoiceTemplate
                         </tr>
                     </thead>
                     <tbody>
+                        ${orders.map((order: any) => `
                         <tr>
                             <td>${order?.styleName || 'UX System Audit'}</td>
-                            <td style="text-align: center;">1</td>
-                            <td style="text-align: right;">${invoice?.currency || '$'} ${(invoice?.amount || 9800).toLocaleString()}</td>
+                            <td style="text-align: center;">${order.qty || 1}</td>
+                            <td style="text-align: right;">${invoice?.currency || '$'} ${((order?.amount || 0) * (order.qty || 1)).toLocaleString()}</td>
                         </tr>
+                        `).join('')}
                     </tbody>
                 </table>
                 
                 <div class="totals-wrap">
-                    <div class="notes">
-                        <h4>NOTES</h4>
-                        <p>${invoice?.notes || 'Payment due strictly within 7 days.'}</p>
-                        ${user?.bankName && user?.accountNumber && user?.accountName ? `
-                            <h4 style="margin-top: 15px; margin-bottom: 5px;">PAYMENT DETAILS</h4>
-                            <p style="font-size: 13px; margin: 0 0 2px 0;">Bank: <strong>${user.bankName}</strong></p>
-                            <p style="font-size: 13px; margin: 0 0 2px 0;">Acct No: <strong>${user.accountNumber}</strong></p>
-                            <p style="font-size: 13px; margin: 0;">Name: <strong>${user.accountName}</strong></p>
-                        ` : ''}
-                    </div>
+                     <div class="notes">
+                         <h4>TERMS</h4>
+                         <p style="font-size: 14px;">${user?.invoiceTerms || ''}</p>
+                         ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                             <h4 style="margin-top: 15px; margin-bottom: 5px;">PAYMENT DETAILS</h4>
+                             <p style="font-size: 13px; margin: 0 0 2px 0;">Bank: <strong>${user.bankName}</strong></p>
+                             <p style="font-size: 13px; margin: 0 0 2px 0;">Acct No: <strong>${user.accountNumber}</strong></p>
+                             <p style="font-size: 13px; margin: 0;">Name: <strong>${user.accountName}</strong></p>
+                         ` : ''}
+                     </div>
                     <div class="totals-box">
                         <h3>TOTAL DUE</h3>
                         <div class="grand">${invoice?.currency || '$'} ${(invoice?.amount || 9800).toLocaleString()}</div>
                     </div>
                 </div>
-                
-                <div class="watermark">POWERED BY NEEDLEX</div>
+                <div class="watermark">POWERED BY NEEDLEX <br/> NeedleAfrica.com</div>
             </div>
         </body>
     </html>

@@ -32,7 +32,7 @@ export default class Customer extends Model {
     @readonly @date('updated_at') updatedAt?: Date;
 
     @children('measurements') measurements: Query<Measurement>;
-    @children('orders') orders!: Query<Order>;
+    @children('orders') orders: Query<Order>;
 
     static async createSyncable(database: any, userId: string, data: Partial<Customer>) {
         return await database.write(async () => {

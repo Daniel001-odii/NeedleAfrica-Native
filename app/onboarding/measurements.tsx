@@ -259,7 +259,7 @@ export default function AddMeasurements() {
                                 {selectedTemplate?.name} Details
                             </Typography>
                             <View className="flex-row bg-gray-100 rounded-lg p-0.5 mr-2">
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     onPress={() => setUnit('in')}
                                     className={`px-3 py-1 rounded-md ${unit === 'in' ? 'bg-white shadow-sm' : ''}`}
                                 >
@@ -267,7 +267,7 @@ export default function AddMeasurements() {
                                         INCH
                                     </Typography>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     onPress={() => setUnit('cm')}
                                     className={`px-3 py-1 rounded-md ${unit === 'cm' ? 'bg-white shadow-sm' : ''}`}
                                 >
@@ -298,7 +298,7 @@ export default function AddMeasurements() {
                                             className="flex-1 text-right font-semibold text-gray-900 text-[16px] min-w-[60px]"
                                             placeholder="0"
                                             placeholderTextColor="#D1D5DB"
-                                            keyboardType="numeric"
+                                            keyboardType="decimal-pad"
                                             value={measurementValues[field] || ''}
                                             onChangeText={(val) => setMeasurementValues(prev => ({ ...prev, [field]: val }))}
                                         />

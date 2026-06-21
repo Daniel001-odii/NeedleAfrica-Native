@@ -2,10 +2,10 @@ export interface InvoiceTemplateProps {
     user: any;
     invoice: any;
     customer: any;
-    order: any;
+    orders: any[];
 }
 
-export const CorporateTemplate = ({ user, invoice, customer, order }: InvoiceTemplateProps) => {
+export const CorporateTemplate = ({ user, invoice, customer, orders }: InvoiceTemplateProps) => {
     return `
     <!DOCTYPE html>
     <html>
@@ -119,12 +119,14 @@ export const CorporateTemplate = ({ user, invoice, customer, order }: InvoiceTem
                         </tr>
                     </thead>
                     <tbody>
+                        ${orders.map((order: any) => `
                         <tr>
                             <td style="color: #1e3a8a; font-weight: 700;">${order?.styleName || 'Consulting Services'}</td>
-                            <td style="text-align: center;">1</td>
-                            <td style="text-align: center;">${invoice?.currency || '$'} ${(invoice?.amount || 2500).toLocaleString()}</td>
-                            <td style="text-align: right;">${invoice?.currency || '$'} ${(invoice?.amount || 2500).toLocaleString()}</td>
+                            <td style="text-align: center;">${order.qty || 1}</td>
+                            <td style="text-align: center;">${invoice?.currency || '$'} ${(order?.amount || 0).toLocaleString()}</td>
+                            <td style="text-align: right;">${invoice?.currency || '$'} ${((order?.amount || 0) * (order.qty || 1)).toLocaleString()}</td>
                         </tr>
+                        `).join('')}
                     </tbody>
                 </table>
                 
@@ -148,7 +150,7 @@ export const CorporateTemplate = ({ user, invoice, customer, order }: InvoiceTem
                 <div class="footer">
                     <div class="terms">
                         <h4>Payment Terms</h4>
-                        <p>${invoice?.notes || 'Please pay the invoice within 15 days online. Thank you for your business.'}</p>
+                        <p>${user?.invoiceTerms || ''}</p>
                     </div>
                     ${user?.bankName && user?.accountNumber && user?.accountName ? `
                     <div class="terms" style="text-align: right;">
@@ -161,7 +163,7 @@ export const CorporateTemplate = ({ user, invoice, customer, order }: InvoiceTem
                 </div>
             </div>
             
-            <div class="watermark">POWERED BY NEEDLEX</div>
+            <div class="watermark">POWERED BY NEEDLEX <br/> NeedleAfrica.com</div>
         </body>
     </html>
     `;

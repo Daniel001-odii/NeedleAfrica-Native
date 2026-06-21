@@ -1,5 +1,5 @@
 import { Tabs, router } from 'expo-router';
-import { View, Image, Text } from 'react-native';
+import { View, Image, Text, Animated } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Home, User, People, Calendar } from 'iconsax-react-native';
 import Svg, { G, Path } from 'react-native-svg';
@@ -8,9 +8,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
 import { useCatalog } from '../../hooks/useCatalog';
+import { useEffect, useState } from 'react';
+import NetInfo from '@react-native-community/netinfo';
+
+
+const TAB_BAR_HEIGHT = 5;
 
 export default function TabLayout() {
-    const insets = useSafeAreaInsets();
+    // const insets = useSafeAreaInsets();
     const { user } = useAuth();
     const { isDark } = useTheme();
     const { unreadCount } = useUnreadOrderRequests();
@@ -18,9 +23,30 @@ export default function TabLayout() {
 
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
+    const [isOffline, setIsOffline] = useState(false);
+    const [animation] = useState(new Animated.Value(150)); // Start below screen
+    const insets = useSafeAreaInsets();
+    const bottomOffset = TAB_BAR_HEIGHT + (insets.bottom > 10 ? insets.bottom - 30 : insets.bottom);
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            const offline = state.isConnected === false;
+            setIsOffline(offline);
+
+            Animated.spring(animation, {
+                toValue: offline ? 0 : 150,
+                useNativeDriver: true,
+                friction: 8,
+                tension: 40
+            }).start();
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
-            <LimitedOfflineBanner />
+            {/* <LimitedOfflineBanner /> */}
             <SafeAreaView style={{ flex: 1, paddingBottom: insets.bottom }} edges={['top']}>
                 <Tabs
                     screenOptions={{
@@ -35,11 +61,7 @@ export default function TabLayout() {
                             height: 60 + (insets.bottom > 10 ? insets.bottom - 30 : insets.bottom), // dynamic height
                             paddingTop: 6,
                             paddingBottom: insets.bottom > 10 ? insets.bottom - 30 : insets.bottom, // safe area aware
-                            elevation: 0,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: -4 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 12,
+                            elevation: 0
                         },
 
                         tabBarLabelStyle: {
@@ -56,7 +78,7 @@ export default function TabLayout() {
                             title: 'Home',
                             tabBarIcon: ({ color, focused }) => (
                                 <View>
-                                    <Home size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                    <Home size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
                                     {totalUnread > 0 && (
                                         <View className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full bg-red-500 border-2 border-white dark:border-black items-center justify-center px-0.5">
                                             <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white', lineHeight: 11 }}>
@@ -74,7 +96,7 @@ export default function TabLayout() {
                         options={{
                             title: 'Customers',
                             tabBarIcon: ({ color, focused }) => (
-                                <People size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                <People size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
                             ),
                         }}
                     />
@@ -84,7 +106,7 @@ export default function TabLayout() {
                         options={{
                             title: 'Orders',
                             tabBarIcon: ({ color, focused }) => (
-                                <Calendar size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                <Calendar size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
                             ),
                         }}
                     />
@@ -117,7 +139,7 @@ export default function TabLayout() {
                                         }}
                                     />
                                 ) : (
-                                    <User size={24} color={color} variant={focused ? 'Bold' : 'Linear'} />
+                                    <User size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
                                 )
                             ),
                         }}

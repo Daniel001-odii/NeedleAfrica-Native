@@ -49,6 +49,7 @@ interface User {
     bankName?: string;
     accountNumber?: string;
     accountName?: string;
+    invoiceTerms?: string;
     styleInspoPreference?: 'unsplash' | 'pinterest';
 }
 

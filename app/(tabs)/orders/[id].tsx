@@ -213,7 +213,7 @@ export default function OrderDetail() {
                 title: 'Mark as Delivered',
                 message: 'Are you sure this order has been delivered to the client?',
                 confirmText: 'Yes, Delivered',
-                type: 'success',
+                type: 'info',
                 onConfirm: performToggle
             });
         } else {
@@ -245,7 +245,7 @@ export default function OrderDetail() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <View className={`px-4 pt-2 pb-2 flex-row justify-between items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
@@ -269,7 +269,7 @@ export default function OrderDetail() {
                             {/* Order Basics */}
                             <SectionLabel>Order Basics</SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={`p-5`} rounded="2xl">
                                     <View className={`p-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                         <Typography variant="h2" weight="bold" className="text-2xl">{order.styleName}</Typography>
                                         <Typography color="gray" variant="caption" weight="bold" className="opacity-50 mt-1">ID: #{order.id.slice(-8).toUpperCase()}</Typography>
@@ -290,7 +290,7 @@ export default function OrderDetail() {
                                 <>
                                     <SectionLabel>Client</SectionLabel>
                                     <View className="px-4 mb-6">
-                                        <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                        <Surface variant="white" className={``} rounded="2xl">
                                             <TouchableOpacity
                                                 onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: customer.id } })}
                                                 className={`p-4 flex-row items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}
@@ -330,7 +330,7 @@ export default function OrderDetail() {
                             {/* Logistics & Payment */}
                             <SectionLabel>Logistics & Billing</SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" className={`${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={``} rounded="2xl">
                                     <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                         <Typography weight="semibold" color="gray">Delivery Date</Typography>
                                         <Typography weight="bold" color="primary">{formatDateShort(deliveryDate)}</Typography>
@@ -363,7 +363,7 @@ export default function OrderDetail() {
                             {/* Reference Images */}
                             <SectionLabel>Design References</SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" className={`p-2 flex-row gap-2 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={`p-2 flex-row gap-2`} rounded="2xl">
                                     <TouchableOpacity
                                         className="flex-1 aspect-square rounded-xl overflow-hidden bg-gray-100"
                                         onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
@@ -400,7 +400,7 @@ export default function OrderDetail() {
                             {/* Notes */}
                             <SectionLabel>Special Notes</SectionLabel>
                             <View className="px-4 mb-8">
-                                <Surface variant="white" className={`p-4 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={`p-4`} rounded="2xl">
                                     <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium`}>
                                         {order.notes || "No additional notes for this order."}
                                     </Typography>
@@ -410,8 +410,9 @@ export default function OrderDetail() {
                             <View className="px-4 mb-12">
                                 <Button
                                     onPress={handleStatusToggle}
-                                    className={`h-16 rounded-2xl ${order.status === 'DELIVERED' ? 'bg-[#FF9500]' : 'bg-[#34C759]'} border-0`}
+                                    className={`h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-[#FF9500]' : 'bg-[#34C759]'} border-0 shadow-none`}
                                     textClassName="text-white font-bold"
+                                    style={{ elevation: 0, shadowOpacity: 0 }}
                                 >
                                     {order.status === 'DELIVERED' ? 'Reopen Order' : 'Mark as Delivered'}
                                 </Button>

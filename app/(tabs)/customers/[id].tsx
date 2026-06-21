@@ -83,7 +83,7 @@ export default function CustomerDetail() {
     const initials = (fullName || '??').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`}>
             {/* Standard Refined Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -141,7 +141,7 @@ export default function CustomerDetail() {
 
                             {/* Stats Summary */}
                             <View className="px-4 mb-6">
-                                <Surface variant="white" className={`flex-row py-4 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={`flex-row py-4`} rounded="2xl">
                                     <View className={`flex-1 items-center ${isDark ? 'border-r border-white/5' : 'border-r border-gray-100'}`}>
                                         <Typography variant="h3" weight="bold">{measurements.length}</Typography>
                                         <Typography variant="caption" color="gray" weight="semibold" className="text-[10px] uppercase opacity-60">Measurements</Typography>
@@ -156,7 +156,7 @@ export default function CustomerDetail() {
                             {/* Notes Section */}
                             <SectionLabel>About & Notes</SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" className={`p-4 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                                <Surface variant="white" className={`p-4`} rounded="2xl">
                                     <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium text-[14px]`}>
                                         {customer.notes || "No additional notes for this customer."}
                                     </Typography>
@@ -174,7 +174,7 @@ export default function CustomerDetail() {
                                 Measurements
                             </SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" rounded="2xl" className={`overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                                <Surface variant="white" rounded="2xl" className={`overflow-hidden`}>
                                     {measurements.length === 0 ? (
                                         <View className="p-8 items-center"><Typography color="gray" variant="small">No measurements yet</Typography></View>
                                     ) : (
@@ -198,7 +198,7 @@ export default function CustomerDetail() {
                             {/* Recent Orders Section */}
                             <SectionLabel>Recent Orders</SectionLabel>
                             <View className="px-4 mb-6">
-                                <Surface variant="white" rounded="2xl" className={`overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                                <Surface variant="white" rounded="2xl" className={`overflow-hidden`}>
                                     {orders.length === 0 ? (
                                         <View className="p-8 items-center"><Typography color="gray" variant="small">No orders yet</Typography></View>
                                     ) : (
@@ -231,7 +231,6 @@ export default function CustomerDetail() {
                                     textClassName="font-bold text-[17px]"
                                     style={{ borderWidth: 0, boxShadow: 'none' }}
                                 >
-                                    <ShoppingCart size={20} color="white" variant="Bold" />
                                     <Typography weight="bold" color="white" className="ml-2">Create New Order</Typography>
                                 </Button>
                             </View>
@@ -239,7 +238,7 @@ export default function CustomerDetail() {
                     ) : (
                         <View className="px-4">
                             <SectionLabel>Profile Details</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-soft-pink'}`}>
                                 <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                     <Typography weight="medium" color="gray" className="w-24 text-[14px]">Full Name</Typography>
                                     <TextInput value={fullName} onChangeText={setFullName} className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`} />
@@ -276,7 +275,7 @@ export default function CustomerDetail() {
                             </Surface>
 
                             <SectionLabel>Notes</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-soft-pink'}`}>
                                 <TextInput
                                     value={notes}
                                     onChangeText={setNotes}

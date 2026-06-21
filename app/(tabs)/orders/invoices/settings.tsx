@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, ScrollView, TouchableOpacity, Image, Platform, KeyboardAvoidingView, TextInput, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, Building, Call, Location, DocumentText, MagicStar, Brush, Eye, Crown, CloseCircle, Bank, Card } from 'iconsax-react-native';
+import { ArrowLeft, Camera, Building, Call, Location, DocumentText, MagicStar, Brush, Crown, CloseCircle, Bank, Card, TickCircle } from 'iconsax-react-native';
 import { Modal } from 'react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { WebView } from 'react-native-webview';
 import { useSubscription } from '../../../../hooks/useSubscription';
-import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate } from '../../../../components/invoice-templates';
+import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate, EditorialTemplate } from '../../../../components/invoice-templates';
 
 export default function InvoiceSettingsScreen() {
     const router = useRouter();
@@ -35,6 +35,7 @@ export default function InvoiceSettingsScreen() {
         bankName: user?.bankName || '',
         accountNumber: user?.accountNumber || '',
         accountName: user?.accountName || '',
+        invoiceTerms: user?.invoiceTerms || '',
     });
 
     const handlePickImage = async () => {
@@ -80,7 +81,7 @@ export default function InvoiceSettingsScreen() {
                 <View className="flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
-                        onPress={() => router.back()}
+                        onPress={() => router.navigate('/orders')}
                         variant="ghost"
                     />
                     <Typography variant="h3" weight="bold" className="ml-2">Invoice Setup</Typography>
@@ -170,6 +171,27 @@ export default function InvoiceSettingsScreen() {
                         />
                     </View>
 
+                    <SectionLabel label="Terms & Conditions" />
+                    <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                        <View className={`px-4 py-4 min-h-[120px]`}>
+                            <View className={`w-9 h-9 items-center justify-center rounded-xl mr-3 mb-2 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
+                                <DocumentText size={18} color="#3b82f6" variant="Bulk" />
+                            </View>
+                            <Typography variant="caption" color="gray" weight="bold" className="mb-1.5">TERMS TEXT</Typography>
+                            <TextInput
+                                value={form.invoiceTerms}
+                                onChangeText={(t: string) => setForm({ ...form, invoiceTerms: t })}
+                                placeholder={`e.g. Payment is due within 15 days. Refunds are not applicable to completed garments.`}
+                                placeholderTextColor="#9CA3AF"
+                                multiline
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                                className={` p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                style={{ minHeight: 80 }}
+                            />
+                        </View>
+                    </View>
+
                     {/* Template Selection */}
                     <View className="flex-row items-center justify-between mt-8 mb-4 px-6">
                         <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">
@@ -194,6 +216,7 @@ export default function InvoiceSettingsScreen() {
                             { id: 4, name: 'Elegant', TemplateComp: ElegantTemplate },
                             { id: 5, name: 'Bold', TemplateComp: BoldTemplate },
                             { id: 6, name: 'Corporate', TemplateComp: CorporateTemplate },
+                            { id: 7, name: 'Editorial', TemplateComp: EditorialTemplate }
                         ].map((template) => {
                             const scale = 120 / 800;
                             const isActive = form.invoiceTemplate === template.id;
@@ -215,23 +238,24 @@ export default function InvoiceSettingsScreen() {
 
                             return (
                                 <View key={template.id} className="items-center">
-                                    <View className={`p-1 rounded-[24px] border-2 ${isActive ? 'border-blue-500' : 'border-transparent'}`}>
+                                    <View className={`p-1 rounded-[14px] border-2 ${isActive ? 'border-blue-500' : 'border-transparent'}`}>
                                         <TouchableOpacity
                                             activeOpacity={0.8}
-                                            onPress={handleSelect}
-                                            className={`overflow-hidden rounded-[20px] bg-white border ${isDark ? 'border-zinc-800' : 'border-gray-100'} relative`}
+                                            onPress={() => setPreviewTemplate(template)}
+                                            className={`overflow-hidden rounded-[10px] bg-white border ${isDark ? 'border-zinc-800' : 'border-gray-100'} relative`}
                                             style={{ width: 120, height: 160 }}
                                         >
                                             <View pointerEvents="none" className="flex-1">
                                                 <WebView source={{ html: miniHtml }} scrollEnabled={false} originWhitelist={['*']} />
                                             </View>
 
-                                            {/* Preview Overlay Button */}
+                                            {/* Selection Overlay Button */}
                                             <TouchableOpacity
-                                                onPress={() => setPreviewTemplate(template)}
-                                                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 items-center justify-center backdrop-blur-md"
+                                                onPress={handleSelect}
+                                                className="absolute top-2 right-2 w-8 h-8 rounded-full items-center justify-center backdrop-blur-md"
+                                                style={{ backgroundColor: isActive ? '#3b82f6' : 'rgba(0,0,0,0.4)' }}
                                             >
-                                                <Eye size={16} color="white" variant="Bold" />
+                                                <TickCircle size={16} color="white" variant="Bold" />
                                             </TouchableOpacity>
 
                                             {/* Lock Badge */}
@@ -279,7 +303,7 @@ export default function InvoiceSettingsScreen() {
                                 <View className="bg-white overflow-hidden items-center justify-center p-0" style={{ height: 1050 * previewScale, width: '100%' }}>
                                     {previewTemplate && (
                                         <WebView
-                                            source={{ 
+                                            source={{
                                                 html: previewTemplate.TemplateComp({ user: user || {}, ...mockData })
                                                     .replace('</head>', `<style>@media screen { html { transform: scale(${previewScale}); transform-origin: top left; width: 800px; height: 1050px; overflow: hidden; } body { margin: 0; padding: 0; } }</style></head>`)
                                             }}
@@ -301,7 +325,7 @@ export default function InvoiceSettingsScreen() {
                                                 setPreviewTemplate(null);
                                             }
                                         }}
-                                        className={`h-14 rounded-full ${isFree && previewTemplate?.id > 2 ? 'bg-yellow-400' : 'bg-blue-600'}`}
+                                        className={`h-14 rounded-full border-0 shadow-none ${isFree && previewTemplate?.id > 2 ? 'bg-yellow-400' : 'bg-blue-600'}`}
                                         textClassName={isFree && previewTemplate?.id > 2 ? 'text-black font-bold' : 'text-white font-bold'}
                                     >
                                         {isFree && previewTemplate?.id > 2 ? 'Upgrade to Use Style' : 'Choose this Style'}
@@ -310,6 +334,9 @@ export default function InvoiceSettingsScreen() {
                             </View>
                         </View>
                     </Modal>
+
+                    {/* Terms & Conditions */}
+
 
                     {/* Info Note */}
                     <View className="mt-10 p-5 rounded-3xl bg-blue-500/10 flex-row">
@@ -378,7 +405,7 @@ function InputRow({ label, icon, value, onChangeText, placeholder, last, multili
                     placeholderTextColor="#9CA3AF"
                     keyboardType={keyboardType}
                     multiline={multiline}
-                    className={`font-semibold text-[15px] p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                    className={`p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
                 />
             </View>
             {!last && <View className={`absolute bottom-0 right-0 left-16 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`} />}

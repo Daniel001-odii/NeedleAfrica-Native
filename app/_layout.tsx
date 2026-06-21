@@ -2,7 +2,8 @@ import { Stack, router, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+// import { StatusBar } from 'expo-status-bar';
+// import { StatusBar } from 'react-native';
 import { database } from '../database/watermelon/index.native';
 import { Q } from '@nozbe/watermelondb';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
@@ -109,7 +110,6 @@ function RootLayoutNav() {
 
     return (
         <View style={{ flex: 1, backgroundColor: isDark ? '#000000' : 'white' }}>
-            <OfflineBanner />
             <Stack
                 screenOptions={{
                     animation: "fade",
@@ -131,9 +131,10 @@ function RootLayoutNav() {
                     <LoadingScreen />
                 </View>
             )}
-            <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
+
             <Toast config={toastConfig} />
             <StoreUpdateModal />
+            <OfflineBanner />
         </View>
     );
 }

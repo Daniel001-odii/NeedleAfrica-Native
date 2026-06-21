@@ -2,10 +2,10 @@ interface InvoiceTemplateProps {
     user: any;
     invoice: any;
     customer: any;
-    order: any;
+    orders: any[];
 }
 
-export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemplateProps) => {
+export const CreativeTemplate = ({ user, invoice, customer, orders }: InvoiceTemplateProps) => {
     return `
         <!DOCTYPE html>
         <html>
@@ -41,9 +41,9 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         display: flex;
                     }
                     
-                    /* Left Sidebar */
+                    /* Left Sidebar Decorative Area */
                     .sidebar {
-                        width: 200px;
+                        width: 180px;
                         height: 100%;
                         background-color: #fcfcfc;
                         position: relative;
@@ -53,38 +53,39 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     }
                     
                     /* Sidebar Geometry Shapes */
-                    .shape-yellow { position: absolute; top: 0; left: 0; width: 120px; height: 120px; background-color: #f7d853; border-radius: 0 0 100% 0; }
-                    .shape-dots { position: absolute; top: 150px; left: 20px; width: 60px; height: 60px; background-image: radial-gradient(#111827 2px, transparent 2px); background-size: 10px 10px; }
-                    .shape-purple { position: absolute; top: 250px; left: -30px; width: 100px; height: 100px; background-color: #b07aba; border-radius: 50%; opacity: 0.8; }
-                    .shape-green { position: absolute; top: 450px; right: 0; width: 60px; height: 120px; background-color: #9fdfbc; border-radius: 120px 0 0 120px; opacity: 0.8; }
-                    .shape-black { position: absolute; bottom: 250px; left: 40px; width: 40px; height: 40px; background-color: #111827; border-radius: 50%; }
+                    .shape-yellow { position: absolute; top: 0; left: 0; width: 100px; height: 100px; background-color: #f7d853; border-radius: 0 0 100% 0; }
+                    .shape-dots { position: absolute; top: 130px; left: 20px; width: 60px; height: 60px; background-image: radial-gradient(#111827 2px, transparent 2px); background-size: 10px 10px; }
+                    .shape-purple { position: absolute; top: 220px; left: -20px; width: 80px; height: 80px; background-color: #b07aba; border-radius: 50%; opacity: 0.8; }
+                    .shape-green { position: absolute; top: 400px; right: 0; width: 50px; height: 100px; background-color: #9fdfbc; border-radius: 100px 0 0 100px; opacity: 0.8; }
+                    .shape-black { position: absolute; bottom: 200px; left: 30px; width: 35px; height: 35px; background-color: #111827; border-radius: 50%; }
                     
-                    /* Sidebar Content */
+                    /* Sidebar Text Content */
                     .sidebar-text {
                         position: absolute;
-                        top: 60%;
-                        transform: translateY(-50%) rotate(-90deg);
-                        font-size: 16px;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%) rotate(-90deg);
+                        font-size: 13px;
                         font-weight: 800;
                         letter-spacing: 4px;
                         color: #111827;
                         white-space: nowrap;
-                        left: -40px;
+                        text-transform: uppercase;
                     }
                     .qr-box {
                         position: absolute;
-                        bottom: 40px;
+                        bottom: 35px;
                         left: 50%;
                         transform: translateX(-50%);
-                        width: 100px;
+                        width: 90px;
                         text-align: center;
                     }
-                    .qr-code { width: 80px; height: 80px; background: #fff; border: 2px solid #111; padding: 5px; }
+                    .qr-code { width: 70px; height: 70px; background: #fff; border: 2px solid #111; padding: 4px; }
                     
                     /* Main Content Area */
                     .main-content {
                         flex: 1;
-                        padding: 40px 50px;
+                        padding: 35px 40px 50px 40px;
                         display: flex;
                         flex-direction: column;
                     }
@@ -93,89 +94,96 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-start;
-                        margin-bottom: 30px;
+                        margin-bottom: 25px;
                     }
                     .invoice-title-wrapper { text-align: left; }
-                    .invoice-title { font-size: 60px; font-weight: 800; color: #b07aba; line-height: 1; }
+                    .invoice-title { font-size: 50px; font-weight: 800; color: #b07aba; line-height: 1; }
                     
                     .business-info { text-align: right; }
-                    .business-name { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 5px; }
-                    .business-contact { font-size: 13px; color: #6b7280; line-height: 1.6; }
+                    .business-name { font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+                    .business-contact { font-size: 12px; color: #6b7280; line-height: 1.5; }
                     
                     .meta-grid {
                         display: flex;
                         justify-content: space-between;
-                        margin-bottom: 30px;
+                        margin-bottom: 25px;
+                        border-top: 1px solid #f3f4f6;
+                        padding-top: 15px;
                     }
                     .meta-block { flex: 1; }
-                    .meta-label { font-size: 13px; font-weight: 800; color: #9fdfbc; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
-                    .meta-val { font-size: 16px; font-weight: 700; color: #111827; }
+                    .meta-label { font-size: 12px; font-weight: 800; color: #7e4e88; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+                    .meta-val { font-size: 15px; font-weight: 700; color: #111827; }
                     
-                    .to-block { margin-top: 15px; }
-                    .to-val { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 5px; }
-                    .to-text { font-size: 13px; color: #6b7280; line-height: 1.5; }
+                    .to-block { margin-top: 12px; }
+                    .to-val { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+                    .to-text { font-size: 12px; color: #6b7280; line-height: 1.4; }
                     
+                    /* Table Zone */
                     .items-table {
                         width: 100%;
                         border-collapse: separate;
                         border-spacing: 0;
-                        margin-bottom: 25px;
+                        margin-bottom: 20px;
+                        table-layout: fixed;
                     }
                     .items-table th {
                         background-color: #9fdfbc;
                         color: #111827;
-                        padding: 15px 20px;
+                        padding: 12px 16px;
                         text-align: left;
-                        font-size: 13px;
+                        font-size: 12px;
                         font-weight: 800;
                         text-transform: uppercase;
                     }
-                    .items-table th:first-child { border-radius: 10px 0 0 10px; }
-                    .items-table th:last-child { border-radius: 0 10px 10px 0; text-align: right; }
+                    .items-table th:first-child { border-radius: 8px 0 0 8px; }
+                    .items-table th:last-child { border-radius: 0 8px 8px 0; text-align: right; }
                     
                     .items-table td {
-                        padding: 20px;
+                        padding: 16px;
                         border-bottom: 1px solid #f3f4f6;
-                        font-size: 14px;
+                        font-size: 13px;
                         vertical-align: top;
+                        word-wrap: break-word;
                     }
                     .items-table td:last-child { text-align: right; font-weight: 700; }
-                    .item-title { font-weight: 700; color: #111827; margin-bottom: 5px; font-size: 15px; }
-                    .item-desc { color: #6b7280; font-size: 13px; max-width: 250px; }
+                    .item-title { font-weight: 700; color: #111827; margin-bottom: 4px; font-size: 14px; }
+                    .item-desc { color: #6b7280; font-size: 12px; line-height: 1.4; }
                     
+                    /* Totals Zone */
                     .totals-wrapper {
                         display: flex;
                         justify-content: flex-end;
-                        margin-bottom: 25px;
+                        margin-bottom: 20px;
                     }
-                    .totals-box { width: 350px; }
-                    .totals-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 15px; font-weight: 600; color: #4b5563; }
+                    .totals-box { width: 320px; }
+                    .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; font-weight: 600; color: #4b5563; }
                     
                     .grand-total {
                         display: flex;
                         justify-content: space-between;
                         background-color: #f7d853;
                         color: #111827;
-                        padding: 15px 25px;
-                        border-radius: 12px;
-                        font-size: 18px;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        font-size: 16px;
                         font-weight: 800;
-                        margin-top: 10px;
+                        margin-top: 8px;
                     }
                     
+                    /* Footer Zone */
                     .footer-bottom {
-                        margin-top: auto;
+                        margin-top: 10px;
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-end;
                     }
-                    .terms-box { width: 60%; }
-                    .terms-title { font-size: 13px; font-weight: 800; color: #111827; margin-bottom: 5px; text-transform: uppercase; }
-                    .terms-text { font-size: 12px; color: #6b7280; line-height: 1.6; }
+                    .terms-box { width: 62%; }
+                    .terms-title { font-size: 12px; font-weight: 800; color: #111827; margin-bottom: 4px; text-transform: uppercase; }
+                    .terms-text { font-size: 11px; color: #6b7280; line-height: 1.5; }
                     
                     .signature-box { width: 30%; text-align: center; }
-                    .signature-line { width: 100%; height: 2px; background-color: #111827; margin-top: 25px; margin-bottom: 10px; }
-                    .signature-name { font-size: 15px; font-weight: 800; color: #111827; text-transform: uppercase; }
+                    .signature-line { width: 100%; height: 2px; background-color: #111827; margin-top: 20px; margin-bottom: 8px; }
+                    .signature-name { font-size: 13px; font-weight: 800; color: #111827; text-transform: uppercase; }
                 </style>
             </head>
             <body>
@@ -190,17 +198,18 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                     
                     <div class="qr-box">
                         <svg class="qr-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h6v6H3V3z"/><path d="M15 3h6v6h-6V3z"/><path d="M3 15h6v6H3v-6z"/><path d="M15 15h2v2h-2z"/><path d="M19 19h2v2h-2z"/><path d="M19 15h2v2h-2z"/><path d="M15 19h2v2h-2z"/></svg>
-                        <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">SCAN ME</div>
+                        <div style="font-size: 9px; font-weight: 800; margin-top: 4px;">SCAN DETAILS</div>
                     </div>
                 </div>
                 
                 <div class="main-content">
+                    <!-- Top Header -->
                     <div class="header-top">
                         <div class="invoice-title-wrapper">
                             <div class="invoice-title">INVOICE</div>
                         </div>
                         <div class="business-info">
-                            ${user?.profilePicture ? `<img src="${user.profilePicture}" style="height: 50px; object-fit: contain; margin-bottom: 10px; border-radius: 8px;" alt="Logo"><br>` : ''}
+                            ${user?.profilePicture ? `<img src="${user.profilePicture}" style="height: 45px; object-fit: contain; margin-bottom: 8px; border-radius: 6px;" alt="Logo"><br>` : ''}
                             <div class="business-name">${user?.businessName || 'Business Name'}</div>
                             <div class="business-contact">
                                 ${user?.phoneNumber || '+123-456-7890'}<br>
@@ -210,6 +219,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         </div>
                     </div>
                     
+                    <!-- Metadata Info Grid -->
                     <div class="meta-grid">
                         <div class="meta-block">
                             <div class="meta-label">Invoice No:</div>
@@ -223,36 +233,39 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         </div>
                         <div class="meta-block" style="text-align: right;">
                             <div class="meta-label">Issue Date:</div>
-                            <div class="meta-val" style="margin-bottom: 15px;">${new Date(invoice?.createdAt || 0).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                            <div class="meta-val" style="margin-bottom: 12px;">${new Date(invoice?.createdAt || 0).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                             
                             <div class="meta-label">Due Date:</div>
                             <div class="meta-val" style="color: #b07aba;">On Receipt</div>
                         </div>
                     </div>
                     
+                    <!-- Table Grid -->
                     <table class="items-table">
                         <thead>
                             <tr>
                                 <th style="width: 50%;">Description</th>
                                 <th style="width: 20%; text-align: center;">Price</th>
                                 <th style="width: 15%; text-align: center;">Qty</th>
-                                <th style="width: 15%;">Total</th>
+                                <th style="width: 15%; text-align: right;">Total</th>
                             </tr>
                         </thead>
                         <tbody>
+                            ${orders.map((order: any) => `
                             <tr>
                                 <td>
                                     <div class="item-title">${order?.styleName || 'Apparel Service'}</div>
-                                    <div class="item-desc">Premium custom styling, tailoring, and fit adjustments</div>
+                                    <div class="item-desc">Premium custom styling, tailoring, and fit adjustments.</div>
                                 </td>
-                                <td style="text-align: center;">${invoice?.currency} ${(invoice?.amount || 0).toLocaleString()}</td>
-                                <td style="text-align: center;">1</td>
-                                <td>${invoice?.currency} ${(invoice?.amount || 0).toLocaleString()}</td>
+                                <td style="text-align: center;">${invoice?.currency || '$'} ${(order?.amount || 0).toLocaleString()}</td>
+                                <td style="text-align: center;">${order.qty || 1}</td>
+                                <td style="text-align: right;">${invoice?.currency || '$'} ${((order?.amount || 0) * (order.qty || 1)).toLocaleString()}</td>
                             </tr>
+                            `).join('')}
                             ${invoice?.notes ? `
                             <tr>
                                 <td colspan="4">
-                                    <div class="item-title" style="font-size: 13px;">Notes</div>
+                                    <div class="item-title" style="font-size: 12px;">Notes</div>
                                     <div class="item-desc" style="max-width: unset;">${invoice.notes}</div>
                                 </td>
                             </tr>
@@ -260,36 +273,37 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         </tbody>
                     </table>
                     
+                    <!-- Totals Zone -->
                     <div class="totals-wrapper">
                         <div class="totals-box">
                             <div class="totals-row">
                                 <span>Sub Total</span>
-                                <span>${invoice?.currency} ${(invoice?.amount || 0).toLocaleString()}</span>
+                                <span>${invoice?.currency || '$'} ${(invoice?.amount || 0).toLocaleString()}</span>
                             </div>
                             <div class="totals-row">
                                 <span>Tax</span>
-                                <span>${invoice?.currency} 0</span>
+                                <span>${invoice?.currency || '$'} 0</span>
                             </div>
                             
                             <div class="grand-total">
                                 <span>TOTAL</span>
-                                <span>${invoice?.currency} ${(invoice?.amount || 0).toLocaleString()}</span>
+                                <span>${invoice?.currency || '$'} ${(invoice?.amount || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                     
+                    <!-- Footer Info -->
                     <div class="footer-bottom">
                         <div class="terms-box">
-                            <div class="terms-title">Terms & Conditions / Payment Info</div>
-                            <div class="terms-text">
-                                ${user?.bankName && user?.accountNumber && user?.accountName ? `
-                                    Bank: <strong>${user.bankName}</strong> &nbsp;|&nbsp; 
-                                    Acct No: <strong>${user.accountNumber}</strong> &nbsp;|&nbsp; 
-                                    Name: <strong>${user.accountName}</strong><br>
-                                ` : ''}
-                                Payment is due within 15 days from the date of the invoice.<br>
-                                Please make all payments to ${user?.businessName || 'the business'}.
-                            </div>
+                            <div class="terms-title">Terms &amp; Payment Info</div>
+                             <div class="terms-text">
+                                 ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                                     Bank: <strong>${user.bankName}</strong> &nbsp;|&nbsp; 
+                                     Acct: <strong>${user.accountNumber}</strong> &nbsp;|&nbsp; 
+                                     Name: <strong>${user.accountName}</strong><br>
+                                 ` : ''}
+                                 ${user?.invoiceTerms || ''}
+                             </div>
                         </div>
                         <div class="signature-box">
                             <div class="signature-line"></div>
@@ -297,7 +311,7 @@ export const CreativeTemplate = ({ user, invoice, customer, order }: InvoiceTemp
                         </div>
                     </div>
                 </div>
-                <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX</div>
+                <div style="position: absolute; bottom: 25px; left: 0; width: 800px; text-align: center; font-size: 11px; font-weight: 800; color: #a1a1aa; letter-spacing: 3px; z-index: 10;">POWERED BY NEEDLEX <br/> NeedleAfrica.com</div>
             </body>
         </html>
     `;

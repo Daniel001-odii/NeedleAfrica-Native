@@ -2,10 +2,10 @@ export interface InvoiceTemplateProps {
     user: any;
     invoice: any;
     customer: any;
-    order: any;
+    orders: any[];
 }
 
-export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTemplateProps) => {
+export const ElegantTemplate = ({ user, invoice, customer, orders }: InvoiceTemplateProps) => {
     return `
     <!DOCTYPE html>
     <html>
@@ -41,6 +41,7 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     position: relative; 
                 }
                 
+                /* Border Frame */
                 .border-frame {
                     position: absolute;
                     top: 20px; left: 20px; right: 20px; bottom: 20px;
@@ -49,23 +50,23 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     pointer-events: none;
                 }
                 
+                /* Header Zone */
                 .header-wrapper {
                     text-align: center;
-                    padding: 60px 50px 30px;
+                    padding: 45px 50px 25px;
                     border-bottom: 1px solid #eaeaea;
                     margin: 0 40px;
                 }
-                
                 .brand-name {
                     font-family: 'Playfair Display', serif;
-                    font-size: 36px;
+                    font-size: 32px;
                     font-weight: 700;
                     color: #222222;
-                    margin: 0 0 10px 0;
+                    margin: 0 0 8px 0;
                     letter-spacing: 2px;
                 }
                 .brand-details {
-                    font-size: 13px;
+                    font-size: 12px;
                     color: #777777;
                     font-weight: 300;
                     letter-spacing: 1px;
@@ -73,33 +74,97 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                 
                 .invoice-title {
                     font-family: 'Playfair Display', serif;
-                    font-size: 42px;
+                    font-size: 36px;
                     font-style: italic;
                     color: #d4af37;
                     text-align: center;
-                    margin: 30px 0 0 0;
+                    margin: 20px 0 0 0;
                 }
                 
-                .main-content { padding: 30px 60px; }
+                /* Content Zone */
+                .main-content { 
+                    padding: 25px 60px 60px 60px; 
+                    display: flex;
+                    flex-direction: column;
+                }
                 
-                .meta-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eaeaea; padding-bottom: 25px; margin-bottom: 30px; }
-                .meta-col h4 { font-size: 11px; color: #a0a0a0; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px 0; }
+                .meta-row { 
+                    display: flex; 
+                    justify-content: space-between; 
+                    border-bottom: 1px solid #eaeaea; 
+                    padding-bottom: 20px; 
+                    margin-bottom: 25px; 
+                }
+                .meta-col h4 { font-size: 11px; color: #a0a0a0; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 6px 0; }
                 .meta-col p { font-size: 16px; margin: 0; color: #222222; font-family: 'Playfair Display', serif; }
-                .meta-col span { font-size: 13px; color: #666666; }
+                .meta-col span { font-size: 13px; color: #666666; display: block; margin-top: 2px; }
                 
-                table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-                th { color: #a0a0a0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; padding: 10px 0; border-bottom: 1px solid #d4af37; text-align: left; }
-                td { padding: 20px 0; font-size: 15px; color: #333333; border-bottom: 1px solid #eaeaea; }
+                /* Table Zone */
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 25px; 
+                    table-layout: fixed;
+                }
+                th { 
+                    color: #a0a0a0; 
+                    font-size: 11px; 
+                    font-weight: 700; 
+                    text-transform: uppercase; 
+                    letter-spacing: 2px; 
+                    padding: 8px 0; 
+                    border-bottom: 1px solid #d4af37; 
+                    text-align: left; 
+                }
+                td { 
+                    padding: 16px 0; 
+                    font-size: 14px; 
+                    color: #333333; 
+                    border-bottom: 1px solid #eaeaea; 
+                    word-wrap: break-word;
+                }
                 
+                /* Totals Zone */
                 .totals-container { display: flex; justify-content: flex-end; }
                 .totals-box { width: 250px; }
-                .total-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: #666666; }
-                .grand-total { border-top: 1px solid #d4af37; border-bottom: 1px solid #d4af37; margin-top: 10px; padding: 15px 0; font-size: 20px; font-weight: 700; color: #222222; font-family: 'Playfair Display', serif; display: flex; justify-content: space-between; }
+                .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #666666; }
+                .grand-total { 
+                    border-top: 1px solid #d4af37; 
+                    border-bottom: 1px solid #d4af37; 
+                    margin-top: 8px; 
+                    padding: 12px 0; 
+                    font-size: 18px; 
+                    font-weight: 700; 
+                    color: #222222; 
+                    font-family: 'Playfair Display', serif; 
+                    display: flex; 
+                    justify-content: space-between; 
+                }
                 
-                .footer { text-align: center; margin-top: 50px; }
-                .footer p { font-size: 12px; color: #888888; font-style: italic; font-family: 'Playfair Display', serif; }
+                /* Footer Zone */
+                .footer { text-align: center; margin-top: 25px; }
+                .footer p { font-size: 11px; color: #888888; font-style: italic; font-family: 'Playfair Display', serif; margin: 0 0 8px 0; }
+                .payment-details {
+                    font-size: 10px; 
+                    text-transform: uppercase; 
+                    letter-spacing: 1px; 
+                    color: #777777;
+                    margin-top: 10px;
+                }
                 
-                .watermark { position: absolute; bottom: 35px; left: 0; width: 800px; text-align: center; font-size: 10px; font-weight: 700; color: #d4af37; letter-spacing: 4px; z-index: 10; opacity: 0.7; }
+                .watermark { 
+                    position: absolute; 
+                    bottom: 35px; 
+                    left: 0; 
+                    width: 800px; 
+                    text-align: center; 
+                    font-size: 10px; 
+                    font-weight: 700; 
+                    color: #d4af37; 
+                    letter-spacing: 4px; 
+                    z-index: 10; 
+                    opacity: 0.7; 
+                }
             </style>
         </head>
         <body>
@@ -115,6 +180,7 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
             <h2 class="invoice-title">Invoice</h2>
             
             <div class="main-content">
+                <!-- Info Row -->
                 <div class="meta-row">
                     <div class="meta-col">
                         <h4>Billed To</h4>
@@ -129,6 +195,7 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     </div>
                 </div>
                 
+                <!-- Table Details -->
                 <table>
                     <thead>
                         <tr>
@@ -138,14 +205,17 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                         </tr>
                     </thead>
                     <tbody>
+                        ${orders.map((order: any) => `
                         <tr>
-                            <td style="font-family: 'Playfair Display', serif; font-size: 18px;">${order?.styleName || 'Bespoke Tailoring'}</td>
-                            <td style="text-align: center;">1</td>
-                            <td style="text-align: right; font-weight: 600;">${invoice?.currency || '$'} ${(invoice?.amount || 5400).toLocaleString()}</td>
+                            <td style="font-family: 'Playfair Display', serif; font-size: 16px;">${order?.styleName || 'Bespoke Tailoring'}</td>
+                            <td style="text-align: center;">${order.qty || 1}</td>
+                            <td style="text-align: right; font-weight: 600;">${invoice?.currency || '$'} ${((order?.amount || 0) * (order.qty || 1)).toLocaleString()}</td>
                         </tr>
+                        `).join('')}
                     </tbody>
                 </table>
                 
+                <!-- Totals Summary -->
                 <div class="totals-container">
                     <div class="totals-box">
                         <div class="total-row">
@@ -159,17 +229,18 @@ export const ElegantTemplate = ({ user, invoice, customer, order }: InvoiceTempl
                     </div>
                 </div>
                 
+                <!-- Terms & Bank Details -->
                 <div class="footer">
-                    <p>${invoice?.notes || 'Thank you for your valued patronage.'}</p>
-                    ${user?.bankName && user?.accountNumber && user?.accountName ? `
-                        <div style="margin-top: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #777777;">
-                            Payment Details: ${user.bankName} &nbsp;|&nbsp; Acct: ${user.accountNumber} &nbsp;|&nbsp; Name: ${user.accountName}
-                        </div>
-                    ` : ''}
-                </div>
+                     <p>${user?.invoiceTerms || 'Thank you for your business.'}</p>
+                     ${user?.bankName && user?.accountNumber && user?.accountName ? `
+                         <div class="payment-details">
+                             Payment Details: ${user.bankName} &nbsp;|&nbsp; Acct: ${user.accountNumber} &nbsp;|&nbsp; Name: ${user.accountName}
+                         </div>
+                     ` : ''}
+                 </div>
             </div>
             
-            <div class="watermark">POWERED BY NEEDLEX</div>
+           <div class="watermark">POWERED BY NEEDLEX <br/> NeedleAfrica.com</div>
         </body>
     </html>
     `;

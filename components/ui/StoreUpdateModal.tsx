@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Platform, Linking, Image, TouchableOpacity } from 'react-native';
+import { Modal, View, Platform, Linking, Pressable } from 'react-native';
 import { Typography } from './Typography';
 import { Button } from './Button';
 import { useTheme } from '../../contexts/ThemeContext';
-import { RefreshCircle, CloseCircle } from 'iconsax-react-native';
+import { RefreshCircle } from 'iconsax-react-native';
 import Constants from 'expo-constants';
 import axiosInstance from '../../lib/axios';
 
@@ -21,16 +21,12 @@ export function StoreUpdateModal() {
 
     const checkVersion = async () => {
         try {
-            // Fetch the required version from the API
             const response = await axiosInstance.get('/app-version');
 
             if (response.data.status === 'success' && response.data.data) {
                 const serverVersion = response.data.data.version;
                 const forceUpdate = response.data.data.forceUpdate;
 
-                // Simple version comparison: if not the same and forceUpdate is enabled
-                // In production, you might want to use something like 'compare-versions' 
-                // but this satisfies the user's specific "is not the same" requirement.
                 if (serverVersion !== currentVersion && forceUpdate) {
                     setNeedsUpdate(true);
                     setUpdateInfo(response.data.data);
@@ -54,69 +50,64 @@ export function StoreUpdateModal() {
 
     return (
         <Modal
-            animationType="fade"
+            animationType="slide"
             transparent={true}
             visible={needsUpdate && !dismissed}
-            onRequestClose={() => { }}
+            // visible={true}
+            onRequestClose={() => setDismissed(true)}
             statusBarTranslucent={true}
         >
-            <View className={`flex-1 ${isDark ? 'bg-black/80' : 'bg-black/40'} justify-center p-6`}>
-                <View className={`w-full p-8 rounded-[40px] ${isDark ? 'bg-[#1C1C1E] border border-white/10' : 'bg-white'} items-center shadow-2xl`}>
-                    
-                    {/* App Icon Container */}
-                    <View className="mb-8 mt-2 items-center justify-center relative">
-                        <View className={`p-4 rounded-[48px] ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                            <View className={`w-24 h-24 rounded-[32px] overflow-hidden items-center justify-center shadow-sm`}>
-                                <Image
-                                    source={require('../../assets/app-icon.png')}
-                                    className="w-full h-full"
-                                    resizeMode="cover"
-                                />
+            <View className={`flex-1 ${isDark ? 'bg-black/70' : 'bg-black/40'} justify-end`}>
+                <Pressable className={`mx-2 mb-12 rounded-3xl ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+                    <View className="p-6 pb-12">
+                        <View className="items-center mb-6 mt-2">
+                            <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
+                                <RefreshCircle size={32} color={isDark ? "#60A5FA" : "#3B82F6"} variant="Bulk" />
                             </View>
-                        </View>
-                        
-                        {/* Update Notification Badge */}
-                        <View className="absolute top-2 right-2 bg-blue-600 w-8 h-8 rounded-full border-[3px] border-white dark:border-[#1C1C1E] items-center justify-center">
-                            <Typography weight="black" color="white" className="text-[12px] mt-[-1px] font-black">1</Typography>
-                        </View>
-                    </View>
-
-                    <Typography variant="h1" weight="bold" className="text-center mb-4 text-3xl">
-                        A Fresh Update{'\n'}is Ready!
-                    </Typography>
-
-                    <View className={`px-4 py-1.5 rounded-full mb-5 ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
-                        <Typography variant="small" weight="bold" className="text-blue-600 dark:text-blue-400">
-                            Version {updateInfo?.version || "1.5.0"}
-                        </Typography>
-                    </View>
-
-                    <Typography variant="body" color="gray" className="text-center leading-relaxed mb-8 text-[15px] px-2">
-                        {updateInfo?.updateMessage || "We've added new features, crushed some bugs, and made Needle Africa even faster. Update now to enjoy the best experience."}
-                    </Typography>
-
-                    <View className="w-full space-y-3">
-                        <Button
-                            onPress={handleUpdate}
-                            className="w-full h-[56px] rounded-full bg-blue-600 border-0 flex-row items-center justify-center shadow-lg shadow-blue-500/30"
-                        >
-                            <View className="flex-row items-center">
-                                <RefreshCircle size={22} color="white" variant="Bulk" className="mr-2" />
-                                <Typography className="text-white font-bold text-[16px]">Update Now</Typography>
-                            </View>
-                        </Button>
-
-                        <TouchableOpacity
-                            onPress={() => setDismissed(true)}
-                            className="h-[48px] items-center justify-center"
-                        >
-                            <Typography variant="body" weight="bold" className="text-gray-400 text-[15px]">
-                                Remind Me Later
+                            <Typography variant="h3" weight="bold" className="text-center mb-2">
+                                A Fresh Update is Ready!
                             </Typography>
-                        </TouchableOpacity>
-                    </View>
+                            <View className={`px-4 py-1.5 rounded-full ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
+                                <Typography variant="small" weight="bold" className={isDark ? 'text-blue-400' : 'text-blue-600'}>
+                                    Version {updateInfo?.version || "1.5.0"}
+                                </Typography>
+                            </View>
+                        </View>
 
-                </View>
+                        <View className={`rounded-2xl p-4 mb-8 border ${isDark ? 'bg-surface-muted-dark border-border-dark' : 'bg-surface-muted border-gray-100'}`}>
+                            <Typography variant="body" className="text-center leading-6" color="gray">
+                                {updateInfo?.updateMessage || "We've added new features, crushed some bugs, and made Needle Africa even faster. Update now to enjoy the best experience."}
+                            </Typography>
+                        </View>
+
+                        <View className="space-y-3 flex flex-col gap-3">
+                            <Button
+                                onPress={handleUpdate}
+                                style={{
+                                    borderWidth: 0,
+                                    shadowColor: 'transparent',
+                                }}
+                                className="h-14 rounded-full bg-blue-600 shadow-lg shadow-blue-500/30 border-none"
+                                textClassName="text-white font-bold"
+                            >
+                                Update Now
+                            </Button>
+
+                            <Button
+                                style={{
+                                    borderWidth: 0,
+                                    shadowColor: 'transparent',
+                                }}
+                                onPress={() => setDismissed(true)}
+                                variant="outline"
+                                className={`h-14 rounded-full ${isDark ? 'bg-gray-700 border-gray-700' : 'bg-gray-100 border-gray-100'}`}
+                                textClassName={isDark ? "text-gray-300" : "text-gray-600"}
+                            >
+                                Remind Me Later
+                            </Button>
+                        </View>
+                    </View>
+                </Pressable>
             </View>
         </Modal>
     );

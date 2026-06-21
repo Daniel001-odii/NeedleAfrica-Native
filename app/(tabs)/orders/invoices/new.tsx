@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { View, ScrollView, Pressable, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, ScrollView, Pressable, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, User, Box, SearchNormal1, TickCircle } from 'iconsax-react-native';
+import { ArrowLeft, User, Box, SearchNormal1, TickCircle, AddCircle } from 'iconsax-react-native';
 import { Typography } from '../../../../components/ui/Typography';
 import { Surface } from '../../../../components/ui/Surface';
 import { IconButton } from '../../../../components/ui/IconButton';
@@ -19,6 +19,7 @@ import Toast from 'react-native-toast-message';
 import { useConfirm } from '../../../../contexts/ConfirmContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import { StoreReviewService } from '../../../../services/StoreReviewService';
+import { CURRENCIES } from '../../../../constants/currencies';
 
 export default function CreateInvoiceScreen() {
     const router = useRouter();
@@ -32,9 +33,12 @@ export default function CreateInvoiceScreen() {
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { confirm } = useConfirm();
+    const currency = user?.currency || 'NGN';
+    const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
     const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
-    const [selectedOrderId, setSelectedOrderId] = useState('');
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+    const [orderQuantities, setOrderQuantities] = useState<Record<string, number>>({});
     const [notes, setNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -61,25 +65,60 @@ export default function CreateInvoiceScreen() {
         return orders.filter(o => o.customerId === selectedCustomerId && o.deletedAt === null);
     }, [orders, selectedCustomerId]);
 
-    React.useEffect(() => {
-        if (customerOrders.length > 0) {
-            if (!selectedOrderId || !customerOrders.find(o => o.id === selectedOrderId)) {
-                setSelectedOrderId(customerOrders[0].id);
-            }
-        } else {
-            setSelectedOrderId('');
-        }
-    }, [customerOrders]);
+    const selectedOrdersData = useMemo(() => {
+        return orders.filter(o => selectedOrderIds.includes(o.id));
+    }, [orders, selectedOrderIds]);
 
-    const selectedOrder = useMemo(() => {
-        return orders.find(o => o.id === selectedOrderId);
-    }, [orders, selectedOrderId]);
+    const totalAmount = useMemo(() => {
+        return selectedOrdersData.reduce((sum, o) => sum + (o.amount || 0) * (orderQuantities[o.id] || 1), 0);
+    }, [selectedOrdersData, orderQuantities]);
+
+    // Reset selections when customer changes
+    React.useEffect(() => {
+        setSelectedOrderIds([]);
+        setOrderQuantities({});
+    }, [selectedCustomerId]);
+
+    const toggleOrder = useCallback((orderId: string) => {
+        setSelectedOrderIds(prev => {
+            if (prev.includes(orderId)) {
+                setOrderQuantities(q => {
+                    const next = { ...q };
+                    delete next[orderId];
+                    return next;
+                });
+                return prev.filter(id => id !== orderId);
+            } else {
+                setOrderQuantities(q => ({ ...q, [orderId]: 1 }));
+                return [...prev, orderId];
+            }
+        });
+    }, []);
+
+    const setOrderQty = useCallback((orderId: string, qty: number) => {
+        setOrderQuantities(prev => ({ ...prev, [orderId]: Math.max(1, qty) }));
+    }, []);
+
+    const toggleAllOrders = useCallback(() => {
+        if (!customerOrders.length) return;
+        const allIds = customerOrders.map(o => o.id);
+        const allSelected = allIds.every(id => selectedOrderIds.includes(id));
+        if (allSelected) {
+            setSelectedOrderIds([]);
+            setOrderQuantities({});
+        } else {
+            setSelectedOrderIds(allIds);
+            const qtys: Record<string, number> = {};
+            allIds.forEach(id => { qtys[id] = 1; });
+            setOrderQuantities(qtys);
+        }
+    }, [customerOrders, selectedOrderIds]);
 
     const handleCreate = async () => {
-        if (!selectedCustomerId || !selectedOrderId) {
+        if (!selectedCustomerId || selectedOrderIds.length === 0) {
             confirm({
                 title: 'Error',
-                message: 'Please select both a customer and an order',
+                message: 'Please select a customer and at least one order',
                 confirmText: 'OK',
                 onConfirm: () => { }
             });
@@ -100,8 +139,8 @@ export default function CreateInvoiceScreen() {
         try {
             const invoice = await createInvoice({
                 customerId: selectedCustomerId,
-                orderId: selectedOrderId,
-                amount: selectedOrder?.amount || 0,
+                orderIds: selectedOrderIds,
+                orderQuantities,
                 currency: user?.currency || 'NGN',
                 notes
             });
@@ -132,6 +171,7 @@ export default function CreateInvoiceScreen() {
     };
 
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+    const allSelected = customerOrders.length > 0 && customerOrders.every(o => selectedOrderIds.includes(o.id));
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
@@ -197,7 +237,7 @@ export default function CreateInvoiceScreen() {
                                 </View>
                             </View>
                             {!initialCustomerId && (
-                                <Pressable onPress={() => { setSelectedCustomerId(''); setSelectedOrderId(''); }}>
+                                <Pressable onPress={() => { setSelectedCustomerId(''); setSelectedOrderIds([]); }}>
                                     <Typography variant="small" color="primary" weight="bold">Change</Typography>
                                 </Pressable>
                             )}
@@ -207,43 +247,127 @@ export default function CreateInvoiceScreen() {
                     {/* Order Selection */}
                     {selectedCustomerId && (
                         <View className="mb-8">
-                            <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">2. Select Order</Typography>
+                            <View className="flex-row items-center justify-between mb-4">
+                                <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest ml-1">
+                                    2. Select Orders
+                                </Typography>
+                                {customerOrders.length > 0 && (
+                                    <Pressable onPress={toggleAllOrders} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
+                                        <Typography variant="small" weight="bold" color="primary">
+                                            {allSelected ? 'Deselect All' : 'Select All'}
+                                        </Typography>
+                                    </Pressable>
+                                )}
+                            </View>
                             {loadingOrders ? (
                                 <ActivityIndicator color={isDark ? "white" : "black"} />
                             ) : customerOrders.length === 0 ? (
                                 <Surface variant="muted" className={`p-6 items-center ${isDark ? 'bg-surface-muted-dark' : ''}`} rounded="2xl" hasBorder>
-                                    <Typography variant="small" color="gray">No active orders found for this customer.</Typography>
+                                    <Typography variant="small" color="gray" className="text-center mb-4">No active orders found for this customer.</Typography>
+                                    <Button
+                                        onPress={() => router.push('/(tabs)/orders/new')}
+                                        className={`h-12 px-6 rounded-full ${isDark ? 'bg-white' : 'bg-black'}`}
+                                        textClassName={isDark ? 'text-black' : 'text-white'}
+                                    >
+                                        Create New Order
+                                    </Button>
                                 </Surface>
                             ) : (
                                 <View className="gap-3">
-                                    {customerOrders.map(order => (
-                                        <Pressable key={order.id} onPress={() => setSelectedOrderId(order.id)}>
-                                            <Surface
-                                                variant="white"
-                                                className={`p-4 border ${selectedOrderId === order.id ? (isDark ? 'border-indigo-500' : 'border-[#FF5678]') : (isDark ? 'border-border-dark' : 'border-gray-100')} flex-row items-center`}
-                                                rounded="2xl"
-                                                hasBorder
-                                            >
-                                                <View className={`w-10 h-10 ${selectedOrderId === order.id ? (isDark ? 'bg-indigo-600' : 'bg-[#FF5678]') : (isDark ? 'bg-dark-800' : 'bg-gray-100')} rounded-full items-center justify-center mr-4`}>
-                                                    <Box size={20} color={selectedOrderId === order.id ? 'white' : (isDark ? '#9CA3AF' : 'black')} variant="Bulk" />
-                                                </View>
-                                                <View className="flex-1">
-                                                    <Typography weight="bold">{order.styleName}</Typography>
-                                                    <Typography variant="caption" color="gray">
-                                                        {user?.currency || 'NGN'} {(order.amount || 0).toLocaleString()}
-                                                    </Typography>
-                                                </View>
-                                                {selectedOrderId === order.id && <TickCircle size={24} color={isDark ? "#ff8fa3" : "#FF5678"} variant="Bold" />}
-                                            </Surface>
-                                        </Pressable>
-                                    ))}
+                                    {customerOrders.map(order => {
+                                        const isSelected = selectedOrderIds.includes(order.id);
+                                        const orderImageUri = order.styleImage || order.fabricImage || '';
+                                        return (
+                                            <Pressable key={order.id} onPress={() => toggleOrder(order.id)}>
+                                                <Surface
+                                                    variant="white"
+                                                    className={`py-3 px-3 border ${isSelected ? (isDark ? 'border-indigo-500' : 'border-[#FF5678]') : (isDark ? 'border-border-dark' : 'border-gray-100')} flex-row items-center`}
+                                                    rounded="2xl"
+                                                    hasBorder
+                                                >
+                                                    {isSelected ? (
+                                                        <View className={`w-12 h-12 rounded-full items-center justify-center mr-3 ${isDark ? 'bg-indigo-600' : 'bg-[#FF5678]'}`}>
+                                                            <TickCircle size={22} color="white" variant="Bold" />
+                                                        </View>
+                                                    ) : orderImageUri ? (
+                                                        <Image
+                                                            source={{ uri: orderImageUri }}
+                                                            className="w-12 h-12 rounded-lg mr-3"
+                                                            resizeMode="cover"
+                                                        />
+                                                    ) : (
+                                                        <View className={`w-12 h-12 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-dark-800' : 'bg-gray-100'}`}>
+                                                            <Box size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                                                        </View>
+                                                    )}
+                                                    <View className="flex-1 mr-3">
+                                                        <Typography weight="bold" numberOfLines={1} className="text-[14px]">{order.styleName}</Typography>
+                                                        <Typography variant="caption" color="gray">
+                                                            {order.status} · {currencySymbol}{(order.amount || 0).toLocaleString()}
+                                                        </Typography>
+                                                    </View>
+                                                    {isSelected && (
+                                                        <View className="flex-row items-center">
+                                                            <Pressable
+                                                                onPress={() => setOrderQty(order.id, (orderQuantities[order.id] || 1) - 1)}
+                                                                className={`w-8 h-8 rounded-full items-center justify-center border ${isDark ? 'bg-dark-600 border-indigo-400/40' : 'bg-[#FFF0F3] border-[#FF5678]/30'} ${(orderQuantities[order.id] || 1) <= 1 ? 'opacity-40' : ''}`}
+                                                                disabled={(orderQuantities[order.id] || 1) <= 1}
+                                                            >
+                                                                <Typography weight="extrabold" className={`text-base ${isDark ? 'text-indigo-300' : 'text-[#FF5678]'}`}>−</Typography>
+                                                            </Pressable>
+                                                            <View className={`min-w-[32px] items-center mx-2 px-2 py-1 rounded-lg ${isDark ? 'bg-dark-700' : 'bg-[#FFF0F3]'}`}>
+                                                                <Typography weight="bold" className={`text-sm ${isDark ? 'text-white' : 'text-[#FF5678]'}`}>
+                                                                    {orderQuantities[order.id] || 1}
+                                                                </Typography>
+                                                            </View>
+                                                            <Pressable
+                                                                onPress={() => setOrderQty(order.id, (orderQuantities[order.id] || 1) + 1)}
+                                                                className={`w-8 h-8 rounded-full items-center justify-center border ${isDark ? 'bg-indigo-600 border-indigo-400/60' : 'bg-[#FF5678] border-[#FF5678]'}`}
+                                                            >
+                                                                <Typography weight="extrabold" className="text-base text-white">+</Typography>
+                                                            </Pressable>
+                                                        </View>
+                                                    )}
+                                                </Surface>
+                                            </Pressable>
+                                        );
+                                    })}
                                 </View>
+                            )}
+
+                            {/* Selected Summary */}
+                            {selectedOrderIds.length > 0 && (
+                                <Surface variant={"muted" as any} className={`mt-4 p-4 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`} rounded="2xl">
+                                    <View className="flex-row justify-between items-center mb-3">
+                                        <Typography variant="small" weight="bold" color="gray">
+                                            {selectedOrderIds.length} order{selectedOrderIds.length !== 1 ? 's' : ''} selected
+                                        </Typography>
+                                        <Typography variant="body" weight="bold">
+                                            {currencySymbol}{totalAmount.toLocaleString()}
+                                        </Typography>
+                                    </View>
+                                    {selectedOrdersData.map(order => {
+                                        const qty = orderQuantities[order.id] || 1;
+                                        const subtotal = (order.amount || 0) * qty;
+                                        return (
+                                            <View key={order.id} className="flex-row justify-between py-1.5 border-t border-white/10">
+                                                <Typography variant="small" className="flex-1" numberOfLines={1}>
+                                                    {order.styleName}
+                                                    {qty > 1 && `  ×${qty}`}
+                                                </Typography>
+                                                <Typography variant="small" weight="semibold">
+                                                    {currencySymbol}{subtotal.toLocaleString()}
+                                                </Typography>
+                                            </View>
+                                        );
+                                    })}
+                                </Surface>
                             )}
                         </View>
                     )}
 
                     {/* Additional Details */}
-                    {selectedOrderId && (
+                    {selectedOrderIds.length > 0 && (
                         <View className="mb-8">
                             <Typography variant="caption" color="gray" weight="bold" className="mb-4 uppercase tracking-widest ml-1">3. Invoice Details</Typography>
                             <Surface variant="muted" rounded="2xl" className={`p-4 border ${isDark ? 'border-border-dark bg-surface-muted-dark' : 'border-gray-100'} min-h-[100px]`}>
@@ -265,12 +389,12 @@ export default function CreateInvoiceScreen() {
                     <Button
                         onPress={handleCreate}
                         isLoading={submitting}
-                        disabled={!selectedCustomerId || !selectedOrderId}
-                        className={`h-16 rounded-full border-0 ${(!selectedCustomerId || !selectedOrderId) ? (isDark ? 'bg-dark-800' : 'bg-gray-200') : (isDark ? 'bg-white' : 'bg-black')}`}
-                        textClassName={`font-bold ${(!selectedCustomerId || !selectedOrderId) ? "text-gray-400" : (isDark ? "text-black" : "text-white")}`}
+                        disabled={!selectedCustomerId || selectedOrderIds.length === 0}
+                        className={`h-16 rounded-full border-0 ${(!selectedCustomerId || selectedOrderIds.length === 0) ? (isDark ? 'bg-dark-800' : 'bg-gray-200') : (isDark ? 'bg-white' : 'bg-black')}`}
+                        textClassName={`font-bold ${(!selectedCustomerId || selectedOrderIds.length === 0) ? "text-gray-400" : (isDark ? "text-black" : "text-white")}`}
                         size="lg"
                     >
-                        Generate Invoice
+                        {`Generate Invoice (${selectedOrderIds.length > 0 ? `${currencySymbol}${totalAmount.toLocaleString()}` : 'Select Orders'})`}
                     </Button>
                 </View>
             </KeyboardAvoidingView>

@@ -131,5 +131,27 @@ export default schemaMigrations({
                 }),
             ],
         },
+        {
+            toVersion: 9,
+            steps: [
+                addColumns({
+                    table: 'invoices',
+                    columns: [
+                        { name: 'order_ids', type: 'string', isOptional: true },
+                    ],
+                }),
+            ],
+        },
+        {
+            toVersion: 10,
+            steps: [
+                addColumns({
+                    table: 'invoices',
+                    columns: [
+                        { name: 'order_quantities', type: 'string', isOptional: true },
+                    ],
+                }),
+            ],
+        },
     ],
 });

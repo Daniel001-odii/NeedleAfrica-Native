@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box, Gallery } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Typography } from '../../../components/ui/Typography';
@@ -180,6 +180,16 @@ export default function NewOrder() {
         }
     };
 
+    const handleImageResult = (type: 'fabric' | 'style', result: ImagePicker.ImagePickerResult) => {
+        if (!result.canceled) {
+            if (type === 'fabric') {
+                setFabricImage(result.assets[0].uri);
+            } else {
+                setStyleImage(result.assets[0].uri);
+            }
+        }
+    };
+
     const pickImage = async (type: 'fabric' | 'style') => {
         if (!isOnline) {
             Toast.show({
@@ -190,19 +200,41 @@ export default function NewOrder() {
             return;
         }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            if (type === 'fabric') {
-                setFabricImage(result.assets[0].uri);
-            } else {
-                setStyleImage(result.assets[0].uri);
-            }
-        }
+        Alert.alert(
+            'Add Image',
+            'Choose an image source',
+            [
+                {
+                    text: '📷 Take Photo',
+                    onPress: async () => {
+                        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                        if (status !== 'granted') {
+                            Alert.alert('Permission Required', 'Camera access is needed to take photos.');
+                            return;
+                        }
+                        const result = await ImagePicker.launchCameraAsync({
+                            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                            allowsEditing: true,
+                            quality: 1,
+                        });
+                        handleImageResult(type, result);
+                    },
+                },
+                {
+                    text: '🖼️ Choose from Gallery',
+                    onPress: async () => {
+                        const result = await ImagePicker.launchImageLibraryAsync({
+                            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                            allowsEditing: true,
+                            quality: 1,
+                        });
+                        handleImageResult(type, result);
+                    },
+                },
+                { text: 'Cancel', style: 'cancel' },
+            ],
+            { cancelable: true }
+        );
     };
 
     const formatDate = (date: Date) => {
@@ -217,9 +249,9 @@ export default function NewOrder() {
     };
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-[#F2F2F7]'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* <SafeAreaView className="flex-1" edges={['top', 'bottom']}> */}
-            <View className={`px-4 pt-2 pb-2 flex-row items-center ${isDark ? 'bg-black border-b border-white/5' : 'bg-[#F2F2F7] border-b border-gray-100'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center ${isDark ? 'bg-black border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
                     onPress={() => router.back()}
@@ -242,7 +274,7 @@ export default function NewOrder() {
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-widest opacity-60">
                             Order Identity
                         </Typography>
-                        <Surface variant="white" className={`overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
                             {/* Dress Type */}
                             <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                 <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#007AFF]/10' : 'bg-blue-50'}`}>
@@ -280,7 +312,7 @@ export default function NewOrder() {
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-widest opacity-60">
                             Schedule & Billing
                         </Typography>
-                        <Surface variant="white" className={`overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
                             {/* Date */}
                             <TouchableOpacity
                                 onPress={() => setShowDatePicker(true)}
@@ -295,8 +327,8 @@ export default function NewOrder() {
                                     </Typography>
                                 </View>
                                 <View className="flex-row items-center">
-                                    <Typography variant="small" weight="semibold" color="primary" className="mr-1">{formatDate(dueDate)}</Typography>
-                                    <ArrowDown2 size={14} color={isDark ? "#0A84FF" : "#007AFF"} />
+                                    <Typography variant="small" weight="semibold" className="mr-1 text-brand-primary">{formatDate(dueDate)}</Typography>
+                                    <ArrowDown2 size={14} color="pink" />
                                 </View>
                             </TouchableOpacity>
 
@@ -338,14 +370,14 @@ export default function NewOrder() {
                             Design & Fabric
                         </Typography>
                         <View className="flex-row gap-3 mb-4">
-                            <TouchableOpacity onPress={() => pickImage('fabric')} className="flex-1">
-                                <Surface variant="white" className={`h-32 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm shadow-gray-200/50'} overflow-hidden`} rounded="2xl">
+                            <TouchableOpacity onPress={() => pickImage('fabric')} className="flex-1 aspect-square">
+                                <Surface variant="white" className={`flex-1 items-center justify-center overflow-hidden`} rounded="2xl">
                                     {fabricImage ? (
                                         <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
                                     ) : (
                                         <View className="items-center">
-                                            <View className={`w-9 h-9 rounded-full items-center justify-center mb-1.5 ${isDark ? 'bg-[#007AFF]/20' : 'bg-blue-50'}`}>
-                                                <Add size={18} color={isDark ? "#0A84FF" : "#007AFF"} />
+                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                                <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
                                             </View>
                                             <Typography variant="small" color="gray" weight="semibold">Fabric</Typography>
                                         </View>
@@ -353,14 +385,14 @@ export default function NewOrder() {
                                 </Surface>
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={() => pickImage('style')} className="flex-1">
-                                <Surface variant="white" className={`h-32 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm shadow-gray-200/50'} overflow-hidden`} rounded="2xl">
+                            <TouchableOpacity onPress={() => pickImage('style')} className="flex-1 aspect-square">
+                                <Surface variant="white" className={`flex-1 items-center justify-center overflow-hidden`} rounded="2xl">
                                     {styleImage ? (
                                         <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
                                     ) : (
                                         <View className="items-center">
-                                            <View className={`w-9 h-9 rounded-full items-center justify-center mb-1.5 ${isDark ? 'bg-[#007AFF]/20' : 'bg-blue-50'}`}>
-                                                <Add size={18} color={isDark ? "#0A84FF" : "#007AFF"} />
+                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                                <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
                                             </View>
                                             <Typography variant="small" color="gray" weight="semibold">Design</Typography>
                                         </View>
@@ -369,7 +401,7 @@ export default function NewOrder() {
                             </TouchableOpacity>
                         </View>
 
-                        <Surface variant="white" className={`overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`} rounded="2xl">
+                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
                             <View className="px-4 py-4">
                                 <TextInput
                                     className={`text-[15px] font-medium min-h-[100px] ${isDark ? 'text-white' : 'text-zinc-900'}`}

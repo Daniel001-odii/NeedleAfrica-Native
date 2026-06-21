@@ -131,7 +131,7 @@ export default function Orders() {
                 title: "Mark as Delivered",
                 message: "Are you sure this order has been delivered?",
                 confirmText: "Yes, Delivered",
-                type: "success",
+                type: "info",
                 onConfirm: performToggle
             });
         } else {
@@ -236,6 +236,7 @@ export default function Orders() {
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
+
             <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-4">
@@ -280,12 +281,8 @@ export default function Orders() {
             </View>
 
             {/* Tabs */}
-            <View className="py-2">
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerClassName="px-6 py-4"
-                >
+            <View className="mx-4 mt-3">
+                <View className={`flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900' : 'bg-gray-100'}`}>
                     {TABS.map((tab) => {
                         const isActive = activeTab === tab;
                         const count = tab === 'All'
@@ -297,31 +294,33 @@ export default function Orders() {
                                 key={tab}
                                 activeOpacity={0.7}
                                 onPress={() => setActiveTab(tab)}
-                                className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 ${isActive
-                                    ? (isDark ? 'bg-zinc-100' : 'bg-zinc-900')
-                                    : (isDark ? 'bg-zinc-900 border border-white/5' : 'bg-white shadow-sm')
+                                className={`flex-1 flex-row items-center justify-center py-3 rounded-full ${isActive
+                                    ? (isDark ? 'bg-zinc-700' : 'bg-brand-primary')
+                                    : 'bg-transparent'
                                     }`}
                             >
                                 <Typography
                                     variant="small"
                                     weight={isActive ? 'bold' : 'medium'}
-                                    className={isActive ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500'}
+                                    className={isActive ? 'text-white' : 'text-gray-500'}
                                 >
                                     {tab}
                                 </Typography>
-                                <View className={`ml-2 px-1.5 py-0.5 rounded-md ${isActive ? (isDark ? 'bg-black/10' : 'bg-white/10') : (isDark ? 'bg-white/5' : 'bg-zinc-50')}`}>
-                                    <Typography
-                                        variant="small"
-                                        weight="bold"
-                                        className={`text-[10px] ${isActive ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500'}`}
-                                    >
-                                        {count}
-                                    </Typography>
-                                </View>
+                                {count > 0 && (
+                                    <View className={`ml-1.5 px-1.5 py-0.5 rounded-md ${isActive ? (isDark ? 'bg-white/20' : 'bg-white/20') : (isDark ? 'bg-white/10' : 'bg-zinc-100')}`}>
+                                        <Typography
+                                            variant="small"
+                                            weight="bold"
+                                            className={`text-[10px] ${isActive ? 'text-white' : 'text-gray-500'}`}
+                                        >
+                                            {count}
+                                        </Typography>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         );
                     })}
-                </ScrollView>
+                </View>
             </View>
 
             {loading ? (
@@ -332,7 +331,7 @@ export default function Orders() {
                 <FlatList
                     data={sortedOrders}
                     keyExtractor={(item) => item.id}
-                    contentContainerClassName="p-4 pt-2 pb-32"
+                    contentContainerClassName="p-4 pt-2 pb-32 flex gap-3"
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
@@ -345,22 +344,22 @@ export default function Orders() {
                             rightThreshold={40}
                         >
                             <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="2xl" hasShadow={!isDark}>
-                                    <View className="relative mr-4 w-[54px] h-[54px] items-center justify-center">
+                                <Surface variant="white" className="flex-row items-center py-2.5 px-3 mb-3.5" rounded="2xl" hasShadow={!isDark}>
+                                    <View className="relative mr-3 w-[42px] h-[42px] items-center justify-center mr-4">
                                         <View className="absolute">
                                             <ProgressSquare
                                                 progress={getProgressValue(order)}
-                                                size={54}
-                                                strokeWidth={2.5}
-                                                borderRadius={14}
+                                                size={42}
+                                                strokeWidth={2}
+                                                borderRadius={12}
                                                 color={getProgressColors(order)}
                                                 backgroundColor={isDark ? '#1F2937' : '#F3F4F6'}
                                             />
                                         </View>
                                         <Surface
                                             variant={(order.fabricImage || order.styleImage) ? 'white' : getVariantForOrder(order.id)}
-                                            className={`w-11 h-11 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) ? (isDark ? 'bg-dark-800' : '') : (isDark ? getDarkVariantClass(getVariantForOrder(order.id)) : '')}`}
-                                            rounded="xl"
+                                            className={`w-9 h-9 items-center justify-center overflow-hidden ${(order.fabricImage || order.styleImage) ? (isDark ? 'bg-dark-800' : '') : (isDark ? getDarkVariantClass(getVariantForOrder(order.id)) : '')}`}
+                                            rounded="lg"
                                         >
                                             {(order.fabricImage || order.styleImage) ? (
                                                 <Image
@@ -368,23 +367,23 @@ export default function Orders() {
                                                     className="w-full h-full"
                                                 />
                                             ) : (
-                                                <Box size={18} color={getVariantColor(getVariantForOrder(order.id))} variant="Bulk" />
+                                                <Box size={15} color={getVariantColor(getVariantForOrder(order.id))} variant="Bulk" />
                                             )}
                                         </Surface>
                                     </View>
 
-                                    <View className="flex-1">
-                                        <View className="flex-row justify-between items-start mb-1">
-                                            <View>
-                                                <Typography variant="body" weight="bold">{order.styleName}</Typography>
-                                                <Typography variant="caption" color="gray" className="mt-0.5">{(order as any).customerFullName}</Typography>
+                                    <View className="flex-1 min-w-0">
+                                        <View className="flex-row justify-between items-start mb-0.5">
+                                            <View className="flex-1 min-w-0 mr-2">
+                                                <Typography variant="small" weight="bold" numberOfLines={1} className="text-[13px]">{order.styleName}</Typography>
+                                                <Typography variant="caption" color="gray" className="text-[11px]" numberOfLines={1}>{(order as any).customerFullName}</Typography>
                                             </View>
-                                            <Typography variant="small" weight="bold" className="text-gray-400">#{order.id.slice(-4).toUpperCase()}</Typography>
+                                            <Typography variant="caption" weight="bold" className="text-gray-400 text-[10px] shrink-0">#{order.id.slice(-4).toUpperCase()}</Typography>
                                         </View>
 
-                                        <View className="flex-row justify-between items-center mt-1">
-                                            <View className="flex-row items-center gap-2">
-                                                <Typography variant="caption" color="gray">
+                                        <View className="flex-row justify-between items-center mt-0.5">
+                                            <View className="flex-row items-center gap-1.5 flex-1 min-w-0">
+                                                <Typography variant="caption" color="gray" className="text-[9px]">
                                                     {order.deliveryDate ? `Due ${new Date(order.deliveryDate).toLocaleDateString()}` : 'No due date'}
                                                 </Typography>
                                                 {(order.amount || 0) > 0 && (order.balance || 0) > 0 && (
@@ -396,7 +395,7 @@ export default function Orders() {
                                                 )}
                                             </View>
                                             <View
-                                                className={`px-2 py-0.5 rounded-md ${order.status === 'DELIVERED'
+                                                className={`px-2 py-0.5 rounded-md shrink-0 ${order.status === 'DELIVERED'
                                                     ? (isDark ? 'bg-green-900/20' : 'bg-green-50')
                                                     : (isDark ? 'bg-orange-900/20' : 'bg-orange-50')}`}
                                             >

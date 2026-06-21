@@ -40,24 +40,39 @@ export function useInvoices(customerId?: string) {
 
     const createInvoice = async (data: {
         customerId: string;
-        orderId: string;
-        amount: number;
+        orderIds: string[];
+        orderQuantities?: Record<string, number>;
         currency: string;
         notes?: string;
     }) => {
         if (!user) return;
 
-        // Generate invoice number: INV-[timestamp-suffix] or INV-[count+1]
-        // For simplicity, let's use INV-[count + 1] padded
+        // Generate invoice number: INV-[count+1] padded
         const existingCount = await database.get<Invoice>('invoices').query(
             Q.where('user_id', user.id)
         ).fetchCount();
 
         const invoiceNumber = `INV-${(existingCount + 1).toString().padStart(4, '0')}`;
 
+        // Auto-calculate amount as sum of selected orders' amounts
+        const orders = await database.get('orders').query(
+            Q.where('user_id', user.id),
+            Q.where('customer_id', data.customerId)
+        ).fetch();
+
+        const selectedOrders = orders.filter((o: any) => data.orderIds.includes(o.id));
+        const quantities = data.orderQuantities || {};
+        const amount = selectedOrders.reduce((sum: number, o: any) => sum + (o.amount || 0) * (quantities[o.id] || 1), 0);
+
         const invoice = await Invoice.createSyncable(database, user.id, {
-            ...data,
-            invoiceNumber
+            customerId: data.customerId,
+            orderId: data.orderIds[0] || '',
+            orderIds: data.orderIds,
+            orderQuantities: quantities,
+            invoiceNumber,
+            amount,
+            currency: data.currency || 'NGN',
+            notes: data.notes,
         });
 
         sync().catch(console.error);
