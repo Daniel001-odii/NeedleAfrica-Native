@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ScrollView, Pressable, RefreshControl, FlatList, ActivityIndicator, Image, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../../../components/ui/Typography';
@@ -225,12 +226,19 @@ export default function Orders() {
 
     useEffect(() => {
         if (!loading && sortedOrders.length > 0) {
-            const timer = setTimeout(() => {
-                showHelpAnimation();
-            }, 1000);
-            return () => clearTimeout(timer);
+            const checkAndShow = async () => {
+                const hasSeen = await AsyncStorage.getItem('has_seen_swipe_hint_orders');
+                if (!hasSeen) {
+                    const timer = setTimeout(() => {
+                        showHelpAnimation();
+                        AsyncStorage.setItem('has_seen_swipe_hint_orders', 'true');
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                }
+            };
+            checkAndShow();
         }
-    }, [loading, sortedOrders.length === 0]);
+    }, [loading, sortedOrders.length > 0]);
 
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
@@ -264,7 +272,7 @@ export default function Orders() {
 
                 {/* Search Bar & Filter */}
                 <View className="flex-row items-center gap-3">
-                    <Surface variant="muted" className={`flex-1 flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
+                    <Surface variant="muted" className={`flex-1 flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="full">
                         <SearchNormal size={18} color="#8E8E93" />
                         <TextInput
                             className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
@@ -274,7 +282,7 @@ export default function Orders() {
                             onChangeText={setSearch}
                         />
                     </Surface>
-                    <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-xl ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                    <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
                         <FilterSearch size={22} color={isDark ? "#ff8fa3" : "#FF5678"} />
                     </TouchableOpacity>
                 </View>
@@ -295,7 +303,7 @@ export default function Orders() {
                                 activeOpacity={0.7}
                                 onPress={() => setActiveTab(tab)}
                                 className={`flex-1 flex-row items-center justify-center py-3 rounded-full ${isActive
-                                    ? (isDark ? 'bg-zinc-700' : 'bg-brand-primary')
+                                    ? (isDark ? 'bg-zinc-700' : 'bg-black')
                                     : 'bg-transparent'
                                     }`}
                             >
@@ -304,19 +312,8 @@ export default function Orders() {
                                     weight={isActive ? 'bold' : 'medium'}
                                     className={isActive ? 'text-white' : 'text-gray-500'}
                                 >
-                                    {tab}
+                                    {tab}  {count > 0 && `(${count})`}
                                 </Typography>
-                                {count > 0 && (
-                                    <View className={`ml-1.5 px-1.5 py-0.5 rounded-md ${isActive ? (isDark ? 'bg-white/20' : 'bg-white/20') : (isDark ? 'bg-white/10' : 'bg-zinc-100')}`}>
-                                        <Typography
-                                            variant="small"
-                                            weight="bold"
-                                            className={`text-[10px] ${isActive ? 'text-white' : 'text-gray-500'}`}
-                                        >
-                                            {count}
-                                        </Typography>
-                                    </View>
-                                )}
                             </TouchableOpacity>
                         );
                     })}
@@ -331,7 +328,7 @@ export default function Orders() {
                 <FlatList
                     data={sortedOrders}
                     keyExtractor={(item) => item.id}
-                    contentContainerClassName="p-4 pt-2 pb-32 flex gap-3"
+                    contentContainerClassName="p-4 pt-2 pb-32 flex"
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
@@ -344,7 +341,7 @@ export default function Orders() {
                             rightThreshold={40}
                         >
                             <Pressable onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}>
-                                <Surface variant="white" className="flex-row items-center py-2.5 px-3 mb-3.5" rounded="2xl" hasShadow={!isDark}>
+                                <Surface variant="white" className="flex-row items-center py-2.5 px-3 mb-2" rounded="3xl" hasShadow={!isDark}>
                                     <View className="relative mr-3 w-[42px] h-[42px] items-center justify-center mr-4">
                                         <View className="absolute">
                                             <ProgressSquare

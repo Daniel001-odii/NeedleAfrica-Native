@@ -53,7 +53,6 @@ export default function MonogramScreen() {
                     onLoadEnd={() => setWebViewLoading(false)}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
-                    startInLoadingState={true}
                     originWhitelist={['*']}
                 />
                 {webViewLoading && (

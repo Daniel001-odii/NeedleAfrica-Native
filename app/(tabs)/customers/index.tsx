@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -71,12 +72,19 @@ function CustomersScreen() {
 
     useEffect(() => {
         if (!loading && sortedCustomers.length > 0) {
-            const timer = setTimeout(() => {
-                showHelpAnimation();
-            }, 1000);
-            return () => clearTimeout(timer);
+            const checkAndShow = async () => {
+                const hasSeen = await AsyncStorage.getItem('has_seen_swipe_hint_customers');
+                if (!hasSeen) {
+                    const timer = setTimeout(() => {
+                        showHelpAnimation();
+                        AsyncStorage.setItem('has_seen_swipe_hint_customers', 'true');
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                }
+            };
+            checkAndShow();
         }
-    }, [loading, sortedCustomers.length === 0]);
+    }, [loading, sortedCustomers.length > 0]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
@@ -144,7 +152,7 @@ function CustomersScreen() {
 
                 {/* Search Bar & Filter */}
                 <View className="flex-row items-center gap-3">
-                    <Surface variant="muted" className={`flex-1 flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="xl">
+                    <Surface variant="muted" className={`flex-1 flex-row items-center px-3 h-11 border-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`} rounded="full">
                         <SearchNormal size={18} color="#8E8E93" />
                         <TextInput
                             className={`flex-1 ml-2 text-base ${isDark ? 'text-white' : 'text-black'}`}
@@ -154,7 +162,7 @@ function CustomersScreen() {
                             onChangeText={setSearch}
                         />
                     </Surface>
-                    <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-xl ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                    <TouchableOpacity onPress={() => setShowSortModal(true)} className={`w-11 h-11 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
                         <FilterSearch size={22} color={isDark ? "#ff8fa3" : "#FF5678"} />
                     </TouchableOpacity>
                 </View>
@@ -179,7 +187,7 @@ function CustomersScreen() {
                         <Pressable
                             onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                         >
-                            <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="2xl">
+                            <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="3xl">
                                 <View className={`w-12 h-12 items-center justify-center mr-4 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
                                     <Typography weight="bold" color="primary">
                                         {(item.fullName || 'C').charAt(0).toUpperCase()}

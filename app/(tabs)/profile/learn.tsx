@@ -26,14 +26,6 @@ export default function LearnScreen() {
                     />
                     <Typography variant="h3" weight="bold" className="ml-1">Learn</Typography>
                 </View>
-                {/* <IconButton
-                    icon={<Refresh2 size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />}
-                    onPress={() => {
-                        setWebViewLoading(true);
-                        setWebViewKey(prev => prev + 1);
-                    }}
-                    variant="ghost"
-                /> */}
             </View>
 
             {/* WebView */}
@@ -46,7 +38,6 @@ export default function LearnScreen() {
                     onLoadEnd={() => setWebViewLoading(false)}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
-                    startInLoadingState={true}
                     originWhitelist={['*']}
                 />
                 {webViewLoading && (

@@ -222,19 +222,19 @@ export default function NewCustomer() {
 
                     {/* Gender Section (Segmented Control Style) */}
                     <SectionLabel>Gender</SectionLabel>
-                    <Surface variant="white" rounded="2xl" className="p-1 mb-6 flex-row">
+                    <Surface variant="white" rounded="full" className="p-1 mb-6 flex-row">
                         {['female', 'male', 'other'].map((g) => {
                             const isActive = gender === g;
                             return (
                                 <TouchableOpacity
                                     key={g}
                                     onPress={() => setGender(g)}
-                                    className={`flex-1 py-2.5 rounded-xl items-center ${isActive ? (isDark ? 'bg-zinc-700' : 'bg-white shadow-sm border border-zinc-100') : ''}`}
+                                    className={`flex-1 py-2.5 rounded-full items-center ${isActive ? 'bg-brand-primary' : ''}`}
                                 >
                                     <Typography
                                         variant="small"
                                         weight={isActive ? "bold" : "medium"}
-                                        className={`capitalize ${isActive ? (isDark ? 'text-white' : 'text-brand-primary') : 'text-zinc-400'}`}
+                                        className={`capitalize ${isActive ? 'text-white' : 'text-zinc-400'}`}
                                     >
                                         {g}
                                     </Typography>

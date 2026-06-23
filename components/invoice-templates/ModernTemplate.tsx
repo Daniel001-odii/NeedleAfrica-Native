@@ -206,7 +206,7 @@ export const ModernTemplate = ({ user, invoice, customer, orders }: InvoiceTempl
                             </tr>
                         </thead>
                         <tbody>
-                            ${orders.map((order: any) => `
+                            ${orders?.map((order: any) => `
                             <tr>
                                 <td>
                                     <div class="item-title">${order?.styleName || 'Custom Service'}</div>

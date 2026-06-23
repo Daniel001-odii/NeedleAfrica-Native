@@ -34,50 +34,51 @@ import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { CatalogVisibilityModal } from '../../../components/CatalogVisibilityModal';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Surface } from '../../../components/ui/Surface';
 
 // Normalize social media input: strip URLs, @ prefixes, trailing slashes — keep only the handle
 function normalizeSocialHandle(input: string): string {
-  if (!input) return '';
-  let cleaned = input.trim();
+    if (!input) return '';
+    let cleaned = input.trim();
 
-  // Strip common URL patterns for each platform
-  const urlPatterns = [
-    /^https?:\/\/(www\.)?instagram\.com\//i,
-    /^https?:\/\/(www\.)?twitter\.com\//i,
-    /^https?:\/\/(www\.)?x\.com\//i,
-    /^https?:\/\/(www\.)?facebook\.com\//i,
-    /^https?:\/\/(www\.)?tiktok\.com\/@?/i,
-    /^instagram\.com\//i,
-    /^twitter\.com\//i,
-    /^x\.com\//i,
-    /^facebook\.com\//i,
-    /^tiktok\.com\/@?/i,
-  ];
+    // Strip common URL patterns for each platform
+    const urlPatterns = [
+        /^https?:\/\/(www\.)?instagram\.com\//i,
+        /^https?:\/\/(www\.)?twitter\.com\//i,
+        /^https?:\/\/(www\.)?x\.com\//i,
+        /^https?:\/\/(www\.)?facebook\.com\//i,
+        /^https?:\/\/(www\.)?tiktok\.com\/@?/i,
+        /^instagram\.com\//i,
+        /^twitter\.com\//i,
+        /^x\.com\//i,
+        /^facebook\.com\//i,
+        /^tiktok\.com\/@?/i,
+    ];
 
-  for (const pattern of urlPatterns) {
-    cleaned = cleaned.replace(pattern, '');
-  }
+    for (const pattern of urlPatterns) {
+        cleaned = cleaned.replace(pattern, '');
+    }
 
-  // Strip leading @
-  cleaned = cleaned.replace(/^@+/, '');
+    // Strip leading @
+    cleaned = cleaned.replace(/^@+/, '');
 
-  // Strip trailing slashes
-  cleaned = cleaned.replace(/\/+$/, '');
+    // Strip trailing slashes
+    cleaned = cleaned.replace(/\/+$/, '');
 
-  return cleaned;
+    return cleaned;
 }
 
 // Convert local-format Nigerian phone (e.g. "08156074667") to E.164 ("+2348156074667").
 // `react-phone-number-input` requires its `value` to be in E.164 format.
 // Falls back to the original value if already international or unrecognized.
 function toE164(raw: string): string {
-  if (!raw) return '';
-  if (raw.startsWith('+')) return raw;
-  // Nigerian mobile numbers: 0[789]xxxxxxxx — strip leading 0, prepend +234
-  if (/^0[789]\d{9}$/.test(raw)) {
-    return '+234' + raw.slice(1);
-  }
-  return raw;
+    if (!raw) return '';
+    if (raw.startsWith('+')) return raw;
+    // Nigerian mobile numbers: 0[789]xxxxxxxx — strip leading 0, prepend +234
+    if (/^0[789]\d{9}$/.test(raw)) {
+        return '+234' + raw.slice(1);
+    }
+    return raw;
 }
 
 const BUSINESS_TYPE_OPTIONS = [
@@ -310,7 +311,7 @@ export default function BusinessSettings() {
     const cardBaseStyle = isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />} onPress={() => router.push("/profile")} variant="ghost" />
@@ -336,16 +337,18 @@ export default function BusinessSettings() {
                     {/* BRANDING */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Business Branding</Typography>
-                        <View className={`rounded-[24px] overflow-hidden p-6 items-center ${cardBaseStyle}`}>
-                            <TouchableOpacity onPress={handlePickLogo} className="relative mb-4">
-                                <View className={`w-24 h-24 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                    {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={40} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
-                                </View>
-                                <View className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-4 border-white dark:border-zinc-900">
-                                    <Camera size={16} color="white" variant="Bulk" />
-                                </View>
-                            </TouchableOpacity>
-                            <Typography weight="bold" className="text-[14px] text-blue-600 mb-6" onPress={handlePickLogo}>Change Business Logo</Typography>
+                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-5`}>
+                            <View className="flex-col items-start ">
+                                <TouchableOpacity onPress={handlePickLogo} className="relative mb-4">
+                                    <View className={`w-24 h-24 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+                                        {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={40} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
+                                    </View>
+                                    <View className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-4 border-white dark:border-zinc-900">
+                                        <Camera size={16} color="white" variant="Bulk" />
+                                    </View>
+                                </TouchableOpacity>
+                                <Typography weight="bold" className="text-[14px] text-blue-600 mb-6" onPress={handlePickLogo}>Change Business Logo</Typography>
+                            </View>
 
                             <View className="w-full gap-y-4">
                                 <View>
@@ -364,17 +367,17 @@ export default function BusinessSettings() {
                                     />
                                 </View>
                             </View>
-                        </View>
+                        </Surface>
                     </View>
 
                     {/* BASIC DETAILS */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Basic Details</Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-5`}>
                             <ProfileRowInput label="Brand Name" value={businessName} onChangeText={setBusinessName} placeholder="Studio Name" isDark={isDark} />
                             <TouchableOpacity
                                 onPress={() => setShowBusinessTypeModal(true)}
-                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
+                                className="flex-row items-center justify-between py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
                             >
                                 <Typography weight="semibold" className="text-gray-900 dark:text-white text-[14px]">Craft</Typography>
                                 <View className="flex-row items-center">
@@ -383,7 +386,7 @@ export default function BusinessSettings() {
                                 </View>
                             </TouchableOpacity>
 
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
+                            <View className="flex-row items-center py-4 border-b border-gray-50 dark:border-white/5">
                                 <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">WhatsApp</Typography>
                                 <View className="flex-1 items-end">
                                     <PhoneInput
@@ -393,7 +396,7 @@ export default function BusinessSettings() {
                                 </View>
                             </View>
 
-                            <View className="flex-row items-center px-4 py-4">
+                            <View className="flex-row items-center py-4">
                                 <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Country</Typography>
                                 <View className="flex-1 items-end">
                                     <CountryPicker
@@ -407,14 +410,14 @@ export default function BusinessSettings() {
                             </View>
 
                             <ProfileRowInput label="Address" value={address} onChangeText={setAddress} placeholder="Street, City, Country" isDark={isDark} />
-                        </View>
+                        </Surface>
                     </View>
 
                     {/* SOCIAL MEDIA */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Social Presence</Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
+                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
                                 <View className="mr-3"><InstagramIcon color="#E4405F" /></View>
                                 <Typography weight="semibold" className="w-1/4 text-[14px]">Instagram</Typography>
                                 <TextInput
@@ -423,7 +426,7 @@ export default function BusinessSettings() {
                                     onBlur={() => setInstagram(normalizeSocialHandle(instagram))}
                                 />
                             </View>
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
                                 <View className="mr-3"><XIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
                                 <Typography weight="semibold" className="w-1/4 text-[14px]">Twitter (X)</Typography>
                                 <TextInput
@@ -432,7 +435,7 @@ export default function BusinessSettings() {
                                     onBlur={() => setTwitter(normalizeSocialHandle(twitter))}
                                 />
                             </View>
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-100 dark:border-white/5">
+                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
                                 <View className="mr-3"><FacebookIcon color="#1877F2" /></View>
                                 <Typography weight="semibold" className="w-1/4 text-[14px]">Facebook</Typography>
                                 <TextInput
@@ -441,7 +444,7 @@ export default function BusinessSettings() {
                                     onBlur={() => setFacebook(normalizeSocialHandle(facebook))}
                                 />
                             </View>
-                            <View className="flex-row items-center px-4 py-4">
+                            <View className="flex-row items-center py-4">
                                 <View className="mr-3"><TikTokIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
                                 <Typography weight="semibold" className="w-1/4 text-[14px]">TikTok</Typography>
                                 <TextInput
@@ -450,13 +453,13 @@ export default function BusinessSettings() {
                                     onBlur={() => setTiktok(normalizeSocialHandle(tiktok))}
                                 />
                             </View>
-                        </View>
+                        </Surface>
                     </View>
 
                     {/* THEME PICKER */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Catalog Appearance</Typography>
-                        <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
+                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
                             <View className="flex-row items-center justify-between mb-4">
                                 <Typography weight="bold" className="text-[14px]">Store Accent Color</Typography>
                                 <Typography variant="small" color="primary" weight="semibold">Customized</Typography>
@@ -477,12 +480,12 @@ export default function BusinessSettings() {
                                     );
                                 })}
                             </ScrollView>
-                        </View>
+                        </Surface>
                     </View>
 
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Visibility Settings</Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                             <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
                                 <View className="flex-1 mr-4">
                                     <View className="flex-row items-center mb-1">
@@ -503,7 +506,7 @@ export default function BusinessSettings() {
                                 <View className="flex-1 mr-4">
                                     <View className="flex-row items-center mb-1">
                                         <Typography weight="bold" className="text-[15px]">Show Price Tags</Typography>
-                                       {/*  {!userIsPro && (
+                                        {/*  {!userIsPro && (
                                             <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
                                                 <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
                                             </View>
@@ -515,24 +518,24 @@ export default function BusinessSettings() {
                                     // value={userIsPro ? showPrices : false}
                                     value={showPrices}
                                     onValueChange={(val) => {
-                                       /*  if (!userIsPro) {
-                                            Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
-                                            return;
-                                        } */
+                                        /*  if (!userIsPro) {
+                                             Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
+                                             return;
+                                         } */
                                         setShowPrices(val);
                                     }}
                                     trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
                                     thumbColor="#FFFFFF"
                                 />
                             </View>
-                        </View>
+                        </Surface>
                     </View>
 
                     {/* STORE LINK */}
                     {catalogId && (
                         <View className="mb-8">
                             <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Your Store Link</Typography>
-                            <View className={`rounded-[24px] p-6 ${cardBaseStyle}`}>
+                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
                                 <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                     https://catalog.needleafrica.com/cg/{nxFormattedId || catalogId}
                                 </Typography>
@@ -556,7 +559,7 @@ export default function BusinessSettings() {
                                         <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Share Card</Typography>
                                     </TouchableOpacity>
                                 </View>
-                            </View>
+                            </Surface>
                         </View>
                     )}
 
@@ -737,7 +740,7 @@ function DisclaimerRow({ icon, title, desc }: { icon: any, title: string, desc: 
 
 function ProfileRowInput({ label, value, onChangeText, placeholder, isDark }: { label: string, value: string, onChangeText: (text: string) => void, placeholder: string, isDark?: boolean }) {
     return (
-        <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
+        <View className="flex-row items-center py-4 border-b border-gray-50 dark:border-white/5">
             <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">{label}</Typography>
             <TextInput className={`flex-1 text-right font-semibold text-[15px] ${isDark ? 'text-white' : 'text-gray-900'}`} placeholder={placeholder} placeholderTextColor="#9CA3AF" value={value} onChangeText={onChangeText} />
         </View>

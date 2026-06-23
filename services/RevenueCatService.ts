@@ -68,22 +68,18 @@ class RevenueCatService {
     return this.initializationPromise;
   }
 
+  // Modify your _initializeInternal method:
   private async _initializeInternal(userId?: string): Promise<void> {
     try {
-      // Configure logging
       Purchases.setLogLevel(LOG_LEVEL.DEBUG);
 
-      // Configure RevenueCat with API key and user ID
-      if (userId) {
-        await Purchases.configure({
-          apiKey: REVENUECAT_API_KEY!,
-          appUserID: userId,
-        });
-      } else {
-        await Purchases.configure({
-          apiKey: REVENUECAT_API_KEY!,
-        });
-      }
+      const configuration = {
+        apiKey: REVENUECAT_API_KEY!,
+        appUserID: userId || null, // Ensure explicitly null if undefined
+      };
+
+      // Correct configuration structure
+      await Purchases.configure(configuration);
 
       this.isInitialized = true;
       console.log('RevenueCat initialized successfully');
@@ -278,7 +274,7 @@ class RevenueCatService {
     try {
       // Check active entitlements (more reliable than product IDs)
       const entitlement = customerInfo?.entitlements?.active?.[ENTITLEMENTS.NEEDLE_AFRICA_PRO];
-      
+
       if (!entitlement) {
         console.warn('No PRO entitlement found in customerInfo. Skipping backend sync.');
         return;
@@ -315,7 +311,7 @@ class RevenueCatService {
       if (Platform.OS === 'android') {
         const packageName = 'com.needleafrica.app';
         const url = `https://play.google.com/store/account/subscriptions?package=${packageName}`;
-        
+
         try {
           const canOpen = await Linking.canOpenURL(url);
           if (canOpen) {
@@ -325,7 +321,7 @@ class RevenueCatService {
         } catch (linkError) {
           console.error('Linking error:', linkError);
         }
-        
+
         // Fallback to general subscriptions page or SDK method
         await Linking.openURL('https://play.google.com/store/account/subscriptions');
       } else {

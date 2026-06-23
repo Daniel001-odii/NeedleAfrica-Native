@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import { WebView } from 'react-native-webview';
 import { useSubscription } from '../../../../hooks/useSubscription';
 import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate, EditorialTemplate } from '../../../../components/invoice-templates';
+import { Surface } from '../../../../components/ui/Surface';
 
 export default function InvoiceSettingsScreen() {
     const router = useRouter();
@@ -71,11 +72,11 @@ export default function InvoiceSettingsScreen() {
     const mockData = useMemo(() => ({
         invoice: { invoiceNumber: '1023', amount: 2450, currency: '$' },
         customer: { fullName: 'Jane Cooper' },
-        order: { styleName: 'Evening Gown' }
+        orders: [{ styleName: 'Evening Gown' }]
     }), []);
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-zinc-900' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -116,7 +117,7 @@ export default function InvoiceSettingsScreen() {
 
                     {/* Business Info Group */}
                     <SectionLabel label="Business Details" isFirst />
-                    <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                         <InputRow
                             label="Name"
                             icon={<Building size={18} color="#3b82f6" variant="Bulk" />}
@@ -141,11 +142,11 @@ export default function InvoiceSettingsScreen() {
                             multiline
                             last
                         />
-                    </View>
+                    </Surface>
 
                     {/* Bank Details Group */}
                     <SectionLabel label="Bank Account Details" />
-                    <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                         <InputRow
                             label="Bank Name"
                             icon={<Bank size={18} color="#3b82f6" variant="Bulk" />}
@@ -169,10 +170,10 @@ export default function InvoiceSettingsScreen() {
                             placeholder="e.g. John Doe Enterprises"
                             last
                         />
-                    </View>
+                    </Surface>
 
                     <SectionLabel label="Terms & Conditions" />
-                    <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                         <View className={`px-4 py-4 min-h-[120px]`}>
                             <View className={`w-9 h-9 items-center justify-center rounded-xl mr-3 mb-2 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
                                 <DocumentText size={18} color="#3b82f6" variant="Bulk" />
@@ -190,7 +191,7 @@ export default function InvoiceSettingsScreen() {
                                 style={{ minHeight: 80 }}
                             />
                         </View>
-                    </View>
+                    </Surface>
 
                     {/* Template Selection */}
                     <View className="flex-row items-center justify-between mt-8 mb-4 px-6">

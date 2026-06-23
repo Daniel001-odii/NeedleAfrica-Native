@@ -243,7 +243,6 @@ export default function CreateInvoiceScreen() {
                             )}
                         </Surface>
                     )}
-
                     {/* Order Selection */}
                     {selectedCustomerId && (
                         <View className="mb-8">

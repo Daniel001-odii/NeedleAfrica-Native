@@ -163,6 +163,12 @@ export default function Profile() {
                     </Typography>
                     <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
                         <ProfileItem
+                            icon={<Book1 size={20} color="#10B981" variant="Bulk" />}
+                            title="Learn"
+                            onPress={() => router.push('/(tabs)/profile/learn')}
+                            isDark={isDark}
+                        />
+                        <ProfileItem
                             icon={<MessageQuestion size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
                             onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
@@ -174,12 +180,7 @@ export default function Profile() {
                             onPress={() => Linking.openURL('https://chat.whatsapp.com/FTIvYiBIyfE4ZLniuOJWmL?mode=gi_t')}
                             isDark={isDark}
                         />
-                        <ProfileItem
-                            icon={<Book1 size={20} color="#10B981" variant="Bulk" />}
-                            title="Learn"
-                            onPress={() => router.push('/(tabs)/profile/learn')}
-                            isDark={isDark}
-                        />
+
                         <ProfileItem
                             icon={<Star size={20} color="#FDB022" variant="Bulk" />}
                             title="Rate Needle Africa"

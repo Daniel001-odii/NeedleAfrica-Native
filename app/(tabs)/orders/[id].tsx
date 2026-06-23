@@ -422,7 +422,7 @@ export default function OrderDetail() {
                         <View className="px-4">
                             {/* Edit Mode Header */}
                             <SectionLabel>Order Information</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                                 <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                                     <Typography weight="medium" color="gray" className="w-24 text-[14px]">Style Name</Typography>
                                     <TextInput
@@ -468,13 +468,13 @@ export default function OrderDetail() {
                             <SectionLabel>Images</SectionLabel>
                             <View className="flex-row gap-4 mb-6">
                                 <TouchableOpacity onPress={() => pickImage('fabric')} className="flex-1">
-                                    <Surface variant="white" className={`h-36 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm'} overflow-hidden`} rounded="2xl">
+                                    <Surface variant="white" className={`h-36 items-center justify-center overflow-hidden`} rounded="2xl">
                                         {fabricImage ? (
                                             <Image source={{ uri: fabricImage }} className="w-full h-full" />
                                         ) : (
                                             <View className="items-center">
-                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
-                                                    <Add size={20} color="#007AFF" />
+                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
+                                                    <Add size={20} color="black" />
                                                 </View>
                                                 <Typography variant="caption" color="gray" weight="bold">Fabric</Typography>
                                             </View>
@@ -483,13 +483,13 @@ export default function OrderDetail() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => pickImage('style')} className="flex-1">
-                                    <Surface variant="white" className={`h-36 items-center justify-center border-2 border-dashed ${isDark ? 'border-white/10 bg-[#1C1C1E]' : 'border-blue-100 bg-white shadow-sm'} overflow-hidden`} rounded="2xl">
+                                    <Surface variant="white" className={`h-36 items-center justify-center overflow-hidden`} rounded="2xl">
                                         {styleImage ? (
                                             <Image source={{ uri: styleImage }} className="w-full h-full" />
                                         ) : (
                                             <View className="items-center">
-                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-blue-50'}`}>
-                                                    <Add size={20} color="#007AFF" />
+                                                <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
+                                                    <Add size={20} color="black" />
                                                 </View>
                                                 <Typography variant="caption" color="gray" weight="bold">Design</Typography>
                                             </View>
@@ -499,7 +499,7 @@ export default function OrderDetail() {
                             </View>
 
                             <SectionLabel>Notes</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-sm shadow-gray-200/50'}`}>
+                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10`}>
                                 <TextInput
                                     value={notes}
                                     onChangeText={setNotes}

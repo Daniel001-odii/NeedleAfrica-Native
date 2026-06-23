@@ -297,7 +297,7 @@ export default function CatalogGallery() {
     }, [isFreemium, items.length, isDark]);
 
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`} edges={['top']}>
             {/* Header */}
             <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
@@ -355,10 +355,10 @@ export default function CatalogGallery() {
                 </View>
             ) : (
                 <View className="flex-1 justify-center p-8 pb-32">
-                    <EmptyState 
-                        onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)} 
-                        onViewSample={handleOpenSampleStorefront} 
-                        isDark={isDark} 
+                    <EmptyState
+                        onUpload={() => catalogId ? setShowUploadModal(true) : router.push('/(tabs)/profile/catalog' as any)}
+                        onViewSample={handleOpenSampleStorefront}
+                        isDark={isDark}
                         isCatalogSetup={!!catalogId}
                     />
                 </View>
@@ -582,10 +582,10 @@ function EmptyState({ onUpload, onViewSample, isDark, isCatalogSetup }: { onUplo
             <Typography variant="h2" weight="bold" className="mb-3 text-center text-[22px] leading-8">
                 {isCatalogSetup ? "Your Gallery is Empty" : "Setup Digital Storefront"}
             </Typography>
-            
+
             <Typography variant="body" color="gray" className="text-center mb-8 px-2 text-[14px] leading-[22px]">
-                {isCatalogSetup 
-                    ? "Start building your digital showroom! Upload your best designs to reach more clients and showcase them in your catalog." 
+                {isCatalogSetup
+                    ? "Start building your digital showroom! Upload your best designs to reach more clients and showcase them in your catalog."
                     : "Create your professional storefront in seconds. Share your gallery link and easily take orders directly from your clients."}
             </Typography>
 
