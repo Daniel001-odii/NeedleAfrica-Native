@@ -18,6 +18,7 @@ import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist'
 import { CatalogVisibilityModal } from '../../components/CatalogVisibilityModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
+import { usePostHog } from 'posthog-react-native';
 
 export default function Home() {
     const { user } = useAuth();
@@ -33,7 +34,13 @@ export default function Home() {
     const { unreadCount } = useUnreadOrderRequests();
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
+    const posthog = usePostHog();
     const todoChecklist = useTodoChecklist();
+
+    // Track dashboard view on mount
+    useEffect(() => {
+        posthog.capture('dashboard_viewed');
+    }, []);
 
     // Animated waving hand
     const waveAnim = useRef(new Animated.Value(0)).current;
@@ -197,7 +204,7 @@ export default function Home() {
                 <View className="flex-row justify-between items-center mb-6">
                     <View>
                         <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
-                          Hi, {user?.username || 'Tailor'}{' '}
+                          Hi, {user?.username.split(" ")[0] || 'Tailor'}{' '}
                           <Animated.Text style={{ transform: [{ rotate: waveRotation }] }}>
                             👋
                           </Animated.Text>
@@ -334,11 +341,11 @@ export default function Home() {
                 {/* 2. Quick Actions Strip */}
                 <View className="mb-6">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4">
-                        <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => router.push('/(tabs)/orders/new')} />
-                        <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => router.push('/measurements/create')} />
-                        <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => router.push('/measurement-templates/create')} />
-                        <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => router.push('/(tabs)/customers/new')} />
-                        <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => router.push('/(tabs)/orders/invoices/new')} />
+                        <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_order' }); router.push('/(tabs)/orders/new'); }} />
+                        <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'measure' }); router.push('/measurements/create'); }} />
+                        <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_template' }); router.push('/measurement-templates/create'); }} />
+                        <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'add_client' }); router.push('/(tabs)/customers/new'); }} />
+                        <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'invoice' }); router.push('/(tabs)/orders/invoices/new'); }} />
                     </ScrollView>
                 </View>
 
@@ -360,7 +367,7 @@ export default function Home() {
                                         <Gallery size={16} color="#10B981" variant="Bulk" />
                                     </View>
                                     <View className="flex-1">
-                                        <Typography weight="bold" className="text-[14px]">Create your catalog</Typography>
+                                        <Typography weight="bold" className="text-[14px]">Create your storefront</Typography>
                                         <Typography variant="small" color="gray" className="text-[12px]">Launch your free online storefront</Typography>
                                     </View>
                                     <ArrowRight size={14} color="#9CA3AF" />

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
@@ -11,7 +12,7 @@ export default function CatalogStep1() {
     const { isDark } = useTheme();
 
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top', 'bottom']}>
             <View className="flex-1 justify-between px-5 pb-8">
                 {/* Header Back Button */}
                 <View className="flex-row items-center justify-between h-12 w-full">

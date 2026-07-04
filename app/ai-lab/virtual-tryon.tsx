@@ -16,6 +16,7 @@ import { VirtualTryOnIcon, SelectDesignIcon } from '../../components/ui/CustomIc
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useRevenueCat } from '../../hooks/useRevenueCat';
 import { SubscriptionModal } from '../../components/SubscriptionModal';
+import { usePostHog } from 'posthog-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ export default function VirtualTryOn() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { isPro } = useRevenueCat();
+    const posthog = usePostHog();
 
     // Paywall Modal State
     const [isSubModalVisible, setIsSubModalVisible] = useState(false);
@@ -119,6 +121,7 @@ export default function VirtualTryOn() {
             });
 
             if (response.data.success && response.data.result) {
+                posthog.capture('virtual_tryon_generated');
                 setResultImage(`data:image/jpeg;base64,${response.data.result}`);
             } else {
                 throw new Error(response.data.error || 'Failed to generate try-on');
@@ -143,6 +146,7 @@ export default function VirtualTryOn() {
             const base64Data = resultImage.split(',')[1];
             const filename = `${FileSystem.cacheDirectory}tryon_${Date.now()}.jpg`;
             await FileSystem.writeAsStringAsync(filename, base64Data, { encoding: 'base64' });
+            posthog.capture('virtual_tryon_shared');
             await Sharing.shareAsync(filename, { mimeType: 'image/jpeg', dialogTitle: 'Share your try-on' });
         } catch (error: any) {
             console.error('Share error:', error);
@@ -205,7 +209,10 @@ export default function VirtualTryOn() {
                         <View style={{ paddingBottom: Math.max(insets.bottom + 20, 40) }}>
                             <TouchableOpacity
                                 activeOpacity={0.8}
-                                onPress={() => setIsSubModalVisible(true)}
+                                onPress={() => {
+                                    posthog.capture('ai_feature_paywall_tapped', { feature: 'virtual_tryon' });
+                                    setIsSubModalVisible(true);
+                                }}
                                 className="h-16 rounded-full bg-indigo-600 flex-row items-center justify-center"
                                 style={{ elevation: 0, shadowOpacity: 0 }}
                             >

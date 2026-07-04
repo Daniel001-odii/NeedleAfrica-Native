@@ -7,7 +7,7 @@ import {
     KeyboardAvoidingView,
     Platform
 } from 'react-native';
-import { useRouter } from 'expo-router';
+
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { ArrowLeft, BookSquare, UserAdd, UserCirlceAdd } from 'iconsax-react-native';
@@ -17,7 +17,7 @@ import { IconButton } from '../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import { TypingText } from '../../components/ui/TypingText';
-import * as Contacts from 'expo-contacts';
+import * as Contacts from 'expo-contacts/legacy';
 
 const PHONE_INPUT_STYLE = {
     fontSize: 16,
@@ -32,7 +32,6 @@ import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
 export default function AddFirstCustomer() {
     const { state, updateState, nextStep, prevStep } = useOnboarding();
     const { addCustomer } = useCustomers();
-    const router = useRouter();
 
     const [showIntro, setShowIntro] = useState(true);
     const [name, setName] = useState(state.customer?.name || '');
@@ -96,7 +95,7 @@ export default function AddFirstCustomer() {
             if (customer) {
                 updateState({
                     customer: { id: customer.id, name: name.trim(), phone: phone?.trim() || '', gender: gender },
-                    step: 3
+                    step: 2
                 });
 
                 nextStep();
@@ -109,21 +108,17 @@ export default function AddFirstCustomer() {
         }
     };
 
-    const handleSkip = () => {
-        updateState({ step: 6 });
-        router.push('/onboarding/completion');
-    };
 
     if (showIntro) {
         return (
             <OnboardingIntroScreen
-                title="Meet your clients."
-                subtitle="Add your very first client to build a profile. Organize measurements, keep records, and manage relationships in one place."
-                stepIndex={3}
-                buttonText="Create Client Profile"
+                title="Start with your first client."
+                subtitle="Every order starts with a client. Add your first profile to manage measurements, payments, and order history."
+                stepIndex={2}
+                buttonText="Add first client"
                 onNext={() => setShowIntro(false)}
                 onBack={prevStep}
-                onSkip={handleSkip}
+
                 illustrationType="customer"
             />
         );
@@ -134,16 +129,13 @@ export default function AddFirstCustomer() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
 
                 {/* Header */}
-                <View className="px-6 pt-4 bg-white flex-row justify-between items-center">
+                <View className="px-6 pt-4 bg-white flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={24} color="#1F2937" />}
                         onPress={() => setShowIntro(true)}
                         variant="ghost"
                         className="-ml-4"
                     />
-                    <TouchableOpacity onPress={handleSkip}>
-                        <Typography color="primary" weight="bold" className="text-[16px]">Skip</Typography>
-                    </TouchableOpacity>
                 </View>
 
                 <ScrollView
@@ -152,9 +144,9 @@ export default function AddFirstCustomer() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Add First Client" speed={30} />
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Let's add your first client" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
-                            Who are you dressing today? Don't worry, you can easily add more later.
+                            Add a client now and start managing orders, measurements, and payments in one place.
                         </Typography>
                     </View>
 
@@ -167,7 +159,7 @@ export default function AddFirstCustomer() {
                             <TouchableOpacity onPress={handleImportContact} className="bg-brand-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1.5">
                                 <UserAdd size={14} color="#FF5678" variant="Bulk" />
                                 <Typography variant="caption" color="primary" weight="bold">
-                                    Add contact
+                                    Import from Contacts
                                 </Typography>
                             </TouchableOpacity>
                         </View>
@@ -189,11 +181,12 @@ export default function AddFirstCustomer() {
                             </View>
 
                             {/* Phone Number Inline */}
-                            <View className="flex-row items-center px-4 py-4">
-                                <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
-                                    Phone Number
+                            <View className="flex-row items-center justify-between px-4 py-4">
+                                <Typography weight="semibold" className="text-gray-900 text-[15px]">
+                                    Phone Number 
+                                 (optional)
                                 </Typography>
-                                <View className="flex-1 items-end">
+                                <View className=" items-end">
                                     <PhoneInput
                                         style={PHONE_INPUT_STYLE}
                                         placeholder="(+123) 456 7890"
@@ -209,12 +202,12 @@ export default function AddFirstCustomer() {
                     </View>
 
                     {/* Group 2: Gender Selection */}
-                    <View className="mb-6">
+                   <View className="mb-6">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                             Gender
                         </Typography>
                         <View className="flex-row gap-3">
-                            {['male', 'female', 'other'].map((g) => {
+                            {['male', 'female'].map((g) => {
                                 const isSelected = gender === g;
                                 return (
                                     <TouchableOpacity
@@ -233,7 +226,7 @@ export default function AddFirstCustomer() {
                                             {g}
                                         </Typography>
                                     </TouchableOpacity>
-                                );
+                                 );
                             })}
                         </View>
                     </View>
@@ -249,7 +242,7 @@ export default function AddFirstCustomer() {
                         className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
-                        Save Customer
+                        Save Client
                     </Button>
 
                 </View>

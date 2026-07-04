@@ -83,6 +83,7 @@ function RootLayoutNav() {
             if (nextAppState === 'active') {
                 performSync();
                 revenueCatService.getCustomerInfo().catch(console.error);
+                Notifications.setBadgeCountAsync(0).catch(console.error);
             }
         });
 

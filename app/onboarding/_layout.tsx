@@ -10,7 +10,7 @@ export default function OnboardingLayout() {
     const { state } = useOnboarding();
     const { isDark } = useTheme();
 
-    const totalSteps = 5; // Workspace, Business, Customer, Measurements, Order
+    const totalSteps = 4; // Business, Customer, Measurements, Order
     const progress = (state.step / totalSteps) * 100;
 
     return (

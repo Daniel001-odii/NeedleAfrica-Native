@@ -103,7 +103,7 @@ export function OnboardingIntroScreen({
             <View className="w-full items-center">
                 {/* Pagination Dots */}
                 <View className="flex-row gap-2 mb-6">
-                    {[1, 2, 3, 4, 5].map((i) => {
+                    {[1, 2, 3, 4].map((i) => {
                         const isActive = i === stepIndex;
                         return (
                             <View

@@ -20,6 +20,7 @@ import { useConfirm } from '../../../../contexts/ConfirmContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import { StoreReviewService } from '../../../../services/StoreReviewService';
 import { CURRENCIES } from '../../../../constants/currencies';
+import { usePostHog } from 'posthog-react-native';
 
 export default function CreateInvoiceScreen() {
     const router = useRouter();
@@ -33,6 +34,7 @@ export default function CreateInvoiceScreen() {
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { confirm } = useConfirm();
+    const posthog = usePostHog();
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
@@ -143,6 +145,13 @@ export default function CreateInvoiceScreen() {
                 orderQuantities,
                 currency: user?.currency || 'NGN',
                 notes
+            });
+
+            posthog.capture('invoice_created', {
+                customer_name: selectedCustomer?.fullName || 'Unknown',
+                order_count: selectedOrderIds.length,
+                total_amount: totalAmount,
+                currency: user?.currency || 'NGN',
             });
 
             Toast.show({

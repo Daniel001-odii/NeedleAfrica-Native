@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import {
     View,
+    TextInput,
     ScrollView,
     TouchableOpacity,
     Modal,
+    FlatList,
     KeyboardAvoidingView,
     Platform,
-    TextInput
 } from 'react-native';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
-import { ArrowLeft, ArrowRight2, CloseCircle, TickCircle } from 'iconsax-react-native';
+import { ArrowLeft, ArrowRight2, CloseCircle, TickCircle, SearchNormal1 } from 'iconsax-react-native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { CURRENCIES } from '../../constants/currencies';
 import CountryPicker from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import Toast from 'react-native-toast-message';
@@ -53,13 +55,19 @@ const HEARD_ABOUT_US_OPTIONS = [
 import { OnboardingIntroScreen } from '../../components/OnboardingIntroScreen';
 
 export default function BusinessDetails() {
-    const { user, updateProfile } = useAuth();
-    const { state, updateState, nextStep, prevStep } = useOnboarding();
+    const { user, updateProfile, logout } = useAuth();
+    const { state, updateState, nextStep, resetOnboarding } = useOnboarding();
 
     const isGoogleOrApple = user?.provider === 'GOOGLE' || user?.provider === 'APPLE';
     const showPhoneInput = isGoogleOrApple || !user?.phoneNumber;
 
     const [showIntro, setShowIntro] = useState(true);
+    // Workspace fields (from old index.tsx)
+    const [businessName, setBusinessName] = useState(state.businessName || user?.businessName || '');
+    const [currency, setCurrency] = useState(state.currency || 'NGN');
+    const [isCurrencyModalVisible, setIsCurrencyModalVisible] = useState(false);
+    const [currencySearchQuery, setCurrencySearchQuery] = useState('');
+    // Business fields
     const [businessType, setBusinessType] = useState(state.businessType || '');
     const [phone, setPhone] = useState<string | undefined>(user?.phoneNumber || state.phoneNumber || undefined);
     const [country, setCountry] = useState(state.country || 'Nigeria');
@@ -72,7 +80,14 @@ export default function BusinessDetails() {
     const [showHeardModal, setShowHeardModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const isFormValid = !!(businessType && phone && country && joinedFrom && (joinedFrom === 'Other' ? otherDiscoverySource.trim() : true));
+    const selectedCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+
+    const filteredCurrencies = CURRENCIES.filter(c =>
+        c.name.toLowerCase().includes(currencySearchQuery.toLowerCase()) ||
+        c.code.toLowerCase().includes(currencySearchQuery.toLowerCase())
+    );
+
+    const isFormValid = !!(businessName.trim() && businessType && phone && country);
 
     const handleContinue = async () => {
         if (!isFormValid) {
@@ -85,6 +100,8 @@ export default function BusinessDetails() {
         setIsLoading(true);
         try {
             await updateProfile({
+                businessName: businessName.trim(),
+                currency,
                 businessType,
                 phoneNumber: phone || '',
                 country,
@@ -93,12 +110,14 @@ export default function BusinessDetails() {
             });
 
             updateState({
+                businessName: businessName.trim(),
+                currency,
                 businessType,
                 phoneNumber: phone || '',
                 country,
                 noOfEmployees,
                 joinedFrom: finalJoinedFrom,
-                step: 2
+                step: 1
             });
 
             nextStep();
@@ -112,12 +131,11 @@ export default function BusinessDetails() {
     if (showIntro) {
         return (
             <OnboardingIntroScreen
-                title="Tailored to your craft."
-                subtitle="Tell us about your specialization and team. We'll personalize NeedleX to perfectly match your studio's unique workflow."
-                stepIndex={2}
-                buttonText="Continue Setup"
+                title="Tell us about your business"
+                subtitle="Choose your specialty, set your currency, and tell us where you're based so we can personalize NeedleX for the way you work."
+                stepIndex={1}
+                buttonText="Continue"
                 onNext={() => setShowIntro(false)}
-                onBack={prevStep}
                 illustrationType="business"
             />
         );
@@ -143,13 +161,55 @@ export default function BusinessDetails() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View className="mb-8 mt-2">
-                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Business Details" speed={30} />
+                        <TypingText variant="h1" weight="bold" className="mb-2 text-gray-900" text="Tell us about your business" speed={30} />
                         <Typography color="gray" variant="subtitle" className="leading-5">
-                            Help us tailor your experience to suit your craft.
+                            Tell us a bit about your business so we can personalize your workspace.
                         </Typography>
                     </View>
 
-                    {/* Group 1: Business Profile */}
+                    {/* Group 1: Brand Details */}
+                    <View className="mb-8">
+                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                            Brand Details
+                        </Typography>
+                        <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+
+                            {/* Business Name Inline */}
+                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
+                                <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                    Business Name
+                                </Typography>
+                                <TextInput
+                                    className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                    placeholder="e.g. NeedleX Couture"
+                                    placeholderTextColor="#D1D5DB"
+                                    value={businessName}
+                                    onChangeText={setBusinessName}
+                                    autoCapitalize="words"
+                                    returnKeyType="done"
+                                />
+                            </View>
+
+                            {/* Currency Selection Inline */}
+                            <TouchableOpacity
+                                onPress={() => setIsCurrencyModalVisible(true)}
+                                className="flex-row items-center justify-between px-4 py-4 active:bg-gray-50"
+                            >
+                                <Typography weight="semibold" className="text-gray-900 text-[15px]">
+                                    Default Currency
+                                </Typography>
+                                <View className="flex-row items-center">
+                                    <Typography weight="medium" className="text-[15px] mr-2 text-brand-primary">
+                                        {selectedCurrency.code} ({selectedCurrency.symbol})
+                                    </Typography>
+                                    <ArrowRight2 size={16} color="#9CA3AF" />
+                                </View>
+                            </TouchableOpacity>
+
+                        </View>
+                    </View>
+
+                    {/* Group 2: Studio Profile */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                             Studio Profile
@@ -172,10 +232,43 @@ export default function BusinessDetails() {
                                 </View>
                             </TouchableOpacity>
 
-                            {/* Team Size */}
-                            <View className="px-4 py-4">
+                            {/* Discovery Source */}
+                            <TouchableOpacity
+                                onPress={() => setShowHeardModal(true)}
+                                className="flex-row items-center justify-between px-4 py-4 active:bg-gray-50"
+                            >
+                                <Typography weight="semibold" className="text-gray-900 text-[15px]">
+                                    How did you hear about us?
+                                </Typography>
+                                <View className="flex-row items-center">
+                                    <Typography weight="medium" className={`text-[15px] mr-2 ${joinedFrom ? 'text-brand-primary' : 'text-gray-400'}`}>
+                                        {joinedFrom === 'Other' && otherDiscoverySource.trim()
+                                            ? otherDiscoverySource.trim()
+                                            : joinedFrom || 'Select'}
+                                    </Typography>
+                                    <ArrowRight2 size={16} color="#9CA3AF" />
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Other Discovery Source Input */}
+                            {joinedFrom === 'Other' && (
+                                <View className="px-4 py-3 border-t border-gray-50 bg-gray-50/50">
+                                    <TextInput
+                                        className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-semibold text-gray-900"
+                                        placeholder="Tell us where you heard about NeedleX..."
+                                        placeholderTextColor="#D1D5DB"
+                                        value={otherDiscoverySource}
+                                        onChangeText={setOtherDiscoverySource}
+                                        autoCapitalize="sentences"
+                                        returnKeyType="done"
+                                    />
+                                </View>
+                            )}
+
+                            {/* Team Size — commented out */}
+                            {/* <View className="px-4 py-4">
                                 <Typography weight="semibold" className="text-gray-900 text-[15px] mb-3">
-                                    Team Size
+                                    How many people work in your business?
                                 </Typography>
                                 <View className="flex-row flex-wrap gap-2.5">
                                     {['1-5', '6-20', '21-50', '50+'].map((range) => {
@@ -199,11 +292,12 @@ export default function BusinessDetails() {
                                         );
                                     })}
                                 </View>
-                            </View>
+                            </View> */}
+
                         </View>
                     </View>
 
-                    {/* Group 2: Contact & Location */}
+                    {/* Group 3: Contact Info */}
                     <View className="mb-8">
                         <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
                             Contact Info
@@ -247,7 +341,7 @@ export default function BusinessDetails() {
                                             setCountryCode(c.cca2);
                                         }}
                                         theme={{
-                                            fontFamily: 'Inter-Medium', // Or your default app font
+                                            fontFamily: 'Inter-Medium',
                                             fontSize: 16,
                                             onBackgroundTextColor: '#111827'
                                         }}
@@ -255,40 +349,6 @@ export default function BusinessDetails() {
                                     />
                                 </View>
                             </View>
-                        </View>
-                    </View>
-
-                    {/* Group 3: Discovery */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Discovery
-                        </Typography>
-                        <View className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
-                            <TouchableOpacity
-                                onPress={() => setShowHeardModal(true)}
-                                className={`flex-row items-center justify-between px-4 py-4 active:bg-gray-50 ${joinedFrom === 'Other' ? 'border-b border-gray-50' : ''}`}
-                            >
-                                <Typography weight="semibold" className="text-gray-900 text-[15px]">
-                                    How did you hear about us?
-                                </Typography>
-                                <View className="flex-row items-center">
-                                    <Typography weight="medium" className={`text-[15px] mr-2 ${joinedFrom ? 'text-brand-primary' : 'text-gray-400'}`}>
-                                        {joinedFrom || 'Select'}
-                                    </Typography>
-                                    <ArrowRight2 size={16} color="#9CA3AF" />
-                                </View>
-                            </TouchableOpacity>
-                            {joinedFrom === 'Other' && (
-                                <View className="px-4 py-3">
-                                    <TextInput
-                                        value={otherDiscoverySource}
-                                        onChangeText={setOtherDiscoverySource}
-                                        placeholder="Please specify"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="text-[15px] font-medium text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100"
-                                    />
-                                </View>
-                            )}
                         </View>
                     </View>
 
@@ -306,9 +366,105 @@ export default function BusinessDetails() {
                         Continue
                     </Button>
 
+                    <View className="mt-5 items-center pb-2">
+                        <View className="flex-row items-center gap-4">
+                            <TouchableOpacity onPress={resetOnboarding} className="px-2">
+                                <Typography color="primary" weight="bold" className="text-[13px]">
+                                    Restart Setup
+                                </Typography>
+                            </TouchableOpacity>
+                            <View className="w-1 h-1 bg-gray-300 rounded-full" />
+                            <TouchableOpacity onPress={() => logout()} className="px-2">
+                                <Typography weight="medium" className="text-gray-400 text-[13px]">
+                                    Sign Out
+                                </Typography>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
 
             </KeyboardAvoidingView>
+
+            {/* Currency Selection Bottom Sheet Modal */}
+            <Modal
+                visible={isCurrencyModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setIsCurrencyModalVisible(false)}
+            >
+                <View className="flex-1 bg-black/40 justify-end">
+                    <View className="bg-[#F2F2F7] rounded-t-[32px] h-[85%] pb-8">
+
+                        <View className="flex-row justify-between items-center p-6 pb-4">
+                            <View className="w-8" />
+                            <Typography variant="h3" weight="bold" className="text-gray-900">Select Currency</Typography>
+                            <TouchableOpacity onPress={() => setIsCurrencyModalVisible(false)} className="bg-gray-200/80 p-1.5 rounded-full">
+                                <CloseCircle size={22} color="#6B7280" variant="Bold" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View className="px-4 mb-4">
+                            <View className="flex-row items-center bg-gray-200/60 h-10 px-3 rounded-xl">
+                                <SearchNormal1 size={18} color="#8E8E93" />
+                                <TextInput
+                                    className="ml-2 flex-1 text-[16px] text-gray-900"
+                                    placeholder="Search currency..."
+                                    placeholderTextColor="#8E8E93"
+                                    value={currencySearchQuery}
+                                    onChangeText={setCurrencySearchQuery}
+                                    autoCorrect={false}
+                                />
+                            </View>
+                        </View>
+
+                        <FlatList
+                            data={filteredCurrencies}
+                            keyExtractor={(item) => item.code}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerClassName="px-4 pb-10"
+                            renderItem={({ item, index }) => {
+                                const isSelected = currency === item.code;
+                                const isLast = index === filteredCurrencies.length - 1;
+
+                                return (
+                                    <View className={`bg-white ${index === 0 ? 'rounded-t-[24px]' : ''} ${isLast ? 'rounded-b-[24px]' : ''} overflow-hidden`}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setCurrency(item.code);
+                                                setIsCurrencyModalVisible(false);
+                                                setCurrencySearchQuery('');
+                                            }}
+                                            className={`flex-row items-center px-4 py-3 active:bg-gray-50 ${!isLast ? 'border-b border-gray-100' : ''}`}
+                                        >
+                                            <View className="w-10 h-10 items-center justify-center bg-brand-primary/10 rounded-xl mr-4 border border-brand-primary/20">
+                                                <Typography weight="bold" className="text-[16px] text-gray-700">
+                                                    {item.symbol}
+                                                </Typography>
+                                            </View>
+                                            <View className="flex-1">
+                                                <Typography weight={isSelected ? "bold" : "semibold"} className={`text-[15px] ${isSelected ? 'text-brand-primary' : 'text-gray-900'}`}>
+                                                    {item.name}
+                                                </Typography>
+                                                <Typography color="gray" className="text-[12px] mt-0.5">
+                                                    {item.code}
+                                                </Typography>
+                                            </View>
+                                            {isSelected && (
+                                                <TickCircle size={22} color="#FF5678" variant="Bold" />
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            }}
+                            ListEmptyComponent={() => (
+                                <View className="items-center py-10">
+                                    <Typography color="gray" className="text-[15px]">No currencies found</Typography>
+                                </View>
+                            )}
+                        />
+                    </View>
+                </View>
+            </Modal>
 
             {/* Selection Modals */}
             <SelectionModal

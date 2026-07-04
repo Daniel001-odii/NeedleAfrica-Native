@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { setBadgeCountAsync } from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
@@ -10,7 +11,7 @@ Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
-        shouldSetBadge: false,
+        shouldSetBadge: true,
         shouldShowBanner: true,
         shouldShowList: true,
     }),
@@ -26,6 +27,7 @@ export class NotificationService {
                 importance: Notifications.AndroidImportance.MAX,
                 vibrationPattern: [0, 250, 250, 250],
                 lightColor: '#FF231F7C',
+                sound: 'notify_1.wav',
             });
         }
 
@@ -135,7 +137,7 @@ export class NotificationService {
                     title,
                     body,
                     data: { orderId, index },
-                    sound: true,
+                    sound: 'notify_1.wav',
                     priority: Notifications.AndroidNotificationPriority.MAX,
                 },
                 trigger: {
@@ -228,7 +230,7 @@ export class NotificationService {
                     title: morningTitle,
                     body: morningBody,
                     data: { type: 'smart_reminder', time: '8AM' },
-                    sound: true,
+                    sound: 'notify_1.wav',
                 },
                 trigger: {
                     type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -246,7 +248,7 @@ export class NotificationService {
                     title: eveningTitle,
                     body: eveningBody,
                     data: { type: 'smart_reminder', time: '8PM' },
-                    sound: true,
+                    sound: 'notify_1.wav',
                 },
                 trigger: {
                     type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -284,7 +286,7 @@ export class NotificationService {
                         title: debtTitle,
                         body: debtBody,
                         data: { type: 'smart_reminder', time: '12PM' },
-                        sound: true,
+                        sound: 'notify_1.wav',
                     },
                     trigger: {
                         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -311,7 +313,7 @@ export class NotificationService {
                 title: "Test: Morning Reminder 🧵",
                 body: morningBody,
                 data: { type: 'test' },
-                sound: true,
+                sound: 'notify_1.wav',
             },
             trigger: null, // trigger immediately
         });
@@ -321,7 +323,7 @@ export class NotificationService {
                 title: "Test: Evening Reminder 🌙",
                 body: "Time to wind down! Don't forget to record today's work and any pending debts while fresh in your mind. 📝💰",
                 data: { type: 'test' },
-                sound: true,
+                sound: 'notify_1.wav',
             },
             trigger: { 
                 type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -350,5 +352,23 @@ export class NotificationService {
 
     static async cancelOrderReminders(orderId: string) {
         return this.cancelOrderRemindersOptimized(orderId);
+    }
+
+    /**
+     * Set the app icon badge count (iOS) — use 0 to clear
+     */
+    static async setBadgeCount(count: number) {
+        try {
+            await setBadgeCountAsync(count);
+        } catch (e) {
+            console.error('Failed to set badge count:', e);
+        }
+    }
+
+    /**
+     * Clear the app icon badge
+     */
+    static async clearBadge() {
+        return this.setBadgeCount(0);
     }
 }

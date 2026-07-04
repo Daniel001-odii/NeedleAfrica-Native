@@ -6,6 +6,7 @@ import { ArrowRight2 } from 'iconsax-react-native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
+import { StoreReviewService } from '../../services/StoreReviewService';
 import { usePostHog } from 'posthog-react-native';
 import Animated, {
     FadeInDown,
@@ -48,6 +49,9 @@ export default function OnboardingCompletion() {
         await completeOnboarding();
         await resetOnboarding();
 
+        // Prompt for store review after onboarding is complete
+        StoreReviewService.requestReview().catch(console.error);
+
         if (target === 'dashboard') {
             router.replace('/(tabs)');
         } else {
@@ -72,10 +76,12 @@ export default function OnboardingCompletion() {
                     </Animated.View>
 
                     <Typography variant="h1" weight="bold" className="text-center text-gray-900 mb-3 text-[26px] leading-8 px-4">
-                        Your digital studio is ready, {firstName}! 🧵
+                        You're all set, {firstName}!
                     </Typography>
                     <Typography color="gray" className="text-center px-6 leading-6 text-[15px] text-gray-500">
-                        <Typography weight="bold" className="text-brand-primary text-[15px]">{businessName}</Typography> is set up for your {specialtyText}. Keep your measurements, orders, and invoices organized in one place, so you can focus on creating.
+                        {/* <Typography weight="bold" className="text-brand-primary text-[15px]"> */}
+                            {businessName} is ready to manage clients, orders, and measurements in one place.
+                            {/* {businessName}</Typography> is set up for your {specialtyText}. Keep your measurements, orders, and invoices organized in one place, so you can focus on creating. */}
                     </Typography>
                 </Animated.View>
 

@@ -1,6 +1,7 @@
 import * as StoreReview from 'expo-store-review';
 import { Platform, Linking } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { posthog } from '../posthogConfig';
 
 // CRITICAL: Ensure these IDs match your actual store identifiers
 const APP_STORE_ID = "6759835205"; 
@@ -29,9 +30,9 @@ export class StoreReviewService {
             
             if (lastAskedRaw) {
                 const lastAsked = parseInt(lastAskedRaw, 10);
-                const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-                if (now - lastAsked < thirtyDays) {
-                    console.log("[StoreReviewService] skipping auto-prompt: asked within last 30 days");
+                const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+                if (now - lastAsked < fifteenDays) {
+                    console.log("[StoreReviewService] skipping auto-prompt: asked within last 15 days");
                     return;
                 }
             }
@@ -46,6 +47,7 @@ export class StoreReviewService {
                 console.log(`[StoreReviewService] hasAction: ${hasAction}`);
 
                 await StoreReview.requestReview();
+                posthog.capture('store_review_triggered');
                 await SecureStore.setItemAsync('last_store_review_ask', now.toString());
             } else {
                 console.log("[StoreReviewService] native review not available on this device");

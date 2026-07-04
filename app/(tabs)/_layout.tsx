@@ -10,6 +10,7 @@ import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
 import { useCatalog } from '../../hooks/useCatalog';
 import { useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
+import { usePostHog } from 'posthog-react-native';
 
 
 const TAB_BAR_HEIGHT = 5;
@@ -20,6 +21,7 @@ export default function TabLayout() {
     const { isDark } = useTheme();
     const { unreadCount } = useUnreadOrderRequests();
     const { needsVisibility } = useCatalog();
+    const posthog = usePostHog();
 
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
@@ -68,6 +70,14 @@ export default function TabLayout() {
                             fontSize: 11,
                             fontWeight: '600',
                             marginTop: 4,
+                        },
+                    }}
+                    screenListeners={{
+                        tabPress: (e) => {
+                            const targetKey = (e.target as any)?.split('-')[0];
+                            if (targetKey) {
+                                posthog.capture('tab_changed', { tab: targetKey });
+                            }
                         },
                     }}
                 >

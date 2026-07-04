@@ -108,11 +108,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         updateState({ step: next });
         
         switch (next) {
-            case 2: router.push('/onboarding/business'); break;
-            case 3: router.push('/onboarding/customer'); break;
-            case 4: router.push('/onboarding/measurements'); break;
-            case 5: router.push('/onboarding/order'); break;
-            case 6: router.push('/onboarding/completion'); break;
+            case 2: router.push('/onboarding/customer'); break;
+            case 3: router.push('/onboarding/measurements'); break;
+            case 4: router.push('/onboarding/order'); break;
+            case 5: router.push('/onboarding/completion'); break;
             default: break;
         }
     };

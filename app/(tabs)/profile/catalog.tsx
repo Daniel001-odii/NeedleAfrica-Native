@@ -35,6 +35,7 @@ import { CatalogVisibilityModal } from '../../../components/CatalogVisibilityMod
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Surface } from '../../../components/ui/Surface';
+import { usePostHog } from 'posthog-react-native';
 
 // Normalize social media input: strip URLs, @ prefixes, trailing slashes — keep only the handle
 function normalizeSocialHandle(input: string): string {
@@ -125,6 +126,7 @@ export default function BusinessSettings() {
     const { isDark } = useTheme();
     const { user, updateProfile, uploadProfilePhoto } = useAuth();
     const insets = useSafeAreaInsets();
+    const posthog = usePostHog();
 
     const [catalogId, setCatalogId] = useState<string | null>(null);
     const [nxFormattedId, setNxFormattedId] = useState<string | null>(null);
@@ -299,6 +301,11 @@ export default function BusinessSettings() {
                 businessLogo: currentLogoUrl
             });
 
+            posthog.capture('catalog_updated', {
+                has_logo: !!currentLogoUrl,
+                is_enabled: isEnabled,
+                show_prices: showPrices,
+            });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Business info updated' });
         } catch (error: any) {
             console.error('Update Failed:', error.response?.data || error);
@@ -495,12 +502,15 @@ export default function BusinessSettings() {
                                         {userIsPro ? 'Allow anyone with your link to view your products' : 'Freemium: up to 3 items. Pro: unlimited catalog items'}
                                     </Typography>
                                 </View>
-                                <Switch
-                                    value={isEnabled}
-                                    onValueChange={(val) => setIsEnabled(val)}
-                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
-                                    thumbColor="#FFFFFF"
-                                />
+                                    <Switch
+                                        value={isEnabled}
+                                        onValueChange={(val) => {
+                                            setIsEnabled(val);
+                                            posthog.capture('catalog_visibility_toggled', { enabled: val });
+                                        }}
+                                        trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                        thumbColor="#FFFFFF"
+                                    />
                             </View>
                             <View className="p-4 flex-row items-center justify-between">
                                 <View className="flex-1 mr-4">
@@ -543,6 +553,7 @@ export default function BusinessSettings() {
                                 <View className="flex-row gap-x-3">
                                     <TouchableOpacity
                                         onPress={async () => {
+                                            posthog.capture('catalog_link_copied');
                                             await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${nxFormattedId || catalogId}`);
                                             Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
                                         }}

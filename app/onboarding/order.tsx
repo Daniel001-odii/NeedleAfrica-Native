@@ -46,6 +46,14 @@ export default function CreateFirstOrder() {
 
     const currencySymbol = user?.currency === 'USD' ? '$' : (user?.currency === 'GBP' ? '£' : '₦');
 
+    const stylePlaceholder = state.template?.name === 'Shirt'
+        ? 'e.g. Blue Oxford Shirt'
+        : state.template?.name === 'Trousers'
+            ? 'e.g. Black Slim Trousers'
+            : state.template?.name === 'Dress'
+                ? 'e.g. Red Evening Dress'
+                : 'e.g. Blue Shirt';
+
     const handleCreateOrder = async () => {
         if (!styleName.trim()) {
             Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter a style name' });
@@ -84,7 +92,7 @@ export default function CreateFirstOrder() {
                     amountPaid,
                     deliveryDate: deliveryDate.toISOString()
                 },
-                step: 5
+                step: 4
             });
 
             nextStep();
@@ -139,9 +147,9 @@ export default function CreateFirstOrder() {
     if (showIntro) {
         return (
             <OnboardingIntroScreen
-                title="Bring ideas to life."
-                subtitle="Create your first order, set a delivery date, and log payments. Turn your creative projects into tracking milestones."
-                stepIndex={5}
+                title={`Create ${state.customer?.name.split(" ")[0] || 'your client'}'s first order`}
+                subtitle="Add the order details, delivery date, and payment information to keep everything organized from day one."
+                stepIndex={4}
                 buttonText="Create Order"
                 onNext={() => setShowIntro(false)}
                 onBack={prevStep}
@@ -194,7 +202,7 @@ export default function CreateFirstOrder() {
                                 </Typography>
                                 <TextInput
                                     className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
-                                    placeholder="e.g. Red Traditional Suit"
+                                    placeholder={stylePlaceholder}
                                     placeholderTextColor="#D1D5DB"
                                     value={styleName}
                                     onChangeText={setStyleName}

@@ -25,7 +25,7 @@ const RevenueHeroCard = ({
                     borderRadius: 28,
                     overflow: 'hidden',
                     // backgroundColor: isDark ? '#1C1C1E' : '#3B82F6',
-                    backgroundColor: '#3B82F6',
+                    backgroundColor: '#ff5678',
                     padding: 18,
                     borderWidth: isDark ? 1 : 0,
                     borderColor: '#374151',

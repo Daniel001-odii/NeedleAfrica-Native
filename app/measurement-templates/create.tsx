@@ -14,6 +14,7 @@ import { ResourceLimitModal } from '../../components/ResourceLimitModal';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { TypingText } from '../../components/ui/TypingText';
+import { usePostHog } from 'posthog-react-native';
 
 export default function CreateTemplateScreen() {
     const router = useRouter();
@@ -23,6 +24,7 @@ export default function CreateTemplateScreen() {
     const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { isDark } = useTheme();
+    const posthog = usePostHog();
 
     const [name, setName] = useState('');
     const [fields, setFields] = useState<string[]>(['', '', '', '']);
@@ -92,6 +94,10 @@ export default function CreateTemplateScreen() {
                 name: name.trim(),
                 fields: validFields,
                 isPublic
+            });
+            posthog.capture('template_created', {
+                field_count: validFields.length,
+                is_public: isPublic,
             });
             router.back();
         } catch (error) {

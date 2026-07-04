@@ -21,7 +21,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useMeasurementTemplates, MeasurementTemplate } from '../../../hooks/useMeasurementTemplates';
 import Measurement from '../../../database/watermelon/models/Measurement';
 import { DocumentText, Add, CloseSquare, BookSquare } from 'iconsax-react-native';
-import * as Contacts from 'expo-contacts';
+import * as Contacts from 'expo-contacts/legacy';
 
 export default function NewCustomer() {
     const { isDark } = useTheme();
@@ -69,6 +69,7 @@ export default function NewCustomer() {
             }
 
             const contact = await Contacts.presentContactPickerAsync();
+            posthog.capture('contact_imported');
             if (contact) {
                 const name = contact.name || [contact.firstName, contact.lastName].filter(Boolean).join(' ');
 

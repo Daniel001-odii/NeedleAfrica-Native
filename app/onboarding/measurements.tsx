@@ -134,7 +134,7 @@ export default function AddMeasurements() {
                 updateState({
                     template: { id: createdTemplate.id, name: createdTemplate.name, fields: fields },
                     measurement: { values: measurementValues, unit },
-                    step: 4
+                    step: 3
                 });
 
                 nextStep();
@@ -154,9 +154,9 @@ export default function AddMeasurements() {
     if (showIntro) {
         return (
             <OnboardingIntroScreen
-                title="Precision is everything."
-                subtitle="Select a standard template or custom-design fields. Say goodbye to messy paper record pads forever."
-                stepIndex={4}
+                title={`Let's measure ${state.customer?.name}`}
+                subtitle={`Take ${state.customer?.name || 'your client'}'s measurements once and reuse them whenever they place a new order.`}
+                stepIndex={3}
                 buttonText="Start Measuring"
                 onNext={() => setShowIntro(false)}
                 onBack={prevStep}
@@ -358,7 +358,7 @@ export default function AddMeasurements() {
                         className={`h-14 rounded-full border-0 shadow-none ${!isFormValid ? 'bg-gray-200' : 'bg-brand-primary'}`}
                         textClassName={`text-lg font-bold ${!isFormValid ? 'text-gray-400' : 'text-white'}`}
                     >
-                        Save Measurements
+                       <Typography className='text-white'> Save {state.customer?.name.split(" ")[0]}'s Measurements</Typography>
                     </Button>
 
                 </View>

@@ -12,6 +12,7 @@ import { revenueCatService } from '../services/RevenueCatService';
 import { posthog } from '../posthogConfig';
 import Constants from 'expo-constants';
 import { database } from '../database/watermelon/index.native';
+import Toast from 'react-native-toast-message';
 // import { database } from '../database/watermelon';
 
 interface User {
@@ -46,6 +47,7 @@ interface User {
     onboardingCompleted?: boolean;
     invoiceTemplate?: number;
     provider?: 'NEEDLEX' | 'GOOGLE' | 'APPLE';
+    emailIsVerified?: boolean;
     bankName?: string;
     accountNumber?: string;
     accountName?: string;
@@ -71,6 +73,11 @@ interface AuthContextType {
     signInWithGoogle: () => Promise<void>;
     signInWithApple: () => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    changeEmail: (newEmail: string, currentPassword?: string) => Promise<string>;
+    verifyEmailChange: (otp: string) => Promise<void>;
+    resendEmailChangeOtp: () => Promise<void>;
+    sendEmailVerification: () => Promise<void>;
+    verifyEmail: (otp: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -434,6 +441,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (status === 'error') {
                 throw new Error(message || 'Password change failed');
             }
+            posthog.capture('password_changed');
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || 'Password change failed';
             throw new Error(errorMsg);
@@ -476,6 +484,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const deleteAccount = async () => {
         setIsActionLoading(true);
         try {
+            posthog.capture('account_deleted');
             await axiosInstance.delete('/users/me');
             await logout();
         } catch (error: any) {
@@ -530,6 +539,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logout = async () => {
+        // Track logout before resetting PostHog
+        posthog.capture('user_logout');
+        
         // Logout from RevenueCat first
         try {
             await revenueCatService.logout();
@@ -550,6 +562,113 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, 0);
     };
 
+    // ---------- EMAIL CHANGE FLOW ----------
+
+    const changeEmail = async (newEmail: string, currentPassword?: string): Promise<string> => {
+        setIsActionLoading(true);
+        try {
+            const payload: any = { newEmail };
+            if (currentPassword) payload.currentPassword = currentPassword;
+
+            const response = await axiosInstance.post('/auth/change-email', payload);
+            const { status, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Failed to initiate email change');
+            }
+
+            return message;
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Email change request failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const verifyEmailChange = async (otp: string) => {
+        setIsActionLoading(true);
+        try {
+            const response = await axiosInstance.post('/auth/verify-email-change', { otp });
+            const { status, user: userData, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Email verification failed');
+            }
+
+            posthog.capture('email_changed');
+            // Update stored user data with new email + verified flag
+            const updatedUser = { ...user, ...userData };
+            await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Email verification failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const resendEmailChangeOtp = async () => {
+        setIsActionLoading(true);
+        try {
+            const response = await axiosInstance.post('/auth/resend-verification-otp');
+            const { status, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Failed to resend verification code');
+            }
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Resend verification code failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    // ---------- VERIFY CURRENT EMAIL FLOW ----------
+
+    const sendEmailVerification = async () => {
+        setIsActionLoading(true);
+        try {
+            const response = await axiosInstance.post('/auth/send-verification-email');
+            const { status, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Failed to send verification email');
+            }
+
+            Toast.show({ type: 'success', text1: 'Code Sent', text2: message });
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to send verification email';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const verifyEmail = async (otp: string) => {
+        setIsActionLoading(true);
+        try {
+            const response = await axiosInstance.post('/auth/verify-email', { otp });
+            const { status, user: userData, message } = response.data;
+
+            if (status === 'error') {
+                throw new Error(message || 'Email verification failed');
+            }
+
+            posthog.capture('email_verified');
+            const updatedUser = { ...user, ...userData };
+            await SecureStore.setItemAsync('user_data', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || 'Email verification failed';
+            throw new Error(errorMsg);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     // Register logout handler with axios
     useEffect(() => {
         const { setLogoutHandler } = require('../lib/axios');
@@ -557,7 +676,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [logout]);
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple, changePassword }}>
+        <AuthContext.Provider value={{ user, isLoading, isActionLoading, isNewUser, signIn, logout, signUp, forgotPassword, resetPassword, updateProfile, uploadProfilePhoto, deleteAccount, completeOnboarding, refreshUser, signInWithGoogle, signInWithApple, changePassword, changeEmail, verifyEmailChange, resendEmailChangeOtp, sendEmailVerification, verifyEmail }}>
             {children}
         </AuthContext.Provider>
     );

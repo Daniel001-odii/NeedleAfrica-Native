@@ -20,6 +20,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { CURRENCIES } from '../../../constants/currencies';
 import * as StoreReview from 'expo-store-review';
 import { StoreReviewService } from '../../../services/StoreReviewService';
+import { usePostHog } from 'posthog-react-native';
 
 const isLocalUri = (uri: string | null) => uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
@@ -32,6 +33,7 @@ export default function OrderDetail() {
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
     const { user } = useAuth();
+    const posthog = usePostHog();
 
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
@@ -139,6 +141,11 @@ export default function OrderDetail() {
                 styleImage: finalStyleImage || undefined
             });
 
+            posthog.capture('order_updated', {
+                has_fabric_image: !!finalFabricImage,
+                has_style_image: !!finalStyleImage,
+            });
+
             setIsEditing(false);
             Toast.show({ type: 'success', text1: 'Success', text2: 'Saved and synced' });
             performSync().catch(console.error);
@@ -158,6 +165,9 @@ export default function OrderDetail() {
             type: 'danger',
             onConfirm: async () => {
                 try {
+                    posthog.capture('order_deleted', {
+                        style_name: order.styleName,
+                    });
                     await deleteOrder(id as string);
                     router.back();
                     Toast.show({ type: 'success', text1: 'Deleted', text2: 'Removed from device' });
@@ -191,6 +201,10 @@ export default function OrderDetail() {
         const performToggle = async () => {
             try {
                 await updateOrderStatus(id as string, newStatus);
+                posthog.capture('order_status_changed', {
+                    from_status: order.status,
+                    to_status: newStatus,
+                });
                 Toast.show({
                     type: 'success',
                     text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',

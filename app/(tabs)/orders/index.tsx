@@ -34,8 +34,10 @@ import { useConfirm } from '../../../contexts/ConfirmContext';
 import { ProgressSquare } from '../../../components/ui/ProgressSquare';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { Button } from '../../../components/ui/Button';
+import { usePostHog } from 'posthog-react-native';
 
 export default function Orders() {
+    const posthog = usePostHog();
     const [activeTab, setActiveTab] = useState<TabType>('All');
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
@@ -107,7 +109,10 @@ export default function Orders() {
             message: `Are you sure you want to delete "${name}"?`,
             confirmText: "Delete",
             type: "danger",
-            onConfirm: () => deleteOrder(id)
+            onConfirm: () => {
+                posthog.capture('order_deleted', { style_name: name });
+                deleteOrder(id);
+            }
         });
     };
 
@@ -117,6 +122,10 @@ export default function Orders() {
         const performToggle = async () => {
             try {
                 await updateOrderStatus(id, newStatus);
+                posthog.capture('order_status_changed', {
+                    from_status: currentStatus,
+                    to_status: newStatus,
+                });
                 Toast.show({
                     type: 'success',
                     text1: newStatus === 'DELIVERED' ? 'Order Delivered' : 'Order Reopened',

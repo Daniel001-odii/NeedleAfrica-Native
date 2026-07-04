@@ -15,17 +15,20 @@ import {
     Gallery,
     Star,
     Chart2,
-    Book1
+    Book1,
+    Logout
 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Typography } from '../../../components/ui/Typography';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useConfirm } from '../../../contexts/ConfirmContext';
 import Svg, { Path } from 'react-native-svg';
 import { StoreReviewService } from '../../../services/StoreReviewService';
 
 export default function Profile() {
-    const { user, refreshUser } = useAuth();
+    const { user, refreshUser, logout } = useAuth();
+    const { confirm } = useConfirm();
     const router = useRouter();
     const { isDark } = useTheme();
 
@@ -196,6 +199,31 @@ export default function Profile() {
                             }
                             title="Send Feedback"
                             onPress={() => Linking.openURL('mailto:hello@needleafrica.com?subject=Feedback for NeedleX')}
+                            isDark={isDark}
+                            isLast
+                        />
+                    </View>
+                </View>
+
+                {/* Session */}
+                <View className="mb-6">
+                    <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
+                        Session
+                    </Typography>
+                    <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
+                        <ProfileItem
+                            icon={<Logout size={20} color={isDark ? "#9CA3AF" : "#6B7280"} variant="Bulk" />}
+                            title="Log Out"
+                            subtitle="Sign out of your account"
+                            onPress={() =>
+                                confirm({
+                                    title: 'Log Out',
+                                    message: 'Are you sure you want to log out? You will need to sign in again to access your account.',
+                                    confirmText: 'Log Out',
+                                    type: 'danger',
+                                    onConfirm: logout
+                                })
+                            }
                             isDark={isDark}
                             isLast
                         />

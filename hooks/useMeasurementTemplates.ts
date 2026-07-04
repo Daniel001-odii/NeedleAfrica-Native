@@ -40,7 +40,7 @@ export function useMeasurementTemplates() {
                 await MeasurementTemplate.createSyncable(database, user.id, preset);
             }
             await AsyncStorage.setItem(presetSeedKey(user.id), 'true');
-            sync().catch(console.error);
+            // Sync is handled by useSync's mount useEffect — no explicit call needed here
         } finally {
             seedingRef.current = false;
         }
