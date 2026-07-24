@@ -233,16 +233,16 @@ export const SubscriptionPaywall: React.FC<SubscriptionPaywallProps> = ({
 
             <View className="flex-row flex-wrap justify-between">
               {[
-                { title: 'Unlimited Orders', icon: <Check size={20} color="#10B981" /> },
-                { title: 'AI Measurements', icon: <Magicpen size={20} color="#FF5678" /> },
-                { title: 'Custom Invoices', icon: <Check size={20} color="#10B981" /> },
-                { title: 'Team Access', icon: <Check size={20} color="#10B981" /> },
-                { title: 'Priority Support', icon: <Check size={20} color="#10B981" /> },
-                { title: 'Cloud Sync', icon: <Check size={20} color="#10B981" /> },
+                { title: 'Unlimited Orders & Clients', icon: <Check size={20} color="#10B981" /> },
+                { title: 'AI Labs (3D Try-on & Sketches)', icon: <Magicpen size={20} color="#FF5678" /> },
+                { title: 'Custom Invoices & PDFs', icon: <Check size={20} color="#10B981" /> },
+                { title: 'Storefront Web Catalog', icon: <Check size={20} color="#10B981" /> },
+                { title: 'Turnaround & Debt Analytics', icon: <Check size={20} color="#10B981" /> },
+                { title: 'VIP Support on WhatsApp', icon: <Check size={20} color="#10B981" /> },
               ].map((item, index) => (
                 <View key={index} className="flex-row items-center mb-4 w-[48%] bg-gray-50 p-3 rounded-lg border border-gray-100">
                   {item.icon}
-                  <Typography variant="small" weight="semibold" className="ml-2 text-gray-700">
+                  <Typography variant="small" weight="semibold" className="ml-2 text-gray-700 text-[11px]" numberOfLines={2}>
                     {item.title}
                   </Typography>
                 </View>

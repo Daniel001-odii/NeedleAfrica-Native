@@ -260,7 +260,7 @@ export default function OrderDetail() {
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
-            <View className={`px-4 pt-2 pb-2 flex-row justify-between items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-50'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row justify-between items-center border-b ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
                     onPress={() => isEditing ? setIsEditing(false) : router.replace('/(tabs)/orders')}

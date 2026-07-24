@@ -102,7 +102,7 @@ export default function SketchToDesign() {
         setIsLoading(true);
         try {
             const formData = new FormData();
-            
+
             // @ts-ignore
             formData.append('sketchImage', {
                 uri: sketchImage,
@@ -237,8 +237,8 @@ export default function SketchToDesign() {
 
     // --- RENDER ORIGINAL AI WORKSPACE FOR PRO MEMBERS ---
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
-            <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-gray-50'}`} edges={['top']}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-100'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
@@ -257,7 +257,7 @@ export default function SketchToDesign() {
                             Convert your hand-drawn sketches into realistic fashion designs using AI.
                         </Typography>
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={pickSketch}
                             className={`w-full aspect-[16/9] rounded-[32px] items-center justify-center border-2 border-dashed ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'} overflow-hidden mb-8`}
                         >
@@ -276,17 +276,17 @@ export default function SketchToDesign() {
 
                         <View className="gap-y-1">
                             <Typography variant="caption" weight="bold" color="gray" className="ml-1 mb-2 uppercase tracking-widest">Customization (Optional)</Typography>
-                            
+
                             <View className="flex-row items-center mb-4">
                                 <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                                     <Magicpen size={20} color="#FF5678" variant="Bulk" />
                                 </View>
-                                <TextInput 
-                                    placeholder="Fabric Type (e.g. Silk, Ankara, Denim)" 
-                                    value={fabricType} 
-                                    onChangeText={setFabricType} 
+                                <TextInput
+                                    placeholder="Fabric Type (e.g. Silk, Ankara, Denim)"
+                                    value={fabricType}
+                                    onChangeText={setFabricType}
                                     placeholderTextColor="#94a3b8"
-                                    className={`flex-1 ${inputClass} mb-0`} 
+                                    className={`flex-1 ${inputClass} mb-0`}
                                 />
                             </View>
 
@@ -294,12 +294,12 @@ export default function SketchToDesign() {
                                 <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                                     <Colorfilter size={20} color="#10B981" variant="Bulk" />
                                 </View>
-                                <TextInput 
-                                    placeholder="Color Scheme (e.g. Emerald & Gold)" 
-                                    value={colorScheme} 
-                                    onChangeText={setColorScheme} 
+                                <TextInput
+                                    placeholder="Color Scheme (e.g. Emerald & Gold)"
+                                    value={colorScheme}
+                                    onChangeText={setColorScheme}
                                     placeholderTextColor="#94a3b8"
-                                    className={`flex-1 ${inputClass} mb-0`} 
+                                    className={`flex-1 ${inputClass} mb-0`}
                                 />
                             </View>
 
@@ -307,12 +307,12 @@ export default function SketchToDesign() {
                                 <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
                                     <Setting4 size={20} color="#F43F5E" variant="Bulk" />
                                 </View>
-                                <TextInput 
-                                    placeholder="Style (e.g. Elegant Evening Gown)" 
-                                    value={style} 
-                                    onChangeText={setStyle} 
+                                <TextInput
+                                    placeholder="Style (e.g. Elegant Evening Gown)"
+                                    value={style}
+                                    onChangeText={setStyle}
                                     placeholderTextColor="#94a3b8"
-                                    className={`flex-1 ${inputClass} mb-0`} 
+                                    className={`flex-1 ${inputClass} mb-0`}
                                 />
                             </View>
                         </View>
@@ -329,7 +329,7 @@ export default function SketchToDesign() {
                         </View>
 
                         <View className="flex-row gap-4 w-full">
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={() => setResultImage(null)}
                                 className={`flex-1 h-14 rounded-full flex-row items-center justify-center ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border-gray-100'}`}
                                 style={{ elevation: 0, shadowOpacity: 0 }}
@@ -338,7 +338,7 @@ export default function SketchToDesign() {
                                 <Typography className="ml-2 font-bold">New Sketch</Typography>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={handleShare}
                                 className="flex-1 h-14 rounded-full bg-amber-500 flex-row items-center justify-center"
                                 style={{ elevation: 0, shadowOpacity: 0 }}
@@ -353,12 +353,12 @@ export default function SketchToDesign() {
 
 
             {!resultImage && (
-                <View 
+                <View
                     style={{ paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 20 }}
-                    className={`pt-4 border-t ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}
+                    className={`pt-4 border-t ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-100'}`}
                 >
-                    <Button 
-                        onPress={handleGenerate} 
+                    <Button
+                        onPress={handleGenerate}
                         isLoading={isLoading}
                         className="h-16 rounded-full bg-amber-500 border-0 shadow-none"
                         textClassName="text-white font-bold text-lg"

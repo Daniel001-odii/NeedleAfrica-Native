@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, FlatList, Pressable, TextInput, Linking, RefreshControl, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { Add, SearchNormal, User, ArrowRight, Call, Refresh, FilterSearch, InfoCircle, Task } from 'iconsax-react-native';
@@ -10,6 +10,7 @@ import { Typography } from '../../../components/ui/Typography';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -40,6 +41,7 @@ function CustomersScreen() {
     const { user } = useAuth();
     const { getLimitStatus } = useResourceLimits();
     const swipeableRefs = useRef<Record<string, Swipeable | null>>({});
+    const insets = useSafeAreaInsets();
 
     const showHelpAnimation = () => {
         const firstId = sortedCustomers[0]?.id;
@@ -124,9 +126,10 @@ function CustomersScreen() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Sort';
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
-            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
-                {/* Header */}
+        <View className={`flex-1`}>
+
+            {/* Header */}
+            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-black' : 'bg-white'}`}>
                 <View className="flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center">
                         <Typography variant="h2" weight="bold">Customers</Typography>
@@ -169,74 +172,76 @@ function CustomersScreen() {
             </View>
 
             {/* List */}
-            <FlatList
-                data={sortedCustomers}
-                keyExtractor={item => item.id}
-                contentContainerClassName="p-4 pt-6 pb-20"
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
-                }
-                renderItem={({ item }) => (
-                    <Swipeable
-                        ref={ref => { swipeableRefs.current[item.id] = ref; }}
-                        renderRightActions={() => renderRightActions(item.id, item.fullName || 'Client')}
-                        friction={2}
-                        rightThreshold={40}
-                    >
-                        <Pressable
-                            onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
+            <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
+                <FlatList
+                    data={sortedCustomers}
+                    keyExtractor={item => item.id}
+                    contentContainerClassName="p-4 pt-6 pb-20"
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" />
+                    }
+                    renderItem={({ item }) => (
+                        <Swipeable
+                            ref={ref => { swipeableRefs.current[item.id] = ref; }}
+                            renderRightActions={() => renderRightActions(item.id, item.fullName || 'Client')}
+                            friction={2}
+                            rightThreshold={40}
                         >
-                            <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="3xl">
-                                <View className={`w-12 h-12 items-center justify-center mr-4 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
-                                    <Typography weight="bold" color="primary">
-                                        {(item.fullName || 'C').charAt(0).toUpperCase()}
-                                    </Typography>
-                                </View>
-                                <View className="flex-1">
-                                    <Typography variant="body" weight="bold">{item.fullName}</Typography>
-                                    <Typography variant="caption" color="gray" className="mt-0.5">{item.phoneNumber || 'No phone number'}</Typography>
-                                </View>
-                                {item.phoneNumber && (
-                                    <TouchableOpacity
-                                        className={`w-10 h-10 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-green-50'}`}
-                                        onPress={() => handleCall(item.phoneNumber || null)}
-                                    >
-                                        <Call size={18} color="#22c55e" variant="Bold" />
-                                    </TouchableOpacity>
-                                )}
-
-                            </Surface>
-                        </Pressable>
-                    </Swipeable>
-                )}
-                ListEmptyComponent={
-                    !loading ? (
-                        <View className="items-center justify-center py-20 px-10">
-                            <Image
-                                source={require('../../../assets/illustrations/customers.png')}
-                                style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
-                            />
-                            <Typography variant="h3" weight="bold" className="text-center mb-2">No customers</Typography>
-                            <Typography variant="body" color="gray" className="text-center mb-8">
-                                {search ? "Try a different search term" : "Add your first client to get started"}
-                            </Typography>
-                            {!search && (
-                                <Button
-                                    onPress={() => router.push('/(tabs)/customers/new')}
-                                    className={`px-8 h-14 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
-                                    textClassName={isDark ? 'text-dark' : 'text-white'}
-                                >
-                                    <View className="flex-row items-center">
-                                        <Add size={20} color={isDark ? 'black' : 'white'} className="mr-2" />
-                                        <Typography weight="bold" className={isDark ? 'text-dark' : 'text-white'}>New Customer</Typography>
+                            <Pressable
+                                onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
+                            >
+                                <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="3xl">
+                                    <View className={`w-12 h-12 items-center justify-center mr-4 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                        <Typography weight="bold" color="primary">
+                                            {(item.fullName || 'C').charAt(0).toUpperCase()}
+                                        </Typography>
                                     </View>
-                                </Button>
-                            )}
-                        </View>
-                    ) : null
-                }
-            />
+                                    <View className="flex-1">
+                                        <Typography variant="body" weight="bold">{item.fullName}</Typography>
+                                        <Typography variant="caption" color="gray" className="mt-0.5">{item.phoneNumber || 'No phone number'}</Typography>
+                                    </View>
+                                    {item.phoneNumber && (
+                                        <TouchableOpacity
+                                            className={`w-10 h-10 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-green-50'}`}
+                                            onPress={() => handleCall(item.phoneNumber || null)}
+                                        >
+                                            <Call size={18} color="#22c55e" variant="Bold" />
+                                        </TouchableOpacity>
+                                    )}
+
+                                </Surface>
+                            </Pressable>
+                        </Swipeable>
+                    )}
+                    ListEmptyComponent={
+                        !loading ? (
+                            <View className="items-center justify-center py-20 px-10">
+                                <Image
+                                    source={require('../../../assets/illustrations/customers.png')}
+                                    style={{ width: 160, height: 160, resizeMode: 'contain', marginBottom: 24 }}
+                                />
+                                <Typography variant="h3" weight="bold" className="text-center mb-2">No customers</Typography>
+                                <Typography variant="body" color="gray" className="text-center mb-8">
+                                    {search ? "Try a different search term" : "Add your first client to get started"}
+                                </Typography>
+                                {!search && (
+                                    <Button
+                                        onPress={() => router.push('/(tabs)/customers/new')}
+                                        className={`px-8 h-14 rounded-full ${isDark ? 'bg-white' : 'bg-dark'}`}
+                                        textClassName={isDark ? 'text-dark' : 'text-white'}
+                                    >
+                                        <View className="flex-row items-center">
+                                            <Add size={20} color={isDark ? 'black' : 'white'} className="mr-2" />
+                                            <Typography weight="bold" className={isDark ? 'text-dark' : 'text-white'}>New Customer</Typography>
+                                        </View>
+                                    </Button>
+                                )}
+                            </View>
+                        ) : null
+                    }
+                />
+            </View>
 
             <ActionSheet
                 visible={showSortModal}

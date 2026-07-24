@@ -6,6 +6,7 @@ import {
     Colorfilter,
     Gallery,
     Ruler,
+    Calculator,
 } from 'iconsax-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -103,6 +104,12 @@ export default function Extras() {
                         title="Templates Library"
                         desc="Ready-made measurement presets"
                         onPress={() => router.push('/extras/templates-library' as any)}
+                    />
+                    <ToolCard
+                        icon={<Calculator size={24} color="#3B82F6" variant="Bulk" />}
+                        title="Pricing Calculator"
+                        desc="Calculate fabric & labor costs"
+                        onPress={() => router.push('/extras/pricing-calculator' as any)}
                     />
                 </View>
 

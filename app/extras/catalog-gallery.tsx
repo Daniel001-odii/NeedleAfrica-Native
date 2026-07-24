@@ -299,7 +299,7 @@ export default function CatalogGallery() {
     return (
         <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`} edges={['top']}>
             {/* Header */}
-            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-black border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
@@ -320,7 +320,7 @@ export default function CatalogGallery() {
                     <ActivityIndicator color="#3b82f6" />
                 </View>
             ) : items.length > 0 ? (
-                <View className="flex-1 px-5 pb-24">
+                <View className="flex-1 px-5 pb-24 mt-12">
                     {/* Dashboard Stats */}
                     <View className="flex-row gap-4 mb-8">
                         <View className={`flex-1 p-4 rounded-[24px] ${cardBaseStyle}`}>
@@ -496,8 +496,8 @@ export default function CatalogGallery() {
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowWebView(false)}
             >
-                <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
-                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-100'}`}>
+                <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`} edges={['top']}>
+                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-black border-white/10' : 'bg-white border-gray-100'}`}>
                         <View className="flex-row items-center">
                             <IconButton
                                 icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />}

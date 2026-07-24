@@ -191,6 +191,9 @@ export class NotificationService {
 
             // Schedule Daily Smart Reminders
             await this.scheduleSmartReminders(orders);
+
+            // Schedule Inactivity Reminders
+            await this.scheduleInactivityReminders(orders, user);
         } catch (e) {
             console.error("Critical error in refreshAllReminders:", e);
         }
@@ -370,5 +373,70 @@ export class NotificationService {
      */
     static async clearBadge() {
         return this.setBadgeCount(0);
+    }
+
+    static async scheduleInactivityReminders(orders: any[], user: any) {
+        try {
+            // 1. Cancel existing inactivity reminders to avoid duplicates
+            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+            for (const notification of scheduled) {
+                if (notification.content.data?.type === 'inactivity_reminder') {
+                    await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+                }
+            }
+
+            const activeOrders = orders.filter(o => !o.deletedAt);
+            if (activeOrders.length === 0) return;
+
+            // Find the latest order creation date
+            const latestDateMs = Math.max(...activeOrders.map(o => new Date(o.createdAt).getTime()));
+            const latestDate = new Date(latestDateMs);
+
+            const name = user?.username ? user.username.split(" ")[0] : 'Tailor';
+
+            // Schedule 7-day reminder
+            const date7 = new Date(latestDate);
+            date7.setDate(date7.getDate() + 7);
+            date7.setHours(10, 0, 0, 0); // 10:00 AM local time
+
+            if (date7.getTime() > Date.now()) {
+                await Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: `We miss your designs, ${name}! ❤️`,
+                        body: "It's been a week since your last order. Open NeedleX to log your new creations and keep client measurements up to date!",
+                        data: { type: 'inactivity_reminder', days: 7 },
+                        sound: 'notify_1.wav',
+                    },
+                    trigger: {
+                        type: Notifications.SchedulableTriggerInputTypes.DATE,
+                        date: date7,
+                    },
+                });
+            }
+
+            // Schedule 14-day reminder
+            const date14 = new Date(latestDate);
+            date14.setDate(date14.getDate() + 14);
+            date14.setHours(10, 0, 0, 0); // 10:00 AM local time
+
+            if (date14.getTime() > Date.now()) {
+                await Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: "Keep your business running smooth 🚀",
+                        body: `Hi ${name}, don't lose track of your active orders and pending balances. Tap to log your latest work and keep clients happy.`,
+                        data: { type: 'inactivity_reminder', days: 14 },
+                        sound: 'notify_1.wav',
+                    },
+                    trigger: {
+                        type: Notifications.SchedulableTriggerInputTypes.DATE,
+                        date: date14,
+                    },
+                });
+            }
+
+            console.log("Inactivity reminders scheduled successfully.");
+        } catch (e) {
+            console.error("Failed to schedule inactivity reminders:", e);
+        }
     }
 }

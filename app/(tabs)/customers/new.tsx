@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
@@ -48,6 +48,7 @@ export default function NewCustomer() {
     const { confirm } = useConfirm();
     const { isFree } = useSubscription();
     const router = useRouter();
+    const { from } = useLocalSearchParams<{ from?: string }>();
     const posthog = usePostHog();
     const database = useDatabase();
     const { user } = useAuth();
@@ -137,7 +138,7 @@ export default function NewCustomer() {
                 }
             }
 
-            posthog.capture('customer_created', { gender, has_phone: !!phoneNumber });
+            posthog.capture('customer_created', { gender, has_phone: !!phoneNumber, from: from || 'direct' });
             performSync().catch(console.error);
             Toast.show({ type: 'success', text1: 'Saved', text2: 'Customer and measurements added' });
 
@@ -164,7 +165,7 @@ export default function NewCustomer() {
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* Standard Refined Header */}
-            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-black border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton
                         icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}

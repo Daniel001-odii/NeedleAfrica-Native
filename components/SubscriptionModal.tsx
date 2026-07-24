@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TickCircle, Crown, Star1, Refresh, ArrowRight, CloseCircle } from 'iconsax-react-native';
+import { TickCircle, Crown, Star1, Refresh, ArrowRight, CloseCircle, People, Gallery, Chart2, MessageQuestion } from 'iconsax-react-native';
 import { Typography } from './ui/Typography';
 import { useRevenueCat } from '../hooks/useRevenueCat';
 import { revenueCatService } from '../services/RevenueCatService';
@@ -194,7 +194,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     resizeMode="cover"
                 >
                     <LinearGradient
-                        colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.95)']}
+                        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.98)', '#000000']}
                         style={{ flex: 1 }}
                     >
                         <SafeAreaView style={{ flex: 1 }} edges={[]}>
@@ -245,121 +245,142 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     </Typography>
                                 </View>
 
-                                {/* Features List */}
-                                <View className="mb-3">
+                                {/* Benefits List (Scrollable, now above comparison chart) */}
+                                <View style={{ height: 130 }} className="mb-5 bg-white/5 rounded-2xl p-3 border border-white/10">
+                                    <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={true}>
+                                        <View className="flex flex-col gap-3">
+                                            {[
+                                                { title: "Unlimited Clients & Orders", subtitle: "Grow your database without limits", icon: <People size={20} color="#FF5678" variant="Bulk" /> },
+                                                { title: "Online Storefront Website", subtitle: "Collect custom client bookings online", icon: <Gallery size={20} color="#FF5678" variant="Bulk" /> },
+                                                { title: "Turnaround Speed & Analytics", subtitle: "Interactive charts of your performance", icon: <Chart2 size={20} color="#FF5678" variant="Bulk" /> },
+                                                { title: "AI Labs (Try-on & Sketches)", subtitle: "Create virtual mockups on client photos", icon: <Star1 size={20} color="#FF5678" variant="Bulk" /> },
+                                                { title: "Direct WhatsApp VIP Support", subtitle: "Priority support line for setup help", icon: <MessageQuestion size={20} color="#FF5678" variant="Bulk" /> }
+                                            ].map((benefit, idx) => (
+                                                <View key={idx} className="flex-row items-center mb-1 last:mb-0">
+                                                    <View className="w-8 h-8 bg-white/5 rounded-full items-center justify-center mr-3">
+                                                        {benefit.icon}
+                                                    </View>
+                                                    <View className="flex-1">
+                                                        <Typography variant="body" weight="semibold" className="text-white text-[13px] leading-4">{benefit.title}</Typography>
+                                                        <Typography variant="small" className="text-zinc-400 text-[10px] mt-0.5">{benefit.subtitle}</Typography>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </ScrollView>
+                                </View>
+
+                                {/* Comparison Table */}
+                                <View className="mb-5 bg-white/5 rounded-2xl p-4 border border-white/10">
+
+                                    {/* Table Header */}
+                                    <View className="flex-row pb-4 border-b border-white/10 mb-3">
+                                        <View className="flex-1">
+                                            {/* <Typography variant="small" weight="bold" className="text-zinc-400 text-[11px] uppercase">Feature</Typography> */}
+                                        </View>
+                                        <View className="w-16 items-center">
+                                            <Typography variant="small" weight="bold" className="text-zinc-400 text-[11px] uppercase">Free</Typography>
+                                        </View>
+                                        <View className="w-16 items-center">
+                                            <Typography variant="small" weight="bold" className="text-indigo-400 text-[11px] uppercase">PRO</Typography>
+                                        </View>
+                                    </View>
+
+                                    {/* Table Rows */}
                                     {[
-                                        "Unlimited customers",
-                                        "Unlimited orders",
-                                        "Unlimited measurement templates",
-                                        "Unlimited Customizable invoices",
-                                        "Free access to extra tools",
-                                        'Early access to new features'
-                                    ].map((feature, idx) => (
-                                        <View key={idx} className="flex-row items-center mb-1.5">
-                                            <TickCircle size={20} color="#FF5678" variant="Bold" />
-                                            <Typography variant="body" color="white" className="ml-3 font-medium">{feature}</Typography>
+                                        { name: "Active Clients", free: "10", pro: "Unlimited" },
+                                        { name: "Active Orders", free: "10", pro: "Unlimited" },
+                                        { name: "Draft Templates", free: "5", pro: "Unlimited" },
+                                        { name: "Custom Invoices", free: "10", pro: "Unlimited" },
+                                        { name: "AI Labs access", free: "", pro: "Unlimited" },
+                                        { name: "Online Storefront", free: "Basic", pro: "Advanced" }
+                                    ].map((row, idx) => (
+                                        <View key={idx} className="flex-row items-center py-2.5 border-b border-white/5 last:border-b-0">
+                                            <View className="flex-1">
+                                                <Typography variant="body" weight="medium" color="white" className="text-[13px]">{row.name}</Typography>
+                                            </View>
+                                            <View className="w-16 items-center">
+                                                <Typography variant="body" className="text-zinc-400 text-[13px]">{row.free}</Typography>
+                                            </View>
+                                            <View className="w-30 items-center">
+                                                <Typography variant="body" weight="bold" className="text-indigo-400 text-[13px]">{row.pro}</Typography>
+                                            </View>
                                         </View>
                                     ))}
                                 </View>
 
-                                {/* Tab Selector */}
-                                {!loadingPackages && packages.length > 1 && !isPro && (
-                                    <View className="flex-row bg-white/10 rounded-full p-1 mb-4">
-                                        <TouchableOpacity
-                                            onPress={() => setSelectedPlanType('MONTHLY')}
-                                            className={`flex-1 py-2.5 items-center rounded-full ${selectedPlanType === 'MONTHLY' ? 'bg-indigo-500' : ''}`}
-                                        >
-                                            <Typography
-                                                variant="body"
-                                                weight="bold"
-                                                color="white"
-                                                className={selectedPlanType === 'MONTHLY' ? "" : "opacity-40"}
-                                            >
-                                                Monthly
-                                            </Typography>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => setSelectedPlanType('YEARLY')}
-                                            className={`flex-1 py-2.5 items-center rounded-full ${selectedPlanType === 'YEARLY' ? 'bg-indigo-500' : ''}`}
-                                        >
-                                            <Typography
-                                                variant="body"
-                                                weight="bold"
-                                                color="white"
-                                                className={selectedPlanType === 'YEARLY' ? "" : "opacity-40"}
-                                            >
-                                                Yearly
-                                            </Typography>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-
-                                {/* Single Premium Plan Card */}
+                                {/* Both Packages Selection Cards */}
                                 {loadingPackages ? (
                                     <ActivityIndicator size="large" color="#FF5678" className="mt-8" />
                                 ) : (
-                                    activePackage && (
-                                        <View className="bg-white/5 rounded-[24px] p-5 border-white/10 mb-4">
-                                            <View className="flex-row justify-between items-start mb-2">
-                                                <View>
-                                                    <Typography variant="h3" weight="bold" color="white">
-                                                        {selectedPlanType === 'YEARLY' ? 'Yearly Access' : 'Monthly Access'}
-                                                    </Typography>
-                                                    <Typography variant="body" color="white" className="opacity-60">
-                                                        {selectedPlanType === 'YEARLY' ? 'The Best Value' : 'Flexibility First'}
-                                                    </Typography>
-                                                </View>
-                                                <Crown size={32} color="#FF5678" variant="Bold" />
-                                            </View>
-
-                                            <View className="mb-5">
-                                                {isPro && subscriptionStatus?.productId === activePackage.product.identifier ? (
-                                                    <View className="bg-green-500/20 px-4 py-2 rounded-xl border border-green-500/50 my-2 self-start">
-                                                        <Typography variant="body" weight="bold" className="text-green-400">Current Plan</Typography>
-                                                    </View>
-                                                ) : selectedPlanType === 'YEARLY' ? (
-                                                    <View>
-                                                        {/*  <Typography variant="h3" weight="bold" color="white" className="opacity-90">
-                                                            $0.00 for the first 7 days,
-                                                        </Typography> */}
-                                                        <View className="flex-row items-end">
-                                                            <Typography variant="h1" weight="bold" color="white" className="py-1" style={{ fontSize: 32 }}>
-                                                                {activePackage.product.priceString}
+                                    !isPro && packages.length > 0 && (
+                                        <View className="flex-row gap-3 mb-5">
+                                            {/* Monthly Package Card */}
+                                            {(() => {
+                                                const monthlyPkg = packages.find(p => p.identifier.toLowerCase().includes('monthly') || p.packageType === PACKAGE_TYPE.MONTHLY);
+                                                if (!monthlyPkg) return null;
+                                                const isSelected = selectedPlanType === 'MONTHLY';
+                                                return (
+                                                    <TouchableOpacity
+                                                        activeOpacity={0.8}
+                                                        onPress={() => setSelectedPlanType('MONTHLY')}
+                                                        className={`flex-1 rounded-2xl p-3 border ${isSelected ? 'bg-indigo-500/10 border-indigo-500 shadow-lg shadow-indigo-500/10' : 'bg-white/5 border-white/10'}`}
+                                                    >
+                                                        <Typography variant="body" weight="bold" color="white" className="text-[13.5px]">
+                                                            Monthly
+                                                        </Typography>
+                                                        <Typography variant="small" color="white" className="opacity-60 text-[10px] mt-0.5">
+                                                            Flexibility First
+                                                        </Typography>
+                                                        
+                                                        <View className="flex-row items-baseline mt-3">
+                                                            <Typography variant="h2" weight="bold" color="white" className="text-[18px]">
+                                                                {monthlyPkg.product.priceString}
                                                             </Typography>
-                                                            <Typography variant="body" color="white" className="opacity-60 ml-2 mb-1.5">
-                                                                /year
+                                                            <Typography variant="small" color="white" className="opacity-60 ml-0.5 text-[10px]">
+                                                                /mo
                                                             </Typography>
                                                         </View>
-                                                    </View>
-                                                ) : (
-                                                    <View className="flex-row items-end">
-                                                        <Typography variant="h1" weight="bold" color="white" className="py-1" style={{ fontSize: 36 }}>
-                                                            {activePackage.product.priceString}
-                                                        </Typography>
-                                                        <Typography variant="body" color="white" className="opacity-60 ml-2 mb-1.5">
-                                                            / month
-                                                        </Typography>
-                                                    </View>
-                                                )}
-                                            </View>
+                                                    </TouchableOpacity>
+                                                );
+                                            })()}
 
-                                            {selectedPlanType === 'YEARLY' && (
-                                                <View className="flex-row gap-2.5">
-                                                    <View className="bg-indigo-500 px-2.5 py-1 rounded-lg">
-                                                        <Typography variant="small" weight="bold" className="text-white text-[10px]">SAVE 17%</Typography>
-                                                    </View>
-                                                    <View className="bg-white/10 px-2.5 py-1 rounded-lg flex-row items-center">
-                                                        <Star1 size={14} color="white" variant="Bold" />
-                                                        <Typography variant="small" className="text-white ml-1 font-bold">1 Week Free Trial</Typography>
-                                                    </View>
-                                                </View>
-                                            )}
-
-                                            <Typography variant="small" color="white" className="mt-3 opacity-40 italic">
-                                                {selectedPlanType === 'YEARLY'
-                                                    ? `Total cost ${activePackage.product.priceString} billed annually.`
-                                                    : 'Billed monthly. Cancel anytime.'}
-                                            </Typography>
+                                            {/* Yearly Package Card */}
+                                            {(() => {
+                                                const yearlyPkg = packages.find(p => p.identifier.toLowerCase().includes('yearly') || p.packageType === PACKAGE_TYPE.ANNUAL);
+                                                if (!yearlyPkg) return null;
+                                                const isSelected = selectedPlanType === 'YEARLY';
+                                                return (
+                                                    <TouchableOpacity
+                                                        activeOpacity={0.8}
+                                                        onPress={() => setSelectedPlanType('YEARLY')}
+                                                        className={`flex-1 rounded-2xl p-3 border ${isSelected ? 'bg-indigo-500/10 border-indigo-500 shadow-lg shadow-indigo-500/10' : 'bg-white/5 border-white/10'}`}
+                                                    >
+                                                        <View className="items-start">
+                                                            <View className="flex-row items-center gap-1">
+                                                                <Typography variant="body" weight="bold" color="white" className="text-[13.5px]">
+                                                                    Yearly
+                                                                </Typography>
+                                                                <View className="bg-indigo-500 px-1 py-0.5 rounded">
+                                                                    <Typography variant="small" weight="bold" className="text-white text-[7px]">SAVE 17%</Typography>
+                                                                </View>
+                                                            </View>
+                                                            <Typography variant="small" color="white" className="opacity-60 text-[10px] mt-0.5">
+                                                                1 Week Free Trial
+                                                            </Typography>
+                                                        </View>
+                                                        
+                                                        <View className="flex-row items-baseline mt-3">
+                                                            <Typography variant="h2" weight="bold" color="white" className="text-[18px]">
+                                                                {yearlyPkg.product.priceString}
+                                                            </Typography>
+                                                            <Typography variant="small" color="white" className="opacity-60 ml-0.5 text-[10px]">
+                                                                /yr
+                                                            </Typography>
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                );
+                                            })()}
                                         </View>
                                     )
                                 )}
@@ -392,9 +413,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     ) : (
                                         <View className="flex-row items-center">
                                             <Typography variant="subtitle" weight="bold" color="white">
-                                                {isPro ? 'Manage Subscription' : 'Subscribe Now'}
+                                                {isPro ? 'Manage Subscription' : 'Try Premium'}
                                             </Typography>
-                                            <ArrowRight size={20} color="white" className="ml-2" />
                                         </View>
                                     )}
                                 </TouchableOpacity>

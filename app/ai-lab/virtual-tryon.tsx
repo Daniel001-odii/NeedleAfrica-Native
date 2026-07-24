@@ -234,8 +234,8 @@ export default function VirtualTryOn() {
 
     // --- RENDER ORIGINAL AI WORKSPACE FOR PRO MEMBERS ---
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`} edges={['top']}>
-            <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}>
+        <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-gray-50'}`} edges={['top']}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center border-b ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-100'}`}>
                 <IconButton
                     icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
                     onPress={() => router.back()}
@@ -327,7 +327,7 @@ export default function VirtualTryOn() {
             {!resultImage && (
                 <View
                     style={{ paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 20 }}
-                    className={`pt-4 border-t ${isDark ? 'bg-zinc-950 border-white/5' : 'bg-white border-gray-100'}`}
+                    className={`pt-4 border-t ${isDark ? 'bg-black border-white/5' : 'bg-white border-gray-100'}`}
                 >
                     <Button
                         onPress={handleGenerate}

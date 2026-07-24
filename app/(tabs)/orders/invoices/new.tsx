@@ -183,7 +183,7 @@ export default function CreateInvoiceScreen() {
     const allSelected = customerOrders.length > 0 && customerOrders.every(o => selectedOrderIds.includes(o.id));
 
     return (
-        <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-white'}`}>
+        <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <View className={`px-6 py-4 flex-row items-center border-b ${isDark ? 'border-border-dark' : 'border-gray-50'}`}>
                 <IconButton
                     icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}

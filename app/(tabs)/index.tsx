@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -30,7 +30,7 @@ export default function Home() {
     const [balanceVisible, setBalanceVisible] = useState(true);
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
     const [catalogModalVisible, setCatalogModalVisible] = useState(false);
-    
+
     const { unreadCount } = useUnreadOrderRequests();
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
@@ -99,7 +99,7 @@ export default function Home() {
     const onDontShowCatalogModalAgain = async () => {
         try {
             await AsyncStorage.setItem('catalog_visibility_modal_dismissed', 'true');
-        } catch {}
+        } catch { }
         setCatalogModalVisible(false);
     };
 
@@ -173,6 +173,45 @@ export default function Home() {
         };
     }, [orders, customers]);
 
+    const daysSinceLastOrder = useMemo(() => {
+        const activeOrders = orders.filter(o => !o.deletedAt);
+        if (activeOrders.length === 0) return null;
+
+        const dates = activeOrders.map(o => o.createdAt ? new Date(o.createdAt).getTime() : 0).filter(d => d > 0);
+        if (dates.length === 0) return null;
+
+        const latestDate = Math.max(...dates);
+        const diffTime = Date.now() - latestDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    }, [orders]);
+
+    const nudgeContent = useMemo(() => {
+        if (daysSinceLastOrder === null || daysSinceLastOrder < 5) return null;
+
+        const name = user?.username ? user.username.split(" ")[0] : 'Tailor';
+
+        if (daysSinceLastOrder <= 7) {
+            return {
+                title: `Unleash your creativity, ${name}! 🧵`,
+                message: `It's been ${daysSinceLastOrder} days since your last order. A lot can happen in a week! Did you take on new client projects? Log them now to keep your queue organized.`,
+                action: "Record New Order"
+            };
+        } else if (daysSinceLastOrder <= 14) {
+            return {
+                title: `Let's stay on top of things, ${name}! 📈`,
+                message: `You haven't logged an order in ${daysSinceLastOrder} days. Recording orders helps you automatically track fabric photos, delivery dates, and pending payments.`,
+                action: "Add Recent Work"
+            };
+        } else {
+            return {
+                title: `Bring the magic back, ${name}! ✨`,
+                message: `It's been ${daysSinceLastOrder} days since your last entry. Consistent record-keeping is the secret to scaling your tailoring business. Let's get back in the flow!`,
+                action: "Start Recording"
+            };
+        }
+    }, [daysSinceLastOrder, user]);
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -204,10 +243,10 @@ export default function Home() {
                 <View className="flex-row justify-between items-center mb-6">
                     <View>
                         <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
-                          Hi, {user?.username.split(" ")[0] || 'Tailor'}{' '}
-                          <Animated.Text style={{ transform: [{ rotate: waveRotation }] }}>
-                            👋
-                          </Animated.Text>
+                            Hi, {user?.username.split(" ")[0] || 'Tailor'}{' '}
+                            <Animated.Text style={{ transform: [{ rotate: waveRotation }] }}>
+                                👋
+                            </Animated.Text>
                         </Typography>
                         <Typography variant="caption" weight="bold" color="gray">
                             {getGreeting()}.
@@ -215,6 +254,12 @@ export default function Home() {
                     </View>
 
                     <View className="flex-row items-center gap-2">
+                        <IconButton
+                            icon={<InfoCircle size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                            onPress={() => router.push('/(tabs)/profile/learn')}
+                            variant="ghost"
+                            className='bg-gray-300/20 p-3'
+                        />
                         <IconButton
                             icon={<Gallery size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
                             onPress={() => router.push('/extras/catalog-gallery')}
@@ -294,8 +339,60 @@ export default function Home() {
                     </View>
                 )}
 
+                {/* Business Analytics Announcement Banner */}
+                <TouchableOpacity
+                    onPress={() => {
+                        posthog.capture('home_analytics_banner_clicked');
+                        router.push('/(tabs)/profile/analytics');
+                    }}
+                >
 
-                {/* Learn Banner: Not sure how to use NeedleX? */}
+                    <View
+                        style={{
+                            borderRadius: 10,
+                            padding: 8,
+                            borderWidth: 1,
+                            height: 95,
+                            borderColor: isDark ? '#2C2C2E' : '#F3F4F6',
+                            shadowColor: '#000000',
+                            shadowOffset: { width: 0, height: 8 },
+                            shadowOpacity: isDark ? 0.3 : 0.06,
+                            shadowRadius: 16,
+                            elevation: 4,
+                            overflow: 'hidden'
+                        }}
+                        className="mb-6 bg-blue-500"
+                    >
+                        <View className="flex-row items-center relative z-10">
+                            <View className="flex-1 ml-3 pr-3">
+                                <View className="flex-row items-center mb-1.5">
+                                    <Typography variant="body" weight="bold" className={`text-[15px] text-white`}>
+                                        Business Analytics
+                                    </Typography>
+                                    <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
+                                        <Typography variant="small" weight="black" className="text-[8px] text-white uppercase tracking-tighter">NEW</Typography>
+                                    </View>
+                                </View>
+                                <Typography variant="small" className={`leading-[17px] text-white mb-3.5 text-[12px]`}>
+                                    Track your orders, delivery speed, and storefront views in one dashboard.
+                                </Typography>
+
+                            </View>
+
+                            <Image
+                                source={require('../../assets/images/analytics_banner.png')}
+                                style={{ width: 85, height: 85 }}
+                                resizeMode="contain"
+                            />
+                        </View>
+                        {/* Background glow lines */}
+                        <View className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/5 rounded-full" />
+                    </View>
+                </TouchableOpacity>
+
+
+                {/* Learn Banner: Not sure how to use NeedleX? - Temporarily Commented */}
+                {/* 
                 <TouchableOpacity
                     onPress={() => router.push('/(tabs)/profile/learn')}
                     activeOpacity={0.9}
@@ -332,16 +429,16 @@ export default function Home() {
                             </View>
                         </View>
 
-                        {/* Background Glow Effect */}
                         <View className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/10 rounded-full" />
                         <View className="absolute -top-16 -left-16 w-48 h-48 bg-white/5 rounded-full" />
                     </View>
                 </TouchableOpacity>
+                */}
 
                 {/* 2. Quick Actions Strip */}
                 <View className="mb-6">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4">
-                        <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_order' }); router.push('/(tabs)/orders/new'); }} />
+                        <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_order' }); posthog.capture('clicked_quick_create_order'); router.push('/(tabs)/orders/new'); }} />
                         <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'measure' }); router.push('/measurements/create'); }} />
                         <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_template' }); router.push('/measurement-templates/create'); }} />
                         <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'add_client' }); router.push('/(tabs)/customers/new'); }} />
@@ -349,7 +446,7 @@ export default function Home() {
                     </ScrollView>
                 </View>
 
-            
+
                 {/* Getting Started To-Do (shown when no clients or orders) */}
                 {
                     showTodo ? (

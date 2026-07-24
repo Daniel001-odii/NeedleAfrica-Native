@@ -319,7 +319,7 @@ export default function BusinessSettings() {
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
-            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-black border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />} onPress={() => router.push("/profile")} variant="ghost" />
                     <Typography variant="h3" weight="bold" className="ml-2">Catalog Storefront</Typography>
@@ -502,15 +502,15 @@ export default function BusinessSettings() {
                                         {userIsPro ? 'Allow anyone with your link to view your products' : 'Freemium: up to 3 items. Pro: unlimited catalog items'}
                                     </Typography>
                                 </View>
-                                    <Switch
-                                        value={isEnabled}
-                                        onValueChange={(val) => {
-                                            setIsEnabled(val);
-                                            posthog.capture('catalog_visibility_toggled', { enabled: val });
-                                        }}
-                                        trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
-                                        thumbColor="#FFFFFF"
-                                    />
+                                <Switch
+                                    value={isEnabled}
+                                    onValueChange={(val) => {
+                                        setIsEnabled(val);
+                                        posthog.capture('catalog_visibility_toggled', { enabled: val });
+                                    }}
+                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                    thumbColor="#FFFFFF"
+                                />
                             </View>
                             <View className="p-4 flex-row items-center justify-between">
                                 <View className="flex-1 mr-4">
@@ -626,8 +626,8 @@ export default function BusinessSettings() {
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowWebView(false)}
             >
-                <SafeAreaView className={`flex-1 ${isDark ? 'bg-zinc-950' : 'bg-white'}`} edges={['top']}>
-                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-100'}`}>
+                <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`} edges={['top']}>
+                    <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDark ? 'bg-black border-white/10' : 'bg-white border-gray-100'}`}>
                         <View className="flex-row items-center">
                             <IconButton
                                 icon={<CloseCircle size={24} color={isDark ? 'white' : 'black'} />}

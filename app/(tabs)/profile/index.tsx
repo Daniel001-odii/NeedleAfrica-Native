@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Constants from 'expo-constants';
-import { View, ScrollView, Image, Pressable, Linking, RefreshControl } from 'react-native';
+import { View, ScrollView, Image, Pressable, Linking, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import { Platform } from 'react-native';
@@ -61,29 +61,42 @@ export default function Profile() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
             >
                 {/* User Info Card */}
-                <View className={`flex-row items-center mb-6`}>
-                    {user?.profilePicture ? (
-                        <Image
-                            source={{ uri: user.profilePicture }}
-                            className="w-16 h-16 rounded-full mr-4 border border-gray-100"
-                        />
-                    ) : (
-                        <View className={`w-16 h-16 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/50' : 'bg-blue-50'} rounded-full`}>
-                            <Typography variant="h2" weight="bold" color="primary">
-                                {(user?.username || 'J')[0].toUpperCase()}
-                                {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
+                <View className="flex-row items-center justify-between mb-6">
+                    <View className="flex-row items-center flex-1">
+                        {user?.profilePicture ? (
+                            <Image
+                                source={{ uri: user.profilePicture }}
+                                className="w-16 h-16 rounded-full mr-4 border border-gray-100"
+                            />
+                        ) : (
+                            <View className={`w-16 h-16 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/50' : 'bg-blue-50'} rounded-full`}>
+                                <Typography variant="h2" weight="bold" color="primary">
+                                    {(user?.username || 'J')[0].toUpperCase()}
+                                    {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
+                                </Typography>
+                            </View>
+                        )}
+                        <View className="flex-1 pr-2">
+                            <Typography variant="h3" weight="bold" className="mb-0.5" numberOfLines={1}>{user?.username || 'Jane Doe'}</Typography>
+                            <Typography variant="caption" color="primary" weight="medium" className="mb-1" numberOfLines={1}>
+                                {user?.businessType} • {user?.businessName || 'Workspace'}
+                            </Typography>
+                            <Typography variant="caption" color="gray" className="text-[11px]" numberOfLines={1}>
+                                {user?.email || 'jane@needleafrica.com'}
                             </Typography>
                         </View>
-                    )}
-                    <View className="flex-1">
-                        <Typography variant="h3" weight="bold" className="mb-0.5">{user?.username || 'Jane Doe'}</Typography>
-                        <Typography variant="caption" color="primary" weight="medium" className="mb-1">
-                            {user?.businessType} • {user?.businessName || 'Workspace'}
-                        </Typography>
-                        <Typography variant="caption" color="gray" className="text-[11px]">
-                            {user?.email || 'jane@needleafrica.com'}
-                        </Typography>
                     </View>
+
+                    {!userIsPro && (
+                        <TouchableOpacity
+                            onPress={() => setIsSubscriptionModalVisible(true)}
+                            className="bg-indigo-500 dark:bg-indigo-600 px-4 py-2 rounded-full flex-row items-center justify-center border border-indigo-400/20"
+                            activeOpacity={0.8}
+                        >
+                            <Crown size={14} color="white" variant="Bold" className="mr-1" />
+                            <Typography variant="small" weight="bold" color="white" className="text-[11px] uppercase tracking-wider">Unlock PRO</Typography>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {/* Account Section */}
@@ -136,7 +149,7 @@ export default function Profile() {
                         <ProfileItem
                             icon={<Chart2 size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Business Analytics"
-                            subtitle="Coming soon"
+                            onPress={() => router.push('/(tabs)/profile/analytics')}
                             isDark={isDark}
                             isLast
                         />
@@ -174,7 +187,7 @@ export default function Profile() {
                         <ProfileItem
                             icon={<MessageQuestion size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Help & Support"
-                            onPress={() => Linking.openURL('https://twitter.com/needleafrica')}
+                            onPress={() => Linking.openURL('https://wa.me/2347076626371')}
                             isDark={isDark}
                         />
                         <ProfileItem

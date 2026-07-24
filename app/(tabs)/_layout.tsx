@@ -11,7 +11,37 @@ import { useCatalog } from '../../hooks/useCatalog';
 import { useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { usePostHog } from 'posthog-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
+const TabIndicator = () => (
+    <View
+        style={{
+            position: 'absolute',
+            top: -10,
+            alignItems: 'center',
+            width: 80,
+            height: 48,
+        }}
+        pointerEvents="none"
+    >
+        {/* <LinearGradient
+            colors={['rgba(255, 86, 120, 0.22)', 'rgba(255, 86, 120, 0)']}
+            style={{
+                position: 'absolute',
+                top: 0,
+                width: 70,
+                height: 35,
+            }}
+        /> */}
+        <View
+            style={{
+                width: 70,
+                height: 1,
+                backgroundColor: '#FF5678',
+            }}
+        />
+    </View>
+);
 
 const TAB_BAR_HEIGHT = 5;
 
@@ -53,7 +83,7 @@ export default function TabLayout() {
                 <Tabs
                     screenOptions={{
                         headerShown: false,
-                        tabBarActiveTintColor: isDark ? '#FFFFFF' : '#1C1C1E',
+                        tabBarActiveTintColor: '#FF5678',
                         tabBarInactiveTintColor: isDark ? '#9CA3AF' : '#9CA3AF',
 
                         tabBarStyle: {
@@ -87,15 +117,18 @@ export default function TabLayout() {
                         options={{
                             title: 'Home',
                             tabBarIcon: ({ color, focused }) => (
-                                <View>
-                                    <Home size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
-                                    {totalUnread > 0 && (
-                                        <View className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full bg-red-500 border-2 border-white dark:border-black items-center justify-center px-0.5">
-                                            <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white', lineHeight: 11 }}>
-                                                {totalUnread > 99 ? '99+' : totalUnread}
-                                            </Text>
-                                        </View>
-                                    )}
+                                <View style={{ alignItems: 'center', justifyContent: 'center', width: 40, height: 30 }}>
+                                    {focused && <TabIndicator />}
+                                    <View>
+                                        <Home size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                        {totalUnread > 0 && (
+                                            <View className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full bg-red-500 border-2 border-white dark:border-black items-center justify-center px-0.5">
+                                                <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white', lineHeight: 11 }}>
+                                                    {totalUnread > 99 ? '99+' : totalUnread}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
                                 </View>
                             ),
                         }}
@@ -106,7 +139,10 @@ export default function TabLayout() {
                         options={{
                             title: 'Customers',
                             tabBarIcon: ({ color, focused }) => (
-                                <People size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                <View style={{ alignItems: 'center', justifyContent: 'center', width: 40, height: 30 }}>
+                                    {focused && <TabIndicator />}
+                                    <People size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                </View>
                             ),
                         }}
                     />
@@ -116,7 +152,10 @@ export default function TabLayout() {
                         options={{
                             title: 'Orders',
                             tabBarIcon: ({ color, focused }) => (
-                                <Calendar size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                <View style={{ alignItems: 'center', justifyContent: 'center', width: 40, height: 30 }}>
+                                    {focused && <TabIndicator />}
+                                    <Calendar size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                </View>
                             ),
                         }}
                     />
@@ -126,9 +165,12 @@ export default function TabLayout() {
                         options={{
                             title: 'Extras',
                             tabBarIcon: ({ color, focused }) => (
-                                <Svg width="22" height="22" viewBox="0 0 24 24">
-                                    <Path fill={focused ? color : 'none'} stroke={color} stroke-width="1.5" d="M15.5 6.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm6.5 11a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm-13 0a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z" />
-                                </Svg>
+                                <View style={{ alignItems: 'center', justifyContent: 'center', width: 40, height: 30 }}>
+                                    {focused && <TabIndicator />}
+                                    <Svg width="22" height="22" viewBox="0 0 24 24">
+                                        <Path fill={focused ? color : 'none'} stroke={color} strokeWidth="1.5" d="M15.5 6.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm6.5 11a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Zm-13 0a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z" />
+                                    </Svg>
+                                </View>
                             ),
                         }}
                     />
@@ -138,19 +180,22 @@ export default function TabLayout() {
                         options={{
                             title: 'Profile',
                             tabBarIcon: ({ color, focused }) => (
-                                user?.profilePicture ? (
-                                    <Image
-                                        source={{ uri: user.profilePicture }}
-                                        style={{
-                                            width: 26,
-                                            height: 26,
-                                            borderRadius: 13,
-                                            opacity: focused ? 1 : 0.7
-                                        }}
-                                    />
-                                ) : (
-                                    <User size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
-                                )
+                                <View style={{ alignItems: 'center', justifyContent: 'center', width: 40, height: 30 }}>
+                                    {focused && <TabIndicator />}
+                                    {user?.profilePicture ? (
+                                        <Image
+                                            source={{ uri: user.profilePicture }}
+                                            style={{
+                                                width: 26,
+                                                height: 26,
+                                                borderRadius: 13,
+                                                opacity: focused ? 1 : 0.7
+                                            }}
+                                        />
+                                    ) : (
+                                        <User size={24} color={color as string} variant={focused ? 'Bold' : 'Linear'} />
+                                    )}
+                                </View>
                             ),
                         }}
                     />

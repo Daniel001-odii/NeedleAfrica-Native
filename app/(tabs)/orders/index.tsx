@@ -254,7 +254,7 @@ export default function Orders() {
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
 
-            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-black' : 'bg-white'}`}>
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center">

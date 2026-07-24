@@ -55,6 +55,16 @@ export default function NewOrder() {
     const [showCustomerModal, setShowCustomerModal] = useState(true);
     const [customerSearch, setCustomerSearch] = useState('');
 
+    React.useEffect(() => {
+        if (!customerSearch.trim()) return;
+
+        const timer = setTimeout(() => {
+            posthog.capture('order_client_searched', { query: customerSearch });
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [customerSearch]);
+
     const [dressType, setDressType] = useState('');
     const [notes, setNotes] = useState('');
     const [price, setPrice] = useState('');
@@ -516,6 +526,7 @@ export default function NewOrder() {
                             renderItem={({ item }) => (
                                 <Pressable
                                     onPress={() => {
+                                        posthog.capture('order_client_selected', { customer_id: item.id });
                                         setSelectedCustomer(item);
                                         setShowCustomerModal(false);
                                         setCustomerSearch('');
@@ -544,8 +555,9 @@ export default function NewOrder() {
                                     <Typography color="gray" className="text-center mb-4">No clients found</Typography>
                                     <Button
                                         onPress={() => {
+                                            posthog.capture('order_create_client_button_tapped');
                                             setShowCustomerModal(false);
-                                            router.push('/(tabs)/customers/new');
+                                            router.push('/(tabs)/customers/new?from=order');
                                         }}
                                         className={`h-12 px-6 rounded-full ${isDark ? 'bg-white' : 'bg-black'}`}
                                         textClassName={isDark ? 'text-black' : 'text-white'}

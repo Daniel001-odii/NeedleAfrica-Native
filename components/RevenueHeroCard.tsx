@@ -19,10 +19,10 @@ const RevenueHeroCard = ({
     formatCurrency: (amount: number) => string;
 }) => {
     return (
-        <View className="mb-6 relative">
+        <View className="mb-2 relative">
             <View
                 style={{
-                    borderRadius: 28,
+                    borderRadius: 10,
                     overflow: 'hidden',
                     // backgroundColor: isDark ? '#1C1C1E' : '#3B82F6',
                     backgroundColor: '#ff5678',

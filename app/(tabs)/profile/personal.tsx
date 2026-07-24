@@ -14,12 +14,12 @@ import PhoneInput from 'react-phone-number-input/react-native-input';
 
 // Convert local-format Nigerian phone (e.g. "08156074667") to E.164 ("+2348156074667").
 function toE164(raw: string): string {
-  if (!raw) return '';
-  if (raw.startsWith('+')) return raw;
-  if (/^0[789]\d{9}$/.test(raw)) {
-    return '+234' + raw.slice(1);
-  }
-  return raw;
+    if (!raw) return '';
+    if (raw.startsWith('+')) return raw;
+    if (/^0[789]\d{9}$/.test(raw)) {
+        return '+234' + raw.slice(1);
+    }
+    return raw;
 }
 
 const BUSINESS_TYPE_OPTIONS = [
@@ -76,7 +76,7 @@ export default function PersonalInformation() {
     // Verify current email state
     const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
     const [verifyEmailStep, setVerifyEmailStep] = useState<'send' | 'otp' | 'success'>('send');
-    
+
     // OTP State managed as an array of 6 digits
     const [otpArray, setOtpArray] = useState<string[]>(Array(6).fill(''));
     const otpCode = otpArray.join(''); // Derived state for submission compatibility
@@ -88,19 +88,19 @@ export default function PersonalInformation() {
 
     const handleOtpDigitChange = (text: string, index: number) => {
         const cleanText = text.replace(/\D/g, '');
-        
+
         // Handle code paste (if pasted text length is larger than 1)
         if (cleanText.length > 1) {
             const pastedDigits = cleanText.slice(0, 6).split('');
             const newOtp = [...otpArray];
-            
+
             // Distribute characters starting from current focused index
             pastedDigits.forEach((digit, i) => {
                 if (index + i < 6) {
                     newOtp[index + i] = digit;
                 }
             });
-            
+
             setOtpArray(newOtp);
             // Focus the next empty input or last input
             const nextFocusIndex = Math.min(index + pastedDigits.length, 5);
@@ -345,7 +345,7 @@ export default function PersonalInformation() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
 
                 {/* Header */}
-                <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-zinc-950 border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
+                <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between ${isDark ? 'bg-black border-b border-white/5' : 'bg-white border-b border-gray-50'}`}>
                     <View className="flex-row items-center">
                         <IconButton
                             icon={<ArrowLeft size={22} color={isDark ? 'white' : 'black'} />}
@@ -822,11 +822,10 @@ export default function PersonalInformation() {
                                                     <TextInput
                                                         key={index}
                                                         ref={(ref) => { otpRefs.current[index] = ref; }}
-                                                        className={`w-12 h-14 text-center text-[22px] font-bold rounded-xl border ${
-                                                            hasValue
+                                                        className={`w-12 h-14 text-center text-[22px] font-bold rounded-xl border ${hasValue
                                                                 ? (isDark ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-blue-500 bg-blue-50 text-gray-900')
                                                                 : (isDark ? 'border-white/10 bg-zinc-900 text-white' : 'border-gray-200 bg-gray-50 text-gray-900')
-                                                        }`}
+                                                            }`}
                                                         keyboardType="number-pad"
                                                         maxLength={2}
                                                         value={otpArray[index]}
@@ -921,7 +920,7 @@ export default function PersonalInformation() {
                                             <ProfileRowInput
                                                 label="Current"
                                                 value={email || ''}
-                                                onChangeText={() => {}}
+                                                onChangeText={() => { }}
                                                 placeholder="you@example.com"
                                                 isDark={isDark}
                                             />
@@ -974,11 +973,10 @@ export default function PersonalInformation() {
                                                     <TextInput
                                                         key={index}
                                                         ref={(ref) => { otpRefs.current[index] = ref; }}
-                                                        className={`w-12 h-14 text-center text-[22px] font-bold rounded-xl border ${
-                                                            hasValue
+                                                        className={`w-12 h-14 text-center text-[22px] font-bold rounded-xl border ${hasValue
                                                                 ? (isDark ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-blue-500 bg-blue-50 text-gray-900')
                                                                 : (isDark ? 'border-white/10 bg-zinc-900 text-white' : 'border-gray-200 bg-gray-50 text-gray-900')
-                                                        }`}
+                                                            }`}
                                                         keyboardType="number-pad"
                                                         maxLength={2} // Using 2 instead of 1 lets users overwrite values smoothly
                                                         value={otpArray[index]}
