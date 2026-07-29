@@ -11,7 +11,8 @@ import {
     Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useOrders } from '../../hooks/useOrders';
 import {
     ArrowLeft,
     Trash,
@@ -126,6 +127,12 @@ const getCurrencySymbol = (code: string) => {
 
 export default function PricingCalculatorScreen() {
     const router = useRouter();
+    const { orderId, styleName: paramStyleName, amount: paramAmount } = useLocalSearchParams<{
+        orderId?: string;
+        styleName?: string;
+        amount?: string;
+    }>();
+    const { updateOrder } = useOrders();
     const { isDark } = useTheme();
     const { user } = useAuth();
     const posthog = usePostHog();
@@ -279,10 +286,14 @@ export default function PricingCalculatorScreen() {
 
     const calcs = getCalculations();
 
+    const initialAmount = paramAmount ? parseFloat(paramAmount) : 0;
+    const initialProfit = initialAmount - calcs.totalCOGS;
+    const initialMargin = initialAmount > 0 ? (initialProfit / initialAmount) * 100 : 0;
+
     // Copy to clipboard
     const copyReportText = async () => {
         const text = `--- FASHION PRICING REPORT ---
-Garment Type: ${activePreset ? PRESETS[activePreset].name : 'Custom Design'}
+Garment Type: ${activePreset ? PRESETS[activePreset].name : (paramStyleName || 'Custom Design')}
 Currency: ${userCurrencyCode} (${currencySymbol})
 
 1. COST BREAKDOWN:
@@ -352,6 +363,29 @@ Calculated with Needle Africa Pricing Tool.`;
     };
     const incrementDtc = (amt: number) => {
         setDtcMultiplier(prev => Math.max(1, parseFloat((prev + amt).toFixed(1))));
+    };
+
+    const handleApplyPrice = async (targetPrice: number, label: string) => {
+        if (!orderId) return;
+        try {
+            const roundedPrice = Math.round(targetPrice);
+            await updateOrder(orderId, { amount: roundedPrice });
+            
+            Toast.show({
+                type: 'success',
+                text1: 'Order Price Updated!',
+                text2: `Successfully set order price to ${currencySymbol}${roundedPrice.toLocaleString()} (${label})`,
+            });
+            
+            router.replace('/(tabs)/orders');
+        } catch (error) {
+            console.error('Failed to update order price:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: 'Could not save the new price to the order.',
+            });
+        }
     };
 
     return (
@@ -658,6 +692,57 @@ Calculated with Needle Africa Pricing Tool.`;
                         </View>
                     </View>
 
+                    {/* Order Price Analysis Comparison Card */}
+                    {initialAmount > 0 && (
+                        <View className={`p-5 mb-6 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-150'} shadow-sm`}>
+                            <Typography variant="subtitle" weight="bold" className="mb-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                Order Price Analysis
+                            </Typography>
+                            <Typography variant="small" color="gray" className="mb-4">
+                                Analysis for the set price of your order: <Typography weight="bold" className={isDark ? 'text-white' : 'text-zinc-900'}>"{paramStyleName || 'Garment'}"</Typography>.
+                            </Typography>
+
+                            <View className="flex-row justify-between items-center mb-4">
+                                <View>
+                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Order Price</Typography>
+                                    <Typography variant="h2" weight="bold" className="text-zinc-900 dark:text-white">
+                                        {currencySymbol}{initialAmount.toLocaleString()}
+                                    </Typography>
+                                </View>
+                                <View className="items-end">
+                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Estimated Profit</Typography>
+                                    <Typography variant="h2" weight="bold" className={initialProfit >= 0 ? 'text-green-500' : 'text-red-500'}>
+                                        {initialProfit >= 0 ? '+' : ''}{currencySymbol}{initialProfit.toFixed(2)}
+                                    </Typography>
+                                </View>
+                            </View>
+
+                            <View className="flex-row justify-between items-center mb-4">
+                                <View>
+                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Profit Margin</Typography>
+                                    <Typography variant="body" weight="bold" className={initialMargin >= 50 ? 'text-green-500' : (initialMargin >= 20 ? 'text-yellow-500' : 'text-red-500')}>
+                                        {initialMargin.toFixed(0)}%
+                                    </Typography>
+                                </View>
+                                <View className="items-end">
+                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Cost of Goods (COGS)</Typography>
+                                    <Typography variant="body" weight="bold" className="text-zinc-900 dark:text-white">
+                                        {currencySymbol}{calcs.totalCOGS.toFixed(2)}
+                                    </Typography>
+                                </View>
+                            </View>
+
+                            {initialMargin < 30 && (
+                                <View className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-250/30 p-3 rounded-xl flex-row items-start">
+                                    <InfoCircle size={18} color="#EAB308" className="mt-0.5 mr-2" />
+                                    <Typography variant="small" className="text-yellow-750 dark:text-yellow-500 flex-1 leading-4">
+                                        Your profit margin is low ({initialMargin.toFixed(0)}%). Consider adjusting the order price or reducing material/labor costs to hit standard profit benchmarks.
+                                    </Typography>
+                                </View>
+                            )}
+                        </View>
+                    )}
+
                     {/* DYNAMIC VISUAL REPORT CARD - CAPTURABLE BY VIEW-SHOT */}
                     <Animated.View style={{ opacity: fadeAnim }}>
                         <View
@@ -674,7 +759,7 @@ Calculated with Needle Africa Pricing Tool.`;
                                 </View>
                                 <View className="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
                                     <Typography variant="small" weight="bold" className="text-zinc-800 dark:text-zinc-200 text-[10px]">
-                                        {activePreset ? PRESETS[activePreset].name : 'Custom Order'}
+                                        {activePreset ? PRESETS[activePreset].name : (paramStyleName || 'Custom Order')}
                                     </Typography>
                                 </View>
                             </View>
@@ -798,6 +883,71 @@ Calculated with Needle Africa Pricing Tool.`;
                             </Typography>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Apply Pricing to Order options */}
+                    {orderId && (
+                        <View className={`p-5 mt-6 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-150'} shadow-sm`}>
+                            <Typography variant="subtitle" weight="bold" className="mb-3 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                Apply Pricing to Order
+                            </Typography>
+                            <Typography variant="small" color="gray" className="mb-4">
+                                Update this order's price directly in your database using one of the calculated pricing models.
+                            </Typography>
+
+                            <View className="gap-3">
+                                <TouchableOpacity
+                                    onPress={() => handleApplyPrice(calcs.dtcPrice, 'Retail (DTC)')}
+                                    className="flex-row justify-between items-center p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 active:bg-blue-500/25"
+                                >
+                                    <View>
+                                        <Typography variant="body" weight="bold" className="text-blue-600 dark:text-blue-400">
+                                            Apply Retail (DTC)
+                                        </Typography>
+                                        <Typography variant="small" color="gray" className="mt-0.5">
+                                            Recommended markup ({dtcMultiplier}x)
+                                        </Typography>
+                                    </View>
+                                    <Typography variant="body" weight="extrabold" className="text-blue-600 dark:text-blue-450">
+                                        {currencySymbol}{calcs.dtcPrice.toFixed(2)}
+                                    </Typography>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => handleApplyPrice(calcs.wholesalePrice, 'Wholesale')}
+                                    className="flex-row justify-between items-center p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 active:bg-orange-500/25"
+                                >
+                                    <View>
+                                        <Typography variant="body" weight="bold" className="text-orange-600 dark:text-orange-400">
+                                            Apply Wholesale
+                                        </Typography>
+                                        <Typography variant="small" color="gray" className="mt-0.5">
+                                            Bulk purchase markup ({wholesaleMultiplier}x)
+                                        </Typography>
+                                    </View>
+                                    <Typography variant="body" weight="extrabold" className="text-orange-600 dark:text-orange-450">
+                                        {currencySymbol}{calcs.wholesalePrice.toFixed(2)}
+                                    </Typography>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => handleApplyPrice(calcs.standardRetailPrice, 'Traditional Retail')}
+                                    className="flex-row justify-between items-center p-4 rounded-xl bg-zinc-500/10 border border-zinc-550/20 active:bg-zinc-500/25"
+                                >
+                                    <View>
+                                        <Typography variant="body" weight="bold" className="text-zinc-700 dark:text-zinc-300">
+                                            Apply Traditional Retail
+                                        </Typography>
+                                        <Typography variant="small" color="gray" className="mt-0.5">
+                                            Wholesale x 2.2 markup
+                                        </Typography>
+                                    </View>
+                                    <Typography variant="body" weight="extrabold" className="text-zinc-700 dark:text-zinc-300">
+                                        {currencySymbol}{calcs.standardRetailPrice.toFixed(2)}
+                                    </Typography>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
 
                 </ScrollView>
             </KeyboardAvoidingView>

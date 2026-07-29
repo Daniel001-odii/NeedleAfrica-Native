@@ -17,14 +17,14 @@ const TabIndicator = () => (
     <View
         style={{
             position: 'absolute',
-            top: -10,
+            top: -12,
             alignItems: 'center',
             width: 80,
             height: 48,
         }}
         pointerEvents="none"
     >
-        {/* <LinearGradient
+        <LinearGradient
             colors={['rgba(255, 86, 120, 0.22)', 'rgba(255, 86, 120, 0)']}
             style={{
                 position: 'absolute',
@@ -32,11 +32,11 @@ const TabIndicator = () => (
                 width: 70,
                 height: 35,
             }}
-        /> */}
+        />
         <View
             style={{
                 width: 70,
-                height: 1,
+                height: 2,
                 backgroundColor: '#FF5678',
             }}
         />

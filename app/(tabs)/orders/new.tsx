@@ -16,6 +16,8 @@ import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useSync } from '../../../hooks/useSync';
 import { ResourceLimitModal } from '../../../components/ResourceLimitModal';
+import { PricingCalculatorPromptModal } from '../../../components/PricingCalculatorPromptModal';
+import { QuickCreateCustomerModal } from '../../../components/QuickCreateCustomerModal';
 import { Modal, FlatList } from 'react-native';
 import { SearchNormal1, CloseCircle as CloseCircleIcon, User } from 'iconsax-react-native';
 import { uploadOrderImages } from '../../../services/ImageUploadService';
@@ -39,6 +41,9 @@ export default function NewOrder() {
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
 
     const [showLimitModal, setShowLimitModal] = useState(false);
+    const [showPricingModal, setShowPricingModal] = useState(false);
+    const [showQuickCustomerModal, setShowQuickCustomerModal] = useState(false);
+    const [createdOrderDetails, setCreatedOrderDetails] = useState<{ id: string; styleName: string; amount: number } | null>(null);
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
@@ -98,14 +103,14 @@ export default function NewOrder() {
     };
 
     React.useEffect(() => {
-        if (customerId && customers.length > 0) {
+        if (customerId && customers.length > 0 && !selectedCustomer) {
             const preSelected = customers.find(c => c.id === customerId);
             if (preSelected) {
                 setSelectedCustomer(preSelected);
                 setShowCustomerModal(false);
             }
         }
-    }, [customerId, customers]);
+    }, [customerId, customers, selectedCustomer]);
 
     const filteredCustomers = customers.filter(c =>
         (c.fullName || '').toLowerCase().includes(customerSearch.toLowerCase())
@@ -149,7 +154,7 @@ export default function NewOrder() {
                 uploadedImages = await uploadOrderImages(fabricImage, styleImage);
             }
 
-            await addOrder({
+            const createdOrder = await addOrder({
                 customerId: selectedCustomer.id,
                 styleName: dressType,
                 amount: parseInt(price.replace(/,/g, '')) || 0,
@@ -172,7 +177,17 @@ export default function NewOrder() {
             });
 
             Toast.show({ type: 'success', text1: 'Order created!' });
-            router.replace('/(tabs)/orders');
+
+            if (createdOrder) {
+                setCreatedOrderDetails({
+                    id: createdOrder.id,
+                    styleName: dressType,
+                    amount: parseInt(price.replace(/,/g, '')) || 0,
+                });
+                setShowPricingModal(true);
+            } else {
+                router.replace('/(tabs)/orders');
+            }
         } catch (error) {
             console.error('Failed to create order:', error);
             Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to create order' });
@@ -508,7 +523,7 @@ export default function NewOrder() {
                             </TouchableOpacity>
                         </View>
 
-                        <Surface variant="white" className={`flex-row items-center px-4 h-12 mb-6 ${isDark ? 'bg-white/5' : 'bg-black/5'}`} rounded="xl">
+                        <Surface variant="white" className={`flex-row items-center px-4 h-12 mb-4 ${isDark ? 'bg-white/5' : 'bg-black/5'}`} rounded="xl">
                             <SearchNormal1 size={18} color="#8E8E93" />
                             <TextInput
                                 className={`ml-3 flex-1 font-semibold text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}
@@ -518,6 +533,20 @@ export default function NewOrder() {
                                 onChangeText={setCustomerSearch}
                             />
                         </Surface>
+
+                        <TouchableOpacity
+                            onPress={() => {
+                                posthog.capture('order_create_client_button_tapped');
+                                setShowCustomerModal(false);
+                                setShowQuickCustomerModal(true);
+                            }}
+                            className={`flex-row items-center justify-center h-12 mb-4 rounded-xl border border-dashed ${isDark ? 'border-zinc-700 bg-white/5' : 'border-zinc-300 bg-white'}`}
+                        >
+                            <Add size={18} color={isDark ? '#FFF' : '#71717A'} />
+                            <Typography weight="semibold" className="ml-2 text-zinc-650 dark:text-zinc-300">
+                                Create New Client
+                            </Typography>
+                        </TouchableOpacity>
 
                         <FlatList
                             data={filteredCustomers}
@@ -557,7 +586,7 @@ export default function NewOrder() {
                                         onPress={() => {
                                             posthog.capture('order_create_client_button_tapped');
                                             setShowCustomerModal(false);
-                                            router.push('/(tabs)/customers/new?from=order');
+                                            setShowQuickCustomerModal(true);
                                         }}
                                         className={`h-12 px-6 rounded-full ${isDark ? 'bg-white' : 'bg-black'}`}
                                         textClassName={isDark ? 'text-black' : 'text-white'}
@@ -588,6 +617,42 @@ export default function NewOrder() {
                 currentCount={limitModalData.currentCount}
                 limit={limitModalData.limit}
                 isOffline={!isOnline}
+            />
+
+            <PricingCalculatorPromptModal
+                visible={showPricingModal}
+                styleName={createdOrderDetails?.styleName}
+                onClose={() => {
+                    setShowPricingModal(false);
+                    router.replace('/(tabs)/orders');
+                }}
+                onConfirm={() => {
+                    setShowPricingModal(false);
+                    if (createdOrderDetails) {
+                        router.replace({
+                            pathname: '/extras/pricing-calculator',
+                            params: {
+                                orderId: createdOrderDetails.id,
+                                styleName: createdOrderDetails.styleName,
+                                amount: createdOrderDetails.amount.toString(),
+                            }
+                        } as any);
+                    } else {
+                        router.replace('/(tabs)/orders');
+                    }
+                }}
+            />
+
+            <QuickCreateCustomerModal
+                visible={showQuickCustomerModal}
+                onClose={() => {
+                    setShowQuickCustomerModal(false);
+                    setShowCustomerModal(true);
+                }}
+                onCustomerCreated={(customer) => {
+                    setSelectedCustomer(customer);
+                    setShowQuickCustomerModal(false);
+                }}
             />
         </View>
     );

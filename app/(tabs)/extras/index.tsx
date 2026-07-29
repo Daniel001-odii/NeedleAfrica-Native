@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, ImageBackground } from 'react-native';
+import { View, ScrollView, Pressable, Alert, ImageBackground, ImageSourcePropType } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
     DocumentText,
     PenTool,
@@ -28,12 +29,11 @@ export default function Extras() {
 
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
-                {/* Hero: Catalog Management */}
+                {/* Hero: Catalog Gallery */}
                 <View className="px-4 mt-6">
-                    <TouchableOpacity
-                        activeOpacity={0.9}
+                    <Pressable
                         onPress={() => router.push('/extras/catalog-gallery' as any)}
-                        className="overflow-hidden rounded-[32px]"
+                        className="overflow-hidden rounded-[28px]"
                         style={{ height: 180 }}
                     >
                         <ImageBackground
@@ -53,83 +53,126 @@ export default function Extras() {
                                 </View>
                             </View>
                         </ImageBackground>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
-                {/* Studio Tools Grid */}
+                {/* Creative Tools – Bento Grid */}
                 <SectionLabel label="Creative Tools" />
-                <View className="flex-row flex-wrap px-4 justify-between">
-                    <ToolCard
-                        icon={<DocumentText size={24} color="#10B981" variant="Bulk" />}
-                        title="Invoice Editor"
-                        desc="Billing and client receipts"
-                        onPress={() => router.push('/(tabs)/orders/invoices/settings' as any)}
-                    />
-                    <ToolCard
-                        icon={<Colorfilter size={24} color="#0D9488" variant="Bulk" />}
-                        title="Pantone Generator"
-                        desc="Fashion color palettes"
-                        onPress={() => router.push('/extras/pantone')}
-                    />
-                    <ToolCard
-                        icon={
-                            <View style={{ width: 28, height: 28, position: 'relative' }}>
-                                <PinterestIcon size={20} color="#E60023" style={{ position: 'absolute', top: 0, left: 0 }} />
-                                <View style={{
-                                    position: 'absolute',
-                                    bottom: -2,
-                                    right: -2,
-                                    backgroundColor: isDark ? '#27272a' : '#f9fafb',
-                                    borderRadius: 6,
-                                    padding: 2,
-                                    borderWidth: 1.5,
-                                    borderColor: isDark ? '#18181b' : '#ffffff'
-                                }}>
-                                    <UnsplashIcon size={11} color={isDark ? '#ffffff' : '#000000'} />
+                <View className="px-4" style={{ gap: 10 }}>
+                    {/* Row 1: equal */}
+                    <View className="flex-row" style={{ gap: 10 }}>
+                        <BentoCard
+                            icon={<DocumentText size={22} color="#ffffff" variant="Bulk" />}
+                            title="Invoice Editor"
+                            desc="Billing & client receipts"
+                            onPress={() => router.push('/(tabs)/orders/invoices/settings' as any)}
+                            bgImage={require('../../../assets/images/bento_invoice.jpg')}
+                            accent="violet"
+                            height={140}
+                            flex={1}
+                        />
+                        <BentoCard
+                            icon={<Colorfilter size={22} color="#ffffff" variant="Bulk" />}
+                            title="Pantone Generator"
+                            desc="Fashion color palettes"
+                            onPress={() => router.push('/extras/pantone')}
+                            bgImage={require('../../../assets/images/bento_pantone.png')}
+                            accent="rose"
+                            height={140}
+                            flex={1}
+                        />
+                    </View>
+
+                    {/* Row 2: wide + narrow */}
+                    <View className="flex-row" style={{ gap: 10 }}>
+                        <BentoCard
+                            icon={
+                                <View style={{ width: 28, height: 28, position: 'relative' }}>
+                                    <PinterestIcon size={20} color="#ffffff" style={{ position: 'absolute', top: 0, left: 0 }} />
+                                    <View style={{
+                                        position: 'absolute',
+                                        bottom: -2,
+                                        right: -2,
+                                        borderRadius: 6,
+                                        padding: 2,
+                                    }}>
+                                        <UnsplashIcon size={11} color="#ffffff" />
+                                    </View>
                                 </View>
-                            </View>
-                        }
-                        title="Style Inspo"
-                        desc="Browse fashion ideas"
-                        onPress={() => router.push('/extras/ideas' as any)}
-                    />
-                    <ToolCard
-                        icon={<PenTool size={24} color="#8B5CF6" variant="Bulk" />}
-                        title="Monogram"
-                        desc="Design your custom monogram"
-                        onPress={() => router.push('/extras/monogram' as any)}
-                    />
-                    <ToolCard
-                        icon={<Ruler size={24} color="#F97316" variant="Bulk" />}
-                        title="Templates Library"
-                        desc="Ready-made measurement presets"
-                        onPress={() => router.push('/extras/templates-library' as any)}
-                    />
-                    <ToolCard
-                        icon={<Calculator size={24} color="#3B82F6" variant="Bulk" />}
-                        title="Pricing Calculator"
-                        desc="Calculate fabric & labor costs"
-                        onPress={() => router.push('/extras/pricing-calculator' as any)}
-                    />
+                            }
+                            title="Style Inspo"
+                            desc="Browse Pinterest & Unsplash"
+                            onPress={() => router.push('/extras/ideas' as any)}
+                            bgImage={require('../../../assets/images/bento_style_inspo.png')}
+                            accent="red"
+                            height={125}
+                            flex={1.6}
+                        />
+                        <BentoCard
+                            icon={<PenTool size={22} color="#ffffff" variant="Bulk" />}
+                            title="Monogram"
+                            desc="Custom logos"
+                            onPress={() => router.push('/extras/monogram' as any)}
+                            bgImage={require('../../../assets/images/bento_monogram.png')}
+                            accent="purple"
+                            height={125}
+                            flex={1}
+                        />
+                    </View>
+
+                    {/* Row 3: narrow + wide (mirrors Row 2) */}
+                    <View className="flex-row" style={{ gap: 10 }}>
+                        <BentoCard
+                            icon={<Ruler size={22} color="#ffffff" variant="Bulk" />}
+                            title="Templates"
+                            desc="Measurement presets"
+                            onPress={() => router.push('/extras/templates-library' as any)}
+                            bgImage={require('../../../assets/images/bento_templates.png')}
+                            accent="orange"
+                            height={125}
+                            flex={1}
+                        />
+                        <BentoCard
+                            icon={<Calculator size={22} color="#ffffff" variant="Bulk" />}
+                            title="Pricing Calculator"
+                            desc="Fabric & labor costs"
+                            onPress={() => router.push('/extras/pricing-calculator' as any)}
+                            bgImage={require('../../../assets/images/bento_pricing.png')}
+                            accent="emerald"
+                            height={125}
+                            flex={1.6}
+                            tag="NEW"
+                        />
+                    </View>
                 </View>
 
-                {/* AI Labs Section */}
+                {/* AI Labs – Bento Grid */}
                 <SectionLabel label="AI Labs" showBadge />
-                <View className="flex-row flex-wrap px-4 justify-between">
-                    <ToolCard
-                        icon={<VirtualTryOnIcon size={24} color="#FF5678" />}
-                        title="Virtual Try-on"
-                        desc="Mock designs on client photos"
-                        onPress={() => handleAiPress('virtual-tryon')}
-                        infoText="Available on Pro plan"
-                    />
-                    <ToolCard
-                        icon={<PenTool size={24} color="#FDB022" variant="Bulk" />}
-                        title="Sketch to Design"
-                        desc="Convert sketches to realistic fabric"
-                        onPress={() => handleAiPress('sketch-to-design')}
-                        infoText="Available on Pro plan"
-                    />
+                <View className="px-4" style={{ gap: 10 }}>
+                    <View className="flex-row" style={{ gap: 10 }}>
+                        <BentoCard
+                            icon={<VirtualTryOnIcon size={22} color="#ffffff" />}
+                            title="Virtual Try-on"
+                            desc="Mock designs on client photos"
+                            onPress={() => handleAiPress('virtual-tryon')}
+                            infoText="Available on Pro plan"
+                            bgImage={require('../../../assets/images/bento_tryon.png')}
+                            accent="cyan"
+                            height={140}
+                            flex={1.4}
+                        />
+                        <BentoCard
+                            icon={<PenTool size={22} color="#ffffff" variant="Bulk" />}
+                            title="Sketch to Design"
+                            desc="Sketches → realistic fabric"
+                            onPress={() => handleAiPress('sketch-to-design')}
+                            infoText="Available on Pro plan"
+                            bgImage={require('../../../assets/images/bento_sketch.png')}
+                            accent="teal"
+                            height={140}
+                            flex={1}
+                        />
+                    </View>
                 </View>
 
             </ScrollView>
@@ -137,26 +180,11 @@ export default function Extras() {
     );
 }
 
-/** 
+/**
  * Design System Components
  */
 
-function QuickStat({ icon, label, value }: { icon: any, label: string, value: string }) {
-    const { isDark } = useTheme();
-    return (
-        <View className={`flex-1 flex-row items-center p-4 rounded-2xl ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white shadow-sm shadow-gray-100'}`}>
-            <View className={`w-8 h-8 items-center justify-center rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
-                {icon}
-            </View>
-            <View className="ml-3">
-                <Typography variant="caption" color="gray" weight="bold">{label}</Typography>
-                <Typography variant="body" weight="bold">{value}</Typography>
-            </View>
-        </View>
-    );
-}
-
-function SectionLabel({ label, showBadge }: { label: string, showBadge?: boolean }) {
+function SectionLabel({ label, showBadge }: { label: string; showBadge?: boolean }) {
     return (
         <View className="flex-row items-center mt-10 mb-4 ml-6">
             <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">
@@ -171,22 +199,111 @@ function SectionLabel({ label, showBadge }: { label: string, showBadge?: boolean
     );
 }
 
-function ToolCard({ icon, title, desc, onPress, infoText }: { icon: any, title: string, desc: string, onPress?: () => void, infoText?: string }) {
+function BentoCard({
+    icon,
+    title,
+    desc,
+    onPress,
+    infoText,
+    flex = 1,
+    height = 130,
+    tag,
+    bgImage,
+    accent = 'teal',
+}: {
+    icon: any;
+    title: string;
+    desc: string;
+    onPress?: () => void;
+    infoText?: string;
+    flex?: number;
+    height?: number;
+    tag?: string;
+    bgImage?: ImageSourcePropType;
+    accent?: 'teal' | 'rose' | 'red' | 'purple' | 'orange' | 'emerald' | 'violet' | 'cyan';
+}) {
     const { isDark } = useTheme();
-    const handlePress = () => onPress ? onPress() : Alert.alert(title, infoText);
+    const handlePress = () => (onPress ? onPress() : Alert.alert(title, infoText));
+
+    const rgb = {
+        teal: '20, 184, 166',
+        rose: '244, 63, 94',
+        red: '239, 68, 68',
+        purple: '168, 85, 247',
+        orange: '249, 115, 22',
+        emerald: '16, 185, 129',
+        violet: '99, 102, 241',
+        cyan: '6, 182, 212',
+    }[accent] || '99, 102, 241';
+
+    const iconWrapperBg = `rgba(${rgb}, ${isDark ? '0.15' : '0.12'})`;
+    const iconColor = `rgb(${rgb})`;
+    const bgIconColor = `rgba(${rgb}, ${isDark ? '0.075' : '0.055'})`;
+
+    const bgIconSize = 130;
+
+    let bgIcon = null;
+    if (title === 'Style Inspo') {
+        bgIcon = <PinterestIcon size={bgIconSize} color={bgIconColor} />;
+    } else if (React.isValidElement(icon)) {
+        bgIcon = React.cloneElement(icon as React.ReactElement<any>, {
+            size: bgIconSize,
+            color: bgIconColor,
+            variant: 'Bulk'
+        });
+    }
+
+    let adaptedIcon = icon;
+    if (title === 'Style Inspo') {
+        adaptedIcon = (
+            <View style={{ width: 28, height: 28, position: 'relative' }}>
+                <PinterestIcon size={20} color={iconColor} style={{ position: 'absolute', top: 0, left: 0 }} />
+                <View style={{
+                    position: 'absolute',
+                    bottom: -2,
+                    right: -2,
+                    borderRadius: 6,
+                    padding: 2,
+                }}>
+                    <UnsplashIcon size={11} color={iconColor} />
+                </View>
+            </View>
+        );
+    } else if (React.isValidElement(icon)) {
+        adaptedIcon = React.cloneElement(icon as React.ReactElement<any>, {
+            color: iconColor,
+        });
+    }
+
+    const content = (
+        <>
+            <View className="flex-row justify-between items-start z-10">
+                <View className="w-11 h-11 items-center justify-center rounded-2xl" style={{ backgroundColor: iconWrapperBg }}>
+                    {adaptedIcon}
+                </View>
+                {tag && (
+                    <View className="bg-blue-500 px-2 py-0.5 rounded-full">
+                        <Typography weight="bold" className="text-[9px] text-white">{tag}</Typography>
+                    </View>
+                )}
+            </View>
+            <View className="z-10">
+                <Typography weight="bold" variant="body" className={`mb-0.5 ${isDark ? 'text-white' : 'text-zinc-900'}`}>{title}</Typography>
+                <Typography variant="small" numberOfLines={2} className={isDark ? 'text-zinc-400' : 'text-zinc-550'}>{desc}</Typography>
+            </View>
+        </>
+    );
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={handlePress}
-            activeOpacity={0.7}
-            className={`w-[48%] mb-4 p-5 rounded-[32px] ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
+            style={{ flex, height, overflow: 'hidden' }}
+            className={`p-5 rounded-[24px] justify-between relative ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-100'}`}
         >
-            <View className={`w-12 h-12 items-center justify-center rounded-2xl mb-4 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
-                {icon}
+            <View style={{ position: 'absolute', bottom: -20, right: -20, transform: [{ rotate: '-10deg' }] }}>
+                {bgIcon}
             </View>
-            <Typography weight="bold" variant="body" className="mb-0.5">{title}</Typography>
-            <Typography variant="small" color="gray" numberOfLines={1}>{desc}</Typography>
-        </TouchableOpacity>
+            {content}
+        </Pressable>
     );
 }
-

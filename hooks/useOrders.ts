@@ -87,6 +87,8 @@ export function useOrders(customerId?: string) {
 
         // Trigger immediate sync to server
         sync().catch(console.error);
+
+        return newOrder;
     };
 
     const updateOrder = async (id: string, data: {
