@@ -179,10 +179,16 @@ export default function NewOrder() {
             Toast.show({ type: 'success', text1: 'Order created!' });
 
             if (createdOrder) {
+                const orderAmount = parseInt(price.replace(/,/g, '')) || 0;
                 setCreatedOrderDetails({
                     id: createdOrder.id,
                     styleName: dressType,
-                    amount: parseInt(price.replace(/,/g, '')) || 0,
+                    amount: orderAmount,
+                });
+                posthog.capture('pricing_calculator_prompt_shown', {
+                    order_id: createdOrder.id,
+                    style_name: dressType,
+                    amount: orderAmount
                 });
                 setShowPricingModal(true);
             } else {
@@ -623,12 +629,22 @@ export default function NewOrder() {
                 visible={showPricingModal}
                 styleName={createdOrderDetails?.styleName}
                 onClose={() => {
+                    if (createdOrderDetails) {
+                        posthog.capture('pricing_calculator_prompt_dismissed', {
+                            order_id: createdOrderDetails.id,
+                            style_name: createdOrderDetails.styleName
+                        });
+                    }
                     setShowPricingModal(false);
                     router.replace('/(tabs)/orders');
                 }}
                 onConfirm={() => {
-                    setShowPricingModal(false);
                     if (createdOrderDetails) {
+                        posthog.capture('pricing_calculator_prompt_confirmed', {
+                            order_id: createdOrderDetails.id,
+                            style_name: createdOrderDetails.styleName
+                        });
+                        setShowPricingModal(false);
                         router.replace({
                             pathname: '/extras/pricing-calculator',
                             params: {
@@ -638,6 +654,7 @@ export default function NewOrder() {
                             }
                         } as any);
                     } else {
+                        setShowPricingModal(false);
                         router.replace('/(tabs)/orders');
                     }
                 }}

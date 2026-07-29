@@ -138,6 +138,14 @@ export default function PricingCalculatorScreen() {
     const posthog = usePostHog();
     const reportRef = useRef<View>(null);
 
+    React.useEffect(() => {
+        posthog?.capture('pricing_calculator_opened', {
+            from_order: !!orderId,
+            order_id: orderId,
+            initial_amount: paramAmount ? parseFloat(paramAmount) : undefined
+        });
+    }, [orderId]);
+
     // Resolve user's set currency
     const userCurrencyCode = user?.currency || 'NGN';
     const currencySymbol = getCurrencySymbol(userCurrencyCode);
@@ -196,6 +204,7 @@ export default function PricingCalculatorScreen() {
 
     // Material CRUD
     const addMaterial = () => {
+        posthog?.capture('pricing_calculator_material_added');
         setMaterials(prev => [
             ...prev,
             {
@@ -222,11 +231,11 @@ export default function PricingCalculatorScreen() {
     };
 
     const toggleWastage = (id: string, currentWastage: number) => {
-        let next = 0.10;
-        if (currentWastage === 0.10) next = 0.15;
-        else if (currentWastage === 0.15) next = 0.20;
-        else if (currentWastage === 0.20) next = 0.00;
-        updateMaterial(id, 'wastage', next);
+        const nextWastage = currentWastage === 0.10 ? 0.15 : (currentWastage === 0.15 ? 0.20 : (currentWastage === 0.20 ? 0.00 : 0.10));
+        posthog?.capture('pricing_calculator_wastage_toggled', {
+            new_wastage: nextWastage
+        });
+        updateMaterial(id, 'wastage', nextWastage);
     };
 
     // Calculations
@@ -370,6 +379,13 @@ Calculated with Needle Africa Pricing Tool.`;
         try {
             const roundedPrice = Math.round(targetPrice);
             await updateOrder(orderId, { amount: roundedPrice });
+            
+            posthog?.capture('pricing_calculator_applied_to_order', {
+                order_id: orderId,
+                applied_price: roundedPrice,
+                price_type: label,
+                original_price: paramAmount ? parseFloat(paramAmount) : undefined
+            });
             
             Toast.show({
                 type: 'success',
@@ -524,7 +540,10 @@ Calculated with Needle Africa Pricing Tool.`;
                         {/* Mode toggle */}
                         <View className="flex-row gap-2 mb-5 bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl">
                             <Pressable
-                                onPress={() => setLaborMode('fixed')}
+                                onPress={() => {
+                                    posthog?.capture('pricing_calculator_labor_mode_toggled', { mode: 'fixed' });
+                                    setLaborMode('fixed');
+                                }}
                                 className={`flex-1 py-2 rounded-lg ${laborMode === 'fixed' ? 'bg-white dark:bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
                             >
                                 <Typography weight="bold" variant="caption" className={`text-center ${laborMode === 'fixed' ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
@@ -532,7 +551,10 @@ Calculated with Needle Africa Pricing Tool.`;
                                 </Typography>
                             </Pressable>
                             <Pressable
-                                onPress={() => setLaborMode('hourly')}
+                                onPress={() => {
+                                    posthog?.capture('pricing_calculator_labor_mode_toggled', { mode: 'hourly' });
+                                    setLaborMode('hourly');
+                                }}
                                 className={`flex-1 py-2 rounded-lg ${laborMode === 'hourly' ? 'bg-white dark:bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
                             >
                                 <Typography weight="bold" variant="caption" className={`text-center ${laborMode === 'hourly' ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
