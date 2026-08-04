@@ -123,21 +123,29 @@ export function useSubscription(): UseSubscriptionReturn {
     currentCount: number
   ): boolean => {
     if (!status || status.plan !== 'FREE') return false;
-    const { allowed } = subscriptionService.checkFreeTierLimits(resource, currentCount);
+    const referralCount = user?.activatedReferralCount || 0;
+    const { allowed } = subscriptionService.checkFreeTierLimits(resource, currentCount, referralCount);
     return !allowed;
-  }, [status]);
+  }, [status, user]);
 
   const getLimitForResource = useCallback((
     resource: 'orders' | 'customers' | 'templates' | 'invoices'
   ): number => {
-    const limits = {
+    const baseLimits = {
       orders: 5,
       customers: 5,
       templates: 3,
       invoices: 5,
     };
-    return limits[resource];
-  }, []);
+    const bonus = {
+      orders: 5,
+      customers: 5,
+      templates: 3,
+      invoices: 5,
+    };
+    const referralCount = user?.activatedReferralCount || 0;
+    return baseLimits[resource] + (referralCount * bonus[resource]);
+  }, [user]);
 
   const isFeatureAvailable = useCallback((feature: string): { available: boolean; disabled: boolean; upgradeMessage?: string } => {
     if (!status) {

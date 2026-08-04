@@ -7,6 +7,7 @@ import { Surface } from './ui/Surface';
 import { useRevenueCat } from '../hooks/useRevenueCat';
 import { SubscriptionPaywall } from './SubscriptionPaywall';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FeatureGuardProps {
   children: React.ReactNode;
@@ -98,6 +99,7 @@ interface LimitGuardProps {
  */
 export function LimitGuard({ children, resource, currentCount }: LimitGuardProps) {
   const { isPro } = useRevenueCat();
+  const { user } = useAuth();
   const router = useRouter();
   const [showPaywall, setShowPaywall] = useState(false);
   const { isDark } = useTheme();
@@ -107,15 +109,22 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
     return <>{children}</>;
   }
 
-  // Define free tier limits
-  const limits = {
+  // Define free tier limits including referral bonuses
+  const baseLimits = {
+    orders: 5,
+    customers: 5,
+    templates: 3,
+    invoices: 5,
+  };
+  const bonus = {
     orders: 5,
     customers: 5,
     templates: 3,
     invoices: 5,
   };
 
-  const limit = limits[resource];
+  const referralCount = user?.activatedReferralCount || 0;
+  const limit = baseLimits[resource] + (referralCount * bonus[resource]);
   const hasReached = currentCount >= limit;
 
   if (!hasReached) {

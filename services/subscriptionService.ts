@@ -193,16 +193,24 @@ class SubscriptionService {
    */
   checkFreeTierLimits(
     resource: 'orders' | 'customers' | 'templates' | 'invoices',
-    currentCount: number
+    currentCount: number,
+    referralCount: number = 0
   ): { allowed: boolean; limit: number } {
-    const limits = {
-      orders: 10,
-      customers: 10,
+    const baseLimits = {
+      orders: 5,
+      customers: 5,
       templates: 3,
-      invoices: 10,
+      invoices: 5,
     };
 
-    const limit = limits[resource];
+    const bonus = {
+      orders: 5,
+      customers: 5,
+      templates: 3,
+      invoices: 5,
+    };
+
+    const limit = baseLimits[resource] + (referralCount * bonus[resource]);
     return {
       allowed: currentCount < limit,
       limit,

@@ -1,11 +1,13 @@
 import { Stack } from 'expo-router';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function ProfileLayout() {
+    const { isDark } = useTheme();
     return (
         <Stack
             screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: 'white' },
+                contentStyle: { backgroundColor: isDark ? 'black' : 'white' },
                 animation: 'slide_from_right',
             }}
         >

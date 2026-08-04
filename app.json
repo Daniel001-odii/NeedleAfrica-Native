@@ -3,7 +3,7 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "1.9.99",
+    "version": "2.0.01",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -88,7 +88,9 @@
       [
         "expo-notifications",
         {
-          "sounds": ["./assets/sounds/notify_1.wav"]
+          "sounds": [
+            "./assets/sounds/notify_1.wav"
+          ]
         }
       ],
       "expo-localization",

@@ -1,4 +1,5 @@
 import { synchronize } from '@nozbe/watermelondb/sync';
+import { Q } from '@nozbe/watermelondb';
 import { database } from './index.native';
 import axiosInstance from '../../lib/axios';
 
@@ -48,6 +49,37 @@ export async function performSync() {
                     }
                 });
             });
+
+            // Filter out existing local records from 'created' to prevent diagnostic warning
+            for (const table of Object.keys(normalizedChanges)) {
+                const tableChanges = normalizedChanges[table];
+                const created = tableChanges.created || [];
+                if (created.length > 0) {
+                    const ids = created.map((r: any) => r.id);
+                    try {
+                        const collection = database.get(table);
+                        const existingRecords = await collection.query(Q.where('id', Q.oneOf(ids))).fetch();
+                        const existingIds = new Set(existingRecords.map((r: any) => r.id));
+
+                        if (existingIds.size > 0) {
+                            console.log(`[Sync] Found ${existingIds.size} records in table "${table}" that already exist locally. Moving from created to updated.`);
+                            const newCreated = [];
+                            const newUpdated = [...(tableChanges.updated || [])];
+                            for (const record of created) {
+                                if (existingIds.has(record.id)) {
+                                    newUpdated.push(record);
+                                } else {
+                                    newCreated.push(record);
+                                }
+                            }
+                            tableChanges.created = newCreated;
+                            tableChanges.updated = newUpdated;
+                        }
+                    } catch (err) {
+                        console.error(`[Sync] Pre-validation failed for table ${table}:`, err);
+                    }
+                }
+            }
 
             return { changes: normalizedChanges, timestamp };
         },

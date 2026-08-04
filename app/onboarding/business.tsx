@@ -75,6 +75,7 @@ export default function BusinessDetails() {
     const [noOfEmployees, setNoOfEmployees] = useState(state.noOfEmployees || '1-5');
     const [joinedFrom, setJoinedFrom] = useState(state.joinedFrom || '');
     const [otherDiscoverySource, setOtherDiscoverySource] = useState('');
+    const [referralCode, setReferralCode] = useState(state.referralCode || '');
 
     const [showTypeModal, setShowTypeModal] = useState(false);
     const [showHeardModal, setShowHeardModal] = useState(false);
@@ -106,8 +107,9 @@ export default function BusinessDetails() {
                 phoneNumber: phone || '',
                 country,
                 noOfEmployees,
-                joinedFrom: finalJoinedFrom
-            });
+                joinedFrom: finalJoinedFrom,
+                referredByCode: referralCode.trim() || undefined
+            } as any);
 
             updateState({
                 businessName: businessName.trim(),
@@ -117,12 +119,14 @@ export default function BusinessDetails() {
                 country,
                 noOfEmployees,
                 joinedFrom: finalJoinedFrom,
+                referralCode: referralCode.trim(),
                 step: 1
             });
 
             nextStep();
-        } catch (error) {
-            Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update profile' });
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.error || error.message || 'Failed to update profile';
+            Toast.show({ type: 'error', text1: 'Error', text2: errorMsg });
         } finally {
             setIsLoading(false);
         }
@@ -193,7 +197,7 @@ export default function BusinessDetails() {
                             {/* Currency Selection Inline */}
                             <TouchableOpacity
                                 onPress={() => setIsCurrencyModalVisible(true)}
-                                className="flex-row items-center justify-between px-4 py-4 active:bg-gray-50"
+                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 active:bg-gray-50"
                             >
                                 <Typography weight="semibold" className="text-gray-900 text-[15px]">
                                     Default Currency
@@ -205,6 +209,22 @@ export default function BusinessDetails() {
                                     <ArrowRight2 size={16} color="#9CA3AF" />
                                 </View>
                             </TouchableOpacity>
+
+                            {/* Referral Code (Optional) Inline */}
+                            <View className="flex-row items-center px-4 py-4">
+                                <Typography weight="semibold" className="text-gray-900 w-1/3 text-[15px]">
+                                    Referral Code
+                                </Typography>
+                                <TextInput
+                                    className="flex-1 text-right font-semibold text-gray-900 text-[16px]"
+                                    placeholder="Optional code"
+                                    placeholderTextColor="#D1D5DB"
+                                    value={referralCode}
+                                    onChangeText={setReferralCode}
+                                    autoCapitalize="characters"
+                                    returnKeyType="done"
+                                />
+                            </View>
 
                         </View>
                     </View>

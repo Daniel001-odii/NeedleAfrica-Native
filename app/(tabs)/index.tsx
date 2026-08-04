@@ -230,14 +230,15 @@ export default function Home() {
     const hasNoCatalog = !catalogLoading && !isActivated;
     const hasNoClients = !customersLoading && customers.length === 0;
     const hasNoOrders = !ordersLoading && orders.length === 0;
-    const showTodo = hasNoCatalog || hasNoClients || hasNoOrders;
+    const showTodo = hasNoClients && hasNoOrders;
 
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             <ScrollView
                 contentContainerClassName="p-5 pb-12"
                 showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={onRefresh} tintColor={isDark ? '#FFFFFF' : '#3B82F6'} />}
+                // refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={onRefresh} tintColor={isDark ? '#FFFFFF' : '#3B82F6'} />}
+                refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={isDark ? '#FFFFFF' : '#3B82F6'} />}
             >
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6">

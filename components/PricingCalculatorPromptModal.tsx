@@ -78,9 +78,9 @@ export function PricingCalculatorPromptModal({
 
             <TouchableOpacity
               onPress={onClose}
-              className="h-12 items-center justify-center rounded-full bg-gray-400"
+              className="h-12 items-center justify-center rounded-full bg-gray-500"
             >
-              <Typography variant="body" color="gray" weight="bold">
+              <Typography variant="body" className='text-white' weight="bold">
                 Maybe Later
               </Typography>
             </TouchableOpacity>

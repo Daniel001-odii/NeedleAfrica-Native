@@ -103,7 +103,7 @@ export default function Extras() {
                             title="Style Inspo"
                             desc="Browse Pinterest & Unsplash"
                             onPress={() => router.push('/extras/ideas' as any)}
-                            bgImage={require('../../../assets/images/bento_style_inspo.png')}
+                            // bgImage={require('../../../assets/images/bento_style_inspo.png')}
                             accent="red"
                             height={125}
                             flex={1.6}
@@ -113,7 +113,7 @@ export default function Extras() {
                             title="Monogram"
                             desc="Custom logos"
                             onPress={() => router.push('/extras/monogram' as any)}
-                            bgImage={require('../../../assets/images/bento_monogram.png')}
+                            // bgImage={require('../../../assets/images/bento_monogram.png')}
                             accent="purple"
                             height={125}
                             flex={1}
@@ -127,7 +127,7 @@ export default function Extras() {
                             title="Templates"
                             desc="Measurement presets"
                             onPress={() => router.push('/extras/templates-library' as any)}
-                            bgImage={require('../../../assets/images/bento_templates.png')}
+                            // bgImage={require('../../../assets/images/bento_templates.png')}
                             accent="orange"
                             height={125}
                             flex={1}
@@ -137,7 +137,7 @@ export default function Extras() {
                             title="Pricing Calculator"
                             desc="Fabric & labor costs"
                             onPress={() => router.push('/extras/pricing-calculator' as any)}
-                            bgImage={require('../../../assets/images/bento_pricing.png')}
+                            // bgImage={require('../../../assets/images/bento_pricing.png')}
                             accent="emerald"
                             height={125}
                             flex={1.6}
@@ -156,7 +156,7 @@ export default function Extras() {
                             desc="Mock designs on client photos"
                             onPress={() => handleAiPress('virtual-tryon')}
                             infoText="Available on Pro plan"
-                            bgImage={require('../../../assets/images/bento_tryon.png')}
+                            // bgImage={require('../../../assets/images/bento_tryon.png')}
                             accent="cyan"
                             height={140}
                             flex={1.4}
@@ -167,7 +167,7 @@ export default function Extras() {
                             desc="Sketches → realistic fabric"
                             onPress={() => handleAiPress('sketch-to-design')}
                             infoText="Available on Pro plan"
-                            bgImage={require('../../../assets/images/bento_sketch.png')}
+                            // bgImage={require('../../../assets/images/bento_sketch.png')}
                             accent="teal"
                             height={140}
                             flex={1}

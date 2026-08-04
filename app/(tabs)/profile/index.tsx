@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Constants from 'expo-constants';
-import { View, ScrollView, Image, Pressable, Linking, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, Pressable, Linking, RefreshControl, TouchableOpacity, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import { Platform } from 'react-native';
@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../../contexts/AuthContext';
 import { Typography } from '../../../components/ui/Typography';
 import { SubscriptionModal } from '../../../components/SubscriptionModal';
+import { ReferralModal } from '../../../components/ReferralModal';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import Svg, { Path } from 'react-native-svg';
@@ -34,6 +35,7 @@ export default function Profile() {
 
     const [refreshing, setRefreshing] = useState(false);
     const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+    const [isReferralModalVisible, setIsReferralModalVisible] = useState(false);
 
     const userIsPro = user?.subscriptionPlan === 'PRO' && user?.subscriptionStatus === 'ACTIVE';
     const planType = user?.currentPlanCode || 'monthly';
@@ -60,43 +62,61 @@ export default function Profile() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
             >
-                {/* User Info Card */}
-                <View className="flex-row items-center justify-between mb-6">
+                {/* Reduced User Info Card */}
+                <View className="flex-row items-center justify-between mb-5 mt-2 px-1">
                     <View className="flex-row items-center flex-1">
                         {user?.profilePicture ? (
                             <Image
                                 source={{ uri: user.profilePicture }}
-                                className="w-16 h-16 rounded-full mr-4 border border-gray-100"
+                                className="w-10 h-10 rounded-full mr-3"
                             />
                         ) : (
-                            <View className={`w-16 h-16 items-center justify-center mr-4 ${isDark ? 'bg-indigo-900/50' : 'bg-blue-50'} rounded-full`}>
-                                <Typography variant="h2" weight="bold" color="primary">
+                            <View className={`w-10 h-10 items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/50' : 'bg-blue-50'} rounded-full`}>
+                                <Typography variant="caption" weight="bold" color="primary" className="text-[12px]">
                                     {(user?.username || 'J')[0].toUpperCase()}
-                                    {(user?.username || 'D').split(' ')[1]?.[0]?.toUpperCase() || ''}
                                 </Typography>
                             </View>
                         )}
-                        <View className="flex-1 pr-2">
-                            <Typography variant="h3" weight="bold" className="mb-0.5" numberOfLines={1}>{user?.username || 'Jane Doe'}</Typography>
-                            <Typography variant="caption" color="primary" weight="medium" className="mb-1" numberOfLines={1}>
-                                {user?.businessType} • {user?.businessName || 'Workspace'}
+                        <View className="flex-1">
+                            <Typography variant="body" weight="bold" className="text-[14px]" numberOfLines={1}>
+                                {user?.username || 'Tailor Workspace'}
                             </Typography>
                             <Typography variant="caption" color="gray" className="text-[11px]" numberOfLines={1}>
-                                {user?.email || 'jane@needleafrica.com'}
+                                {user?.email || 'tailor@needleafrica.com'}
                             </Typography>
                         </View>
                     </View>
+                </View>
 
-                    {!userIsPro && (
-                        <TouchableOpacity
-                            onPress={() => setIsSubscriptionModalVisible(true)}
-                            className="bg-indigo-500 dark:bg-indigo-600 px-4 py-2 rounded-full flex-row items-center justify-center border border-indigo-400/20"
-                            activeOpacity={0.8}
+                {/* Referrals Hero Card (mimicking extras header layout) */}
+                <View className="mb-6">
+                    <Pressable
+                        onPress={() => setIsReferralModalVisible(true)}
+                        className="overflow-hidden rounded-[24px]"
+                        style={{ height: 160 }}
+                    >
+                        <ImageBackground
+                            source={require('../../../assets/images/referral_bg.png')}
+                            resizeMode="cover"
+                            className="w-full h-full"
                         >
-                            <Crown size={14} color="white" variant="Bold" className="mr-1" />
-                            <Typography variant="small" weight="bold" color="white" className="text-[11px] uppercase tracking-wider">Unlock PRO</Typography>
-                        </TouchableOpacity>
-                    )}
+                            <View className="w-full h-full justify-between p-5" style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}>
+                                <View className="w-4/5">
+                                    <Typography variant="subtitle" weight="bold" color="white" className="text-[16px] font-bold">
+                                        Refer & Earn Rewards
+                                    </Typography>
+                                    <Typography variant="small" className="text-white mt-1 text-[11.5px] leading-4">
+                                        Invite tailors, earn points, and unlock upgraded capacity limits for free!
+                                    </Typography>
+                                </View>
+                                <View className="bg-white self-start px-4 py-2 mt-4 rounded-full shadow-sm">
+                                    <Typography variant="small" weight="bold" className="text-black text-[11px]">
+                                        Invite Friends
+                                    </Typography>
+                                </View>
+                            </View>
+                        </ImageBackground>
+                    </Pressable>
                 </View>
 
                 {/* Account Section */}
@@ -144,6 +164,14 @@ export default function Profile() {
                             icon={<Gallery size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
                             title="Catalog-Website Settings"
                             onPress={() => router.push('/(tabs)/profile/catalog')}
+                            isDark={isDark}
+                        />
+                        <ProfileItem
+                            icon={<People size={20} color={isDark ? "#ff8fa3" : "#3b82f6"} variant="Bulk" />}
+                            title="Refer & Earn Rewards"
+                            badge={user?.referralPoints ? `${user.referralPoints} pts` : ''}
+                            badgeColor="bg-blue-600"
+                            onPress={() => setIsReferralModalVisible(true)}
                             isDark={isDark}
                         />
                         <ProfileItem
@@ -265,6 +293,11 @@ export default function Profile() {
             <SubscriptionModal
                 visible={isSubscriptionModalVisible}
                 onClose={() => setIsSubscriptionModalVisible(false)}
+            />
+
+            <ReferralModal
+                visible={isReferralModalVisible}
+                onClose={() => setIsReferralModalVisible(false)}
             />
         </View>
     );

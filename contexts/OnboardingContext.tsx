@@ -11,6 +11,7 @@ interface OnboardingState {
     country: string;
     noOfEmployees: string;
     joinedFrom: string;
+    referralCode: string;
     customer: {
         id?: string;
         name: string;
@@ -45,6 +46,7 @@ const initialState: OnboardingState = {
     country: 'Nigeria',
     noOfEmployees: '1-5',
     joinedFrom: '',
+    referralCode: '',
     customer: null,
     template: null,
     measurement: null,
