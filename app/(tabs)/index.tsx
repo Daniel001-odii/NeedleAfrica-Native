@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated } from 'react-native';
+import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
@@ -16,6 +16,7 @@ import RevenueHeroCard from '../../components/RevenueHeroCard';
 import { useCatalog } from '../../hooks/useCatalog';
 import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist';
 import { CatalogVisibilityModal } from '../../components/CatalogVisibilityModal';
+import { ReferralModal } from '../../components/ReferralModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
 import { usePostHog } from 'posthog-react-native';
@@ -30,6 +31,23 @@ export default function Home() {
     const [balanceVisible, setBalanceVisible] = useState(true);
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
     const [catalogModalVisible, setCatalogModalVisible] = useState(false);
+    const [isReferralModalVisible, setIsReferralModalVisible] = useState(false);
+    const [activeSlide, setActiveSlide] = useState(0);
+    const carouselRef = useRef<ScrollView>(null);
+
+    // Auto-scroll the promo banner carousel every 5 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const nextSlide = activeSlide === 0 ? 1 : 0;
+            const containerWidth = Dimensions.get('window').width - 32;
+            carouselRef.current?.scrollTo({
+                x: nextSlide * containerWidth,
+                animated: true
+            });
+            setActiveSlide(nextSlide);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [activeSlide]);
 
     const { unreadCount } = useUnreadOrderRequests();
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
@@ -340,57 +358,106 @@ export default function Home() {
                     </View>
                 )}
 
-                {/* Business Analytics Announcement Banner */}
-                <TouchableOpacity
-                    onPress={() => {
-                        posthog.capture('home_analytics_banner_clicked');
-                        router.push('/(tabs)/profile/analytics');
-                    }}
-                >
-
-                    <View
-                        style={{
-                            borderRadius: 10,
-                            padding: 8,
-                            borderWidth: 1,
-                            height: 95,
-                            borderColor: isDark ? '#2C2C2E' : '#F3F4F6',
-                            shadowColor: '#000000',
-                            shadowOffset: { width: 0, height: 8 },
-                            shadowOpacity: isDark ? 0.3 : 0.06,
-                            shadowRadius: 16,
-                            elevation: 4,
-                            overflow: 'hidden'
+                {/* Home Promo Carousel (Business Analytics & Refer & Earn) */}
+                <View className="mb-6 -mr-2">
+                    <ScrollView
+                        ref={carouselRef}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={(e) => {
+                            const contentOffsetX = e.nativeEvent.contentOffset.x;
+                            const idx = Math.round(contentOffsetX / (Dimensions.get('window').width - 32));
+                            setActiveSlide(idx);
                         }}
-                        className="mb-6 bg-blue-500"
+                        scrollEventThrottle={16}
+                        style={{ width: Dimensions.get('window').width - 32 }}
                     >
-                        <View className="flex-row items-center relative z-10">
-                            <View className="flex-1 ml-3 pr-3">
-                                <View className="flex-row items-center mb-1.5">
-                                    <Typography variant="body" weight="bold" className={`text-[15px] text-white`}>
-                                        Business Analytics
-                                    </Typography>
-                                    <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
-                                        <Typography variant="small" weight="black" className="text-[8px] text-white uppercase tracking-tighter">NEW</Typography>
+                        {/* Slide 1: Business Analytics */}
+                        <TouchableOpacity
+                            onPress={() => {
+                                posthog.capture('home_analytics_banner_clicked');
+                                router.push('/(tabs)/profile/analytics');
+                            }}
+                            activeOpacity={0.85}
+                            style={{ width: Dimensions.get('window').width - 32 }}
+                        >
+                            <View
+                                style={{
+                                    borderRadius: 24,
+                                    padding: 16,
+                                    height: 110,
+                                    overflow: 'hidden'
+                                }}
+                                className="bg-blue-600 mr-2 flex-row items-center justify-between"
+                            >
+                                <View className="flex-1 pr-2">
+                                    <View className="flex-row items-center mb-1">
+                                        <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                            Business Analytics
+                                        </Typography>
+                                        <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
+                                            <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">NEW</Typography>
+                                        </View>
                                     </View>
+                                    <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                        Track your orders, delivery speed, and storefront views in one dashboard.
+                                    </Typography>
                                 </View>
-                                <Typography variant="small" className={`leading-[17px] text-white mb-3.5 text-[12px]`}>
-                                    Track your orders, delivery speed, and storefront views in one dashboard.
-                                </Typography>
-
+                                <Image
+                                    source={require('../../assets/images/analytics_banner.png')}
+                                    style={{ width: 75, height: 75 }}
+                                    resizeMode="contain"
+                                />
                             </View>
+                        </TouchableOpacity>
 
-                            <Image
-                                source={require('../../assets/images/analytics_banner.png')}
-                                style={{ width: 85, height: 85 }}
-                                resizeMode="contain"
-                            />
-                        </View>
-                        {/* Background glow lines */}
-                        <View className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/5 rounded-full" />
+                        {/* Slide 2: Refer & Earn */}
+                        <TouchableOpacity
+                            onPress={() => {
+                                posthog.capture('home_referral_banner_clicked');
+                                setIsReferralModalVisible(true);
+                            }}
+                            activeOpacity={0.85}
+                            style={{ width: Dimensions.get('window').width - 32 }}
+                        >
+                            <View
+                                style={{
+                                    borderRadius: 24,
+                                    padding: 16,
+                                    height: 110,
+                                    overflow: 'hidden'
+                                }}
+                                className="bg-[#1C1C1E] dark:bg-[#1C1C1E] mr-2 flex-row items-center justify-between border border-white/5"
+                            >
+                                <View className="flex-1 pr-2">
+                                    <View className="flex-row items-center mb-1">
+                                        <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                            Refer & Earn Rewards
+                                        </Typography>
+                                        <View className="bg-white/20 px-2 py-0.5 rounded-full ml-2">
+                                            <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">BONUS</Typography>
+                                        </View>
+                                    </View>
+                                    <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                        Invite tailors, earn points, and unlock upgraded capacity limits for free!
+                                    </Typography>
+                                </View>
+                                <Image
+                                    source={require('../../assets/images/referral_bg.png')}
+                                    style={{ width: 75, height: 75, borderRadius: 16 }}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                        </TouchableOpacity>
+                    </ScrollView>
+
+                    {/* Pagination Dots */}
+                    <View className="flex-row justify-center items-center mt-3 gap-1.5">
+                        <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 0 ? 'bg-blue-600 w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
+                        <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 1 ? 'bg-[#ff5678] w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
                     </View>
-                </TouchableOpacity>
-
+                </View>
 
                 {/* Learn Banner: Not sure how to use NeedleX? - Temporarily Commented */}
                 {/* 
@@ -582,6 +649,10 @@ export default function Home() {
                 onClose={onDismissCatalogModal}
                 onSuccess={onDismissCatalogModal}
                 onDontShowAgain={onDontShowCatalogModalAgain}
+            />
+            <ReferralModal
+                visible={isReferralModalVisible}
+                onClose={() => setIsReferralModalVisible(false)}
             />
         </View>
     );
