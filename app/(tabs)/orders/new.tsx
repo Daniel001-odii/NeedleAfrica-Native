@@ -32,10 +32,10 @@ export default function NewOrder() {
     const { customers } = useCustomers();
     const { addOrder } = useOrders();
     const { canCreate, counts } = useResourceLimits();
-    const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { isDark } = useTheme();
     const { user } = useAuth();
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
     const posthog = usePostHog();
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
@@ -47,12 +47,11 @@ export default function NewOrder() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 10,
+        limit: 5,
         message: '',
         isAtLimit: false,
         isNearLimit: false,
     });
-    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const { customerId } = useLocalSearchParams<{ customerId: string }>();
 
@@ -134,9 +133,9 @@ export default function NewOrder() {
         }
 
         // Check resource limits for free tier
-        if (isFree) {
-            const limitCheck = canCreate('orders');
-            if (!limitCheck.allowed && !proceedAnyway) {
+        if (!isPro) {
+            const limitCheck = await canCreate('orders');
+            if (!limitCheck.allowed) {
                 setLimitModalData(limitCheck);
                 setShowLimitModal(true);
                 return;
@@ -609,20 +608,9 @@ export default function NewOrder() {
             <ResourceLimitModal
                 visible={showLimitModal}
                 onClose={() => setShowLimitModal(false)}
-                onUpgrade={() => {
-                    setShowLimitModal(false);
-                    router.push('/(tabs)/profile/subscription');
-                }}
-                onContinueAnyway={() => {
-                    setShowLimitModal(false);
-                    setProceedAnyway(true);
-                    // Small delay to let state update before trying again
-                    setTimeout(() => handleCreateOrder(), 100);
-                }}
                 resource="orders"
                 currentCount={limitModalData.currentCount}
                 limit={limitModalData.limit}
-                isOffline={!isOnline}
             />
 
             <PricingCalculatorPromptModal

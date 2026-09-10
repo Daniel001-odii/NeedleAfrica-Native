@@ -5,8 +5,11 @@ import { Typography } from './ui/Typography';
 import { Button } from './ui/Button';
 import { Surface } from './ui/Surface';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { useSync } from '../hooks/useSync';
+import { useResourceLimits } from '../hooks/useResourceLimits';
+import { ResourceLimitModal } from './ResourceLimitModal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
 import * as Contacts from 'expo-contacts/legacy';
 import Toast from 'react-native-toast-message';
@@ -24,15 +27,23 @@ export function QuickCreateCustomerModal({
   onCustomerCreated,
 }: QuickCreateCustomerModalProps) {
   const { isDark } = useTheme();
+  const { user } = useAuth();
+  const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
   const { addCustomer } = useCustomers();
   const { sync } = useSync();
+  const { canCreate } = useResourceLimits();
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [gender, setGender] = useState('female');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitModalData, setLimitModalData] = useState({
+    currentCount: 0,
+    limit: 5,
+  });
 
-  if (!visible) return null;
+  if (!visible && !showLimitModal) return null;
 
   const handleImportContact = async () => {
     try {
@@ -76,6 +87,18 @@ export function QuickCreateCustomerModal({
       return;
     }
 
+    if (!isPro) {
+      const limitCheck = await canCreate('customers');
+      if (!limitCheck.allowed) {
+        setLimitModalData({
+          currentCount: limitCheck.currentCount,
+          limit: limitCheck.limit,
+        });
+        setShowLimitModal(true);
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const customer = await addCustomer({ fullName: fullName.trim(), phoneNumber, gender });
@@ -102,12 +125,13 @@ export function QuickCreateCustomerModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <>
+      <Modal
+        visible={visible && !showLimitModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={onClose}
+      >
       <View className="flex-1 bg-black/60 justify-end">
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -222,5 +246,14 @@ export function QuickCreateCustomerModal({
         </KeyboardAvoidingView>
       </View>
     </Modal>
+
+    <ResourceLimitModal
+      visible={showLimitModal}
+      onClose={() => setShowLimitModal(false)}
+      resource="customers"
+      currentCount={limitModalData.currentCount}
+      limit={limitModalData.limit}
+    />
+  </>
   );
 }

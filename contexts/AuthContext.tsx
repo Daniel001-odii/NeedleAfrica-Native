@@ -53,6 +53,8 @@ interface User {
     accountName?: string;
     invoiceTerms?: string;
     styleInspoPreference?: 'unsplash' | 'pinterest';
+    activatedReferralCount?: number;
+    referralPoints?: number;
 }
 
 interface AuthContextType {

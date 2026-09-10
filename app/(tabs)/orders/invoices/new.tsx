@@ -31,9 +31,9 @@ export default function CreateInvoiceScreen() {
     const { orders, loading: loadingOrders } = useOrders();
     const { createInvoice } = useInvoices();
     const { canCreate } = useResourceLimits();
-    const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { confirm } = useConfirm();
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
     const posthog = usePostHog();
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
@@ -48,12 +48,11 @@ export default function CreateInvoiceScreen() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 10,
+        limit: 5,
         message: '',
         isAtLimit: false,
         isNearLimit: false,
     });
-    const [proceedAnyway, setProceedAnyway] = useState(false);
 
     const filteredCustomers = useMemo(() => {
         return customers.filter(c =>
@@ -128,9 +127,10 @@ export default function CreateInvoiceScreen() {
         }
 
         // Check resource limits for free tier
-        if (isFree) {
-            const limitCheck = canCreate('invoices');
-            if (!limitCheck.allowed && !proceedAnyway) {
+        const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+        if (!isPro) {
+            const limitCheck = await canCreate('invoices');
+            if (!limitCheck.allowed) {
                 setLimitModalData(limitCheck);
                 setShowLimitModal(true);
                 return;
@@ -410,19 +410,9 @@ export default function CreateInvoiceScreen() {
             <ResourceLimitModal
                 visible={showLimitModal}
                 onClose={() => setShowLimitModal(false)}
-                onUpgrade={() => {
-                    setShowLimitModal(false);
-                    router.push('/(tabs)/profile/subscription');
-                }}
-                onContinueAnyway={() => {
-                    setShowLimitModal(false);
-                    setProceedAnyway(true);
-                    setTimeout(() => handleCreate(), 100);
-                }}
                 resource="invoices"
                 currentCount={limitModalData.currentCount}
                 limit={limitModalData.limit}
-                isOffline={!isOnline}
             />
         </View>
     );

@@ -13,6 +13,7 @@ import { useSync } from '../../hooks/useSync';
 import { ResourceLimitModal } from '../../components/ResourceLimitModal';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { TypingText } from '../../components/ui/TypingText';
 import { usePostHog } from 'posthog-react-native';
 
@@ -21,9 +22,10 @@ export default function CreateTemplateScreen() {
     const { addTemplate } = useMeasurementTemplates();
     const { canCreate } = useResourceLimits();
     const { confirm } = useConfirm();
-    const { isFree } = useSubscription();
     const { isOnline } = useSync();
     const { isDark } = useTheme();
+    const { user } = useAuth();
+    const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
     const posthog = usePostHog();
 
     const [name, setName] = useState('');
@@ -33,12 +35,11 @@ export default function CreateTemplateScreen() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 5,
+        limit: 3,
         message: '',
         isAtLimit: false,
         isNearLimit: false,
     });
-    const [proceedAnyway, setProceedAnyway] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -79,9 +80,9 @@ export default function CreateTemplateScreen() {
             return;
         }
 
-        if (isFree) {
-            const limitCheck = canCreate('templates');
-            if (!limitCheck.allowed && !proceedAnyway) {
+        if (!isPro) {
+            const limitCheck = await canCreate('templates');
+            if (!limitCheck.allowed) {
                 setLimitModalData(limitCheck);
                 setShowLimitModal(true);
                 return;
@@ -290,19 +291,9 @@ export default function CreateTemplateScreen() {
             <ResourceLimitModal
                 visible={showLimitModal}
                 onClose={() => setShowLimitModal(false)}
-                onUpgrade={() => {
-                    setShowLimitModal(false);
-                    router.push('/(tabs)/profile/subscription');
-                }}
-                onContinueAnyway={() => {
-                    setShowLimitModal(false);
-                    setProceedAnyway(true);
-                    setTimeout(() => handleSave(), 100);
-                }}
                 resource="templates"
                 currentCount={limitModalData.currentCount}
                 limit={limitModalData.limit}
-                isOffline={!isOnline}
             />
         </View>
     );

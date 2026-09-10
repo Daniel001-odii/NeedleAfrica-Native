@@ -3,16 +3,16 @@ import { database } from '../database/watermelon/index.native';
 import { Q } from '@nozbe/watermelondb';
 import { useAuth } from '../contexts/AuthContext';
 
-type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
+export type ResourceType = 'orders' | 'customers' | 'templates' | 'invoices';
 
-interface ResourceCounts {
+export interface ResourceCounts {
   orders: number;
   customers: number;
   templates: number;
   invoices: number;
 }
 
-interface LimitStatus {
+export interface LimitStatus {
   resource: ResourceType;
   current: number;
   limit: number;
@@ -21,27 +21,36 @@ interface LimitStatus {
   isNearLimit: boolean;
 }
 
-interface UseResourceLimitsReturn {
+export interface CanCreateResult {
+  allowed: boolean;
+  currentCount: number;
+  limit: number;
+  message: string;
+  isAtLimit: boolean;
+  isNearLimit: boolean;
+}
+
+export interface UseResourceLimitsReturn {
   counts: ResourceCounts;
   isLoading: boolean;
   refreshCounts: () => Promise<void>;
-  canCreate: (resource: ResourceType) => {
-    allowed: boolean;
-    currentCount: number;
-    limit: number;
-    message: string;
-    isAtLimit: boolean;
-    isNearLimit: boolean;
-  };
+  canCreate: (resource: ResourceType) => Promise<CanCreateResult>;
   getLimitStatus: (resource: ResourceType) => LimitStatus;
   anyResourceAtLimit: boolean;
 }
 
-const LIMITS: Record<ResourceType, number> = {
-  orders: 10,
-  customers: 10,
-  templates: 5,
-  invoices: 10,
+const BASE_LIMITS: Record<ResourceType, number> = {
+  orders: 5,
+  customers: 5,
+  templates: 3,
+  invoices: 5,
+};
+
+const REFERRAL_BONUS: Record<ResourceType, number> = {
+  orders: 5,
+  customers: 5,
+  templates: 3,
+  invoices: 5,
 };
 
 export function useResourceLimits(): UseResourceLimitsReturn {
@@ -54,9 +63,14 @@ export function useResourceLimits(): UseResourceLimitsReturn {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const getResourceLimit = useCallback((resource: ResourceType): number => {
+    const referralCount = user?.activatedReferralCount || 0;
+    return BASE_LIMITS[resource] + (referralCount * REFERRAL_BONUS[resource]);
+  }, [user]);
+
   // Helper to create a query for a resource
   const getResourceQuery = useCallback((resource: ResourceType) => {
-    if (!user) return null;
+    if (!user?.id) return null;
 
     const tableName = resource === 'templates' ? 'measurement_templates' : resource;
 
@@ -66,10 +80,10 @@ export function useResourceLimits(): UseResourceLimitsReturn {
         Q.where('user_id', user.id),
         Q.where('deleted_at', Q.eq(null))
       );
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
       setIsLoading(false);
       return;
     }
@@ -99,17 +113,44 @@ export function useResourceLimits(): UseResourceLimitsReturn {
     return () => {
       subscriptions.forEach(sub => sub.unsubscribe());
     };
-  }, [user, getResourceQuery]);
+  }, [user?.id, getResourceQuery]);
 
-  // Keep refreshCounts for manual triggers if needed, though observers handle most cases
   const refreshCounts = useCallback(async () => {
-    if (!user) return;
-    // Handled by observers, but we can do a manual fetch if needed
-  }, [user]);
+    if (!user?.id) return;
+    const resources: ResourceType[] = ['orders', 'customers', 'templates', 'invoices'];
+    const newCounts: Partial<ResourceCounts> = {};
 
-  const canCreate = useCallback((resource: ResourceType) => {
-    const current = counts[resource];
-    const limit = LIMITS[resource];
+    for (const res of resources) {
+      const query = getResourceQuery(res);
+      if (query) {
+        newCounts[res] = await query.fetchCount();
+      }
+    }
+
+    setCounts(prev => ({ ...prev, ...newCounts }));
+  }, [user?.id, getResourceQuery]);
+
+  // Live asynchronous check directly against SQLite database to prevent race conditions
+  const canCreate = useCallback(async (resource: ResourceType): Promise<CanCreateResult> => {
+    const limit = getResourceLimit(resource);
+
+    if (!user?.id) {
+      return {
+        allowed: false,
+        currentCount: 0,
+        limit,
+        message: 'Please sign in',
+        isAtLimit: true,
+        isNearLimit: false,
+      };
+    }
+
+    const query = getResourceQuery(resource);
+    const current = query ? await query.fetchCount() : (counts[resource] ?? 0);
+
+    // Keep state in sync
+    setCounts(prev => prev[resource] === current ? prev : { ...prev, [resource]: current });
+
     const isAtLimit = current >= limit;
     const isNearLimit = current >= limit - 1;
 
@@ -130,12 +171,12 @@ export function useResourceLimits(): UseResourceLimitsReturn {
       isAtLimit,
       isNearLimit,
     };
-  }, [counts]);
+  }, [user?.id, getResourceLimit, getResourceQuery, counts]);
 
   const getLimitStatus = useCallback((resource: ResourceType): LimitStatus => {
     const current = counts[resource];
-    const limit = LIMITS[resource];
-    const percentage = (current / limit) * 100;
+    const limit = getResourceLimit(resource);
+    const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 100;
     const isAtLimit = current >= limit;
     const isNearLimit = current >= limit - 1;
 
@@ -147,11 +188,11 @@ export function useResourceLimits(): UseResourceLimitsReturn {
       isAtLimit,
       isNearLimit,
     };
-  }, [counts]);
+  }, [counts, getResourceLimit]);
 
   const anyResourceAtLimit = Object.keys(counts).some((key) => {
     const resource = key as ResourceType;
-    return counts[resource] >= LIMITS[resource];
+    return counts[resource] >= getResourceLimit(resource);
   });
 
   return {
@@ -163,4 +204,3 @@ export function useResourceLimits(): UseResourceLimitsReturn {
     anyResourceAtLimit,
   };
 }
-

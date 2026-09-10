@@ -34,19 +34,17 @@ export default function NewCustomer() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 10,
+        limit: 5,
         message: '',
         isAtLimit: false,
         isNearLimit: false,
     });
-    const [proceedAnyway, setProceedAnyway] = useState(false);
     const [wantsMeasurements, setWantsMeasurements] = useState(false);
 
     const { addCustomer } = useCustomers();
     const { sync: performSync, isOnline } = useSync();
     const { canCreate } = useResourceLimits();
     const { confirm } = useConfirm();
-    const { isFree } = useSubscription();
     const router = useRouter();
     const { from } = useLocalSearchParams<{ from?: string }>();
     const posthog = usePostHog();
@@ -110,9 +108,10 @@ export default function NewCustomer() {
             return;
         }
 
-        if (isFree) {
-            const limitCheck = canCreate('customers');
-            if (!limitCheck.allowed && !proceedAnyway) {
+        const isPro = user?.subscriptionPlan === 'PRO' || user?.subscriptionPlan === 'STUDIO_AI';
+        if (!isPro) {
+            const limitCheck = await canCreate('customers');
+            if (!limitCheck.allowed) {
                 setLimitModalData(limitCheck);
                 setShowLimitModal(true);
                 return;
@@ -152,7 +151,6 @@ export default function NewCustomer() {
             });
         } finally {
             setIsSubmitting(false);
-            setProceedAnyway(false); // reset state after submission
         }
     };
 
@@ -349,19 +347,9 @@ export default function NewCustomer() {
             <ResourceLimitModal
                 visible={showLimitModal}
                 onClose={() => setShowLimitModal(false)}
-                onUpgrade={() => {
-                    setShowLimitModal(false);
-                    router.push('/(tabs)/profile/subscription');
-                }}
-                onContinueAnyway={() => {
-                    setShowLimitModal(false);
-                    setProceedAnyway(true);
-                    setTimeout(() => handleSubmit(wantsMeasurements), 100);
-                }}
                 resource="customers"
                 currentCount={limitModalData.currentCount}
                 limit={limitModalData.limit}
-                isOffline={!isOnline}
             />
         </View>
     );
