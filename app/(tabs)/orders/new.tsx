@@ -3,7 +3,7 @@ import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView,
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box, Gallery } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box, Gallery, Trash } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Typography } from '../../../components/ui/Typography';
@@ -400,35 +400,87 @@ export default function NewOrder() {
                             Design & Fabric
                         </Typography>
                         <View className="flex-row gap-3 mb-4">
-                            <TouchableOpacity onPress={() => pickImage('fabric')} className="flex-1 aspect-square">
-                                <Surface variant="white" className={`flex-1 items-center justify-center overflow-hidden`} rounded="2xl">
-                                    {fabricImage ? (
-                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <View className="items-center">
-                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
-                                                <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                            {/* Fabric Image */}
+                            <View className="flex-1 aspect-square relative">
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => pickImage('fabric')}
+                                    className="w-full h-full"
+                                >
+                                    <Surface variant="white" className="w-full h-full items-center justify-center overflow-hidden" rounded="2xl">
+                                        {fabricImage ? (
+                                            <>
+                                                <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                                <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
+                                                    <Typography variant="caption" className="text-white text-[10px] font-semibold">Fabric</Typography>
+                                                </View>
+                                            </>
+                                        ) : (
+                                            <View className="items-center">
+                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                                    <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                                                </View>
+                                                <Typography variant="small" color="gray" weight="semibold">Fabric</Typography>
                                             </View>
-                                            <Typography variant="small" color="gray" weight="semibold">Fabric</Typography>
-                                        </View>
-                                    )}
-                                </Surface>
-                            </TouchableOpacity>
+                                        )}
+                                    </Surface>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity onPress={() => pickImage('style')} className="flex-1 aspect-square">
-                                <Surface variant="white" className={`flex-1 items-center justify-center overflow-hidden`} rounded="2xl">
-                                    {styleImage ? (
-                                        <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
-                                    ) : (
-                                        <View className="items-center">
-                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
-                                                <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                                {fabricImage && (
+                                    <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        onPress={() => setFabricImage(null)}
+                                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
+                                        accessibilityLabel="Delete fabric image"
+                                    >
+                                        <Svg width="18" height="18" viewBox="0 0 24 24">
+                                            <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
+                                        </Svg>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            {/* Style / Design Image */}
+                            <View className="flex-1 aspect-square relative">
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => pickImage('style')}
+                                    className="w-full h-full"
+                                >
+                                    <Surface variant="white" className="w-full h-full items-center justify-center overflow-hidden" rounded="2xl">
+                                        {styleImage ? (
+                                            <>
+                                                <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                                <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
+                                                    <Typography variant="caption" className="text-white text-[10px] font-semibold">Design</Typography>
+                                                </View>
+                                            </>
+                                        ) : (
+                                            <View className="items-center">
+                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                                    <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                                                </View>
+                                                <Typography variant="small" color="gray" weight="semibold">Design</Typography>
                                             </View>
-                                            <Typography variant="small" color="gray" weight="semibold">Design</Typography>
-                                        </View>
-                                    )}
-                                </Surface>
-                            </TouchableOpacity>
+                                        )}
+                                    </Surface>
+                                </TouchableOpacity>
+
+                                {styleImage && (
+                                    <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        onPress={() => setStyleImage(null)}
+                                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
+                                        accessibilityLabel="Delete style image"
+                                    >
+                                        <Svg width="18" height="18" viewBox="0 0 24 24">
+                                            <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
+                                        </Svg>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
                         <Surface variant="white" className={`overflow-hidden`} rounded="2xl">

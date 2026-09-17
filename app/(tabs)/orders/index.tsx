@@ -272,9 +272,9 @@ export default function Orders() {
                             <DocumentText size={18} color="#FF5678" />
                             <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>my invoices</Typography>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/(tabs)/orders/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                            <Add size={20} color="#FF5678" />
-                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/orders/new')} className="flex-row items-center px-3 py-1.5 rounded-full bg-[#FF5678]">
+                            <Add size={20} color="white" />
+                            <Typography variant="small" weight="bold" color="white" className="ml-1">New</Typography>
                         </TouchableOpacity>
                     </View>
                 </View>

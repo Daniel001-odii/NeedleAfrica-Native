@@ -146,9 +146,9 @@ function CustomersScreen() {
                             <Task size={18} color="#FF5678" />
                             <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>My Templates</Typography>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'}`}>
-                            <Add size={20} color="#FF5678" />
-                            <Typography variant="small" weight="bold" className={`ml-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>New</Typography>
+                        <TouchableOpacity onPress={() => router.push('/(tabs)/customers/new')} className="flex-row items-center px-3 py-1.5 rounded-full bg-[#FF5678]">
+                            <Add size={20} color="white" />
+                            <Typography variant="small" weight="bold" color="white" className="ml-1">New</Typography>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -191,7 +191,7 @@ function CustomersScreen() {
                             <Pressable
                                 onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: item.id } })}
                             >
-                                <Surface variant="white" className="flex-row items-center p-4 mb-3" rounded="3xl">
+                                <Surface variant="white" className="flex-row items-center p-2 mb-3" rounded="3xl">
                                     <View className={`w-12 h-12 items-center justify-center mr-4 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
                                         <Typography weight="bold" color="primary">
                                             {(item.fullName || 'C').charAt(0).toUpperCase()}
@@ -203,7 +203,7 @@ function CustomersScreen() {
                                     </View>
                                     {item.phoneNumber && (
                                         <TouchableOpacity
-                                            className={`w-10 h-10 items-center justify-center rounded-full ${isDark ? 'bg-zinc-800' : 'bg-green-50'}`}
+                                            className={`w-10 h-10 items-center justify-center rounded-full`}
                                             onPress={() => handleCall(item.phoneNumber || null)}
                                         >
                                             <Call size={18} color="#22c55e" variant="Bold" />
