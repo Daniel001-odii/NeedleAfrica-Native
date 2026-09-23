@@ -55,6 +55,7 @@ interface User {
     styleInspoPreference?: 'unsplash' | 'pinterest';
     activatedReferralCount?: number;
     referralPoints?: number;
+    hasCompletedSurvey?: boolean;
 }
 
 interface AuthContextType {
@@ -144,6 +145,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     username: parsedUser.username,
                     businessName: parsedUser.businessName
                 });
+                if (parsedUser.email) {
+                    posthog.setPersonPropertiesForFlags({ email: parsedUser.email });
+                }
 
                 // Set RevenueCat user ID for returning users
                 try {
@@ -198,6 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 username: userData.username,
                 method: 'google'
             });
+            if (userData.email) {
+                posthog.setPersonPropertiesForFlags({ email: userData.email });
+            }
             posthog.capture('user_login', { method: 'google', isNewUser: !!isNew });
 
             // Initialize RevenueCat with user ID
@@ -263,6 +270,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 username: userData.username,
                 method: 'apple'
             });
+            if (userData.email) {
+                posthog.setPersonPropertiesForFlags({ email: userData.email });
+            }
             posthog.capture('user_login', { method: 'apple', isNewUser: !!isNew });
 
             // Initialize RevenueCat with user ID
@@ -313,6 +323,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 username: userData.username,
                 method: 'email'
             });
+            if (userData.email) {
+                posthog.setPersonPropertiesForFlags({ email: userData.email });
+            }
             posthog.capture('user_login', { method: 'email' });
 
             // Initialize RevenueCat with user ID
@@ -361,6 +374,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 username: userData.username,
                 businessName: userData.businessName
             });
+            if (userData.email) {
+                posthog.setPersonPropertiesForFlags({ email: userData.email });
+            }
             posthog.capture('user_signup', { method: 'email' });
 
             // Initialize RevenueCat with user ID
@@ -555,6 +571,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await SecureStore.deleteItemAsync('user_data');
         setIsNewUser(false);
         setUser(null);
+        posthog.resetPersonPropertiesForFlags();
         posthog.reset();
         
         // Use setTimeout to ensure state updates have propagated before navigation

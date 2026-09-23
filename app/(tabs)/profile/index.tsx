@@ -16,7 +16,8 @@ import {
     Star,
     Chart2,
     Book1,
-    Logout
+    Logout,
+    MagicStar
 } from 'iconsax-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Typography } from '../../../components/ui/Typography';
@@ -64,7 +65,7 @@ export default function Profile() {
             >
                 {/* Reduced User Info Card */}
                 <View className="flex-row items-center justify-between mb-5 mt-2 px-1">
-                    <View className="flex-row items-center flex-1">
+                    <View className="flex-row items-center flex-1 mr-3">
                         {user?.profilePicture ? (
                             <Image
                                 source={{ uri: user.profilePicture }}
@@ -86,6 +87,26 @@ export default function Profile() {
                             </Typography>
                         </View>
                     </View>
+
+                    {/* User Points Badge */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setIsReferralModalVisible(true)}
+                        className={`flex-row items-center px-3 py-1.5 rounded-full border ${
+                            isDark
+                                ? 'bg-amber-500/10 border-amber-500/20'
+                                : 'bg-amber-50 border-amber-200'
+                        }`}
+                    >
+                        <MagicStar size={14} color="#F59E0B" variant="Bold" />
+                        <Typography
+                            variant="caption"
+                            weight="bold"
+                            className="ml-1.5 text-[12px] text-amber-600 dark:text-amber-400"
+                        >
+                            {user?.referralPoints || 0} pts
+                        </Typography>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Referrals Hero Card (mimicking extras header layout) */}

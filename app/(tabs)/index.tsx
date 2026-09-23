@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated, Dimensions } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle, Gift } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
@@ -17,12 +17,17 @@ import { useCatalog } from '../../hooks/useCatalog';
 import { useTodoChecklist, CHECKLIST_ITEMS } from '../../hooks/useTodoChecklist';
 import { CatalogVisibilityModal } from '../../components/CatalogVisibilityModal';
 import { ReferralModal } from '../../components/ReferralModal';
+import { SurveyModal } from '../../components/SurveyModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
-import { usePostHog } from 'posthog-react-native';
+import { usePostHog, useFeatureFlag } from 'posthog-react-native';
+import axiosInstance from '../../lib/axios';
 
 export default function Home() {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
+    const posthog = usePostHog();
+    const inAppSurveyFlag = useFeatureFlag('in_app_survey');
+    const isSurveyFeatureEnabled = Boolean(inAppSurveyFlag ?? posthog?.isFeatureEnabled('in_app_survey'));
     const { isSyncing, sync: performSync } = useSync();
     const { orders, loading: ordersLoading } = useOrders();
     const { customers, loading: customersLoading } = useCustomers();
@@ -32,8 +37,69 @@ export default function Home() {
     const [catalogBannerVisible, setCatalogBannerVisible] = useState(false);
     const [catalogModalVisible, setCatalogModalVisible] = useState(false);
     const [isReferralModalVisible, setIsReferralModalVisible] = useState(false);
+    const [isSurveyModalVisible, setIsSurveyModalVisible] = useState(false);
+    const [isSurveyCompleted, setIsSurveyCompleted] = useState(user?.hasCompletedSurvey || false);
     const [activeSlide, setActiveSlide] = useState(0);
     const carouselRef = useRef<ScrollView>(null);
+
+    // Set user properties for feature flag targeting and reload flags
+    useEffect(() => {
+        if (user?.email && posthog) {
+            posthog.setPersonPropertiesForFlags({ email: user.email });
+        }
+    }, [user?.email, posthog]);
+
+    // Check survey status directly from backend API (guarded by feature flag)
+    const checkSurveyStatus = useCallback(async () => {
+        if (!user?.id || !isSurveyFeatureEnabled) return;
+        try {
+            // Remove legacy local device flag if previously set
+            await AsyncStorage.removeItem('survey_completed');
+
+            // Query authoritative survey status from backend API
+            const response = await axiosInstance.get('/survey/status');
+            const completed = Boolean(response.data?.hasCompletedSurvey ?? user?.hasCompletedSurvey);
+            setIsSurveyCompleted(completed);
+
+            if (completed) {
+                return;
+            }
+
+            // If not completed, check 48hr throttle for auto-pop up
+            const lastDismissed = await AsyncStorage.getItem('survey_last_dismissed_at');
+            if (!lastDismissed) {
+                setTimeout(() => setIsSurveyModalVisible(true), 1000);
+                return;
+            }
+
+            const timeSinceDismissed = Date.now() - parseInt(lastDismissed, 10);
+            const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+            if (timeSinceDismissed >= FORTY_EIGHT_HOURS) {
+                setTimeout(() => setIsSurveyModalVisible(true), 1000);
+            }
+        } catch (e) {
+            console.error('Failed to check survey status from API:', e);
+            if (user?.hasCompletedSurvey) {
+                setIsSurveyCompleted(true);
+            }
+        }
+    }, [user?.id, user?.hasCompletedSurvey, isSurveyFeatureEnabled]);
+
+    // Check on screen focus
+    useFocusEffect(
+        useCallback(() => {
+            checkSurveyStatus();
+        }, [checkSurveyStatus])
+    );
+
+    // Watch feature flag change to evaluate survey or dismiss modal if disabled
+    useEffect(() => {
+        if (isSurveyFeatureEnabled) {
+            checkSurveyStatus();
+        } else {
+            setIsSurveyModalVisible(false);
+        }
+    }, [isSurveyFeatureEnabled, checkSurveyStatus]);
 
     // Auto-scroll the promo banner carousel every 5 seconds
     useEffect(() => {
@@ -52,13 +118,12 @@ export default function Home() {
     const { unreadCount } = useUnreadOrderRequests();
     const totalUnread = unreadCount + (needsVisibility ? 1 : 0);
 
-    const posthog = usePostHog();
     const todoChecklist = useTodoChecklist();
 
     // Track dashboard view on mount
     useEffect(() => {
-        posthog.capture('dashboard_viewed');
-    }, []);
+        posthog?.capture('dashboard_viewed');
+    }, [posthog]);
 
     // Animated waving hand
     const waveAnim = useRef(new Animated.Value(0)).current;
@@ -124,7 +189,9 @@ export default function Home() {
     const onRefresh = useCallback(async () => {
         await performSync();
         todoChecklist.refresh();
-    }, [performSync, todoChecklist.refresh]);
+        await refreshUser();
+        await checkSurveyStatus();
+    }, [performSync, todoChecklist.refresh, refreshUser, checkSurveyStatus]);
 
     // Stat Calculations
     const stats = useMemo(() => {
@@ -358,106 +425,180 @@ export default function Home() {
                     </View>
                 )}
 
-                {/* Home Promo Carousel (Business Analytics & Refer & Earn) */}
-                <View className="mb-6 -mr-2">
-                    <ScrollView
-                        ref={carouselRef}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onScroll={(e) => {
-                            const contentOffsetX = e.nativeEvent.contentOffset.x;
-                            const idx = Math.round(contentOffsetX / (Dimensions.get('window').width - 32));
-                            setActiveSlide(idx);
-                        }}
-                        scrollEventThrottle={16}
-                        style={{ width: Dimensions.get('window').width - 32 }}
-                    >
-                        {/* Slide 1: Business Analytics */}
-                        <TouchableOpacity
-                            onPress={() => {
-                                posthog.capture('home_analytics_banner_clicked');
-                                router.push('/(tabs)/profile/analytics');
-                            }}
-                            activeOpacity={0.85}
-                            style={{ width: Dimensions.get('window').width - 32 }}
-                        >
+                {/* Promo Banner / Carousel - Controlled by in_app_survey Feature Flag */}
+                {isSurveyFeatureEnabled ? (
+                    /* Survey Promo Banner (Active when in_app_survey flag is enabled) */
+                    <View className="mb-6">
+                        {isSurveyCompleted || user?.hasCompletedSurvey ? (
                             <View
                                 style={{
                                     borderRadius: 24,
                                     padding: 16,
-                                    height: 110,
+                                    height: 105,
                                     overflow: 'hidden'
                                 }}
-                                className="bg-blue-600 mr-2 flex-row items-center justify-between"
+                                className={`flex-row items-center justify-between border ${isDark
+                                        ? 'bg-[#1C1C1E] border-white/5'
+                                        : 'bg-emerald-50/60 border-emerald-100'
+                                    }`}
                             >
-                                <View className="flex-1 pr-2">
+                                <View className="flex-1 pr-3">
                                     <View className="flex-row items-center mb-1">
-                                        <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                            Business Analytics
+                                        <Typography variant="body" weight="bold" className={`text-[15px] ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                            NeedleX Survey
                                         </Typography>
-                                        <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
-                                            <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">NEW</Typography>
+                                        <View className="bg-emerald-500/20 px-2 py-0.5 rounded-full ml-2">
+                                            <Typography variant="small" weight="black" className="text-emerald-600 dark:text-emerald-400 text-[8px] uppercase tracking-tighter">
+                                                COMPLETED
+                                            </Typography>
                                         </View>
                                     </View>
-                                    <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                        Track your orders, delivery speed, and storefront views in one dashboard.
+                                    <Typography variant="small" className={`leading-[16px] text-[12px] ${isDark ? 'text-zinc-400' : 'text-emerald-800/80'}`}>
+                                        Thank you for sharing your feedback to help us shape NeedleX!
                                     </Typography>
                                 </View>
-                                <Image
-                                    source={require('../../assets/images/analytics_banner.png')}
-                                    style={{ width: 75, height: 75 }}
-                                    resizeMode="contain"
-                                />
+                                <View className="w-12 h-12 rounded-2xl bg-emerald-500/10 items-center justify-center border border-emerald-500/20">
+                                    <TickCircle size={26} color="#10B981" variant="Bold" />
+                                </View>
                             </View>
-                        </TouchableOpacity>
-
-                        {/* Slide 2: Refer & Earn */}
-                        <TouchableOpacity
-                            onPress={() => {
-                                posthog.capture('home_referral_banner_clicked');
-                                setIsReferralModalVisible(true);
-                            }}
-                            activeOpacity={0.85}
-                            style={{ width: Dimensions.get('window').width - 32 }}
-                        >
-                            <View
-                                style={{
-                                    borderRadius: 24,
-                                    padding: 16,
-                                    height: 110,
-                                    overflow: 'hidden'
+                        ) : (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog.capture('home_survey_banner_clicked');
+                                    setIsSurveyModalVisible(true);
                                 }}
-                                className="bg-[#1C1C1E] dark:bg-[#1C1C1E] mr-2 flex-row items-center justify-between border border-white/5"
+                                activeOpacity={0.85}
                             >
-                                <View className="flex-1 pr-2">
-                                    <View className="flex-row items-center mb-1">
-                                        <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                            Refer & Earn Rewards
-                                        </Typography>
-                                        <View className="bg-white/20 px-2 py-0.5 rounded-full ml-2">
-                                            <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">BONUS</Typography>
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Help Shape NeedleX
+                                            </Typography>
+                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
+                                                    +10 PTS
+                                                </Typography>
+                                            </View>
                                         </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Take a 2-minute survey to help us improve, and earn 10 free reward points!
+                                        </Typography>
                                     </View>
-                                    <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                        Invite tailors, earn points, and unlock upgraded capacity limits for free!
-                                    </Typography>
+                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
+                                        <Gift size={30} color="#FFFFFF" variant="Bulk" />
+                                    </View>
                                 </View>
-                                <Image
-                                    source={require('../../assets/images/referral_bg.png')}
-                                    style={{ width: 75, height: 75, borderRadius: 16 }}
-                                    resizeMode="cover"
-                                />
-                            </View>
-                        </TouchableOpacity>
-                    </ScrollView>
-
-                    {/* Pagination Dots */}
-                    <View className="flex-row justify-center items-center mt-3 gap-1.5">
-                        <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 0 ? 'bg-blue-600 w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
-                        <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 1 ? 'bg-[#ff5678] w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
+                            </TouchableOpacity>
+                        )}
                     </View>
-                </View>
+                ) : (
+                    /* Home Promo Carousel (Business Analytics & Refer & Earn) - Active when in_app_survey flag is disabled */
+                    <View className="mb-6 -mr-2">
+                        <ScrollView
+                            ref={carouselRef}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            onScroll={(e) => {
+                                const contentOffsetX = e.nativeEvent.contentOffset.x;
+                                const idx = Math.round(contentOffsetX / (Dimensions.get('window').width - 32));
+                                setActiveSlide(idx);
+                            }}
+                            scrollEventThrottle={16}
+                            style={{ width: Dimensions.get('window').width - 32 }}
+                        >
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog.capture('home_analytics_banner_clicked');
+                                    router.push('/(tabs)/profile/analytics');
+                                }}
+                                activeOpacity={0.85}
+                                style={{ width: Dimensions.get('window').width - 32 }}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-blue-600 mr-2 flex-row items-center justify-between"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Business Analytics
+                                            </Typography>
+                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">NEW</Typography>
+                                            </View>
+                                        </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Track your orders, delivery speed, and storefront views in one dashboard.
+                                        </Typography>
+                                    </View>
+                                    <Image
+                                        source={require('../../assets/images/analytics_banner.png')}
+                                        style={{ width: 75, height: 75 }}
+                                        resizeMode="contain"
+                                    />
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog.capture('home_referral_banner_clicked');
+                                    setIsReferralModalVisible(true);
+                                }}
+                                activeOpacity={0.85}
+                                style={{ width: Dimensions.get('window').width - 32 }}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-[#1C1C1E] dark:bg-[#1C1C1E] mr-2 flex-row items-center justify-between border border-white/5"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Refer & Earn Rewards
+                                            </Typography>
+                                            <View className="bg-white/20 px-2 py-0.5 rounded-full ml-2">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">BONUS</Typography>
+                                            </View>
+                                        </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Invite tailors, earn points, and unlock upgraded capacity limits for free!
+                                        </Typography>
+                                    </View>
+                                    <Image
+                                        source={require('../../assets/images/referral_bg.png')}
+                                        style={{ width: 75, height: 75, borderRadius: 16 }}
+                                        resizeMode="cover"
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                        </ScrollView>
+
+                        <View className="flex-row justify-center items-center mt-3 gap-1.5">
+                            <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 0 ? 'bg-blue-600 w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
+                            <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 1 ? 'bg-[#ff5678] w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
+                        </View>
+                    </View>
+                )}
 
                 {/* Learn Banner: Not sure how to use NeedleX? - Temporarily Commented */}
                 {/* 
@@ -654,6 +795,17 @@ export default function Home() {
                 visible={isReferralModalVisible}
                 onClose={() => setIsReferralModalVisible(false)}
             />
+            {isSurveyFeatureEnabled && (
+                <SurveyModal
+                    visible={isSurveyModalVisible}
+                    onClose={() => setIsSurveyModalVisible(false)}
+                    onCompleted={async () => {
+                        setIsSurveyCompleted(true);
+                        await refreshUser();
+                        await checkSurveyStatus();
+                    }}
+                />
+            )}
         </View>
     );
 }

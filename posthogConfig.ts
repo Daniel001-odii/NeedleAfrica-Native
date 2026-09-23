@@ -14,9 +14,11 @@ export const posthog = new PostHog(
     host: HOST,// Automatically captures screen views and taps
     enableSessionReplay: true, // Enables Session Replay
     captureAppLifecycleEvents: true,
-    sessionReplayConfig: {    // Allow images to be visible in replay (change to true if sensitive)
-      captureLog: true,         // Capture console.logs/errors (Android only for now)
-      captureNetworkTelemetry: true, // Capture network requests
+    sessionReplayConfig: {
+      maskAllTextInputs: false,
+      maskAllImages: false,
+      captureLog: true,
+      captureNetworkTelemetry: true,
     }
   }
 )

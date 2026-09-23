@@ -15,7 +15,8 @@ import { NotificationService } from '../services/NotificationService';
 import { revenueCatService } from '../services/RevenueCatService';
 import * as Notifications from 'expo-notifications';
 import "../global.css";
-import { PostHogProvider } from 'posthog-react-native'
+import { PostHogProvider } from 'posthog-react-native';
+import { posthog } from '../posthogConfig';
 import Toast from 'react-native-toast-message';
 import LoadingScreen from './loading';
 import { toastConfig } from '../components/ui/CustomToast';
@@ -146,19 +147,7 @@ export default function RootLayout() {
     }, []);
 
     return (
-        <PostHogProvider
-            apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
-            debug={true}
-            options={{
-                host: "https://us.i.posthog.com",
-                enableSessionReplay: true,
-                sessionReplayConfig: {
-                    maskAllTextInputs: true,
-                    maskAllImages: false,
-                    captureLog: true,
-                    captureNetworkTelemetry: true,
-                },
-            }}>
+        <PostHogProvider client={posthog} debug={__DEV__}>
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
