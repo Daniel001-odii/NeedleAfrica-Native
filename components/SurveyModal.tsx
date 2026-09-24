@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     View,
     Modal,
@@ -10,6 +10,7 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
     Image,
+    ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Typography } from './ui/Typography';
@@ -37,9 +38,14 @@ import {
     Gift,
     MagicStar,
     Award,
+    CloseCircle,
 } from 'iconsax-react-native';
+import { TeamAppreciationModal } from './TeamAppreciationModal';
 
 export type BusinessTrack = 'CUSTOM_TAILOR' | 'RTW' | 'TEAMS';
+
+const DRAFT_STEP_KEY = 'survey_draft_step';
+const DRAFT_ANSWERS_KEY = 'survey_draft_answers';
 
 interface SurveyModalProps {
     visible: boolean;
@@ -187,8 +193,10 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
 
     // Current step: 0 = Intro, 1..11 = Questions, 12 = Success
     const [currentStep, setCurrentStep] = useState(0);
+    const [savedDraftStep, setSavedDraftStep] = useState<number | null>(null);
     const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAppreciationModal, setShowAppreciationModal] = useState(false);
 
     // Answers State
     const [rating, setRating] = useState<number>(0);
@@ -227,12 +235,124 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
         width: `${progressWidth.value}%`,
     }));
 
+    // Save draft helper
+    const saveDraft = useCallback(async (step: number, answersState: any) => {
+        try {
+            if (step >= 1 && step <= 11) {
+                await Promise.all([
+                    AsyncStorage.setItem(DRAFT_STEP_KEY, step.toString()),
+                    AsyncStorage.setItem(DRAFT_ANSWERS_KEY, JSON.stringify(answersState)),
+                ]);
+                setSavedDraftStep(step);
+            }
+        } catch (e) {
+            console.error('Failed to save survey draft:', e);
+        }
+    }, []);
+
+    // Clear draft helper
+    const clearDraft = useCallback(async () => {
+        try {
+            await AsyncStorage.multiRemove([DRAFT_STEP_KEY, DRAFT_ANSWERS_KEY]);
+            setSavedDraftStep(null);
+        } catch (e) {
+            console.error('Failed to clear survey draft:', e);
+        }
+    }, []);
+
+    // Load draft on modal open
+    useEffect(() => {
+        if (visible) {
+            const loadDraft = async () => {
+                try {
+                    const [savedStepStr, savedAnswersStr] = await Promise.all([
+                        AsyncStorage.getItem(DRAFT_STEP_KEY),
+                        AsyncStorage.getItem(DRAFT_ANSWERS_KEY),
+                    ]);
+
+                    if (savedAnswersStr) {
+                        const parsed = JSON.parse(savedAnswersStr);
+                        if (parsed.rating !== undefined) setRating(parsed.rating);
+                        if (parsed.ratingComment !== undefined) setRatingComment(parsed.ratingComment);
+                        if (parsed.mostUseful !== undefined) setMostUseful(parsed.mostUseful);
+                        if (parsed.doBetter !== undefined) setDoBetter(parsed.doBetter);
+                        if (parsed.missMost !== undefined) setMissMost(parsed.missMost);
+                        if (parsed.trackQ1 !== undefined) setTrackQ1(parsed.trackQ1);
+                        if (parsed.trackQ2 !== undefined) setTrackQ2(parsed.trackQ2);
+                        if (parsed.trackQ3 !== undefined) setTrackQ3(parsed.trackQ3);
+                        if (parsed.valuableFeatures !== undefined) setValuableFeatures(parsed.valuableFeatures);
+                        if (parsed.worthPayingMonthly !== undefined) setWorthPayingMonthly(parsed.worthPayingMonthly);
+                        if (parsed.selectedPriceRange !== undefined) setSelectedPriceRange(parsed.selectedPriceRange);
+                        if (parsed.oneThingToChange !== undefined) setOneThingToChange(parsed.oneThingToChange);
+                    }
+
+                    if (savedStepStr) {
+                        const stepNum = parseInt(savedStepStr, 10);
+                        if (!isNaN(stepNum) && stepNum >= 1 && stepNum <= 11) {
+                            setSavedDraftStep(stepNum);
+                            setCurrentStep(stepNum);
+                            return;
+                        }
+                    }
+                    setCurrentStep(0);
+                } catch (e) {
+                    console.error('Failed to load survey draft:', e);
+                }
+            };
+
+            loadDraft();
+        }
+    }, [visible]);
+
+    // Auto-save draft whenever answers or step update while in questions
+    const answersPayload = useMemo(() => ({
+        rating,
+        ratingComment,
+        mostUseful,
+        doBetter,
+        missMost,
+        trackQ1,
+        trackQ2,
+        trackQ3,
+        valuableFeatures,
+        worthPayingMonthly,
+        selectedPriceRange,
+        oneThingToChange,
+    }), [
+        rating,
+        ratingComment,
+        mostUseful,
+        doBetter,
+        missMost,
+        trackQ1,
+        trackQ2,
+        trackQ3,
+        valuableFeatures,
+        worthPayingMonthly,
+        selectedPriceRange,
+        oneThingToChange,
+    ]);
+
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        if (currentStep >= 1 && currentStep <= 11) {
+            saveDraft(currentStep, answersPayload);
+        }
+    }, [currentStep, answersPayload, saveDraft]);
+
     const goToStep = (targetStep: number) => {
         setDirection(targetStep > currentStep ? 'forward' : 'backward');
         setCurrentStep(targetStep);
+        if (targetStep >= 1 && targetStep <= 11) {
+            saveDraft(targetStep, answersPayload);
+        }
     };
 
-    // Handle skip / dismiss from intro
+    // Handle skip / dismiss from intro or question
     const handleDismiss = async () => {
         try {
             await AsyncStorage.setItem('survey_last_dismissed_at', Date.now().toString());
@@ -240,6 +360,24 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
             console.error('Failed to save survey dismissal time:', e);
         }
         onClose();
+    };
+
+    // Reset survey and start fresh
+    const handleResetDraft = async () => {
+        await clearDraft();
+        setRating(0);
+        setRatingComment('');
+        setMostUseful('');
+        setDoBetter('');
+        setMissMost('');
+        setTrackQ1('');
+        setTrackQ2('');
+        setTrackQ3('');
+        setValuableFeatures('');
+        setWorthPayingMonthly('');
+        setSelectedPriceRange('');
+        setOneThingToChange('');
+        setCurrentStep(1);
     };
 
     // Submit Survey
@@ -268,6 +406,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
             });
 
             if (response.data.status === 'success') {
+                await clearDraft();
                 await refreshUser();
                 goToStep(12); // Go to success slide
                 onCompleted?.();
@@ -405,7 +544,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -430,7 +569,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -455,7 +594,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -485,7 +624,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -515,7 +654,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -545,7 +684,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -570,7 +709,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -595,7 +734,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -651,7 +790,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             If you could change, remove or add one thing to NeedleX today, what would it be?
                         </Typography>
                         <Typography variant="caption" color="gray" className="mb-4">
-                            Final question! After this, your 10 points will be credited immediately.
+                            Final question! After this, earn 10 points to add 5 new customer records to your limit immediately.
                         </Typography>
                         <TextInput
                             multiline
@@ -664,7 +803,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     ? 'bg-white/5 border-white/10 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
-                            style={{ minHeight: 95, textAlignVertical: 'top' }}
+                            style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
                     </View>
                 );
@@ -675,212 +814,267 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
     };
 
     return (
-        <Modal
-            animationType="fade"
-            transparent={true}
-            visible={visible}
-            onRequestClose={currentStep === 0 ? handleDismiss : () => goToStep(Math.max(0, currentStep - 1))}
-        >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View className="flex-1 bg-black/60 justify-end">
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    >
-                        <Animated.View
-                            entering={FadeInUp.duration(280).springify().damping(22)}
-                            className={`m-4 mb-8 rounded-[32px] p-6 shadow-2xl border ${isDark ? 'bg-[#1C1C1E] border-white/10' : 'bg-white border-gray-100'
+        <>
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={visible}
+                onRequestClose={currentStep === 0 ? handleDismiss : () => goToStep(Math.max(0, currentStep - 1))}
+            >
+                {/* 
+                  KeyboardAvoidingView placed at the root of Modal ensures Android and iOS
+                  accurately shift the modal sheet above the software keyboard.
+                */}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                        <View className="flex-1 bg-black/60 justify-end">
+                            <Animated.View
+                                entering={FadeInUp.duration(280).springify().damping(22)}
+                                className={`m-4 mb-6 rounded-[32px] p-5 md:p-6 shadow-2xl border ${
+                                    isDark ? 'bg-[#1C1C1E] border-white/10' : 'bg-white border-gray-100'
                                 }`}
-                        >
-                            {/* Header Row (Step > 0 & Step < 12) */}
-                            {currentStep > 0 && currentStep < 12 && (
-                                <View className="mb-4">
-                                    <View className="flex-row items-center justify-between mb-2">
-                                        <Typography variant="small" weight="bold" color="primary">
-                                            QUESTION {currentStep} OF {totalQuestions}
-                                        </Typography>
-                                    </View>
-                                    {/* Liquid Smooth Animated Progress Bar */}
-                                    <View
-                                        className={`h-1.5 w-full rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'
-                                            }`}
-                                    >
-                                        <Animated.View
-                                            className="h-full bg-brand-primary rounded-full"
-                                            style={animatedProgressStyle}
-                                        />
-                                    </View>
-                                </View>
-                            )}
-
-                            {/* Non-scrollable Content Container */}
-                            <View className="w-full">
-                                {/* ================= SLIDE 0: INTRO ================= */}
-                                {currentStep === 0 && (
-                                    <Animated.View
-                                        key="slide-0"
-                                        entering={
-                                            direction === 'backward'
-                                                ? FadeInLeft.duration(240).springify().damping(20)
-                                                : FadeInDown.duration(260).springify().damping(18)
-                                        }
-                                        className="items-center py-2"
-                                    >
+                                style={{ maxHeight: '92%' }}
+                            >
+                                {/* Header Row (Step > 0 & Step < 12) */}
+                                {currentStep > 0 && currentStep < 12 && (
+                                    <View className="mb-3">
+                                        <View className="flex-row items-center justify-between mb-2">
+                                            <Typography variant="small" weight="bold" color="primary">
+                                                QUESTION {currentStep} OF {totalQuestions}
+                                            </Typography>
+                                            <TouchableOpacity
+                                                onPress={handleDismiss}
+                                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                className="p-1"
+                                            >
+                                                <CloseCircle size={20} color={isDark ? '#9CA3AF' : '#6B7280'} variant="Linear" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        {/* Liquid Smooth Animated Progress Bar */}
                                         <View
-                                            className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'
-                                                }`}
+                                            className={`h-1.5 w-full rounded-full overflow-hidden ${
+                                                isDark ? 'bg-white/10' : 'bg-gray-100'
+                                            }`}
                                         >
-                                            <Gift size={36} color="#2563EB" variant="Bulk" />
-                                        </View>
-
-                                        <View className="bg-blue-600/10 border border-blue-500/20 px-3 py-1 rounded-full mb-3 flex-row items-center gap-1.5">
-                                            <MagicStar size={14} color="#2563EB" variant="Bold" />
-                                            <Typography variant="small" weight="bold" className="text-blue-600 dark:text-blue-400">
-                                                EARN +10 FREE POINTS
-                                            </Typography>
-                                        </View>
-
-                                        <Typography variant="h2" weight="bold" className="text-center mb-2">
-                                            Help Us Shape NeedleX
-                                        </Typography>
-
-                                        <Typography variant="body" color="gray" className="text-center px-2 mb-4 leading-6 text-[15px]">
-                                            Take a few minutes to answer this survey to help us make NeedleX better... and earn free 10 points credited directly to your account!
-                                        </Typography>
-
-                                        <TouchableOpacity
-                                            onPress={() => goToStep(1)}
-                                            activeOpacity={0.85}
-                                            className="w-full bg-brand-primary py-4 rounded-full items-center justify-center mb-3"
-                                        >
-                                            <Typography variant="body" weight="bold" color="white" className="text-[16px]">
-                                                Start Survey
-                                            </Typography>
-                                        </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            onPress={handleDismiss}
-                                            activeOpacity={0.7}
-                                            className="py-2"
-                                        >
-                                            <Typography variant="caption" weight="semibold" color="gray">
-                                                Maybe later
-                                            </Typography>
-                                        </TouchableOpacity>
-                                    </Animated.View>
-                                )}
-
-                                {/* ================= SLIDES 1 to 11: DYNAMIC SLIDING QUESTIONS ================= */}
-                                {currentStep >= 1 && currentStep <= 11 && (
-                                    <View>
-                                        <Animated.View
-                                            key={`question-slide-${currentStep}`}
-                                            entering={
-                                                direction === 'forward'
-                                                    ? FadeInRight.duration(240).springify().damping(20)
-                                                    : FadeInLeft.duration(240).springify().damping(20)
-                                            }
-                                            className="w-full"
-                                        >
-                                            {renderQuestionContent()}
-                                        </Animated.View>
-
-                                        {/* Fixed Bottom Action Row: Previous + Next / Submit */}
-                                        <View className="flex-row items-center gap-2.5 mt-5">
-                                            <TouchableOpacity
-                                                onPress={() => goToStep(currentStep - 1)}
-                                                activeOpacity={0.85}
-                                                className={`w-14 h-14 rounded-full items-center justify-center border ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'
-                                                    }`}
-                                            >
-                                                <ArrowLeft2 size={20} color={isDark ? '#FFFFFF' : '#111827'} />
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity
-                                                onPress={currentStep === 11 ? handleSubmit : () => goToStep(currentStep + 1)}
-                                                disabled={isSubmitting}
-                                                activeOpacity={0.85}
-                                                className="flex-1 bg-brand-primary py-4 rounded-full items-center justify-center flex-row gap-2"
-                                            >
-                                                {isSubmitting ? (
-                                                    <ActivityIndicator size="small" color="#FFFFFF" />
-                                                ) : currentStep === 11 ? (
-                                                    <Animated.View
-                                                        entering={FadeInRight.duration(180)}
-                                                        className="flex-row items-center gap-2"
-                                                    >
-                                                        <Typography variant="body" weight="bold" color="white">
-                                                            Submit & Claim 10 Points
-                                                        </Typography>
-                                                        <MagicStar size={18} color="#FFFFFF" variant="Bold" />
-                                                    </Animated.View>
-                                                ) : (
-                                                    <Typography variant="body" weight="bold" color="white">
-                                                        Next Question
-                                                    </Typography>
-                                                )}
-                                            </TouchableOpacity>
+                                            <Animated.View
+                                                className="h-full bg-brand-primary rounded-full"
+                                                style={animatedProgressStyle}
+                                            />
                                         </View>
                                     </View>
                                 )}
 
-                                {/* ================= SLIDE 12: SUCCESS & REWARD ================= */}
-                                {currentStep === 12 && (
-                                    <Animated.View
-                                        key="slide-12"
-                                        entering={FadeInUp.duration(300).springify().damping(16)}
-                                        className="items-center py-2"
-                                    >
+                                {/* Content Container */}
+                                <View className="w-full">
+                                    {/* ================= SLIDE 0: INTRO ================= */}
+                                    {currentStep === 0 && (
                                         <Animated.View
-                                            entering={FadeInDown.delay(100).duration(300).springify().damping(12)}
-                                            className="items-center justify-center mb-2"
+                                            key="slide-0"
+                                            entering={
+                                                direction === 'backward'
+                                                    ? FadeInLeft.duration(240).springify().damping(20)
+                                                    : FadeInDown.duration(260).springify().damping(18)
+                                            }
+                                            className="items-center py-2"
                                         >
-                                            <Image
-                                                source={require('../assets/illustrations/completed.png')}
-                                                style={{ width: 120, height: 120 }}
-                                                resizeMode="contain"
-                                            />
-                                        </Animated.View>
-
-                                        <Typography variant="h2" weight="bold" className="text-center mb-1.5">
-                                            Survey Completed! 🎉
-                                        </Typography>
-
-                                        <Typography variant="body" color="gray" className="text-center px-2 mb-4 text-[14px] leading-5">
-                                            Thank you for taking the time to share your feedback. Your insights are invaluable in making NeedleX the best tool for fashion creators.
-                                        </Typography>
-
-                                        <Animated.View
-                                            entering={FadeInUp.delay(180).duration(300).springify().damping(15)}
-                                            className={`w-full p-3.5 rounded-2xl mb-5 items-center border ${isDark
-                                                    ? 'bg-emerald-500/10 border-emerald-500/20'
-                                                    : 'bg-emerald-50 border-emerald-200'
+                                            <View
+                                                className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${
+                                                    isDark ? 'bg-blue-500/10' : 'bg-blue-50'
                                                 }`}
-                                        >
-                                            <Typography variant="h3" weight="bold" className="text-emerald-600 dark:text-emerald-400 mb-0.5">
-                                                +10 Points Added!
-                                            </Typography>
-                                            <Typography variant="caption" className="text-emerald-700 dark:text-emerald-300 text-center">
-                                                Your points have been credited to your account balance.
-                                            </Typography>
-                                        </Animated.View>
+                                            >
+                                                <Gift size={36} color="#2563EB" variant="Bulk" />
+                                            </View>
 
-                                        <TouchableOpacity
-                                            onPress={onClose}
-                                            activeOpacity={0.85}
-                                            className="w-full bg-brand-primary py-4 rounded-full items-center justify-center"
-                                        >
-                                            <Typography variant="body" weight="bold" color="white">
-                                                Done
+                                            <View className="bg-blue-600/10 border border-blue-500/20 px-3 py-1 rounded-full mb-3 flex-row items-center gap-1.5">
+                                                <MagicStar size={14} color="#2563EB" variant="Bold" />
+                                                <Typography variant="small" weight="bold" className="text-blue-600 dark:text-blue-400">
+                                                    EARN 10 PTS = +5 CUSTOMER RECORDS
+                                                </Typography>
+                                            </View>
+
+                                            <Typography variant="h2" weight="bold" className="text-center mb-2">
+                                                Help Us Shape NeedleX
                                             </Typography>
-                                        </TouchableOpacity>
-                                    </Animated.View>
-                                )}
-                            </View>
-                        </Animated.View>
-                    </KeyboardAvoidingView>
-                </View>
-            </TouchableWithoutFeedback>
-        </Modal>
+
+                                            <Typography variant="body" color="gray" className="text-center px-2 mb-4 leading-6 text-[15px]">
+                                                Take a few minutes to answer this survey to help us make NeedleX better... and earn 10 free points to get 5 new customer records added to your limit!
+                                            </Typography>
+
+                                            <TouchableOpacity
+                                                onPress={() => goToStep(savedDraftStep && savedDraftStep >= 1 ? savedDraftStep : 1)}
+                                                activeOpacity={0.85}
+                                                className="w-full bg-brand-primary py-4 rounded-full items-center justify-center mb-3 shadow-sm"
+                                            >
+                                                <Typography variant="body" weight="bold" color="white" className="text-[16px]">
+                                                    {savedDraftStep && savedDraftStep >= 1
+                                                        ? `Resume Survey (Question ${savedDraftStep} of 11)`
+                                                        : 'Start Survey'}
+                                                </Typography>
+                                            </TouchableOpacity>
+
+                                            {savedDraftStep && savedDraftStep >= 1 && (
+                                                <TouchableOpacity
+                                                    onPress={handleResetDraft}
+                                                    activeOpacity={0.7}
+                                                    className="py-1.5 mb-1"
+                                                >
+                                                    <Typography variant="small" weight="semibold" className="text-rose-500 text-[13px]">
+                                                        Start over from beginning
+                                                    </Typography>
+                                                </TouchableOpacity>
+                                            )}
+
+                                            <TouchableOpacity
+                                                onPress={handleDismiss}
+                                                activeOpacity={0.7}
+                                                className="py-2"
+                                            >
+                                                <Typography variant="caption" weight="semibold" color="gray">
+                                                    Maybe later
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        </Animated.View>
+                                    )}
+
+                                    {/* ================= SLIDES 1 to 11: DYNAMIC SLIDING QUESTIONS ================= */}
+                                    {currentStep >= 1 && currentStep <= 11 && (
+                                        <View>
+                                            {/* ScrollView wraps question content so on Android with keyboard open, input is never cut off */}
+                                            <ScrollView
+                                                bounces={false}
+                                                showsVerticalScrollIndicator={false}
+                                                keyboardShouldPersistTaps="handled"
+                                                contentContainerStyle={{ flexGrow: 1 }}
+                                                style={{ maxHeight: 370 }}
+                                            >
+                                                <Animated.View
+                                                    key={`question-slide-${currentStep}`}
+                                                    entering={
+                                                        direction === 'forward'
+                                                            ? FadeInRight.duration(240).springify().damping(20)
+                                                            : FadeInLeft.duration(240).springify().damping(20)
+                                                    }
+                                                    className="w-full"
+                                                >
+                                                    {renderQuestionContent()}
+                                                </Animated.View>
+                                            </ScrollView>
+
+                                            {/* Fixed Bottom Action Row: Previous + Next / Submit */}
+                                            <View className="flex-row items-center gap-2.5 mt-4">
+                                                <TouchableOpacity
+                                                    onPress={() => goToStep(currentStep - 1)}
+                                                    activeOpacity={0.85}
+                                                    className={`w-14 h-14 rounded-full items-center justify-center border ${
+                                                        isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'
+                                                    }`}
+                                                >
+                                                    <ArrowLeft2 size={20} color={isDark ? '#FFFFFF' : '#111827'} />
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    onPress={currentStep === 11 ? handleSubmit : () => goToStep(currentStep + 1)}
+                                                    disabled={isSubmitting}
+                                                    activeOpacity={0.85}
+                                                    className="flex-1 bg-brand-primary py-4 rounded-full items-center justify-center flex-row gap-2"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                                    ) : currentStep === 11 ? (
+                                                        <Animated.View
+                                                            entering={FadeInRight.duration(180)}
+                                                            className="flex-row items-center gap-2"
+                                                        >
+                                                            <Typography variant="body" weight="bold" color="white">
+                                                                Submit & Claim +5 Records
+                                                            </Typography>
+                                                            <MagicStar size={18} color="#FFFFFF" variant="Bold" />
+                                                        </Animated.View>
+                                                    ) : (
+                                                        <Typography variant="body" weight="bold" color="white">
+                                                            Next Question
+                                                        </Typography>
+                                                    )}
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    )}
+
+                                    {/* ================= SLIDE 12: SUCCESS & REWARD ================= */}
+                                    {currentStep === 12 && (
+                                        <Animated.View
+                                            key="slide-12"
+                                            entering={FadeInUp.duration(300).springify().damping(16)}
+                                            className="items-center py-2"
+                                        >
+                                            <Animated.View
+                                                entering={FadeInDown.delay(100).duration(300).springify().damping(12)}
+                                                className="items-center justify-center mb-2"
+                                            >
+                                                <Image
+                                                    source={require('../assets/illustrations/completed.png')}
+                                                    style={{ width: 120, height: 120 }}
+                                                    resizeMode="contain"
+                                                />
+                                            </Animated.View>
+
+                                            <Typography variant="h2" weight="bold" className="text-center mb-1.5">
+                                                Survey Completed! 🎉
+                                            </Typography>
+
+                                            <Typography variant="body" color="gray" className="text-center px-2 mb-4 text-[14px] leading-5">
+                                                Thank you for sharing your feedback. Your insights are invaluable in making NeedleX the best tool for fashion creators.
+                                            </Typography>
+
+                                            <Animated.View
+                                                entering={FadeInUp.delay(180).duration(300).springify().damping(15)}
+                                                className={`w-full p-4 rounded-2xl mb-5 items-center border ${
+                                                    isDark
+                                                        ? 'bg-emerald-500/10 border-emerald-500/20'
+                                                        : 'bg-emerald-50 border-emerald-200'
+                                                }`}
+                                            >
+                                                <Typography variant="h3" weight="bold" className="text-emerald-600 dark:text-emerald-400 mb-1 text-[17px]">
+                                                    +10 Points Added! (+5 Records)
+                                                </Typography>
+                                                <Typography variant="caption" className="text-emerald-700 dark:text-emerald-300 text-center leading-4 text-[12px]">
+                                                    Your points have been credited to your balance, unlocking 5 new customer records to your limit!
+                                                </Typography>
+                                            </Animated.View>
+
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setShowAppreciationModal(true);
+                                                }}
+                                                activeOpacity={0.85}
+                                                className="w-full bg-brand-primary py-4 rounded-full items-center justify-center"
+                                            >
+                                                <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                    Continue
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        </Animated.View>
+                                    )}
+                                </View>
+                            </Animated.View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+            </Modal>
+
+            {/* Team Appreciation Note Modal */}
+            <TeamAppreciationModal
+                visible={showAppreciationModal}
+                onClose={() => {
+                    setShowAppreciationModal(false);
+                    onClose();
+                }}
+            />
+        </>
     );
 }
 

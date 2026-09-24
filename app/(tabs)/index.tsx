@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated, Dimensions } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle, Gift } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle, Gift, Award } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router, useFocusEffect } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -39,6 +39,7 @@ export default function Home() {
     const [isReferralModalVisible, setIsReferralModalVisible] = useState(false);
     const [isSurveyModalVisible, setIsSurveyModalVisible] = useState(false);
     const [isSurveyCompleted, setIsSurveyCompleted] = useState(user?.hasCompletedSurvey || false);
+    const [surveyDraftStep, setSurveyDraftStep] = useState<number | null>(null);
     const [activeSlide, setActiveSlide] = useState(0);
     const carouselRef = useRef<ScrollView>(null);
 
@@ -62,7 +63,22 @@ export default function Home() {
             setIsSurveyCompleted(completed);
 
             if (completed) {
+                setSurveyDraftStep(null);
+                await AsyncStorage.multiRemove(['survey_draft_step', 'survey_draft_answers']);
                 return;
+            }
+
+            // Check if user has an active survey draft
+            const draftStepStr = await AsyncStorage.getItem('survey_draft_step');
+            if (draftStepStr) {
+                const stepNum = parseInt(draftStepStr, 10);
+                if (!isNaN(stepNum) && stepNum >= 1 && stepNum <= 11) {
+                    setSurveyDraftStep(stepNum);
+                } else {
+                    setSurveyDraftStep(null);
+                }
+            } else {
+                setSurveyDraftStep(null);
             }
 
             // If not completed, check 48hr throttle for auto-pop up
@@ -461,10 +477,47 @@ export default function Home() {
                                     <TickCircle size={26} color="#10B981" variant="Bold" />
                                 </View>
                             </View>
+                        ) : surveyDraftStep && surveyDraftStep >= 1 ? (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog?.capture('home_survey_banner_clicked', { resume: true, step: surveyDraftStep });
+                                    setIsSurveyModalVisible(true);
+                                }}
+                                activeOpacity={0.85}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Complete Your Survey
+                                            </Typography>
+                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
+                                                    CONTINUE (+10 PTS)
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Earn 10pts to get 5 new customer records to your limit! Pick up right where you left off.
+                                        </Typography>
+                                    </View>
+                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
+                                        <Award size={30} color="#FFFFFF" variant="Bulk" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
                         ) : (
                             <TouchableOpacity
                                 onPress={() => {
-                                    posthog.capture('home_survey_banner_clicked');
+                                    posthog?.capture('home_survey_banner_clicked', { resume: false });
                                     setIsSurveyModalVisible(true);
                                 }}
                                 activeOpacity={0.85}
@@ -490,7 +543,7 @@ export default function Home() {
                                             </View>
                                         </View>
                                         <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                            Take a 2-minute survey to help us improve, and earn 10 free reward points!
+                                            Earn 10pts to get 5 new customer records to your limit! Take a 2-minute survey to help us improve.
                                         </Typography>
                                     </View>
                                     <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
@@ -798,9 +851,23 @@ export default function Home() {
             {isSurveyFeatureEnabled && (
                 <SurveyModal
                     visible={isSurveyModalVisible}
-                    onClose={() => setIsSurveyModalVisible(false)}
+                    onClose={async () => {
+                        setIsSurveyModalVisible(false);
+                        const draftStepStr = await AsyncStorage.getItem('survey_draft_step');
+                        if (draftStepStr) {
+                            const stepNum = parseInt(draftStepStr, 10);
+                            if (!isNaN(stepNum) && stepNum >= 1 && stepNum <= 11) {
+                                setSurveyDraftStep(stepNum);
+                            } else {
+                                setSurveyDraftStep(null);
+                            }
+                        } else {
+                            setSurveyDraftStep(null);
+                        }
+                    }}
                     onCompleted={async () => {
                         setIsSurveyCompleted(true);
+                        setSurveyDraftStep(null);
                         await refreshUser();
                         await checkSurveyStatus();
                     }}
