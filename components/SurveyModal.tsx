@@ -40,7 +40,6 @@ import {
     Award,
     CloseCircle,
 } from 'iconsax-react-native';
-import { TeamAppreciationModal } from './TeamAppreciationModal';
 
 export type BusinessTrack = 'CUSTOM_TAILOR' | 'RTW' | 'TEAMS';
 
@@ -180,6 +179,27 @@ const AnimatedStar: React.FC<AnimatedStarProps> = ({ star, isSelected, onPress, 
     );
 };
 
+const CharacterCounter: React.FC<{ value: string; min?: number }> = ({ value, min = 5 }) => {
+    const len = value.trim().length;
+    if (len >= min) return null;
+    return (
+        <View className="flex-row justify-between items-center mt-1.5 px-0.5">
+            <Typography
+                variant="small"
+                className="text-[11px] font-medium text-amber-500"
+            >
+                Min {min} characters required
+            </Typography>
+            <Typography
+                variant="small"
+                className="text-[11px] text-amber-500"
+            >
+                {len}/{min}
+            </Typography>
+        </View>
+    );
+};
+
 export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps) {
     const posthog = usePostHog();
     const inAppSurveyFlag = useFeatureFlag('in_app_survey');
@@ -196,7 +216,6 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
     const [savedDraftStep, setSavedDraftStep] = useState<number | null>(null);
     const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showAppreciationModal, setShowAppreciationModal] = useState(false);
 
     // Answers State
     const [rating, setRating] = useState<number>(0);
@@ -217,6 +236,51 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
     const [oneThingToChange, setOneThingToChange] = useState('');
 
     const totalQuestions = 11;
+
+    // Check if current step meets validation requirements
+    const isCurrentStepValid = useMemo(() => {
+        switch (currentStep) {
+            case 0:
+                return true;
+            case 1:
+                return rating >= 1 && rating <= 5;
+            case 2:
+                return mostUseful.trim().length >= 5;
+            case 3:
+                return doBetter.trim().length >= 5;
+            case 4:
+                return missMost.trim().length >= 5;
+            case 5:
+                return trackQ1.trim().length >= 5;
+            case 6:
+                return trackQ2.trim().length >= 5;
+            case 7:
+                return trackQ3.trim().length >= 5;
+            case 8:
+                return valuableFeatures.trim().length >= 5;
+            case 9:
+                return worthPayingMonthly.trim().length >= 5;
+            case 10:
+                return selectedPriceRange.trim().length > 0;
+            case 11:
+                return oneThingToChange.trim().length >= 5;
+            default:
+                return true;
+        }
+    }, [
+        currentStep,
+        rating,
+        mostUseful,
+        doBetter,
+        missMost,
+        trackQ1,
+        trackQ2,
+        trackQ3,
+        valuableFeatures,
+        worthPayingMonthly,
+        selectedPriceRange,
+        oneThingToChange,
+    ]);
 
     // Progress animation
     const progressWidth = useSharedValue(0);
@@ -382,6 +446,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
 
     // Submit Survey
     const handleSubmit = async () => {
+        if (!isCurrentStepValid) return;
         setIsSubmitting(true);
         try {
             const answers = {
@@ -477,7 +542,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             How has your experience with NeedleX been so far?
                         </Typography>
                         <Typography variant="caption" color="gray" className="mb-3">
-                            Tap a star to rate your overall experience:
+                            Tap a star to rate your overall experience (required):
                         </Typography>
 
                         {/* Interactive Animated Stars */}
@@ -493,7 +558,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             ))}
                         </View>
 
-                        {rating > 0 && (
+                        {rating > 0 ? (
                             <Animated.View entering={FadeInDown.duration(180)}>
                                 <Typography
                                     variant="caption"
@@ -503,6 +568,10 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                     {starLabels[rating]}
                                 </Typography>
                             </Animated.View>
+                        ) : (
+                            <Typography variant="small" className="text-center text-[12px] text-amber-500 mb-3">
+                                * Please select a star rating to proceed
+                            </Typography>
                         )}
 
                         <Typography variant="small" weight="semibold" color="gray" className="mb-1.5">
@@ -516,8 +585,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="What stood out or what could be better?"
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-3.5 rounded-2xl text-[14px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 70, textAlignVertical: 'top' }}
                         />
@@ -530,8 +599,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             What do you find most useful about NeedleX?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            What is the one thing that saves you the most time or stress?
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            What is the one thing that saves you the most time or stress? (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -541,11 +610,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="e.g., Client measurements, invoices, order tracking, catalog..."
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={mostUseful} min={5} />
                     </View>
                 );
 
@@ -555,8 +625,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             What is the biggest thing you think NeedleX could do better?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            Be as frank as you like — your honest thoughts guide our updates.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            Be as frank as you like — your honest thoughts guide our updates. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -566,11 +636,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="Tell us what slows you down or needs fixing..."
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={doBetter} min={5} />
                     </View>
                 );
 
@@ -580,8 +651,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             If NeedleX disappeared tomorrow, what would you miss most?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            What would be hardest to replace?
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            What would be hardest to replace? (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -591,11 +662,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="The one thing you rely on most..."
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={missMost} min={5} />
                     </View>
                 );
 
@@ -610,8 +682,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             {trackQuestions.q1Title}
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            We want to understand your real day-to-day workflow.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            We want to understand your real day-to-day workflow. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -621,11 +693,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder={trackQuestions.q1Hint}
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={trackQ1} min={5} />
                     </View>
                 );
 
@@ -640,8 +713,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             {trackQuestions.q2Title}
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            Your operational pain points help us prioritize what to automate.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            Your operational pain points help us prioritize what to automate. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -651,11 +724,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder={trackQuestions.q2Hint}
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={trackQ2} min={5} />
                     </View>
                 );
 
@@ -670,8 +744,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             {trackQuestions.q3Title}
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            Tell us what would make NeedleX indispensable to your business.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            Tell us what would make NeedleX indispensable to your business. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -681,11 +755,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder={trackQuestions.q3Hint}
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={trackQ3} min={5} />
                     </View>
                 );
 
@@ -695,8 +770,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             Which parts of NeedleX would you consider valuable enough to pay for?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            Features or tools that deliver real value to your craft or team.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            Features or tools that deliver real value to your craft or team. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -706,11 +781,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="e.g., Cloud backup, client portals, virtual try-ons, analytics..."
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={valuableFeatures} min={5} />
                     </View>
                 );
 
@@ -720,8 +796,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             What would make NeedleX worth paying for every month?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            What outcome or continuous service would justify a monthly plan?
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            What outcome or continuous service would justify a monthly plan? (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -731,11 +807,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="What would give you 10x return on your investment?"
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={worthPayingMonthly} min={5} />
                     </View>
                 );
 
@@ -746,7 +823,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             How much would you realistically be comfortable paying each month?
                         </Typography>
                         <Typography variant="caption" color="gray" className="mb-3">
-                            Select the price range that matches your budget:
+                            Select the price range that matches your budget (required):
                         </Typography>
 
                         <View className="gap-2 mb-1">
@@ -758,10 +835,10 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                         onPress={() => setSelectedPriceRange(range)}
                                         activeOpacity={0.8}
                                         className={`flex-row items-center justify-between py-2.5 px-4 rounded-2xl border ${isSelected
-                                                ? 'bg-brand-primary/10 border-brand-primary dark:bg-brand-primary/20'
-                                                : isDark
-                                                    ? 'bg-white/5 border-white/10'
-                                                    : 'bg-gray-50 border-gray-200'
+                                            ? 'bg-brand-primary/10 border-brand-primary dark:bg-brand-primary/20'
+                                            : isDark
+                                                ? 'bg-white/5 border-white/10'
+                                                : 'bg-gray-50 border-gray-200'
                                             }`}
                                     >
                                         <Typography
@@ -780,6 +857,11 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                 );
                             })}
                         </View>
+                        {!selectedPriceRange && (
+                            <Typography variant="small" className="text-center text-[12px] text-amber-500 mt-2">
+                                * Please select an option to continue
+                            </Typography>
+                        )}
                     </View>
                 );
 
@@ -789,8 +871,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <Typography variant="h3" weight="bold" className="mb-1">
                             If you could change, remove or add one thing to NeedleX today, what would it be?
                         </Typography>
-                        <Typography variant="caption" color="gray" className="mb-4">
-                            Final question! After this, earn 10 points to add 5 new customer records to your limit immediately.
+                        <Typography variant="caption" color="gray" className="mb-3">
+                            Final question! Earn 10 points to add 5 new customer records to your limit immediately. (required)
                         </Typography>
                         <TextInput
                             multiline
@@ -800,11 +882,12 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                             placeholder="Your top wish or suggestion for NeedleX..."
                             placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                             className={`p-4 rounded-2xl text-[15px] border leading-5 ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                                ? 'bg-white/5 border-white/10 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-900'
                                 }`}
                             style={{ minHeight: 90, textAlignVertical: 'top' }}
                         />
+                        <CharacterCounter value={oneThingToChange} min={5} />
                     </View>
                 );
 
@@ -834,37 +917,31 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                         <View className="flex-1 bg-black/60 justify-end">
                             <Animated.View
                                 entering={FadeInUp.duration(280).springify().damping(22)}
-                                className={`m-4 mb-6 rounded-[32px] p-5 md:p-6 shadow-2xl border ${
-                                    isDark ? 'bg-[#1C1C1E] border-white/10' : 'bg-white border-gray-100'
-                                }`}
+                                className={`m-4 mb-6 rounded-[32px] p-5 md:p-6 shadow-2xl border ${isDark ? 'bg-[#1C1C1E] border-white/10' : 'bg-white border-gray-100'
+                                    }`}
                                 style={{ maxHeight: '92%' }}
                             >
-                                {/* Header Row (Step > 0 & Step < 12) */}
+                                {/* Header Row (Step > 0 & Step < 12): Progress Bar + Close Button on Same Line */}
                                 {currentStep > 0 && currentStep < 12 && (
-                                    <View className="mb-3">
-                                        <View className="flex-row items-center justify-between mb-2">
-                                            <Typography variant="small" weight="bold" color="primary">
-                                                QUESTION {currentStep} OF {totalQuestions}
-                                            </Typography>
-                                            <TouchableOpacity
-                                                onPress={handleDismiss}
-                                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                                className="p-1"
-                                            >
-                                                <CloseCircle size={20} color={isDark ? '#9CA3AF' : '#6B7280'} variant="Linear" />
-                                            </TouchableOpacity>
-                                        </View>
+                                    <View className="flex-row items-center gap-3 mb-3">
                                         {/* Liquid Smooth Animated Progress Bar */}
                                         <View
-                                            className={`h-1.5 w-full rounded-full overflow-hidden ${
-                                                isDark ? 'bg-white/10' : 'bg-gray-100'
-                                            }`}
+                                            className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'
+                                                }`}
                                         >
                                             <Animated.View
                                                 className="h-full bg-brand-primary rounded-full"
                                                 style={animatedProgressStyle}
                                             />
                                         </View>
+
+                                        <TouchableOpacity
+                                            onPress={handleDismiss}
+                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                            className="p-0.5"
+                                        >
+                                            <CloseCircle size={22} color={isDark ? '#9CA3AF' : '#6B7280'} variant="Linear" />
+                                        </TouchableOpacity>
                                     </View>
                                 )}
 
@@ -882,9 +959,8 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                             className="items-center py-2"
                                         >
                                             <View
-                                                className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${
-                                                    isDark ? 'bg-blue-500/10' : 'bg-blue-50'
-                                                }`}
+                                                className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'
+                                                    }`}
                                             >
                                                 <Gift size={36} color="#2563EB" variant="Bulk" />
                                             </View>
@@ -969,18 +1045,20 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                                 <TouchableOpacity
                                                     onPress={() => goToStep(currentStep - 1)}
                                                     activeOpacity={0.85}
-                                                    className={`w-14 h-14 rounded-full items-center justify-center border ${
-                                                        isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'
-                                                    }`}
+                                                    className={`w-14 h-14 rounded-full items-center justify-center border ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'
+                                                        }`}
                                                 >
                                                     <ArrowLeft2 size={20} color={isDark ? '#FFFFFF' : '#111827'} />
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
                                                     onPress={currentStep === 11 ? handleSubmit : () => goToStep(currentStep + 1)}
-                                                    disabled={isSubmitting}
+                                                    disabled={!isCurrentStepValid || isSubmitting}
                                                     activeOpacity={0.85}
-                                                    className="flex-1 bg-brand-primary py-4 rounded-full items-center justify-center flex-row gap-2"
+                                                    className={`flex-1 py-4 rounded-full items-center justify-center flex-row gap-2 ${!isCurrentStepValid || isSubmitting
+                                                        ? 'bg-brand-primary/40'
+                                                        : 'bg-brand-primary'
+                                                        }`}
                                                 >
                                                     {isSubmitting ? (
                                                         <ActivityIndicator size="small" color="#FFFFFF" />
@@ -990,9 +1068,9 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                                             className="flex-row items-center gap-2"
                                                         >
                                                             <Typography variant="body" weight="bold" color="white">
-                                                                Submit & Claim +5 Records
+                                                                Claim Reward
                                                             </Typography>
-                                                            <MagicStar size={18} color="#FFFFFF" variant="Bold" />
+                                                            {/* <MagicStar size={18} color="#FFFFFF" variant="Bold" /> */}
                                                         </Animated.View>
                                                     ) : (
                                                         <Typography variant="body" weight="bold" color="white">
@@ -1032,11 +1110,10 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
 
                                             <Animated.View
                                                 entering={FadeInUp.delay(180).duration(300).springify().damping(15)}
-                                                className={`w-full p-4 rounded-2xl mb-5 items-center border ${
-                                                    isDark
-                                                        ? 'bg-emerald-500/10 border-emerald-500/20'
-                                                        : 'bg-emerald-50 border-emerald-200'
-                                                }`}
+                                                className={`w-full p-4 rounded-2xl mb-5 items-center border ${isDark
+                                                    ? 'bg-emerald-500/10 border-emerald-500/20'
+                                                    : 'bg-emerald-50 border-emerald-200'
+                                                    }`}
                                             >
                                                 <Typography variant="h3" weight="bold" className="text-emerald-600 dark:text-emerald-400 mb-1 text-[17px]">
                                                     +10 Points Added! (+5 Records)
@@ -1047,9 +1124,7 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                                             </Animated.View>
 
                                             <TouchableOpacity
-                                                onPress={() => {
-                                                    setShowAppreciationModal(true);
-                                                }}
+                                                onPress={onClose}
                                                 activeOpacity={0.85}
                                                 className="w-full bg-brand-primary py-4 rounded-full items-center justify-center"
                                             >
@@ -1065,15 +1140,6 @@ export function SurveyModal({ visible, onClose, onCompleted }: SurveyModalProps)
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
             </Modal>
-
-            {/* Team Appreciation Note Modal */}
-            <TeamAppreciationModal
-                visible={showAppreciationModal}
-                onClose={() => {
-                    setShowAppreciationModal(false);
-                    onClose();
-                }}
-            />
         </>
     );
 }

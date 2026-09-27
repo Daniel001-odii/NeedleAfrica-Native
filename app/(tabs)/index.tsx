@@ -39,6 +39,11 @@ export default function Home() {
     const [isReferralModalVisible, setIsReferralModalVisible] = useState(false);
     const [isSurveyModalVisible, setIsSurveyModalVisible] = useState(false);
     const [isSurveyCompleted, setIsSurveyCompleted] = useState(user?.hasCompletedSurvey || false);
+    const [isSurveyEligible, setIsSurveyEligible] = useState<boolean>(() => {
+        if (!user?.createdAt) return false;
+        const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
+        return Date.now() - new Date(user.createdAt).getTime() >= FIFTEEN_DAYS_MS;
+    });
     const [surveyDraftStep, setSurveyDraftStep] = useState<number | null>(null);
     const [activeSlide, setActiveSlide] = useState(0);
     const carouselRef = useRef<ScrollView>(null);
@@ -62,9 +67,17 @@ export default function Home() {
             const completed = Boolean(response.data?.hasCompletedSurvey ?? user?.hasCompletedSurvey);
             setIsSurveyCompleted(completed);
 
-            if (completed) {
+            const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
+            const eligible = response.data?.isEligible !== undefined
+                ? Boolean(response.data.isEligible)
+                : (user?.createdAt ? (Date.now() - new Date(user.createdAt).getTime() >= FIFTEEN_DAYS_MS) : false);
+            setIsSurveyEligible(eligible);
+
+            if (completed || !eligible) {
                 setSurveyDraftStep(null);
-                await AsyncStorage.multiRemove(['survey_draft_step', 'survey_draft_answers']);
+                if (completed) {
+                    await AsyncStorage.multiRemove(['survey_draft_step', 'survey_draft_answers']);
+                }
                 return;
             }
 
@@ -81,7 +94,7 @@ export default function Home() {
                 setSurveyDraftStep(null);
             }
 
-            // If not completed, check 48hr throttle for auto-pop up
+            // If not completed and eligible, check 48hr throttle for auto-pop up
             const lastDismissed = await AsyncStorage.getItem('survey_last_dismissed_at');
             if (!lastDismissed) {
                 setTimeout(() => setIsSurveyModalVisible(true), 1000);
@@ -99,7 +112,7 @@ export default function Home() {
                 setIsSurveyCompleted(true);
             }
         }
-    }, [user?.id, user?.hasCompletedSurvey, isSurveyFeatureEnabled]);
+    }, [user?.id, user?.hasCompletedSurvey, user?.createdAt, isSurveyFeatureEnabled]);
 
     // Check on screen focus
     useFocusEffect(
@@ -262,6 +275,21 @@ export default function Home() {
             .filter(o => o.deliveryDate)
             .sort((a, b) => new Date(a.deliveryDate!).getTime() - new Date(b.deliveryDate!).getTime())[0];
 
+        // Most Recent Order (by createdAt descending)
+        const sortedActive = [...activeOrders].sort((a, b) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeB - timeA;
+        });
+        const latestOrder = sortedActive[0] || null;
+        const recentOrder = latestOrder ? {
+            id: latestOrder.id,
+            amount: Number(latestOrder.amount) || Number(latestOrder.amountPaid) || 0,
+            customerName: (latestOrder as any).customerFullName || customers.find(c => c.id === latestOrder.customerId)?.fullName || 'Customer',
+            styleName: latestOrder.styleName,
+            createdAt: latestOrder.createdAt,
+        } : null;
+
         return {
             pendingCount: pendingOrders.length,
             newToday: ordersToday.length,
@@ -270,7 +298,8 @@ export default function Home() {
             revenue: revenueThisWeek,
             totalEarned,
             totalDebt,
-            nextDeadline: nextOrderWithDeadline
+            nextDeadline: nextOrderWithDeadline,
+            recentOrder
         };
     }, [orders, customers]);
 
@@ -393,6 +422,12 @@ export default function Home() {
                     balanceVisible={balanceVisible}
                     setBalanceVisible={setBalanceVisible}
                     formatCurrency={formatCurrency}
+                    recentOrder={stats.recentOrder}
+                    onPressRecentOrder={() => {
+                        if (stats.recentOrder?.id) {
+                            router.push(`/(tabs)/orders/${stats.recentOrder.id}`);
+                        }
+                    }}
                 />
 
                 {/* App Feature Banner: Free Business Website */}
@@ -441,217 +476,6 @@ export default function Home() {
                     </View>
                 )}
 
-                {/* Promo Banner / Carousel - Controlled by in_app_survey Feature Flag */}
-                {isSurveyFeatureEnabled ? (
-                    /* Survey Promo Banner (Active when in_app_survey flag is enabled) */
-                    <View className="mb-6">
-                        {isSurveyCompleted || user?.hasCompletedSurvey ? (
-                            <View
-                                style={{
-                                    borderRadius: 24,
-                                    padding: 16,
-                                    height: 105,
-                                    overflow: 'hidden'
-                                }}
-                                className={`flex-row items-center justify-between border ${isDark
-                                        ? 'bg-[#1C1C1E] border-white/5'
-                                        : 'bg-emerald-50/60 border-emerald-100'
-                                    }`}
-                            >
-                                <View className="flex-1 pr-3">
-                                    <View className="flex-row items-center mb-1">
-                                        <Typography variant="body" weight="bold" className={`text-[15px] ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                                            NeedleX Survey
-                                        </Typography>
-                                        <View className="bg-emerald-500/20 px-2 py-0.5 rounded-full ml-2">
-                                            <Typography variant="small" weight="black" className="text-emerald-600 dark:text-emerald-400 text-[8px] uppercase tracking-tighter">
-                                                COMPLETED
-                                            </Typography>
-                                        </View>
-                                    </View>
-                                    <Typography variant="small" className={`leading-[16px] text-[12px] ${isDark ? 'text-zinc-400' : 'text-emerald-800/80'}`}>
-                                        Thank you for sharing your feedback to help us shape NeedleX!
-                                    </Typography>
-                                </View>
-                                <View className="w-12 h-12 rounded-2xl bg-emerald-500/10 items-center justify-center border border-emerald-500/20">
-                                    <TickCircle size={26} color="#10B981" variant="Bold" />
-                                </View>
-                            </View>
-                        ) : surveyDraftStep && surveyDraftStep >= 1 ? (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    posthog?.capture('home_survey_banner_clicked', { resume: true, step: surveyDraftStep });
-                                    setIsSurveyModalVisible(true);
-                                }}
-                                activeOpacity={0.85}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 24,
-                                        padding: 16,
-                                        height: 110,
-                                        overflow: 'hidden'
-                                    }}
-                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
-                                >
-                                    <View className="flex-1 pr-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                                Complete Your Survey
-                                            </Typography>
-                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
-                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
-                                                    CONTINUE (+10 PTS)
-                                                </Typography>
-                                            </View>
-                                        </View>
-                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                            Earn 10pts to get 5 new customer records to your limit! Pick up right where you left off.
-                                        </Typography>
-                                    </View>
-                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
-                                        <Award size={30} color="#FFFFFF" variant="Bulk" />
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    posthog?.capture('home_survey_banner_clicked', { resume: false });
-                                    setIsSurveyModalVisible(true);
-                                }}
-                                activeOpacity={0.85}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 24,
-                                        padding: 16,
-                                        height: 110,
-                                        overflow: 'hidden'
-                                    }}
-                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
-                                >
-                                    <View className="flex-1 pr-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                                Help Shape NeedleX
-                                            </Typography>
-                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
-                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
-                                                    +10 PTS
-                                                </Typography>
-                                            </View>
-                                        </View>
-                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                            Earn 10pts to get 5 new customer records to your limit! Take a 2-minute survey to help us improve.
-                                        </Typography>
-                                    </View>
-                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
-                                        <Gift size={30} color="#FFFFFF" variant="Bulk" />
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                ) : (
-                    /* Home Promo Carousel (Business Analytics & Refer & Earn) - Active when in_app_survey flag is disabled */
-                    <View className="mb-6 -mr-2">
-                        <ScrollView
-                            ref={carouselRef}
-                            horizontal
-                            pagingEnabled
-                            showsHorizontalScrollIndicator={false}
-                            onScroll={(e) => {
-                                const contentOffsetX = e.nativeEvent.contentOffset.x;
-                                const idx = Math.round(contentOffsetX / (Dimensions.get('window').width - 32));
-                                setActiveSlide(idx);
-                            }}
-                            scrollEventThrottle={16}
-                            style={{ width: Dimensions.get('window').width - 32 }}
-                        >
-                            <TouchableOpacity
-                                onPress={() => {
-                                    posthog.capture('home_analytics_banner_clicked');
-                                    router.push('/(tabs)/profile/analytics');
-                                }}
-                                activeOpacity={0.85}
-                                style={{ width: Dimensions.get('window').width - 32 }}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 24,
-                                        padding: 16,
-                                        height: 110,
-                                        overflow: 'hidden'
-                                    }}
-                                    className="bg-blue-600 mr-2 flex-row items-center justify-between"
-                                >
-                                    <View className="flex-1 pr-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                                Business Analytics
-                                            </Typography>
-                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2">
-                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">NEW</Typography>
-                                            </View>
-                                        </View>
-                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                            Track your orders, delivery speed, and storefront views in one dashboard.
-                                        </Typography>
-                                    </View>
-                                    <Image
-                                        source={require('../../assets/images/analytics_banner.png')}
-                                        style={{ width: 75, height: 75 }}
-                                        resizeMode="contain"
-                                    />
-                                </View>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => {
-                                    posthog.capture('home_referral_banner_clicked');
-                                    setIsReferralModalVisible(true);
-                                }}
-                                activeOpacity={0.85}
-                                style={{ width: Dimensions.get('window').width - 32 }}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 24,
-                                        padding: 16,
-                                        height: 110,
-                                        overflow: 'hidden'
-                                    }}
-                                    className="bg-[#1C1C1E] dark:bg-[#1C1C1E] mr-2 flex-row items-center justify-between border border-white/5"
-                                >
-                                    <View className="flex-1 pr-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
-                                                Refer & Earn Rewards
-                                            </Typography>
-                                            <View className="bg-white/20 px-2 py-0.5 rounded-full ml-2">
-                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">BONUS</Typography>
-                                            </View>
-                                        </View>
-                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
-                                            Invite tailors, earn points, and unlock upgraded capacity limits for free!
-                                        </Typography>
-                                    </View>
-                                    <Image
-                                        source={require('../../assets/images/referral_bg.png')}
-                                        style={{ width: 75, height: 75, borderRadius: 16 }}
-                                        resizeMode="cover"
-                                    />
-                                </View>
-                            </TouchableOpacity>
-                        </ScrollView>
-
-                        <View className="flex-row justify-center items-center mt-3 gap-1.5">
-                            <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 0 ? 'bg-blue-600 w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
-                            <View className={`w-1.5 h-1.5 rounded-full ${activeSlide === 1 ? 'bg-[#ff5678] w-3' : 'bg-gray-300 dark:bg-zinc-800'}`} />
-                        </View>
-                    </View>
-                )}
 
                 {/* Learn Banner: Not sure how to use NeedleX? - Temporarily Commented */}
                 {/* 
@@ -698,14 +522,12 @@ export default function Home() {
                 */}
 
                 {/* 2. Quick Actions Strip */}
-                <View className="mb-6">
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-4">
-                        <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_order' }); posthog.capture('clicked_quick_create_order'); router.push('/(tabs)/orders/new'); }} />
-                        <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'measure' }); router.push('/measurements/create'); }} />
-                        <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_template' }); router.push('/measurement-templates/create'); }} />
-                        <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'add_client' }); router.push('/(tabs)/customers/new'); }} />
-                        <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'invoice' }); router.push('/(tabs)/orders/invoices/new'); }} />
-                    </ScrollView>
+                <View className="mb-6  mt-4 flex-row items-start justify-between">
+                    <QuickActionPill icon={<Add size={22} color="white" />} label="New Order" bg="bg-black dark:bg-zinc-800" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_order' }); posthog.capture('clicked_quick_create_order'); router.push('/(tabs)/orders/new'); }} />
+                    <QuickActionPill icon={<Ruler size={22} color="#FF5678" variant="Bulk" />} label="Measure" bg="bg-indigo-50 dark:bg-indigo-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'measure' }); router.push('/measurements/create'); }} />
+                    <QuickActionPill icon={<Task size={22} color="#8b5cf6" variant="Bulk" />} label="New Template" bg="bg-violet-50 dark:bg-violet-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'new_template' }); router.push('/measurement-templates/create'); }} />
+                    <QuickActionPill icon={<People size={22} color="#f97316" variant="Bulk" />} label="Add Client" bg="bg-orange-50 dark:bg-orange-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'add_client' }); router.push('/(tabs)/customers/new'); }} />
+                    <QuickActionPill icon={<DocumentText size={22} color="#3b82f6" variant="Bulk" />} label="Invoice" bg="bg-blue-50 dark:bg-blue-900/20" onPress={() => { posthog.capture('quick_action_tapped', { action: 'invoice' }); router.push('/(tabs)/orders/invoices/new'); }} />
                 </View>
 
 
@@ -831,6 +653,217 @@ export default function Home() {
 
                     )
                 }
+
+                {/* Promo Banner / Carousel - Survey Banner shown only for eligible users (>=15 days) who haven't completed survey */}
+                {isSurveyFeatureEnabled && isSurveyEligible && !isSurveyCompleted && !user?.hasCompletedSurvey ? (
+                    /* Survey Promo Banner (Active when in_app_survey flag is enabled and user is eligible) */
+                    <View className="mb-6">
+                        {surveyDraftStep && surveyDraftStep >= 1 ? (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog?.capture('home_survey_banner_clicked', { resume: true, step: surveyDraftStep });
+                                    setIsSurveyModalVisible(true);
+                                }}
+                                activeOpacity={0.85}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Complete Your Survey
+                                            </Typography>
+                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
+                                                    CONTINUE (+10 PTS)
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Earn 10pts to get 5 new customer records to your limit! Pick up right where you left off.
+                                        </Typography>
+                                    </View>
+                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
+                                        <Award size={30} color="#FFFFFF" variant="Bulk" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog?.capture('home_survey_banner_clicked', { resume: false });
+                                    setIsSurveyModalVisible(true);
+                                }}
+                                activeOpacity={0.85}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 24,
+                                        padding: 16,
+                                        height: 110,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-brand-primary flex-row items-center justify-between shadow-sm"
+                                >
+                                    <View className="flex-1 pr-2">
+                                        <View className="flex-row items-center mb-1">
+                                            <Typography variant="body" weight="bold" color="white" className="text-[15px]">
+                                                Help Shape NeedleX
+                                            </Typography>
+                                            <View className="bg-[#FF5678] px-2 py-0.5 rounded-full ml-2 flex-row items-center gap-1">
+                                                <Typography variant="small" weight="black" color="white" className="text-[8px] uppercase tracking-tighter">
+                                                    +10 PTS
+                                                </Typography>
+                                            </View>
+                                        </View>
+                                        <Typography variant="small" color="white" className="leading-[16px] opacity-90 text-[12px]">
+                                            Earn 10pts to get 5 new customer records to your limit! Take a 2-minute survey to help us improve.
+                                        </Typography>
+                                    </View>
+                                    <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center border border-white/10">
+                                        <Gift size={30} color="#FFFFFF" variant="Bulk" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                ) : (
+                    /* Home Promo Carousel (Business Analytics & Refer & Earn) - Active when in_app_survey flag is disabled, user is <15 days old, or user completed survey */
+                    <View className="mb-6 -mr-2" style={{ height: 92, position: 'relative' }}>
+                        <ScrollView
+                            ref={carouselRef}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            onScroll={(e) => {
+                                const contentOffsetX = e.nativeEvent.contentOffset.x;
+                                const idx = Math.round(contentOffsetX / (Dimensions.get('window').width - 32));
+                                setActiveSlide(idx);
+                            }}
+                            scrollEventThrottle={16}
+                            style={{ width: Dimensions.get('window').width - 32, height: 92 }}
+                        >
+                            {/* Slide 1: Business Analytics */}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog.capture('home_analytics_banner_clicked');
+                                    router.push('/(tabs)/profile/analytics');
+                                }}
+                                activeOpacity={0.85}
+                                style={{ width: Dimensions.get('window').width - 30, height: 92 }}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 22,
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 14,
+                                        height: 92,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-blue-600 mr-2 flex-row items-center justify-between"
+                                >
+                                    {/* Left: Image */}
+                                    <Image
+                                        source={require('../../assets/images/analytics_banner.png')}
+                                        style={{ width: 48, height: 48 }}
+                                        resizeMode="contain"
+                                        className="mr-3"
+                                    />
+
+                                    {/* Center: Content */}
+                                    <View className="flex-1 pr-2.5 justify-center">
+                                        <Typography variant="body" weight="bold" color="white" className="text-[13.5px] leading-tight mb-0.5">
+                                            Business Analytics
+                                        </Typography>
+                                        <Typography variant="small" color="white" className="leading-[14px] opacity-85 text-[11px]" numberOfLines={2}>
+                                            Track your orders, delivery speed, and store performance.
+                                        </Typography>
+                                    </View>
+
+                                    {/* Right: CTA Button */}
+                                    <View className="bg-white px-3 py-1.5 rounded-full flex-row items-center">
+                                        <Typography variant="small" weight="bold" className="text-blue-600 text-[11px] mr-1">
+                                            View
+                                        </Typography>
+                                        <ArrowRight size={11} color="#2563EB" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Slide 2: Refer & Earn Rewards */}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    posthog.capture('home_referral_banner_clicked');
+                                    setIsReferralModalVisible(true);
+                                }}
+                                activeOpacity={0.85}
+                                style={{ width: Dimensions.get('window').width - 32, height: 92 }}
+                            >
+                                <View
+                                    style={{
+                                        borderRadius: 22,
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 14,
+                                        height: 92,
+                                        overflow: 'hidden'
+                                    }}
+                                    className="bg-[#1C1C1E] dark:bg-[#1C1C1E] mr-2 flex-row items-center justify-between border border-white/5"
+                                >
+                                    {/* Left: Image */}
+                                    <Image
+                                        source={require('../../assets/images/referral_bg.png')}
+                                        style={{ width: 48, height: 48, borderRadius: 12 }}
+                                        resizeMode="cover"
+                                        className="mr-3"
+                                    />
+
+                                    {/* Center: Content */}
+                                    <View className="flex-1 pr-2.5 justify-center">
+                                        <Typography variant="body" weight="bold" color="white" className="text-[13.5px] leading-tight mb-0.5">
+                                            Refer & Earn
+                                        </Typography>
+                                        <Typography variant="small" color="white" className="leading-[14px] opacity-85 text-[11px]" numberOfLines={2}>
+                                            Invite tailors, earn points, and unlock upgraded capacity.
+                                        </Typography>
+                                    </View>
+
+                                    {/* Right: CTA Button */}
+                                    <View className="bg-[#FF5678] px-3 py-1.5 rounded-full flex-row items-center">
+                                        <Typography variant="small" weight="bold" color="white" className="text-[11px] mr-1">
+                                            Invite
+                                        </Typography>
+                                        <ArrowRight size={11} color="white" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        </ScrollView>
+
+                        {/* Overlapping Carousel Indicator at bottom of slides */}
+                        <View
+                            pointerEvents="none"
+                            style={{
+                                position: 'absolute',
+                                bottom: 5,
+                                left: 0,
+                                right: 8,
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 10,
+                            }}
+                        >
+                            <View className={`h-1 rounded-full ${activeSlide === 0 ? 'bg-white w-3' : 'bg-white/40 w-1'}`} style={{ marginHorizontal: 2.5 }} />
+                            <View className={`h-1 rounded-full ${activeSlide === 1 ? 'bg-white w-3' : 'bg-white/40 w-1'}`} style={{ marginHorizontal: 2.5 }} />
+                        </View>
+                    </View>
+                )}
 
 
 

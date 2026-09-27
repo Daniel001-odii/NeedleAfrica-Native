@@ -16,7 +16,7 @@ const ip = hostUri?.split(":")[0];
 // export const API_URL = `http://${ip}:8000/api`;
 
 const API_CONFIG = {
-    development: `http://${ip}:3000/api`,
+    development: `http://${ip}:5001/api`,
     staging: `http://${ip}:3000/api`, // Pointing to local for both dev/staging as requested
     production: 'https://needle-africa-api.vercel.app/api'
 };

@@ -56,6 +56,7 @@ interface User {
     activatedReferralCount?: number;
     referralPoints?: number;
     hasCompletedSurvey?: boolean;
+    createdAt?: string;
 }
 
 interface AuthContextType {

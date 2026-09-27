@@ -5,7 +5,6 @@ import {
     Pressable,
     TouchableOpacity,
     Dimensions,
-    Animated,
     TextInput,
     KeyboardAvoidingView,
     Platform
@@ -20,10 +19,11 @@ import {
     Copy,
     Share,
     Calculator,
-    InfoCircle
+    InfoCircle,
+    TickCircle,
+    Flash
 } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
-import { Surface } from '../../components/ui/Surface';
 import { IconButton } from '../../components/ui/IconButton';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,74 +43,6 @@ interface MaterialItem {
     qty: string;
     wastage: number; // e.g. 0.10 for 10%
 }
-
-interface GarmentPreset {
-    name: string;
-    description: string;
-    materials: MaterialItem[];
-    laborMode: 'hourly' | 'fixed';
-    hourlyRate: string;
-    laborHours: {
-        drafting: string;
-        cutting: string;
-        sewing: string;
-        finishing: string;
-    };
-    fixedLaborFee: string;
-    overheadPercent: number;
-    wholesaleMultiplier: number;
-    dtcMultiplier: number;
-}
-
-const PRESETS: Record<string, GarmentPreset> = {
-    casual: {
-        name: 'Casual/RTW',
-        description: 'T-Shirts, simple tops, light summer dresses',
-        materials: [
-            { id: '1', name: 'Cotton fabric (yards)', cost: '12', qty: '2.5', wastage: 0.10 },
-            { id: '2', name: 'Thread & Notions', cost: '3', qty: '1', wastage: 0.0 }
-        ],
-        laborMode: 'fixed',
-        hourlyRate: '15',
-        laborHours: { drafting: '0.5', cutting: '0.5', sewing: '2.0', finishing: '0.5' },
-        fixedLaborFee: '25',
-        overheadPercent: 10,
-        wholesaleMultiplier: 1.8,
-        dtcMultiplier: 2.5
-    },
-    custom: {
-        name: 'Suit/Custom',
-        description: 'Structured tailoring, native wear, standard suits',
-        materials: [
-            { id: '1', name: 'Premium Brocade/Wool', cost: '35', qty: '4.0', wastage: 0.10 },
-            { id: '2', name: 'Lining & Interfacing', cost: '12', qty: '1', wastage: 0.10 },
-            { id: '3', name: 'Embroidery / Trims', cost: '20', qty: '1', wastage: 0.0 }
-        ],
-        laborMode: 'hourly',
-        hourlyRate: '25',
-        laborHours: { drafting: '1.5', cutting: '1.0', sewing: '6.0', finishing: '2.0' },
-        fixedLaborFee: '75',
-        overheadPercent: 15,
-        wholesaleMultiplier: 2.0,
-        dtcMultiplier: 3.0
-    },
-    bridal: {
-        name: 'Bridals/Gowns',
-        description: 'Complex draping, lace, hand-beading',
-        materials: [
-            { id: '1', name: 'Silk Satin / Lace (yards)', cost: '90', qty: '6.0', wastage: 0.15 },
-            { id: '2', name: 'Tulles / Understructure', cost: '30', qty: '8.0', wastage: 0.15 },
-            { id: '3', name: 'Beads & Embellishments', cost: '75', qty: '1', wastage: 0.0 }
-        ],
-        laborMode: 'hourly',
-        hourlyRate: '40',
-        laborHours: { drafting: '4.0', cutting: '2.0', sewing: '14.0', finishing: '6.0' },
-        fixedLaborFee: '250',
-        overheadPercent: 20,
-        wholesaleMultiplier: 2.2,
-        dtcMultiplier: 4.0
-    }
-};
 
 const getCurrencySymbol = (code: string) => {
     switch (code) {
@@ -141,68 +73,38 @@ export default function PricingCalculatorScreen() {
     React.useEffect(() => {
         posthog?.capture('pricing_calculator_opened', {
             from_order: !!orderId,
-            order_id: orderId,
-            initial_amount: paramAmount ? parseFloat(paramAmount) : undefined
+            ...(orderId ? { order_id: orderId } : {}),
+            ...(paramAmount ? { initial_amount: parseFloat(paramAmount) } : {})
         });
     }, [orderId]);
 
-    // Resolve user's set currency
+    // Currency
     const userCurrencyCode = user?.currency || 'NGN';
     const currencySymbol = getCurrencySymbol(userCurrencyCode);
 
-    // Dynamic states
-    const [activePreset, setActivePreset] = useState<string | null>(null);
+    // Mode: 'quick' or 'detailed'
+    const [calcMode, setCalcMode] = useState<'quick' | 'detailed'>('quick');
 
-    // Material cost state
-    const [materials, setMaterials] = useState<MaterialItem[]>(PRESETS.casual.materials);
+    // Quick Quote State (Starts Clean/Blank)
+    const [quickMaterialCost, setQuickMaterialCost] = useState('');
+    const [quickLaborCost, setQuickLaborCost] = useState('');
+    const [quickWastage, setQuickWastage] = useState<number>(0.10); // 10% default waste buffer
 
-    // Labor cost state
-    const [laborMode, setLaborMode] = useState<'hourly' | 'fixed'>('fixed');
-    const [hourlyRate, setHourlyRate] = useState('20');
-    const [laborHours, setLaborHours] = useState({
-        drafting: '1',
-        cutting: '1',
-        sewing: '4',
-        finishing: '2'
-    });
-    const [fixedLaborFee, setFixedLaborFee] = useState('45');
+    // Detailed Breakdown State (Starts with 1 blank item)
+    const [materials, setMaterials] = useState<MaterialItem[]>([
+        { id: '1', name: '', cost: '', qty: '', wastage: 0.10 }
+    ]);
+    const [laborMode, setLaborMode] = useState<'fixed' | 'hourly'>('fixed');
+    const [fixedLaborFee, setFixedLaborFee] = useState('');
+    const [hourlyRate, setHourlyRate] = useState('');
+    const [hourlyHours, setHourlyHours] = useState('');
+    const [shopBufferPercent, setShopBufferPercent] = useState<number>(10); // 10% studio buffer
 
-    // Overhead and margins
-    const [overheadPercent, setOverheadPercent] = useState(15);
-    const [wholesaleMultiplier, setWholesaleMultiplier] = useState(2.0);
-    const [dtcMultiplier, setDtcMultiplier] = useState(3.0);
+    // Target Profit Margin (applies to both modes)
+    const [targetMargin, setTargetMargin] = useState<number>(40); // 40% default healthy margin
+    const [customMargin, setCustomMargin] = useState<string>('40');
 
-    // Trigger animations
-    const [fadeAnim] = useState(new Animated.Value(1));
-
-    // Handle preset select
-    const selectPreset = (key: string) => {
-        setActivePreset(key);
-        const preset = PRESETS[key];
-        setMaterials(preset.materials.map(m => ({ ...m, id: Math.random().toString() })));
-        setLaborMode(preset.laborMode);
-        setHourlyRate(preset.hourlyRate);
-        setLaborHours({ ...preset.laborHours });
-        setFixedLaborFee(preset.fixedLaborFee);
-        setOverheadPercent(preset.overheadPercent);
-        setWholesaleMultiplier(preset.wholesaleMultiplier);
-        setDtcMultiplier(preset.dtcMultiplier);
-
-        Animated.sequence([
-            Animated.timing(fadeAnim, { toValue: 0.6, duration: 150, useNativeDriver: true }),
-            Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true })
-        ]).start();
-
-        Toast.show({
-            type: 'success',
-            text1: `${preset.name} Preset Loaded`,
-            text2: 'Calculations updated successfully'
-        });
-
-        posthog?.capture('pricing_calculator_preset_selected', { preset_key: key });
-    };
-
-    // Material CRUD
+    // Material CRUD for Detailed Mode
     const addMaterial = () => {
         posthog?.capture('pricing_calculator_material_added');
         setMaterials(prev => [
@@ -227,117 +129,173 @@ export default function PricingCalculatorScreen() {
     };
 
     const removeMaterial = (id: string) => {
+        if (materials.length <= 1) {
+            setMaterials([{ id: Date.now().toString(), name: '', cost: '', qty: '', wastage: 0.10 }]);
+            return;
+        }
         setMaterials(prev => prev.filter(item => item.id !== id));
     };
 
-    const toggleWastage = (id: string, currentWastage: number) => {
-        const nextWastage = currentWastage === 0.10 ? 0.15 : (currentWastage === 0.15 ? 0.20 : (currentWastage === 0.20 ? 0.00 : 0.10));
-        posthog?.capture('pricing_calculator_wastage_toggled', {
-            new_wastage: nextWastage
-        });
-        updateMaterial(id, 'wastage', nextWastage);
+    const cycleWastage = (id: string, current: number) => {
+        const next = current === 0 ? 0.10 : current === 0.10 ? 0.15 : current === 0.15 ? 0.20 : 0;
+        updateMaterial(id, 'wastage', next);
     };
 
-    // Calculations
-    const getCalculations = () => {
+    // Computations
+    const calculateTotals = () => {
         let totalMaterials = 0;
-        materials.forEach(item => {
-            const costVal = parseFloat(item.cost) || 0;
-            const qtyVal = parseFloat(item.qty) || 0;
-            const totalWithBuffer = costVal * qtyVal * (1 + item.wastage);
-            totalMaterials += totalWithBuffer;
-        });
-
         let totalLabor = 0;
-        if (laborMode === 'fixed') {
-            totalLabor = parseFloat(fixedLaborFee) || 0;
+        let totalBuffer = 0;
+
+        if (calcMode === 'quick') {
+            const rawMat = parseFloat(quickMaterialCost) || 0;
+            totalMaterials = rawMat * (1 + quickWastage);
+            totalLabor = parseFloat(quickLaborCost) || 0;
+            totalBuffer = 0;
         } else {
-            const hrRate = parseFloat(hourlyRate) || 0;
-            const totalHours =
-                (parseFloat(laborHours.drafting) || 0) +
-                (parseFloat(laborHours.cutting) || 0) +
-                (parseFloat(laborHours.sewing) || 0) +
-                (parseFloat(laborHours.finishing) || 0);
-            totalLabor = totalHours * hrRate;
+            // Detailed mode
+            materials.forEach(item => {
+                const cost = parseFloat(item.cost) || 0;
+                const qty = parseFloat(item.qty) || 0;
+                totalMaterials += (cost * qty) * (1 + item.wastage);
+            });
+
+            if (laborMode === 'fixed') {
+                totalLabor = parseFloat(fixedLaborFee) || 0;
+            } else {
+                const rate = parseFloat(hourlyRate) || 0;
+                const hrs = parseFloat(hourlyHours) || 0;
+                totalLabor = rate * hrs;
+            }
+
+            totalBuffer = (totalMaterials + totalLabor) * (shopBufferPercent / 100);
         }
 
-        const totalOverhead = (totalMaterials + totalLabor) * (overheadPercent / 100);
-        const totalCOGS = totalMaterials + totalLabor + totalOverhead;
+        const totalCost = totalMaterials + totalLabor + totalBuffer;
 
-        const wholesalePrice = totalCOGS * wholesaleMultiplier;
-        const wholesaleProfit = wholesalePrice - totalCOGS;
-        const wholesaleMargin = wholesalePrice > 0 ? (wholesaleProfit / wholesalePrice) * 100 : 0;
+        // Pricing with margin formula: Price = Cost / (1 - Margin%)
+        const marginDecimal = Math.min(Math.max(targetMargin, 0), 95) / 100;
+        const standardPrice = totalCost > 0
+            ? Math.round(totalCost / (1 - marginDecimal))
+            : 0;
+        const standardProfit = standardPrice - totalCost;
+        const actualStandardMargin = standardPrice > 0 ? (standardProfit / standardPrice) * 100 : 0;
 
-        const dtcPrice = totalCOGS * dtcMultiplier;
-        const dtcProfit = dtcPrice - totalCOGS;
-        const dtcMargin = dtcPrice > 0 ? (dtcProfit / dtcPrice) * 100 : 0;
-
-        const standardRetailPrice = wholesalePrice * 2.2;
-        const standardRetailProfit = standardRetailPrice - totalCOGS;
-        const standardRetailMargin = standardRetailPrice > 0 ? (standardRetailProfit / standardRetailPrice) * 100 : 0;
+        // Rush / Express / VIP Price: 30% higher
+        const rushPrice = Math.round(standardPrice * 1.30);
+        const rushProfit = rushPrice - totalCost;
+        const actualRushMargin = rushPrice > 0 ? (rushProfit / rushPrice) * 100 : 0;
 
         return {
             totalMaterials,
             totalLabor,
-            totalOverhead,
-            totalCOGS,
-            wholesalePrice,
-            wholesaleProfit,
-            wholesaleMargin,
-            dtcPrice,
-            dtcProfit,
-            dtcMargin,
-            standardRetailPrice,
-            standardRetailProfit,
-            standardRetailMargin
+            totalBuffer,
+            totalCost,
+            standardPrice,
+            standardProfit,
+            actualStandardMargin,
+            rushPrice,
+            rushProfit,
+            actualRushMargin
         };
     };
 
-    const calcs = getCalculations();
+    const calcs = calculateTotals();
 
+    // Margin Health Status
+    const getMarginHealth = (margin: number) => {
+        if (margin >= 40) {
+            return {
+                label: 'Healthy Profit Margin',
+                badgeBg: isDark ? 'bg-emerald-950/40 border-emerald-800/60' : 'bg-emerald-50 border-emerald-200',
+                textColor: 'text-emerald-600 dark:text-emerald-400',
+                description: 'Great quote! This comfortably covers unexpected delays and leaves solid profit for your business.'
+            };
+        }
+        if (margin >= 25) {
+            return {
+                label: 'Fair Profit Margin',
+                badgeBg: isDark ? 'bg-amber-950/40 border-amber-800/60' : 'bg-amber-50 border-amber-200',
+                textColor: 'text-amber-600 dark:text-amber-400',
+                description: 'Workable margin, but consider adding a slight buffer if the client requests multiple fittings.'
+            };
+        }
+        return {
+            label: 'Low Margin Caution',
+            badgeBg: isDark ? 'bg-rose-950/40 border-rose-800/60' : 'bg-rose-50 border-rose-200',
+            textColor: 'text-rose-600 dark:text-rose-400',
+            description: 'You are making under 25% profit. Consider raising your workmanship fee or charging for fittings.'
+        };
+    };
+
+    const health = getMarginHealth(calcs.actualStandardMargin);
+
+    // Initial order comparison
     const initialAmount = paramAmount ? parseFloat(paramAmount) : 0;
-    const initialProfit = initialAmount - calcs.totalCOGS;
+    const initialProfit = initialAmount - calcs.totalCost;
     const initialMargin = initialAmount > 0 ? (initialProfit / initialAmount) * 100 : 0;
 
-    // Copy to clipboard
-    const copyReportText = async () => {
-        const text = `--- FASHION PRICING REPORT ---
-Garment Type: ${activePreset ? PRESETS[activePreset].name : (paramStyleName || 'Custom Design')}
-Currency: ${userCurrencyCode} (${currencySymbol})
+    // Apply Price to Order
+    const handleApplyPrice = async (targetPrice: number, label: string) => {
+        if (!orderId) return;
+        try {
+            const roundedPrice = Math.round(targetPrice);
+            await updateOrder(orderId, { amount: roundedPrice });
 
-1. COST BREAKDOWN:
-- Materials: ${currencySymbol}${calcs.totalMaterials.toFixed(2)}
-- Labor: ${currencySymbol}${calcs.totalLabor.toFixed(2)}
-- Allocated Overhead (${overheadPercent}%): ${currencySymbol}${calcs.totalOverhead.toFixed(2)}
-- Total Cost (COGS): ${currencySymbol}${calcs.totalCOGS.toFixed(2)}
+            posthog?.capture('pricing_calculator_applied_to_order', {
+                order_id: orderId,
+                applied_price: roundedPrice,
+                price_type: label,
+                ...(paramAmount ? { original_price: parseFloat(paramAmount) } : {})
+            });
 
-2. SUGGESTED PRICING STRATEGIES:
-- Wholesale Price (${wholesaleMultiplier}x): ${currencySymbol}${calcs.wholesalePrice.toFixed(2)}
-  (Estimated Profit: ${currencySymbol}${calcs.wholesaleProfit.toFixed(2)} | Margin: ${calcs.wholesaleMargin.toFixed(0)}%)
-  
-- Direct Retail (DTC) (${dtcMultiplier}x): ${currencySymbol}${calcs.dtcPrice.toFixed(2)}
-  (Estimated Profit: ${currencySymbol}${calcs.dtcProfit.toFixed(2)} | Margin: ${calcs.dtcMargin.toFixed(0)}%)
+            Toast.show({
+                type: 'success',
+                text1: 'Order Price Updated!',
+                text2: `Successfully updated order to ${currencySymbol}${roundedPrice.toLocaleString()} (${label})`,
+            });
 
-- Traditional Retail (Wholesale x 2.2): ${currencySymbol}${calcs.standardRetailPrice.toFixed(2)}
-  (Estimated Profit: ${currencySymbol}${calcs.standardRetailProfit.toFixed(2)} | Margin: ${calcs.standardRetailMargin.toFixed(0)}%)
+            router.replace('/(tabs)/orders');
+        } catch (error) {
+            console.error('Failed to update order price:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: 'Could not save the new price to the order.',
+            });
+        }
+    };
 
-Calculated with Needle Africa Pricing Tool.`;
+    // Copy Customer-Friendly WhatsApp Quote
+    const copyWhatsAppQuote = async () => {
+        const garmentName = paramStyleName || 'Custom Outfit';
+        const text = `Hello! Here is the quote for your *${garmentName}*:
+
+• Fabric & Materials: ${currencySymbol}${Math.round(calcs.totalMaterials).toLocaleString()}
+• Workmanship & Tailoring: ${currencySymbol}${Math.round(calcs.totalLabor).toLocaleString()}
+----------------------------------
+*Standard Delivery Price: ${currencySymbol}${calcs.standardPrice.toLocaleString()}*
+
+*(Express / Rush Order: ${currencySymbol}${calcs.rushPrice.toLocaleString()})*
+
+Looking forward to creating your beautiful piece!
+— ${user?.businessName || 'Needle Studio'}`;
 
         await Clipboard.setStringAsync(text);
         Toast.show({
             type: 'success',
-            text1: 'Pricing Report Copied!',
-            text2: 'Ready to send to customers or partners'
+            text1: 'Quote Copied to Clipboard!',
+            text2: 'Ready to paste directly into WhatsApp or SMS'
         });
 
-        posthog?.capture('pricing_calculator_report_copied');
+        posthog?.capture('pricing_calculator_whatsapp_quote_copied');
     };
 
-    // Share via image
+    // Share Visual Cost Sheet
     const shareReportImage = async () => {
         if (!reportRef.current) return;
         try {
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 200));
             const uri = await captureRef(reportRef, {
                 format: 'png',
                 quality: 1.0,
@@ -361,45 +319,7 @@ Calculated with Needle Africa Pricing Tool.`;
             Toast.show({
                 type: 'error',
                 text1: 'Sharing Failed',
-                text2: 'Could not generate report card image.'
-            });
-        }
-    };
-
-    // Multipliers helper
-    const incrementWholesale = (amt: number) => {
-        setWholesaleMultiplier(prev => Math.max(1, parseFloat((prev + amt).toFixed(1))));
-    };
-    const incrementDtc = (amt: number) => {
-        setDtcMultiplier(prev => Math.max(1, parseFloat((prev + amt).toFixed(1))));
-    };
-
-    const handleApplyPrice = async (targetPrice: number, label: string) => {
-        if (!orderId) return;
-        try {
-            const roundedPrice = Math.round(targetPrice);
-            await updateOrder(orderId, { amount: roundedPrice });
-            
-            posthog?.capture('pricing_calculator_applied_to_order', {
-                order_id: orderId,
-                applied_price: roundedPrice,
-                price_type: label,
-                original_price: paramAmount ? parseFloat(paramAmount) : undefined
-            });
-            
-            Toast.show({
-                type: 'success',
-                text1: 'Order Price Updated!',
-                text2: `Successfully set order price to ${currencySymbol}${roundedPrice.toLocaleString()} (${label})`,
-            });
-            
-            router.replace('/(tabs)/orders');
-        } catch (error) {
-            console.error('Failed to update order price:', error);
-            Toast.show({
-                type: 'error',
-                text1: 'Update Failed',
-                text2: 'Could not save the new price to the order.',
+                text2: 'Could not generate report image.'
             });
         }
     };
@@ -407,15 +327,20 @@ Calculated with Needle Africa Pricing Tool.`;
     return (
         <SafeAreaView className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`} edges={['top']}>
             {/* Header */}
-            <View className={`px-6 py-4 flex-row justify-between items-center border-b ${isDark ? 'border-zinc-800/80 bg-zinc-950' : 'border-zinc-200/50 bg-white'}`}>
+            <View className={`px-4 pt-2 pb-2 flex-row items-center justify-between border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
                 <View className="flex-row items-center">
                     <IconButton
-                        icon={<ArrowLeft size={20} color={isDark ? "white" : "black"} />}
+                        icon={<ArrowLeft size={22} color={isDark ? "white" : "black"} />}
                         onPress={() => router.back()}
                         variant="ghost"
                         className="-ml-2"
                     />
-                    <Typography variant="h3" weight="bold" className="ml-2">Pricing Calculator</Typography>
+                    <View className="ml-2">
+                        <Typography variant="h3" weight="bold">Pricing Calculator</Typography>
+                        <Typography variant="small" color="gray">
+                            {paramStyleName ? `For: ${paramStyleName}` : 'Simple quotes for fashion designers'}
+                        </Typography>
+                    </View>
                 </View>
             </View>
 
@@ -423,554 +348,743 @@ Calculated with Needle Africa Pricing Tool.`;
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
-                <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false} className="p-5">
-
-                    {/* Presets Segment Picker */}
-                    <Typography variant="caption" weight="bold" color="gray" className="uppercase tracking-widest mb-3 text-[10px]">Garment Preset</Typography>
-                    <View className="bg-zinc-200/60 dark:bg-zinc-900/60 p-1 rounded-xl flex-row mb-6">
-                        {Object.entries(PRESETS).map(([key, value]) => {
-                            const isSelected = activePreset === key;
-                            return (
-                                <Pressable
-                                    key={key}
-                                    onPress={() => selectPreset(key)}
-                                    className={`flex-1 py-2.5 rounded-lg ${isSelected
-                                        ? 'bg-white dark:bg-zinc-800 shadow-sm'
-                                        : 'bg-transparent'
-                                        }`}
-                                >
-                                    <Typography
-                                        weight="bold"
-                                        variant="caption"
-                                        className={`text-center ${isSelected
-                                            ? isDark ? 'text-white' : 'text-zinc-900'
-                                            : 'text-zinc-500 dark:text-zinc-400'
-                                            }`}
-                                    >
-                                        {value.name}
-                                    </Typography>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
-
-                    {/* 1. MATERIALS COST SECTION */}
-                    <View className={`p-5 mb-6 rounded-2xl ${isDark ? 'bg-zinc-900/50 border border-zinc-800' : 'bg-white border border-zinc-100'}`}>
-                        <View className="flex-row justify-between items-center mb-2 pb-3 border-b border-zinc-100 dark:border-zinc-850">
-                            <Typography variant="subtitle" weight="bold">1. Materials Sheet</Typography>
-                            <Typography variant="caption" weight="bold" color="primary">
-                                Subtotal: {currencySymbol}{calcs.totalMaterials.toFixed(2)}
+                <ScrollView
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                    showsVerticalScrollIndicator={false}
+                    className="p-4"
+                >
+                    {/* Mode Switcher: Quick Quote vs Detailed Breakdown */}
+                    <View className={`p-1 rounded-full flex-row mb-5 ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-zinc-200/70 border border-zinc-200'}`}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setCalcMode('quick');
+                                posthog?.capture('pricing_calculator_mode_changed', { mode: 'quick' });
+                            }}
+                            className={`flex-1 py-2.5 rounded-full items-center flex-row justify-center ${calcMode === 'quick'
+                                ? (isDark ? 'bg-zinc-800' : 'bg-white')
+                                : 'bg-transparent'
+                                }`}
+                        >
+                            <Flash size={15} color={calcMode === 'quick' ? '#FF5678' : (isDark ? '#71717A' : '#71717A')} />
+                            <Typography
+                                weight="bold"
+                                variant="caption"
+                                color={calcMode === 'quick' ? (isDark ? 'white' : 'black') : 'gray'}
+                                style={{ color: calcMode === 'quick' ? (isDark ? '#FFFFFF' : '#18181B') : '#71717A' }}
+                                className="ml-1.5"
+                            >
+                                Quick Quote
                             </Typography>
-                        </View>
-
-                        {/* List items */}
-                        {materials.map((item) => (
-                            <View key={item.id} className="py-3 border-b border-zinc-100 dark:border-zinc-800 flex-row items-center gap-2">
-                                <View className="flex-1 gap-1">
-                                    <TextInput
-                                        placeholder="Item name (e.g. Silk fabric)"
-                                        value={item.name}
-                                        onChangeText={(val) => updateMaterial(item.id, 'name', val)}
-                                        placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
-                                        className="text-sm font-semibold p-0 text-zinc-900 dark:text-zinc-100"
-                                    />
-                                    <View className="flex-row items-center gap-1.5 mt-0.5">
-                                        <TextInput
-                                            placeholder={`Price (${currencySymbol})`}
-                                            keyboardType="numeric"
-                                            value={item.cost}
-                                            onChangeText={(val) => updateMaterial(item.id, 'cost', val)}
-                                            placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
-                                            className="text-xs p-0 text-zinc-500 dark:text-zinc-400 w-16"
-                                        />
-                                        <Typography variant="small" color="gray" className="text-zinc-400">×</Typography>
-                                        <TextInput
-                                            placeholder="Qty"
-                                            keyboardType="numeric"
-                                            value={item.qty}
-                                            onChangeText={(val) => updateMaterial(item.id, 'qty', val)}
-                                            placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
-                                            className="text-xs p-0 text-zinc-500 dark:text-zinc-400 w-10"
-                                        />
-                                    </View>
-                                </View>
-
-                                {/* Wastage button */}
-                                <TouchableOpacity
-                                    onPress={() => toggleWastage(item.id, item.wastage)}
-                                    className={`px-2.5 py-1 rounded-lg ${item.wastage > 0 ? 'bg-orange-50 dark:bg-orange-950/40' : 'bg-zinc-50 dark:bg-zinc-900/50'}`}
-                                >
-                                    <Typography
-                                        variant="small"
-                                        weight="semibold"
-                                        className={item.wastage > 0 ? 'text-orange-600 dark:text-orange-400 text-[10px]' : 'text-zinc-450 dark:text-zinc-500 text-[10px]'}
-                                    >
-                                        +{item.wastage * 100}% waste
-                                    </Typography>
-                                </TouchableOpacity>
-
-                                {/* Delete button */}
-                                <TouchableOpacity
-                                    onPress={() => removeMaterial(item.id)}
-                                    className="p-2 rounded-full"
-                                >
-                                    <Trash size={16} color="#ef4444" />
-                                </TouchableOpacity>
-                            </View>
-                        ))}
+                        </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={addMaterial}
-                            className="flex-row items-center justify-center p-3 mt-4 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-xl"
+                            onPress={() => {
+                                setCalcMode('detailed');
+                                posthog?.capture('pricing_calculator_mode_changed', { mode: 'detailed' });
+                            }}
+                            className={`flex-1 py-2.5 rounded-full items-center flex-row justify-center ${calcMode === 'detailed'
+                                ? (isDark ? 'bg-zinc-800' : 'bg-white')
+                                : 'bg-transparent'
+                                }`}
                         >
-                            <AddCircle size={18} color={isDark ? '#FFF' : '#71717A'} />
-                            <Typography variant="body" weight="semibold" className="ml-2 text-zinc-650 dark:text-zinc-300">Add Material Row</Typography>
+                            <Calculator size={15} color={calcMode === 'detailed' ? '#FF5678' : (isDark ? '#71717A' : '#71717A')} />
+                            <Typography
+                                weight="bold"
+                                variant="caption"
+                                color={calcMode === 'detailed' ? (isDark ? 'white' : 'black') : 'gray'}
+                                style={{ color: calcMode === 'detailed' ? (isDark ? '#FFFFFF' : '#18181B') : '#71717A' }}
+                                className="ml-1.5"
+                            >
+                                Detailed Breakdown
+                            </Typography>
                         </TouchableOpacity>
                     </View>
 
-                    {/* 2. LABOR AND TIME SECTION */}
-                    <View className={`p-5 mb-6 rounded-2xl ${isDark ? 'bg-zinc-900/50 border border-zinc-800' : 'bg-white border border-zinc-100'}`}>
-                        <View className="flex-row justify-between items-center mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-850">
-                            <Typography variant="subtitle" weight="bold">2. Tailoring Labor</Typography>
-                            <Typography variant="caption" weight="bold" color="primary">
-                                Labor: {currencySymbol}{calcs.totalLabor.toFixed(2)}
-                            </Typography>
-                        </View>
-
-                        {/* Mode toggle */}
-                        <View className="flex-row gap-2 mb-5 bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl">
-                            <Pressable
-                                onPress={() => {
-                                    posthog?.capture('pricing_calculator_labor_mode_toggled', { mode: 'fixed' });
-                                    setLaborMode('fixed');
-                                }}
-                                className={`flex-1 py-2 rounded-lg ${laborMode === 'fixed' ? 'bg-white dark:bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
-                            >
-                                <Typography weight="bold" variant="caption" className={`text-center ${laborMode === 'fixed' ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
-                                    Fixed Labor Fee
-                                </Typography>
-                            </Pressable>
-                            <Pressable
-                                onPress={() => {
-                                    posthog?.capture('pricing_calculator_labor_mode_toggled', { mode: 'hourly' });
-                                    setLaborMode('hourly');
-                                }}
-                                className={`flex-1 py-2 rounded-lg ${laborMode === 'hourly' ? 'bg-white dark:bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
-                            >
-                                <Typography weight="bold" variant="caption" className={`text-center ${laborMode === 'hourly' ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
-                                    Hourly Breakdown
-                                </Typography>
-                            </Pressable>
-                        </View>
-
-                        {/* Flat labor fee layout */}
-                        {laborMode === 'fixed' ? (
-                            <View className="flex-row justify-between items-center py-1">
-                                <View>
-                                    <Typography variant="body" weight="semibold">Tailoring Flat Fee</Typography>
-                                    <Typography variant="small" color="gray">Flat rate for cutting and sewing</Typography>
+                    {/* ================= MODE 1: QUICK QUOTE ================= */}
+                    {calcMode === 'quick' ? (
+                        <View className="gap-4 mb-5">
+                            {/* Card 1: Fabric & Materials */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-2">
+                                    <View>
+                                        <Typography variant="body" weight="bold">1. Fabric & Materials Cost</Typography>
+                                        <Typography variant="small" color="gray">Fabric, lining, zipper, thread, and trims</Typography>
+                                    </View>
                                 </View>
-                                <View className="flex-row items-center border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-950">
-                                    <Typography variant="body" weight="bold" className="mr-1 text-zinc-400">{currencySymbol}</Typography>
+
+                                <View className={`flex-row items-center border rounded-xl px-3.5 py-2.5 mt-2 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                    <Typography variant="h3" weight="bold" className="text-zinc-400 mr-2">{currencySymbol}</Typography>
                                     <TextInput
                                         keyboardType="numeric"
-                                        value={fixedLaborFee}
-                                        onChangeText={setFixedLaborFee}
-                                        className="text-base font-bold text-zinc-900 dark:text-zinc-100 w-16 text-right p-0"
+                                        placeholder="0"
+                                        placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                        value={quickMaterialCost}
+                                        onChangeText={setQuickMaterialCost}
+                                        className="flex-1 text-xl font-bold text-zinc-900 dark:text-zinc-100 p-0"
+                                    />
+                                </View>
+
+                                {/* Waste / Offcut Buffer Selector */}
+                                <View className="flex-row items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                    <Typography variant="small" color="gray">Cutting waste / buffer:</Typography>
+                                    <View className="flex-row gap-1.5">
+                                        {[
+                                            { label: '0%', val: 0 },
+                                            { label: '+10%', val: 0.10 },
+                                            { label: '+15%', val: 0.15 }
+                                        ].map(item => {
+                                            const isSelected = quickWastage === item.val;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={item.label}
+                                                    onPress={() => setQuickWastage(item.val)}
+                                                    className={`px-3 py-1.5 rounded-lg border ${isSelected
+                                                        ? 'bg-brand-primary/10 border-brand-primary'
+                                                        : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-100 border-zinc-200')
+                                                        }`}
+                                                >
+                                                    <Typography
+                                                        variant="small"
+                                                        weight={isSelected ? 'bold' : 'normal'}
+                                                        color={isSelected ? 'primary' : 'gray'}
+                                                        style={{ color: isSelected ? '#FF5678' : (isDark ? '#A1A1AA' : '#71717A') }}
+                                                    >
+                                                        {item.label}
+                                                    </Typography>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* Card 2: Sewing & Workmanship */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="mb-2">
+                                    <Typography variant="body" weight="bold">2. Sewing & Workmanship Fee</Typography>
+                                    <Typography variant="small" color="gray">What you or your tailors charge for cutting and sewing</Typography>
+                                </View>
+
+                                <View className={`flex-row items-center border rounded-xl px-3.5 py-2.5 mt-2 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                    <Typography variant="h3" weight="bold" className="text-zinc-400 mr-2">{currencySymbol}</Typography>
+                                    <TextInput
+                                        keyboardType="numeric"
+                                        placeholder="0"
+                                        placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                        value={quickLaborCost}
+                                        onChangeText={setQuickLaborCost}
+                                        className="flex-1 text-xl font-bold text-zinc-900 dark:text-zinc-100 p-0"
                                     />
                                 </View>
                             </View>
-                        ) : (
-                            <View className="gap-4">
-                                {/* Hourly Rate */}
-                                <View className="flex-row justify-between items-center py-1">
+
+                            {/* Card 3: Target Profit Margin */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-3">
                                     <View>
-                                        <Typography variant="body" weight="semibold">Hourly Rate</Typography>
-                                        <Typography variant="small" color="gray">Designer fee wage per hour</Typography>
+                                        <Typography variant="body" weight="bold">3. Target Profit Margin</Typography>
+                                        <Typography variant="small" color="gray">Desired profit margin on this order</Typography>
                                     </View>
-                                    <View className="flex-row items-center border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-950">
-                                        <Typography variant="body" weight="bold" className="mr-1 text-zinc-400">{currencySymbol}</Typography>
+                                    <View className="px-2.5 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20">
+                                        <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }}>
+                                            {targetMargin}% Margin
+                                        </Typography>
+                                    </View>
+                                </View>
+
+                                <View className="flex-row gap-2">
+                                    {[25, 35, 40, 50].map(pct => {
+                                        const isSelected = targetMargin === pct;
+                                        return (
+                                            <TouchableOpacity
+                                                key={pct}
+                                                onPress={() => {
+                                                    setTargetMargin(pct);
+                                                    setCustomMargin(pct.toString());
+                                                }}
+                                                className={`flex-1 py-2.5 rounded-xl items-center border ${isSelected
+                                                    ? 'bg-brand-primary border-brand-primary'
+                                                    : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                                    }`}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    weight="bold"
+                                                    color={isSelected ? 'white' : (isDark ? 'white' : 'black')}
+                                                    style={{ color: isSelected ? '#FFFFFF' : (isDark ? '#D4D4D8' : '#3F3F46') }}
+                                                >
+                                                    {pct}%
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                    {/* Custom Margin input */}
+                                    <View className={`flex-1 flex-row items-center justify-center border rounded-xl px-2 ${targetMargin !== 25 && targetMargin !== 35 && targetMargin !== 40 && targetMargin !== 50
+                                        ? 'border-brand-primary bg-brand-primary/10'
+                                        : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                        }`}>
                                         <TextInput
                                             keyboardType="numeric"
-                                            value={hourlyRate}
-                                            onChangeText={setHourlyRate}
-                                            className="text-base font-bold text-zinc-900 dark:text-zinc-100 w-12 text-right p-0"
+                                            value={customMargin}
+                                            onChangeText={(val) => {
+                                                setCustomMargin(val);
+                                                const num = parseFloat(val);
+                                                if (!isNaN(num) && num > 0 && num < 100) {
+                                                    setTargetMargin(num);
+                                                }
+                                            }}
+                                            placeholder="%"
+                                            placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                            style={{ color: isDark ? '#FFFFFF' : '#18181B' }}
+                                            className="text-center font-bold text-xs p-0 w-8"
                                         />
-                                        <Typography variant="body" className="ml-1 text-zinc-400">/hr</Typography>
+                                        <Typography variant="small" weight="bold" color="gray">%</Typography>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    ) : (
+                        /* ================= MODE 2: DETAILED BREAKDOWN ================= */
+                        <View className="gap-4 mb-5">
+                            {/* 1. Itemized Materials */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-3 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                    <View>
+                                        <Typography variant="body" weight="bold">1. Itemized Materials</Typography>
+                                        <Typography variant="small" color="gray">Fabric, trims, threads & zippers</Typography>
+                                    </View>
+                                    <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }}>
+                                        Subtotal: {currencySymbol}{Math.round(calcs.totalMaterials).toLocaleString()}
+                                    </Typography>
+                                </View>
+
+                                {materials.map((item, index) => (
+                                    <View
+                                        key={item.id}
+                                        className={`py-3 ${index !== materials.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/80' : ''}`}
+                                    >
+                                        <View className="flex-row items-center justify-between mb-1.5">
+                                            <TextInput
+                                                placeholder={`Item ${index + 1} (e.g. Lace fabric, lining)`}
+                                                placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                                value={item.name}
+                                                onChangeText={(val) => updateMaterial(item.id, 'name', val)}
+                                                className="flex-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100 p-0"
+                                            />
+                                            <TouchableOpacity
+                                                onPress={() => removeMaterial(item.id)}
+                                                className="p-1.5 -mr-1"
+                                            >
+                                                <Trash size={15} color="#EF4444" />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <View className="flex-row items-center gap-2">
+                                            <View className={`flex-1 flex-row items-center border rounded-lg px-2.5 py-1.5 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                                <Typography variant="small" color="gray" className="mr-1">{currencySymbol}</Typography>
+                                                <TextInput
+                                                    keyboardType="numeric"
+                                                    placeholder="Cost"
+                                                    placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                                    value={item.cost}
+                                                    onChangeText={(val) => updateMaterial(item.id, 'cost', val)}
+                                                    className="flex-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100 p-0"
+                                                />
+                                            </View>
+
+                                            <Typography variant="small" color="gray">×</Typography>
+
+                                            <View className={`w-20 flex-row items-center border rounded-lg px-2.5 py-1.5 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                                <TextInput
+                                                    keyboardType="numeric"
+                                                    placeholder="Qty/Yds"
+                                                    placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                                    value={item.qty}
+                                                    onChangeText={(val) => updateMaterial(item.id, 'qty', val)}
+                                                    className="flex-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100 p-0 text-center"
+                                                />
+                                            </View>
+
+                                            <TouchableOpacity
+                                                onPress={() => cycleWastage(item.id, item.wastage)}
+                                                className={`px-2 py-1.5 rounded-lg border ${item.wastage > 0
+                                                    ? 'bg-brand-primary/10 border-brand-primary/40'
+                                                    : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                                    }`}
+                                            >
+                                                <Typography
+                                                    variant="small"
+                                                    weight="semibold"
+                                                    color={item.wastage > 0 ? 'primary' : 'gray'}
+                                                    style={{ color: item.wastage > 0 ? '#FF5678' : (isDark ? '#71717A' : '#A1A1AA') }}
+                                                    className="text-[10px]"
+                                                >
+                                                    +{Math.round(item.wastage * 100)}% waste
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                ))}
+
+                                <TouchableOpacity
+                                    onPress={addMaterial}
+                                    className={`flex-row items-center justify-center p-3 mt-3 border border-dashed rounded-xl ${isDark ? 'border-zinc-800 bg-zinc-950/60' : 'border-zinc-300 bg-zinc-50'}`}
+                                >
+                                    <AddCircle size={16} color={isDark ? '#E4E4E7' : '#52525B'} />
+                                    <Typography variant="small" weight="bold" className="ml-1.5 text-zinc-700 dark:text-zinc-300">
+                                        Add Another Material
+                                    </Typography>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* 2. Sewing & Labor */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-3 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                    <View>
+                                        <Typography variant="body" weight="bold">2. Tailoring Labor</Typography>
+                                        <Typography variant="small" color="gray">Workmanship & cutting fee</Typography>
+                                    </View>
+                                    <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }}>
+                                        Labor: {currencySymbol}{Math.round(calcs.totalLabor).toLocaleString()}
+                                    </Typography>
+                                </View>
+
+                                <View className="flex-row gap-2 mb-3">
+                                    <TouchableOpacity
+                                        onPress={() => setLaborMode('fixed')}
+                                        className={`flex-1 py-2.5 rounded-xl items-center border ${laborMode === 'fixed'
+                                            ? 'bg-brand-primary border-brand-primary'
+                                            : (isDark ? 'bg-zinc-950 border-zinc-900' : 'bg-zinc-50 border-zinc-200')
+                                            }`}
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            weight="bold"
+                                            color={laborMode === 'fixed' ? 'white' : 'gray'}
+                                            style={{ color: laborMode === 'fixed' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#71717A') }}
+                                        >
+                                            Flat Sewing Fee
+                                        </Typography>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => setLaborMode('hourly')}
+                                        className={`flex-1 py-2.5 rounded-xl items-center border ${laborMode === 'hourly'
+                                            ? 'bg-brand-primary border-brand-primary'
+                                            : (isDark ? 'bg-zinc-950 border-zinc-900' : 'bg-zinc-50 border-zinc-200')
+                                            }`}
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            weight="bold"
+                                            color={laborMode === 'hourly' ? 'white' : 'gray'}
+                                            style={{ color: laborMode === 'hourly' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#71717A') }}
+                                        >
+                                            Hourly Rate
+                                        </Typography>
+                                    </TouchableOpacity>
+                                </View>
+
+                                {laborMode === 'fixed' ? (
+                                    <View className={`flex-row items-center border rounded-xl px-3.5 py-2.5 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                        <Typography variant="body" weight="bold" className="text-zinc-400 mr-2">{currencySymbol}</Typography>
+                                        <TextInput
+                                            keyboardType="numeric"
+                                            placeholder="Flat tailoring fee"
+                                            placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                            value={fixedLaborFee}
+                                            onChangeText={setFixedLaborFee}
+                                            className="flex-1 text-base font-bold text-zinc-900 dark:text-zinc-100 p-0"
+                                        />
+                                    </View>
+                                ) : (
+                                    <View className="flex-row gap-3">
+                                        <View className={`flex-1 flex-row items-center border rounded-xl px-3 py-2 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                            <Typography variant="small" weight="bold" className="text-zinc-400 mr-1">{currencySymbol}</Typography>
+                                            <TextInput
+                                                keyboardType="numeric"
+                                                placeholder="Rate/hr"
+                                                placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                                value={hourlyRate}
+                                                onChangeText={setHourlyRate}
+                                                className="flex-1 text-sm font-bold text-zinc-900 dark:text-zinc-100 p-0"
+                                            />
+                                        </View>
+                                        <View className={`flex-1 flex-row items-center border rounded-xl px-3 py-2 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                            <TextInput
+                                                keyboardType="numeric"
+                                                placeholder="Total hrs"
+                                                placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                                value={hourlyHours}
+                                                onChangeText={setHourlyHours}
+                                                className="flex-1 text-sm font-bold text-zinc-900 dark:text-zinc-100 p-0"
+                                            />
+                                            <Typography variant="small" color="gray" className="ml-1">hrs</Typography>
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* 3. Studio & Shop Running Buffer */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-1.5">
+                                    <View>
+                                        <Typography variant="body" weight="bold">3. Studio Overhead Buffer</Typography>
+                                        <Typography variant="small" color="gray">Generator fuel, needles, electricity & rent</Typography>
+                                    </View>
+                                    <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }}>
+                                        +{currencySymbol}{Math.round(calcs.totalBuffer).toLocaleString()}
+                                    </Typography>
+                                </View>
+
+                                <View className="flex-row gap-2 mt-3">
+                                    {[0, 5, 10, 15, 20].map(pct => {
+                                        const isSelected = shopBufferPercent === pct;
+                                        return (
+                                            <TouchableOpacity
+                                                key={pct}
+                                                onPress={() => setShopBufferPercent(pct)}
+                                                className={`flex-1 py-2 rounded-xl items-center border ${isSelected
+                                                    ? 'bg-brand-primary border-brand-primary'
+                                                    : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                                    }`}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    weight="bold"
+                                                    color={isSelected ? 'white' : (isDark ? 'white' : 'black')}
+                                                    style={{ color: isSelected ? '#FFFFFF' : (isDark ? '#D4D4D8' : '#3F3F46') }}
+                                                >
+                                                    {pct}%
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </View>
+
+                            {/* 4. Target Profit Margin for Detailed Mode */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-3">
+                                    <View>
+                                        <Typography variant="body" weight="bold">4. Target Profit Margin</Typography>
+                                        <Typography variant="small" color="gray">Desired profit percentage</Typography>
+                                    </View>
+                                    <View className="px-2.5 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20">
+                                        <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }}>
+                                            {targetMargin}% Margin
+                                        </Typography>
                                     </View>
                                 </View>
 
-                                {/* Tasks Hours */}
-                                <Typography variant="caption" weight="bold" color="gray" className="uppercase tracking-widest text-[9px] mt-2">Hours per Stage</Typography>
-                                <View className="flex-row flex-wrap justify-between gap-y-3">
-                                    {[
-                                        { label: 'Drafting', key: 'drafting' },
-                                        { label: 'Cutting', key: 'cutting' },
-                                        { label: 'Sewing', key: 'sewing' },
-                                        { label: 'Finishing', key: 'finishing' }
-                                    ].map((task) => (
-                                        <View key={task.key} className="w-[48%] bg-zinc-50 dark:bg-zinc-950 px-3.5 py-2.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 flex-row justify-between items-center">
-                                            <Typography variant="caption" weight="semibold" className="text-zinc-700 dark:text-zinc-300">{task.label}</Typography>
-                                            <TextInput
-                                                keyboardType="numeric"
-                                                value={laborHours[task.key as keyof typeof laborHours]}
-                                                onChangeText={(val) => setLaborHours(prev => ({ ...prev, [task.key]: val }))}
-                                                className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-b border-zinc-350 dark:border-zinc-700 w-8 text-center p-0"
-                                            />
-                                        </View>
-                                    ))}
+                                <View className="flex-row gap-2">
+                                    {[25, 35, 40, 50].map(pct => {
+                                        const isSelected = targetMargin === pct;
+                                        return (
+                                            <TouchableOpacity
+                                                key={pct}
+                                                onPress={() => {
+                                                    setTargetMargin(pct);
+                                                    setCustomMargin(pct.toString());
+                                                }}
+                                                className={`flex-1 py-2.5 rounded-xl items-center border ${isSelected
+                                                    ? 'bg-brand-primary border-brand-primary'
+                                                    : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                                    }`}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    weight="bold"
+                                                    color={isSelected ? 'white' : (isDark ? 'white' : 'black')}
+                                                    style={{ color: isSelected ? '#FFFFFF' : (isDark ? '#D4D4D8' : '#3F3F46') }}
+                                                >
+                                                    {pct}%
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                    <View className={`flex-1 flex-row items-center justify-center border rounded-xl px-2 ${targetMargin !== 25 && targetMargin !== 35 && targetMargin !== 40 && targetMargin !== 50
+                                        ? 'border-brand-primary bg-brand-primary/10'
+                                        : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200')
+                                        }`}>
+                                        <TextInput
+                                            keyboardType="numeric"
+                                            value={customMargin}
+                                            onChangeText={(val) => {
+                                                setCustomMargin(val);
+                                                const num = parseFloat(val);
+                                                if (!isNaN(num) && num > 0 && num < 100) {
+                                                    setTargetMargin(num);
+                                                }
+                                            }}
+                                            placeholder="%"
+                                            placeholderTextColor={isDark ? '#52525B' : '#A1A1AA'}
+                                            style={{ color: isDark ? '#FFFFFF' : '#18181B' }}
+                                            className="text-center font-bold text-xs p-0 w-8"
+                                        />
+                                        <Typography variant="small" weight="bold" color="gray">%</Typography>
+                                    </View>
                                 </View>
                             </View>
-                        )}
-                    </View>
-
-                    {/* 3. OVERHEAD ALLOCATION */}
-                    <View className={`p-5 mb-6 rounded-2xl ${isDark ? 'bg-zinc-900/50 border border-zinc-800' : 'bg-white border border-zinc-100'}`}>
-                        <View className="flex-row justify-between items-center mb-2 pb-3 border-b border-zinc-100 dark:border-zinc-850">
-                            <Typography variant="subtitle" weight="bold">3. Studio Overhead</Typography>
-                            <Typography variant="caption" weight="bold" color="primary">
-                                Overhead: {currencySymbol}{calcs.totalOverhead.toFixed(2)}
-                            </Typography>
                         </View>
-                        <Typography variant="small" color="gray" className="mb-4 leading-4">
-                            Allocated rent, machinery wear and utility buffers.
-                        </Typography>
+                    )}
 
-                        {/* Overhead Buttons Segment */}
-                        <View className="bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl flex-row">
-                            {[0, 5, 10, 15, 20, 25].map((pct) => {
-                                const isSelected = overheadPercent === pct;
-                                return (
-                                    <TouchableOpacity
-                                        key={pct}
-                                        onPress={() => setOverheadPercent(pct)}
-                                        className={`flex-1 py-1.5 rounded-lg ${isSelected ? 'bg-white dark:bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
-                                    >
-                                        <Typography
-                                            weight="bold"
-                                            variant="caption"
-                                            className={`text-center text-[11px] ${isSelected ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}
-                                        >
-                                            {pct}%
-                                        </Typography>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    </View>
-
-                    {/* 4. MARKUP STEPS (APPLE STEPPERS STYLE) */}
-                    <View className={`p-5 mb-8 rounded-2xl ${isDark ? 'bg-zinc-900/50 border border-zinc-800' : 'bg-white border border-zinc-100'}`}>
-                        <Typography variant="subtitle" weight="bold" className="mb-1 pb-3 border-b border-zinc-100 dark:border-zinc-850">4. Margin Multipliers</Typography>
-
-                        {/* Wholesale Stepper */}
-                        <View className="flex-row justify-between items-center py-4 border-b border-zinc-100/50 dark:border-zinc-850/50">
-                            <View>
-                                <Typography variant="body" weight="semibold">Wholesale Markup</Typography>
-                                <Typography variant="small" color="gray">B2B bulk markup factor</Typography>
-                            </View>
-                            <View className="flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-                                <TouchableOpacity
-                                    onPress={() => incrementWholesale(-0.1)}
-                                    className="w-10 h-10 items-center justify-center active:bg-zinc-200 dark:active:bg-zinc-900"
-                                >
-                                    <Typography weight="bold" variant="body" className="text-zinc-600 dark:text-zinc-400">-</Typography>
-                                </TouchableOpacity>
-                                <View className="px-3 min-w-[50px] items-center">
-                                    <Typography weight="bold" variant="body" className="text-zinc-800 dark:text-zinc-200">{wholesaleMultiplier.toFixed(1)}x</Typography>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => incrementWholesale(0.1)}
-                                    className="w-10 h-10 items-center justify-center active:bg-zinc-200 dark:active:bg-zinc-900"
-                                >
-                                    <Typography weight="bold" variant="body" className="text-zinc-600 dark:text-zinc-400">+</Typography>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-
-                        {/* DTC Retail Stepper */}
-                        <View className="flex-row justify-between items-center py-4">
-                            <View>
-                                <Typography variant="body" weight="semibold">Retail (DTC) Markup</Typography>
-                                <Typography variant="small" color="gray">Direct-to-consumer factor</Typography>
-                            </View>
-                            <View className="flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-                                <TouchableOpacity
-                                    onPress={() => incrementDtc(-0.1)}
-                                    className="w-10 h-10 items-center justify-center active:bg-zinc-200 dark:active:bg-zinc-900"
-                                >
-                                    <Typography weight="bold" variant="body" className="text-zinc-600 dark:text-zinc-400">-</Typography>
-                                </TouchableOpacity>
-                                <View className="px-3 min-w-[50px] items-center">
-                                    <Typography weight="bold" variant="body" className="text-zinc-800 dark:text-zinc-200">{dtcMultiplier.toFixed(1)}x</Typography>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => incrementDtc(0.1)}
-                                    className="w-10 h-10 items-center justify-center active:bg-zinc-200 dark:active:bg-zinc-900"
-                                >
-                                    <Typography weight="bold" variant="body" className="text-zinc-600 dark:text-zinc-400">+</Typography>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Order Price Analysis Comparison Card */}
+                    {/* ================= EXISTING ORDER ANALYSIS BANNER ================= */}
                     {initialAmount > 0 && (
-                        <View className={`p-5 mb-6 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-150'} shadow-sm`}>
-                            <Typography variant="subtitle" weight="bold" className="mb-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                                Order Price Analysis
-                            </Typography>
-                            <Typography variant="small" color="gray" className="mb-4">
-                                Analysis for the set price of your order: <Typography weight="bold" className={isDark ? 'text-white' : 'text-zinc-900'}>"{paramStyleName || 'Garment'}"</Typography>.
-                            </Typography>
+                        <View className={`p-4 mb-5 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                            <View className="flex-row justify-between items-center mb-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                <Typography variant="caption" weight="bold" color="gray" className="uppercase tracking-wider">
+                                    Current Order Price Check
+                                </Typography>
+                                <Typography variant="caption" weight="bold" className={initialProfit >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                    {initialProfit >= 0 ? `+${currencySymbol}${Math.round(initialProfit).toLocaleString()} profit` : `Loss of ${currencySymbol}${Math.abs(Math.round(initialProfit)).toLocaleString()}`}
+                                </Typography>
+                            </View>
 
-                            <View className="flex-row justify-between items-center mb-4">
+                            <View className="flex-row justify-between items-center">
                                 <View>
-                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Order Price</Typography>
-                                    <Typography variant="h2" weight="bold" className="text-zinc-900 dark:text-white">
+                                    <Typography variant="small" color="gray">Current Order Total:</Typography>
+                                    <Typography variant="h3" weight="bold">
                                         {currencySymbol}{initialAmount.toLocaleString()}
                                     </Typography>
                                 </View>
                                 <View className="items-end">
-                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Estimated Profit</Typography>
-                                    <Typography variant="h2" weight="bold" className={initialProfit >= 0 ? 'text-green-500' : 'text-red-500'}>
-                                        {initialProfit >= 0 ? '+' : ''}{currencySymbol}{initialProfit.toFixed(2)}
+                                    <Typography variant="small" color="gray">Production Cost:</Typography>
+                                    <Typography variant="h3" weight="bold" className="text-zinc-500 dark:text-zinc-400">
+                                        {currencySymbol}{Math.round(calcs.totalCost).toLocaleString()}
                                     </Typography>
                                 </View>
                             </View>
-
-                            <View className="flex-row justify-between items-center mb-4">
-                                <View>
-                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Profit Margin</Typography>
-                                    <Typography variant="body" weight="bold" className={initialMargin >= 50 ? 'text-green-500' : (initialMargin >= 20 ? 'text-yellow-500' : 'text-red-500')}>
-                                        {initialMargin.toFixed(0)}%
-                                    </Typography>
-                                </View>
-                                <View className="items-end">
-                                    <Typography variant="body" weight="semibold" className="text-zinc-500 dark:text-zinc-400">Cost of Goods (COGS)</Typography>
-                                    <Typography variant="body" weight="bold" className="text-zinc-900 dark:text-white">
-                                        {currencySymbol}{calcs.totalCOGS.toFixed(2)}
-                                    </Typography>
-                                </View>
-                            </View>
-
-                            {initialMargin < 30 && (
-                                <View className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-250/30 p-3 rounded-xl flex-row items-start">
-                                    <InfoCircle size={18} color="#EAB308" className="mt-0.5 mr-2" />
-                                    <Typography variant="small" className="text-yellow-750 dark:text-yellow-500 flex-1 leading-4">
-                                        Your profit margin is low ({initialMargin.toFixed(0)}%). Consider adjusting the order price or reducing material/labor costs to hit standard profit benchmarks.
-                                    </Typography>
-                                </View>
-                            )}
                         </View>
                     )}
 
-                    {/* DYNAMIC VISUAL REPORT CARD - CAPTURABLE BY VIEW-SHOT */}
-                    <Animated.View style={{ opacity: fadeAnim }}>
-                        <View
-                            ref={reportRef}
-                            collapsable={false}
-                            className={`p-6 rounded-[24px] border ${isDark ? 'bg-zinc-950 border-zinc-850' : 'bg-white border-zinc-200/50'} shadow-sm`}
-                            style={{ width: width - 40, alignSelf: 'center', overflow: 'hidden' }}
-                        >
-                            {/* Brand Header */}
-                            <View className="flex-row justify-between items-center mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-900">
-                                <View>
-                                    <Typography variant="subtitle" weight="bold">Garment Cost Sheet</Typography>
-                                    <Typography variant="small" color="gray" className="text-[9px] uppercase tracking-wider">{user?.businessName || 'My Studio'}</Typography>
+                    {/* ================= RESULTS / REPORT CARD (CAPTURABLE) ================= */}
+                    <View
+                        ref={reportRef}
+                        collapsable={false}
+                        className={`p-5 rounded-3xl border mb-5 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200'}`}
+                        style={{ width: width - 32, alignSelf: 'center' }}
+                    >
+                        {/* Header */}
+                        <View className="flex-row justify-between items-center pb-3.5 mb-4 border-b border-zinc-100 dark:border-zinc-850">
+                            <View>
+                                <Typography variant="subtitle" weight="bold">
+                                    {paramStyleName ? paramStyleName : 'Pricing Recommendation'}
+                                </Typography>
+                                <Typography variant="small" color="gray">
+                                    {user?.businessName || 'Tailor Studio'}
+                                </Typography>
+                            </View>
+                            <View className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-850">
+                                <Typography variant="small" weight="bold" className="text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                    {calcMode === 'quick' ? 'Quick Quote' : 'Detailed Sheet'}
+                                </Typography>
+                            </View>
+                        </View>
+
+                        {/* Price Cards */}
+                        <View className="gap-3 mb-4">
+                            {/* Tier 1: Standard Price */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-brand-primary/5 border-brand-primary/25'}`}>
+                                <View className="flex-row justify-between items-center mb-1">
+                                    <Typography variant="caption" weight="bold" color="primary" style={{ color: '#FF5678' }} className="uppercase tracking-wider text-[11px]">
+                                        Standard Customer Quote
+                                    </Typography>
+                                    <View className="px-2 py-0.5 rounded-full bg-brand-primary/10">
+                                        <Typography variant="small" weight="bold" color="primary" style={{ color: '#FF5678' }} className="text-[10px]">
+                                            {Math.round(calcs.actualStandardMargin)}% Margin
+                                        </Typography>
+                                    </View>
                                 </View>
-                                <View className="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
-                                    <Typography variant="small" weight="bold" className="text-zinc-800 dark:text-zinc-200 text-[10px]">
-                                        {activePreset ? PRESETS[activePreset].name : (paramStyleName || 'Custom Order')}
+
+                                <View className="flex-row justify-between items-baseline mt-1">
+                                    <Typography variant="h1" weight="extrabold" className="text-zinc-900 dark:text-white">
+                                        {currencySymbol}{calcs.standardPrice.toLocaleString()}
+                                    </Typography>
+                                    <Typography variant="small" weight="bold" className="text-emerald-600 dark:text-emerald-400">
+                                        Profit: +{currencySymbol}{Math.round(calcs.standardProfit).toLocaleString()}
                                     </Typography>
                                 </View>
                             </View>
 
-                            {/* Main Pricing Output Stack */}
-                            <View className="gap-4 mb-6">
-                                <View className="flex-row justify-between items-center">
-                                    <View>
-                                        <Typography variant="body" weight="semibold" className="text-zinc-800 dark:text-zinc-200">Wholesale ({wholesaleMultiplier}x)</Typography>
-                                        <Typography variant="small" color="gray" className="text-[11px]">
-                                            Profit: {currencySymbol}{calcs.wholesaleProfit.toFixed(0)} | Margin: {calcs.wholesaleMargin.toFixed(0)}%
+                            {/* Tier 2: Rush / Express Price */}
+                            <View className={`p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                <View className="flex-row justify-between items-center mb-1">
+                                    <View className="flex-row items-center">
+                                        <Flash size={13} color="#F59E0B" />
+                                        <Typography variant="caption" weight="bold" className="uppercase tracking-wider text-amber-600 dark:text-amber-400 ml-1 text-[11px]">
+                                            Rush / Express Delivery (+30%)
                                         </Typography>
                                     </View>
-                                    <Typography variant="h2" weight="bold" color="primary">
-                                        {currencySymbol}{calcs.wholesalePrice.toFixed(2)}
-                                    </Typography>
+                                    <View className="px-2 py-0.5 rounded-full bg-amber-500/10">
+                                        <Typography variant="small" weight="bold" className="text-amber-600 dark:text-amber-400 text-[10px]">
+                                            {Math.round(calcs.actualRushMargin)}% Margin
+                                        </Typography>
+                                    </View>
                                 </View>
 
-                                <View className="flex-row justify-between items-center">
-                                    <View>
-                                        <Typography variant="body" weight="semibold" className="text-zinc-800 dark:text-zinc-200">Direct Retail ({dtcMultiplier}x)</Typography>
-                                        <Typography variant="small" color="gray" className="text-[11px]">
-                                            Profit: {currencySymbol}{calcs.dtcProfit.toFixed(0)} | Margin: {calcs.dtcMargin.toFixed(0)}%
-                                        </Typography>
-                                    </View>
-                                    <Typography variant="h2" weight="bold" className="text-blue-500">
-                                        {currencySymbol}{calcs.dtcPrice.toFixed(2)}
+                                <View className="flex-row justify-between items-baseline mt-1">
+                                    <Typography variant="h2" weight="bold" className="text-zinc-800 dark:text-zinc-200">
+                                        {currencySymbol}{calcs.rushPrice.toLocaleString()}
+                                    </Typography>
+                                    <Typography variant="small" weight="bold" className="text-emerald-600 dark:text-emerald-400">
+                                        Profit: +{currencySymbol}{Math.round(calcs.rushProfit).toLocaleString()}
                                     </Typography>
                                 </View>
                             </View>
+                        </View>
 
-                            {/* Stacked Cost breakdown progress bar */}
-                            {calcs.totalCOGS > 0 && (
-                                <View className="mb-6">
-                                    <Typography variant="caption" weight="bold" color="gray" className="uppercase tracking-widest text-[9px] mb-2">Cost Breakdown Ratio</Typography>
-                                    <View className="h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 flex-row overflow-hidden">
+                        {/* Profit Health Message */}
+                        {calcs.totalCost > 0 && (
+                            <View className={`p-3 rounded-xl border flex-row items-start mb-4 ${health.badgeBg}`}>
+                                <InfoCircle size={16} color={calcs.actualStandardMargin >= 40 ? '#059669' : (calcs.actualStandardMargin >= 25 ? '#D97706' : '#E11D48')} className="mt-0.5 mr-2" />
+                                <View className="flex-1">
+                                    <Typography variant="caption" weight="bold" className={health.textColor}>
+                                        {health.label}
+                                    </Typography>
+                                    <Typography variant="small" className={`mt-0.5 text-xs leading-4 ${health.textColor}`}>
+                                        {health.description}
+                                    </Typography>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Cost Breakdown Summary */}
+                        <View className={`p-3.5 rounded-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
+                            <View className="flex-row justify-between items-center mb-2">
+                                <Typography variant="caption" weight="bold" color="gray" className="uppercase tracking-wider text-[10px]">
+                                    Cost Breakdown
+                                </Typography>
+                                <Typography variant="caption" weight="bold" className="text-zinc-900 dark:text-zinc-100">
+                                    Total Cost: {currencySymbol}{Math.round(calcs.totalCost).toLocaleString()}
+                                </Typography>
+                            </View>
+
+                            {/* Ratio Progress Bar */}
+                            {calcs.totalCost > 0 && (
+                                <View className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 flex-row overflow-hidden mb-3">
+                                    <View
+                                        style={{ flex: calcs.totalMaterials || 0.001 }}
+                                        className="bg-brand-primary h-full"
+                                    />
+                                    <View
+                                        style={{ flex: calcs.totalLabor || 0.001 }}
+                                        className="bg-blue-500 h-full"
+                                    />
+                                    {calcs.totalBuffer > 0 && (
                                         <View
-                                            style={{ flex: calcs.totalMaterials }}
-                                            className="bg-orange-400 h-full"
+                                            style={{ flex: calcs.totalBuffer }}
+                                            className="bg-purple-500 h-full"
                                         />
-                                        <View
-                                            style={{ flex: calcs.totalLabor }}
-                                            className="bg-blue-500 h-full"
-                                        />
-                                        <View
-                                            style={{ flex: calcs.totalOverhead }}
-                                            className="bg-zinc-400 h-full"
-                                        />
-                                    </View>
-                                    <View className="flex-row justify-between mt-2 flex-wrap">
-                                        <View className="flex-row items-center mr-2">
-                                            <View className="w-1.5 h-1.5 rounded-full bg-orange-400 mr-1" />
-                                            <Typography variant="small" color="gray" className="text-[9px]">
-                                                Fabric: {((calcs.totalMaterials / calcs.totalCOGS) * 100).toFixed(0)}%
-                                            </Typography>
-                                        </View>
-                                        <View className="flex-row items-center mr-2">
-                                            <View className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1" />
-                                            <Typography variant="small" color="gray" className="text-[9px]">
-                                                Labor: {((calcs.totalLabor / calcs.totalCOGS) * 100).toFixed(0)}%
-                                            </Typography>
-                                        </View>
-                                        <View className="flex-row items-center">
-                                            <View className="w-1.5 h-1.5 rounded-full bg-zinc-400 mr-1" />
-                                            <Typography variant="small" color="gray" className="text-[9px]">
-                                                Overhead: {((calcs.totalOverhead / calcs.totalCOGS) * 100).toFixed(0)}%
-                                            </Typography>
-                                        </View>
-                                    </View>
+                                    )}
                                 </View>
                             )}
 
-                            {/* Summary Totals */}
-                            <View className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80">
-                                <View className="flex-row justify-between mb-1.5">
-                                    <Typography variant="small" color="gray" className="text-[11px]">Materials + Waste Buffer</Typography>
-                                    <Typography variant="small" weight="semibold" className="text-zinc-800 dark:text-zinc-200">{currencySymbol}{calcs.totalMaterials.toFixed(2)}</Typography>
+                            <View className="gap-1.5">
+                                <View className="flex-row justify-between items-center">
+                                    <View className="flex-row items-center">
+                                        <View className="w-2 h-2 rounded-full bg-brand-primary mr-2" />
+                                        <Typography variant="small" color="gray">Fabric & Materials</Typography>
+                                    </View>
+                                    <Typography variant="small" weight="bold">
+                                        {currencySymbol}{Math.round(calcs.totalMaterials).toLocaleString()}
+                                    </Typography>
                                 </View>
-                                <View className="flex-row justify-between mb-1.5">
-                                    <Typography variant="small" color="gray" className="text-[11px]">Tailor Labor Costs</Typography>
-                                    <Typography variant="small" weight="semibold" className="text-zinc-800 dark:text-zinc-200">{currencySymbol}{calcs.totalLabor.toFixed(2)}</Typography>
-                                </View>
-                                <View className="flex-row justify-between mb-1.5 border-b border-zinc-200/50 dark:border-zinc-800 pb-1.5">
-                                    <Typography variant="small" color="gray" className="text-[11px]">Overhead ({overheadPercent}%)</Typography>
-                                    <Typography variant="small" weight="semibold" className="text-zinc-800 dark:text-zinc-200">{currencySymbol}{calcs.totalOverhead.toFixed(2)}</Typography>
-                                </View>
-                                <View className="flex-row justify-between pt-1.5">
-                                    <Typography variant="caption" weight="bold" className="text-zinc-800 dark:text-zinc-200">Total Cost (COGS)</Typography>
-                                    <Typography variant="caption" weight="bold" color="primary">{currencySymbol}{calcs.totalCOGS.toFixed(2)}</Typography>
-                                </View>
-                            </View>
 
-                            <View className='mt-6'>
-                                <Typography className="text-center text-xs text-gray-400 uppercase tracking-wider">Powered by NeedleX</Typography>
+                                <View className="flex-row justify-between items-center">
+                                    <View className="flex-row items-center">
+                                        <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                                        <Typography variant="small" color="gray">Sewing & Workmanship</Typography>
+                                    </View>
+                                    <Typography variant="small" weight="bold">
+                                        {currencySymbol}{Math.round(calcs.totalLabor).toLocaleString()}
+                                    </Typography>
+                                </View>
+
+                                {calcs.totalBuffer > 0 && (
+                                    <View className="flex-row justify-between items-center">
+                                        <View className="flex-row items-center">
+                                            <View className="w-2 h-2 rounded-full bg-purple-500 mr-2" />
+                                            <Typography variant="small" color="gray">Studio Overhead Buffer</Typography>
+                                        </View>
+                                        <Typography variant="small" weight="bold">
+                                            {currencySymbol}{Math.round(calcs.totalBuffer).toLocaleString()}
+                                        </Typography>
+                                    </View>
+                                )}
                             </View>
                         </View>
-                    </Animated.View>
 
-                    {/* Apple Style Action Buttons */}
-                    <View className="flex-row gap-3 mt-6">
-                        <TouchableOpacity
-                            onPress={copyReportText}
-                            activeOpacity={0.8}
-                            className={`flex-1 flex-row items-center justify-center h-12 rounded-xl ${isDark ? 'bg-zinc-900' : 'bg-zinc-200/60'
-                                }`}
-                        >
-                            <Copy size={18} color={isDark ? "#E4E4E7" : "#3F3F46"} className="mr-2" />
-                            <Typography weight="semibold" variant="body" className={`ml-2 ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
-                                Copy Text
+                        <View className="mt-4">
+                            <Typography className="text-center text-[10px] text-zinc-400 uppercase tracking-widest">
+                                Calculated with Needle Africa
                             </Typography>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            onPress={shareReportImage}
-                            activeOpacity={0.8}
-                            className="flex-1 flex-row items-center justify-center h-12 rounded-xl bg-blue-500"
-                        >
-                            <Svg width="20" height="20" viewBox="0 0 24 24"><Path fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7s2.196-2.716 3.404-3.761a.9.9 0 0 1 .63-.238a.92.92 0 0 1 .562.238C13.804 4.284 16 7 16 7m-3.966-3v11M8 11c-1.4 0-2.1 0-2.635.273a2.5 2.5 0 0 0-1.093 1.092C4 12.9 4 13.6 4 15v1c0 2.357 0 3.535.732 4.268S6.643 21 9 21h6c2.357 0 3.535 0 4.268-.732C20 19.535 20 18.357 20 16v-1c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 0 0-1.092-1.092C18.1 11 17.4 11 16 11" /></Svg>
-                            <Typography weight="bold" variant="body" className={`ml-2 text-white`}>
-                                Share Sheet
-                            </Typography>
-                        </TouchableOpacity>
+                        </View>
                     </View>
 
-                    {/* Apply Pricing to Order options */}
-                    {orderId && (
-                        <View className={`p-5 mt-6 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-150'} shadow-sm`}>
-                            <Typography variant="subtitle" weight="bold" className="mb-3 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                                Apply Pricing to Order
-                            </Typography>
-                            <Typography variant="small" color="gray" className="mb-4">
-                                Update this order's price directly in your database using one of the calculated pricing models.
-                            </Typography>
-
-                            <View className="gap-3">
+                    {/* ================= ACTION BUTTONS (NO DROP SHADOWS!) ================= */}
+                    <View className="gap-3">
+                        {/* If orderId is provided: Apply to Order buttons */}
+                        {orderId && (
+                            <View className="gap-2.5">
                                 <TouchableOpacity
-                                    onPress={() => handleApplyPrice(calcs.dtcPrice, 'Retail (DTC)')}
-                                    className="flex-row justify-between items-center p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 active:bg-blue-500/25"
+                                    onPress={() => handleApplyPrice(calcs.standardPrice, 'Standard')}
+                                    activeOpacity={0.85}
+                                    className="h-13 py-3.5 px-4 rounded-xl bg-brand-primary flex-row items-center justify-center"
                                 >
-                                    <View>
-                                        <Typography variant="body" weight="bold" className="text-blue-600 dark:text-blue-400">
-                                            Apply Retail (DTC)
-                                        </Typography>
-                                        <Typography variant="small" color="gray" className="mt-0.5">
-                                            Recommended markup ({dtcMultiplier}x)
-                                        </Typography>
-                                    </View>
-                                    <Typography variant="body" weight="extrabold" className="text-blue-600 dark:text-blue-450">
-                                        {currencySymbol}{calcs.dtcPrice.toFixed(2)}
+                                    <TickCircle size={18} color="white" />
+                                    <Typography variant="body" weight="bold" color="white" style={{ color: '#FFFFFF' }} className="ml-2">
+                                        Apply Standard ({currencySymbol}{calcs.standardPrice.toLocaleString()}) to Order
                                     </Typography>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => handleApplyPrice(calcs.wholesalePrice, 'Wholesale')}
-                                    className="flex-row justify-between items-center p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 active:bg-orange-500/25"
+                                    onPress={() => handleApplyPrice(calcs.rushPrice, 'Rush')}
+                                    activeOpacity={0.85}
+                                    className={`py-3 px-4 rounded-xl flex-row items-center justify-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}
                                 >
-                                    <View>
-                                        <Typography variant="body" weight="bold" className="text-orange-600 dark:text-orange-400">
-                                            Apply Wholesale
-                                        </Typography>
-                                        <Typography variant="small" color="gray" className="mt-0.5">
-                                            Bulk purchase markup ({wholesaleMultiplier}x)
-                                        </Typography>
-                                    </View>
-                                    <Typography variant="body" weight="extrabold" className="text-orange-600 dark:text-orange-450">
-                                        {currencySymbol}{calcs.wholesalePrice.toFixed(2)}
-                                    </Typography>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => handleApplyPrice(calcs.standardRetailPrice, 'Traditional Retail')}
-                                    className="flex-row justify-between items-center p-4 rounded-xl bg-zinc-500/10 border border-zinc-550/20 active:bg-zinc-500/25"
-                                >
-                                    <View>
-                                        <Typography variant="body" weight="bold" className="text-zinc-700 dark:text-zinc-300">
-                                            Apply Traditional Retail
-                                        </Typography>
-                                        <Typography variant="small" color="gray" className="mt-0.5">
-                                            Wholesale x 2.2 markup
-                                        </Typography>
-                                    </View>
-                                    <Typography variant="body" weight="extrabold" className="text-zinc-700 dark:text-zinc-300">
-                                        {currencySymbol}{calcs.standardRetailPrice.toFixed(2)}
+                                    <Flash size={16} color="#F59E0B" />
+                                    <Typography variant="body" weight="bold" className="ml-2 text-zinc-900 dark:text-zinc-100">
+                                        Apply Rush Price ({currencySymbol}{calcs.rushPrice.toLocaleString()})
                                     </Typography>
                                 </TouchableOpacity>
                             </View>
-                        </View>
-                    )}
+                        )}
 
+                        {/* Customer Share & Copy Buttons */}
+                        <View className="flex-row gap-3">
+                            <TouchableOpacity
+                                onPress={copyWhatsAppQuote}
+                                activeOpacity={0.8}
+                                className={`flex-1 h-12 rounded-xl flex-row items-center justify-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}
+                            >
+                                <Copy size={18} color={isDark ? '#E4E4E7' : '#3F3F46'} />
+                                <Typography weight="bold" variant="body" className="ml-2 text-zinc-800 dark:text-zinc-200">
+                                    Copy Quote
+                                </Typography>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={shareReportImage}
+                                activeOpacity={0.8}
+                                className="flex-1 h-12 rounded-xl flex-row items-center justify-center bg-blue-600"
+                            >
+                                <Svg width="18" height="18" viewBox="0 0 24 24">
+                                    <Path
+                                        fill="none"
+                                        stroke="white"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M8 7s2.196-2.716 3.404-3.761a.9.9 0 0 1 .63-.238a.92.92 0 0 1 .562.238C13.804 4.284 16 7 16 7m-3.966-3v11M8 11c-1.4 0-2.1 0-2.635.273a2.5 2.5 0 0 0-1.093 1.092C4 12.9 4 13.6 4 15v1c0 2.357 0 3.535.732 4.268S6.643 21 9 21h6c2.357 0 3.535 0 4.268-.732C20 19.535 20 18.357 20 16v-1c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 0 0-1.092-1.092C18.1 11 17.4 11 16 11"
+                                    />
+                                </Svg>
+                                <Typography weight="bold" variant="body" className="ml-2 text-white">
+                                    Share Sheet
+                                </Typography>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
