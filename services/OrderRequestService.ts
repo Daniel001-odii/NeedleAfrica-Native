@@ -6,13 +6,16 @@ export interface OrderRequest {
     phoneNumber: string | null;
     email: string | null;
     description: string | null;
+    fabricOption: string | null;
+    fabricBudget: number | null;
     bust: string | null;
     waist: string | null;
     hips: string | null;
     length: string | null;
     customMeasurements: { name: string; value: string }[] | null;
     inspoImages: string[];
-    status: string;
+    status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
+    orderId: string | null;
     createdAt: string;
 }
 
@@ -25,5 +28,14 @@ export class OrderRequestService {
             console.error('Failed to fetch order requests', error);
             return [];
         }
+    }
+
+    static async acceptOrderRequest(id: string): Promise<{ order: any; customer: any }> {
+        const response = await axiosInstance.patch(`/order-requests/${id}/accept`);
+        return response.data.data;
+    }
+
+    static async declineOrderRequest(id: string): Promise<void> {
+        await axiosInstance.patch(`/order-requests/${id}/decline`);
     }
 }

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image, Linking, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, ScrollView, Switch, TouchableOpacity, TextInput, Platform, Modal, Pressable, KeyboardAvoidingView, Image, Linking, ActivityIndicator, StyleSheet } from 'react-native';
+import * as ExpoLocation from 'expo-location';
 import { router } from 'expo-router';
 import {
     ArrowLeft,
@@ -16,7 +17,9 @@ import {
     Eye,
     Gallery,
     Refresh2,
-    ArrowRight
+    ArrowRight,
+    Location,
+    ArrowRight2,
 } from 'iconsax-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Typography } from '../../../components/ui/Typography';
@@ -82,6 +85,64 @@ function toE164(raw: string): string {
     return raw;
 }
 
+// ---------- Mapbox address search helpers ----------
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? '';
+
+interface MapboxSuggestion {
+    mapbox_id: string;
+    name: string;
+    place_formatted: string;
+    full_address?: string;
+}
+
+function generateSessionToken() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function fetchAddressSuggestions(query: string, sessionToken: string): Promise<MapboxSuggestion[]> {
+    if (!query.trim()) return [];
+    const url = new URL('https://api.mapbox.com/search/searchbox/v1/suggest');
+    url.searchParams.set('q', query);
+    url.searchParams.set('session_token', sessionToken);
+    url.searchParams.set('access_token', MAPBOX_TOKEN);
+    url.searchParams.set('country', 'ng');
+    url.searchParams.set('language', 'en');
+    url.searchParams.set('limit', '6');
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.suggestions ?? [];
+}
+
+async function reverseGeocodeCoords(latitude: number, longitude: number): Promise<string | null> {
+    const url = new URL('https://api.mapbox.com/search/geocode/v6/reverse');
+    url.searchParams.set('longitude', longitude.toString());
+    url.searchParams.set('latitude', latitude.toString());
+    url.searchParams.set('access_token', MAPBOX_TOKEN);
+    url.searchParams.set('limit', '1');
+    const res = await fetch(url.toString());
+    if (!res.ok) return null;
+    const data = await res.json();
+    const feature = data.features?.[0];
+    if (!feature) return null;
+    return feature.properties?.full_address ?? feature.properties?.name ?? null;
+}
+
+async function retrieveAddressCoords(mapboxId: string, sessionToken: string): Promise<{ latitude: number; longitude: number; full_address: string } | null> {
+    const url = new URL(`https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}`);
+    url.searchParams.set('session_token', sessionToken);
+    url.searchParams.set('access_token', MAPBOX_TOKEN);
+    const res = await fetch(url.toString());
+    if (!res.ok) return null;
+    const data = await res.json();
+    const feature = data.features?.[0];
+    if (!feature) return null;
+    const [longitude, latitude] = feature.geometry.coordinates;
+    const full_address = feature.properties?.full_address ?? feature.properties?.name ?? '';
+    return { latitude, longitude, full_address };
+}
+// ---------------------------------------------------
+
 const BUSINESS_TYPE_OPTIONS = [
     'Tailor', 'Fashion Designer', 'Seamstress', 'Pattern Maker', 'Bespoke / Made-to-Measure Brand',
     'Ready-to-Wear Brand', 'Fashion Brand (Bespoke + Ready-to-Wear)', 'Bridal Designer',
@@ -144,6 +205,19 @@ export default function BusinessSettings() {
     const [brandDescription, setBrandDescription] = useState('');
     const [phone, setPhone] = useState(toE164(user?.phoneNumber || ''));
     const [address, setAddress] = useState(user?.address || '');
+    const [latitude, setLatitude] = useState<number | undefined>(user?.latitude);
+    const [longitude, setLongitude] = useState<number | undefined>(user?.longitude);
+
+    // Address modal state
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [addressQuery, setAddressQuery] = useState('');
+    const [addressSuggestions, setAddressSuggestions] = useState<MapboxSuggestion[]>([]);
+    const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+    const [isRetrievingAddress, setIsRetrievingAddress] = useState(false);
+    const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(false);
+    const addressSessionToken = useRef(generateSessionToken());
+    const addressDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const [country, setCountry] = useState(user?.country || 'Nigeria');
     const [countryCode, setCountryCode] = useState<any>(user?.country ? undefined : 'NG');
     const [noOfEmployees, setNoOfEmployees] = useState(user?.noOfEmployees || '1-5');
@@ -197,6 +271,12 @@ export default function BusinessSettings() {
                 setTiktok(res.data.tiktok || '');
                 if (res.data.catalogThemeColor) setSelectedTheme(res.data.catalogThemeColor);
                 if (res.data.businessLogo) setLogo(res.data.businessLogo);
+                // Address & coordinates live on the catalog model
+                setAddress(res.data.address || user?.address || '');
+                if (res.data.latitude != null) setLatitude(res.data.latitude);
+                else if (res.data.latitude == null && user?.latitude != null) setLatitude(user.latitude);
+                if (res.data.longitude != null) setLongitude(res.data.longitude);
+                else if (res.data.longitude == null && user?.longitude != null) setLongitude(user.longitude);
             } else {
                 setCatalogId(null);
             }
@@ -235,7 +315,7 @@ export default function BusinessSettings() {
         if (user) {
             setBusinessName(user.businessName || '');
             setPhone(toE164(user.phoneNumber || ''));
-            setAddress(user.address || '');
+            // address/lat/lng are catalog-owned — loaded in fetchCatalogSettings
             if (user.country) {
                 setCountry(user.country);
                 getAllCountries('emoji' as any).then(countries => {
@@ -250,6 +330,84 @@ export default function BusinessSettings() {
             if (user.businessType) setBusinessType(user.businessType);
         }
     }, [user]);
+
+    const handleAddressQueryChange = useCallback((text: string) => {
+        setAddressQuery(text);
+        if (addressDebounceTimer.current) clearTimeout(addressDebounceTimer.current);
+        if (!text.trim()) { setAddressSuggestions([]); return; }
+        setIsSearchingAddress(true);
+        addressDebounceTimer.current = setTimeout(async () => {
+            try {
+                const results = await fetchAddressSuggestions(text, addressSessionToken.current);
+                setAddressSuggestions(results);
+            } catch {
+                setAddressSuggestions([]);
+            } finally {
+                setIsSearchingAddress(false);
+            }
+        }, 380);
+    }, []);
+
+    const handleAddressSuggestionSelect = useCallback(async (suggestion: MapboxSuggestion) => {
+        setIsRetrievingAddress(true);
+        try {
+            const coords = await retrieveAddressCoords(suggestion.mapbox_id, addressSessionToken.current);
+            if (coords) {
+                setAddress(coords.full_address || suggestion.full_address || suggestion.name);
+                setLatitude(coords.latitude);
+                setLongitude(coords.longitude);
+            } else {
+                setAddress(suggestion.full_address || suggestion.name);
+                setLatitude(undefined);
+                setLongitude(undefined);
+            }
+        } catch {
+            setAddress(suggestion.full_address || suggestion.name);
+        } finally {
+            setIsRetrievingAddress(false);
+            setShowAddressModal(false);
+            setAddressQuery('');
+            setAddressSuggestions([]);
+            addressSessionToken.current = generateSessionToken();
+        }
+    }, []);
+
+    const handleUseCurrentLocation = useCallback(async () => {
+        setIsUsingCurrentLocation(true);
+        try {
+            const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Toast.show({ type: 'error', text1: 'Permission denied', text2: 'Location access is required to use this feature.' });
+                return;
+            }
+            const loc = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Balanced });
+            const { latitude: lat, longitude: lng } = loc.coords;
+            const resolved = await reverseGeocodeCoords(lat, lng);
+            if (resolved) {
+                setAddress(resolved);
+                setLatitude(lat);
+                setLongitude(lng);
+                setShowAddressModal(false);
+                setAddressQuery('');
+                setAddressSuggestions([]);
+                addressSessionToken.current = generateSessionToken();
+                Toast.show({ type: 'success', text1: 'Location set', text2: 'Your current location has been applied.' });
+            } else {
+                Toast.show({ type: 'error', text1: 'Could not resolve address', text2: 'Try searching manually instead.' });
+            }
+        } catch {
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Could not get your location. Try again.' });
+        } finally {
+            setIsUsingCurrentLocation(false);
+        }
+    }, []);
+
+    const openAddressModal = useCallback(() => {
+        addressSessionToken.current = generateSessionToken();
+        setAddressQuery('');
+        setAddressSuggestions([]);
+        setShowAddressModal(true);
+    }, []);
 
     const handlePickLogo = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -275,17 +433,16 @@ export default function BusinessSettings() {
                 }
             }
 
-            // 1. Update general user profile
+            // 1. Update general user profile (address/lat/lng live on the catalog now)
             await updateProfile({
                 businessName: businessName.trim(),
                 phoneNumber: phone,
-                address: address.trim(),
                 country,
                 noOfEmployees,
                 businessType
             });
 
-            // 2. Update Catalog-specific settings
+            // 2. Update Catalog-specific settings (includes atelier address & coordinates)
             const { default: axiosInstance } = await import('../../../lib/axios');
             await axiosInstance.patch('/catalog', {
                 id: catalogId,
@@ -298,7 +455,10 @@ export default function BusinessSettings() {
                 facebook: facebook.trim(),
                 tiktok: tiktok.trim(),
                 catalogThemeColor: selectedTheme,
-                businessLogo: currentLogoUrl
+                businessLogo: currentLogoUrl,
+                address: address.trim() || null,
+                latitude: latitude ?? null,
+                longitude: longitude ?? null,
             });
 
             posthog.capture('catalog_updated', {
@@ -416,7 +576,21 @@ export default function BusinessSettings() {
                                 </View>
                             </View>
 
-                            <ProfileRowInput label="Address" value={address} onChangeText={setAddress} placeholder="Street, City, Country" isDark={isDark} />
+                            <TouchableOpacity
+                                onPress={openAddressModal}
+                                className="flex-row items-center py-4"
+                            >
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Address</Typography>
+                                <View className="flex-row items-center flex-1 justify-end ml-2">
+                                    <Typography
+                                        numberOfLines={1}
+                                        className={`text-[14px] mr-2 flex-shrink text-right ${address ? 'text-blue-600' : 'text-gray-400'}`}
+                                    >
+                                        {address || 'Set address'}
+                                    </Typography>
+                                    <ArrowRight2 size={14} color="#9CA3AF" />
+                                </View>
+                            </TouchableOpacity>
                         </Surface>
                     </View>
 
@@ -579,6 +753,132 @@ export default function BusinessSettings() {
                     </Button>
                 </ScrollView>
             )}
+
+            {/* Modal: Address Search — floating card */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showAddressModal}
+                onRequestClose={() => setShowAddressModal(false)}
+            >
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+                    <Pressable style={StyleSheet.absoluteFill} className="bg-black/50" onPress={() => setShowAddressModal(false)} />
+
+                    {/* Floating card — inset from all sides */}
+                    <View style={{ position: 'absolute', bottom: 16, left: 12, right: 12 }} pointerEvents="box-none">
+                        <View
+                            className={`rounded-[28px] overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'}`}
+                            style={{ maxHeight: 520, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 24, elevation: 16 }}
+                        >
+                            {/* Handle + header */}
+                            <View className="items-center pt-3 pb-1">
+                                <View className={`w-10 h-1 rounded-full ${isDark ? 'bg-white/20' : 'bg-gray-300'}`} />
+                            </View>
+                            <View className="flex-row justify-between items-center px-5 pt-2 pb-3">
+                                <Typography variant="h3" weight="bold" className="text-gray-900 dark:text-white">
+                                    Atelier Address
+                                </Typography>
+                                <TouchableOpacity onPress={() => setShowAddressModal(false)} className="bg-gray-200/80 dark:bg-white/10 p-1.5 rounded-full">
+                                    <CloseCircle size={20} color="#6B7280" variant="Bold" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Search input */}
+                            <View className="px-4 pb-3">
+                                <View className={`flex-row items-center px-4 h-[48px] rounded-[14px] border ${isDark ? 'bg-zinc-900 border-white/10' : 'bg-white border-gray-200'}`}>
+                                    <Location size={17} color="#9CA3AF" variant="Outline" />
+                                    <TextInput
+                                        className={`flex-1 ml-2 text-[15px] font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                        placeholder="Search for your address…"
+                                        placeholderTextColor="#9CA3AF"
+                                        value={addressQuery}
+                                        onChangeText={handleAddressQueryChange}
+                                        autoFocus
+                                        autoCorrect={false}
+                                        returnKeyType="search"
+                                    />
+                                    {isSearchingAddress && <ActivityIndicator size="small" color="#9CA3AF" />}
+                                </View>
+                            </View>
+
+                            {/* Use current location button */}
+                            <View className="px-4 pb-3">
+                                <TouchableOpacity
+                                    onPress={handleUseCurrentLocation}
+                                    disabled={isUsingCurrentLocation || isRetrievingAddress}
+                                    className={`flex-row items-center px-4 h-[46px] rounded-[14px] border ${isDark ? 'bg-blue-500/10 border-blue-500/25' : 'bg-blue-50 border-blue-200'} ${(isUsingCurrentLocation || isRetrievingAddress) ? 'opacity-60' : ''}`}
+                                >
+                                    {isUsingCurrentLocation ? (
+                                        <ActivityIndicator size="small" color="#2563EB" />
+                                    ) : (
+                                        <Location size={17} color="#2563EB" variant="Bold" />
+                                    )}
+                                    <Typography weight="semibold" color="primary" className="ml-2 text-[14px]">
+                                        {isUsingCurrentLocation ? 'Getting location…' : 'Use my current location'}
+                                    </Typography>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Divider */}
+                            <View className={`mx-4 h-px mb-3 ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+
+                            {/* Suggestions / states */}
+                            <ScrollView
+                                className="px-4"
+                                keyboardShouldPersistTaps="always"
+                                showsVerticalScrollIndicator={false}
+                                style={{ maxHeight: 260 }}
+                            >
+                                {isRetrievingAddress ? (
+                                    <View className="items-center py-8">
+                                        <ActivityIndicator size="large" color="#2563EB" />
+                                        <Typography color="gray" className="mt-3 text-[13px]">Getting location details…</Typography>
+                                    </View>
+                                ) : addressSuggestions.length > 0 ? (
+                                    <View className={`rounded-[18px] overflow-hidden mb-4 ${cardBaseStyle}`}>
+                                        {addressSuggestions.map((suggestion, index) => {
+                                            const isLast = index === addressSuggestions.length - 1;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={suggestion.mapbox_id}
+                                                    onPress={() => handleAddressSuggestionSelect(suggestion)}
+                                                    className={`flex-row items-start px-4 py-3 active:bg-blue-50 dark:active:bg-blue-900/20 ${!isLast ? 'border-b border-gray-100 dark:border-white/5' : ''}`}
+                                                >
+                                                    <View className={`w-7 h-7 rounded-full items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${isDark ? 'bg-blue-500/15' : 'bg-blue-50'}`}>
+                                                        <Location size={14} color="#2563EB" variant="Bold" />
+                                                    </View>
+                                                    <View className="flex-1">
+                                                        <Typography weight="semibold" className="text-gray-900 dark:text-white text-[13px]">
+                                                            {suggestion.name}
+                                                        </Typography>
+                                                        <Typography className="text-gray-400 text-[11px] mt-0.5">
+                                                            {suggestion.place_formatted}
+                                                        </Typography>
+                                                    </View>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                ) : addressQuery.trim().length > 0 && !isSearchingAddress ? (
+                                    <View className="items-center py-8">
+                                        <Typography color="gray" className="text-[13px]">No results found</Typography>
+                                        <Typography color="gray" className="text-[11px] mt-1 opacity-60">Try a more specific search</Typography>
+                                    </View>
+                                ) : !addressQuery.trim() && address ? (
+                                    <View className={`rounded-[16px] p-3 mb-4 flex-row items-start border ${isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-white border-blue-100'}`}>
+                                        <Location size={15} color="#2563EB" variant="Bold" style={{ marginTop: 2 }} />
+                                        <View className="flex-1 ml-2">
+                                            <Typography variant="small" weight="semibold" color="primary" className="mb-0.5 text-[11px]">Saved address</Typography>
+                                            <Typography className="text-gray-700 dark:text-gray-300 text-[12px] leading-4">{address}</Typography>
+                                        </View>
+                                    </View>
+                                ) : null}
+                                <View className="h-4" />
+                            </ScrollView>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
 
             {/* Modal: Business Specialization Selector */}
             <Modal animationType="slide" transparent={true} visible={showBusinessTypeModal} onRequestClose={() => setShowBusinessTypeModal(false)}>

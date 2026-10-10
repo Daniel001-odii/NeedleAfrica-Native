@@ -257,16 +257,13 @@ const RevenueHeroCard = ({
                     <View
                         style={{
                             zIndex: 1,
-                            marginTop: -16,
-                            paddingTop: 22,
+                            marginTop: -24,
+                            paddingTop: 28,
                             paddingBottom: 11,
                             paddingHorizontal: 14,
                             borderBottomLeftRadius: 26,
                             borderBottomRightRadius: 26,
                             backgroundColor: isDark ? '#1C1C1E' : '#FFF0F3',
-                            borderWidth: 1,
-                            borderTopWidth: 0,
-                            borderColor: isDark ? '#2E2E32' : '#FFE0E6',
                         }}
                     >
                         <View className="flex-row items-center justify-between">

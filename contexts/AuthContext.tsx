@@ -23,6 +23,8 @@ interface User {
     phoneNumber?: string;
     whatsappNumber?: string;
     address?: string;
+    latitude?: number;
+    longitude?: number;
     profilePicture?: string;
     role: string;
     token?: string;

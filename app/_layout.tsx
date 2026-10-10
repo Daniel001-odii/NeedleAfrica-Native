@@ -53,6 +53,7 @@ function RootLayoutNav() {
         const inAiLab = segments[0] === 'ai-lab';
         const inExtras = segments[0] === 'extras';
         const inOrderRequestDetails = segments[0] === 'order-request-details';
+        const inChats = segments[0] === 'chats';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -61,7 +62,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails && !inChats) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -126,6 +127,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="ai-lab" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="extras" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
+                <Stack.Screen name="chats" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (

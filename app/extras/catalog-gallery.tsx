@@ -54,6 +54,7 @@ export default function CatalogGallery() {
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
     const [images, setImages] = useState<string[]>([]);
+    const [gender, setGender] = useState<'male' | 'female' | 'both'>('both');
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -113,7 +114,8 @@ export default function CatalogGallery() {
                 name,
                 price,
                 description,
-                images
+                images,
+                gender
             });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Style uploaded successfully' });
             setShowUploadModal(false);
@@ -132,6 +134,7 @@ export default function CatalogGallery() {
         setPrice(item.price ? String(item.price) : '');
         setDescription(item.description || '');
         setImages(item.images || []);
+        setGender(item.gender || 'both');
         setShowEditModal(true);
     };
 
@@ -148,7 +151,8 @@ export default function CatalogGallery() {
                 name,
                 price,
                 description,
-                images
+                images,
+                gender
             });
             Toast.show({ type: 'success', text1: 'Success', text2: 'Item updated successfully' });
             setShowEditModal(false);
@@ -206,6 +210,7 @@ export default function CatalogGallery() {
         setPrice('');
         setDescription('');
         setImages([]);
+        setGender('both');
     };
 
     const cardBaseStyle = isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100 shadow-sm shadow-gray-100/50';
@@ -394,6 +399,8 @@ export default function CatalogGallery() {
                             <TextInput placeholder="Style Name" value={name} onChangeText={setName} className={inputClass} />
                             <TextInput placeholder="Price Amount" value={price} onChangeText={setPrice} keyboardType="numeric" className={inputClass} />
                             <TextInput placeholder="Description (Optional)" value={description} onChangeText={setDescription} multiline className={`${inputClass} min-h-[100px] text-left pt-4`} />
+                            <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Gender</Typography>
+                            <GenderPicker value={gender} onChange={setGender} isDark={isDark} />
                             <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Images ({images.length}/1)</Typography>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 h-28">
                                 {images.map((img, i) => (
@@ -429,6 +436,8 @@ export default function CatalogGallery() {
                             <TextInput placeholder="Style Name" value={name} onChangeText={setName} className={inputClass} />
                             <TextInput placeholder="Price Amount" value={price} onChangeText={setPrice} keyboardType="numeric" className={inputClass} />
                             <TextInput placeholder="Description (Optional)" value={description} onChangeText={setDescription} multiline className={`${inputClass} min-h-[100px] text-left pt-4`} />
+                            <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Gender</Typography>
+                            <GenderPicker value={gender} onChange={setGender} isDark={isDark} />
                             <Typography variant="small" weight="bold" color="gray" className="mb-2 uppercase">Images ({images.length}/1)</Typography>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 h-28">
                                 {images.map((img, i) => (
@@ -563,6 +572,46 @@ export default function CatalogGallery() {
                 </TouchableOpacity>
             )}
         </SafeAreaView>
+    );
+}
+
+// ----------------------------------------------------------------------
+// Gender Picker Component
+// ----------------------------------------------------------------------
+
+const GENDER_OPTIONS: { value: 'male' | 'female' | 'both'; label: string }[] = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'both', label: 'Both' },
+];
+
+function GenderPicker({ value, onChange, isDark }: { value: 'male' | 'female' | 'both'; onChange: (v: 'male' | 'female' | 'both') => void; isDark: boolean }) {
+    return (
+        <View className="flex-row gap-3 mb-4">
+            {GENDER_OPTIONS.map((opt) => {
+                const isSelected = value === opt.value;
+                return (
+                    <TouchableOpacity
+                        key={opt.value}
+                        onPress={() => onChange(opt.value)}
+                        className={`flex-1 h-11 rounded-2xl items-center justify-center border ${
+                            isSelected
+                                ? 'bg-blue-600 border-blue-600'
+                                : isDark
+                                    ? 'bg-zinc-800/50 border-zinc-700'
+                                    : 'bg-gray-50 border-gray-200'
+                        }`}
+                    >
+                        <Typography
+                            weight="bold"
+                            className={`text-[14px] ${isSelected ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                        >
+                            {opt.label}
+                        </Typography>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
     );
 }
 

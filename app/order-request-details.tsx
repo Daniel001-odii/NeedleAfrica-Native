@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Image, Linking, Pressable, Modal, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, Linking, Pressable, Modal, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, User, Call, Sms, MessageText1, Ruler, Gallery, CloseCircle } from 'iconsax-react-native';
+import { ArrowLeft, User, Call, Sms, MessageText1, Ruler, Gallery, CloseCircle, TickCircle, CloseSquare } from 'iconsax-react-native';
 import { Typography } from '../components/ui/Typography';
 import { IconButton } from '../components/ui/IconButton';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../contexts/ThemeContext';
-import { OrderRequest } from '../services/OrderRequestService';
+import { OrderRequest, OrderRequestService } from '../services/OrderRequestService';
 import { Surface } from '../components/ui/Surface';
+import Toast from 'react-native-toast-message';
 
 export default function OrderRequestDetailsScreen() {
     const { isDark } = useTheme();
@@ -17,6 +18,11 @@ export default function OrderRequestDetailsScreen() {
     // Full screen image view
     const [viewerVisible, setViewerVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState<{ uri: string; label: string } | null>(null);
+
+    const [isAccepting, setIsAccepting] = useState(false);
+    const [isDeclining, setIsDeclining] = useState(false);
+    // local status mirrors the request's status so the UI updates immediately after action
+    const [localStatus, setLocalStatus] = useState<string | null>(null);
 
     const openViewer = (uri: string, label: string) => {
         setSelectedImage({ uri, label });
@@ -45,6 +51,53 @@ export default function OrderRequestDetailsScreen() {
             </View>
         );
     }
+
+    const effectiveStatus = localStatus ?? orderRequest?.status ?? 'PENDING';
+
+    const handleAccept = async () => {
+        if (!orderRequest) return;
+        setIsAccepting(true);
+        try {
+            await OrderRequestService.acceptOrderRequest(orderRequest.id);
+            setLocalStatus('ACCEPTED');
+            Toast.show({ type: 'success', text1: 'Request Accepted', text2: 'Customer, measurements & order have been created.' });
+            setTimeout(() => router.back(), 1200);
+        } catch (error: any) {
+            const msg = error?.response?.data?.message || 'Could not accept the request. Please try again.';
+            Toast.show({ type: 'error', text1: 'Failed', text2: msg });
+        } finally {
+            setIsAccepting(false);
+        }
+    };
+
+    const handleDecline = () => {
+        if (!orderRequest) return;
+        Alert.alert(
+            'Decline Request',
+            `Are you sure you want to decline ${orderRequest.fullName}'s request?${orderRequest.email ? ' They will be notified by email.' : ''}`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Decline',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeclining(true);
+                        try {
+                            await OrderRequestService.declineOrderRequest(orderRequest.id);
+                            setLocalStatus('DECLINED');
+                            Toast.show({ type: 'info', text1: 'Request Declined', text2: orderRequest.email ? 'The customer has been notified by email.' : 'Request marked as declined.' });
+                            setTimeout(() => router.back(), 1200);
+                        } catch (error: any) {
+                            const msg = error?.response?.data?.message || 'Could not decline the request. Please try again.';
+                            Toast.show({ type: 'error', text1: 'Failed', text2: msg });
+                        } finally {
+                            setIsDeclining(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const handleCall = () => {
         if (orderRequest?.phoneNumber) {
@@ -178,6 +231,35 @@ export default function OrderRequestDetailsScreen() {
                         </Surface>
                     )}
 
+                    {/* Fabric Sourcing */}
+                    {orderRequest.fabricOption && (
+                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
+                            <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} font-semibold mb-3`}>
+                                Fabric Sourcing
+                            </Typography>
+                            <View className="flex-row flex-wrap">
+                                <View className="w-1/2 mb-3">
+                                    <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
+                                        Option
+                                    </Typography>
+                                    <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
+                                        {orderRequest.fabricOption}
+                                    </Typography>
+                                </View>
+                                {orderRequest.fabricBudget != null && (
+                                    <View className="w-1/2 mb-3">
+                                        <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
+                                            Fabric Budget
+                                        </Typography>
+                                        <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
+                                            {orderRequest.fabricBudget.toLocaleString()}
+                                        </Typography>
+                                    </View>
+                                )}
+                            </View>
+                        </Surface>
+                    )}
+
                     {/* Measurements */}
                     {(orderRequest.bust || orderRequest.waist || orderRequest.hips || orderRequest.length ||
                         (orderRequest.customMeasurements && orderRequest.customMeasurements.length > 0)) && (
@@ -241,25 +323,51 @@ export default function OrderRequestDetailsScreen() {
                         </Surface>
                     )}
 
-                    {/* Action Buttons */}
-                    <View className="flex-row gap-3 pb-6">
-
-                        <Button
-                            onPress={() => { }}
-                            className="flex-1 h-14 rounded-full bg-blue-600 border-0 shadow-none"
-                            textClassName="text-white font-bold"
-                        >
-                            Accept Request
-                        </Button>
-                        <Button
-                            onPress={() => { }}
-                            className="h-14 rounded-full bg-red-500 border-0 shadow-none flex-0"
-                            textClassName="text-white font-bold"
-                            style={{ paddingHorizontal: 24 }}
-                        >
-                            Decline
-                        </Button>
-                    </View>
+                    {/* Action Buttons / Status */}
+                    {effectiveStatus === 'PENDING' ? (
+                        <View className="flex-row gap-3 pb-6">
+                            <Button
+                                onPress={handleAccept}
+                                isLoading={isAccepting}
+                                disabled={isAccepting || isDeclining}
+                                className="flex-1 h-14 rounded-full bg-blue-600 border-0 shadow-none"
+                                textClassName="text-white font-bold"
+                            >
+                                Accept Request
+                            </Button>
+                            <Button
+                                onPress={handleDecline}
+                                isLoading={isDeclining}
+                                disabled={isAccepting || isDeclining}
+                                className="h-14 rounded-full bg-red-500 border-0 shadow-none flex-0"
+                                textClassName="text-white font-bold"
+                                style={{ paddingHorizontal: 24 }}
+                            >
+                                Decline
+                            </Button>
+                        </View>
+                    ) : (
+                        <View className="pb-6">
+                            <Surface
+                                variant="white"
+                                rounded="3xl"
+                                className={`p-4 flex-row items-center justify-center gap-3 ${
+                                    effectiveStatus === 'ACCEPTED'
+                                        ? 'bg-green-50 dark:bg-green-900/20'
+                                        : 'bg-red-50 dark:bg-red-900/20'
+                                }`}
+                            >
+                                {effectiveStatus === 'ACCEPTED' ? (
+                                    <TickCircle size={22} color="#22c55e" variant="Bold" />
+                                ) : (
+                                    <CloseSquare size={22} color="#ef4444" variant="Bold" />
+                                )}
+                                <Typography weight="bold" className={effectiveStatus === 'ACCEPTED' ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                                    {effectiveStatus === 'ACCEPTED' ? 'Request Accepted — Order Created' : 'Request Declined'}
+                                </Typography>
+                            </Surface>
+                        </View>
+                    )}
 
                 </ScrollView>
 

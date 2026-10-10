@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, Image, RefreshControl, TouchableOpacity, Animated, Dimensions } from 'react-native';
-import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle, Gift, Award } from 'iconsax-react-native';
+import { Notification, Calendar, Box, ArrowRight, Wallet, People, Timer1, Add, Gallery, User, MagicStar, DocumentText, Ruler, Eye, EyeSlash, MoneyRecive, MoneySend, TickCircle, Task, DollarCircle, MessageText, InfoCircle, Gift, Award, GalleryAdd, Notification1, NotificationBing, NotificationCircle, NotificationFavorite } from 'iconsax-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router, useFocusEffect } from 'expo-router';
 import { Surface } from '../../components/ui/Surface';
@@ -385,21 +385,21 @@ export default function Home() {
                     </View>
 
                     <View className="flex-row items-center gap-2">
-                        <IconButton
+                        {/*  <IconButton
                             icon={<InfoCircle size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
                             onPress={() => router.push('/(tabs)/profile/learn')}
                             variant="ghost"
                             className='bg-gray-300/20 p-3'
-                        />
+                        /> */}
                         <IconButton
-                            icon={<Gallery size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                            icon={<GalleryAdd size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
                             onPress={() => router.push('/extras/catalog-gallery')}
                             variant="ghost"
                             className='bg-gray-300/20 p-3'
                         />
                         <View>
                             <IconButton
-                                icon={<MessageText size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
+                                icon={<Notification size={25} color={isDark ? 'white' : 'black'} variant="Linear" />}
                                 onPress={() => router.push('/notifications')}
                                 variant="ghost"
                                 className='bg-gray-300/20 p-3'
