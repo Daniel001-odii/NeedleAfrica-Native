@@ -54,6 +54,7 @@ function RootLayoutNav() {
         const inExtras = segments[0] === 'extras';
         const inOrderRequestDetails = segments[0] === 'order-request-details';
         const inChats = segments[0] === 'chats';
+        const inChatRoom = segments[0] === 'chat-room';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -62,7 +63,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails && !inChats) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails && !inChats && !inChatRoom) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -128,6 +129,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="extras" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="chats" options={{ headerShown: false, animation: 'slide_from_right' }} />
+                <Stack.Screen name="chat-room" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (

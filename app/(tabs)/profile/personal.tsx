@@ -12,6 +12,7 @@ import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import CountryPicker, { getAllCountries } from 'react-native-country-picker-modal';
 import PhoneInput from 'react-phone-number-input/react-native-input';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? '';
 
@@ -99,6 +100,7 @@ export default function PersonalInformation() {
     const router = useRouter();
     const { confirm } = useConfirm();
     const { isDark } = useTheme();
+    const insets = useSafeAreaInsets();
 
     const [username, setUsername] = useState(user?.username || '');
     const [businessName, setBusinessName] = useState(user?.businessName || '');
@@ -857,13 +859,23 @@ export default function PersonalInformation() {
                 visible={showAddressModal}
                 onRequestClose={() => setShowAddressModal(false)}
             >
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+                >
                     <Pressable style={StyleSheet.absoluteFill} className="bg-black/50" onPress={() => setShowAddressModal(false)} />
 
                     {/* Floating card — inset from all sides */}
-                    <View style={{ position: 'absolute', bottom: 16, left: 12, right: 12 }} pointerEvents="box-none">
-                        <View className={`rounded-[28px] overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'}`}
-                            style={{ maxHeight: 520, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 24, elevation: 16 }}
+                    <View
+                        className="flex-1 justify-end px-3"
+                        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+                        pointerEvents="box-none"
+                    >
+                        <Pressable
+                            onPress={(e) => e.stopPropagation()}
+                            className={`rounded-[28px] overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-[#F2F2F7]'}`}
+                            style={{ maxHeight: 520, flexShrink: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 24, elevation: 16 }}
                         >
                             {/* Handle + header */}
                             <View className="items-center pt-3 pb-1">
@@ -924,7 +936,7 @@ export default function PersonalInformation() {
                                 className="px-4"
                                 keyboardShouldPersistTaps="always"
                                 showsVerticalScrollIndicator={false}
-                                style={{ maxHeight: 260 }}
+                                style={{ maxHeight: 260, flexShrink: 1 }}
                             >
                                 {isRetrievingAddress ? (
                                     <View className="items-center py-8">
@@ -973,7 +985,7 @@ export default function PersonalInformation() {
 
                                 <View className="h-4" />
                             </ScrollView>
-                        </View>
+                        </Pressable>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>

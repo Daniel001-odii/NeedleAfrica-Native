@@ -7,6 +7,7 @@ import { LimitedOfflineBanner } from '../../components/LimitedOfflineBanner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUnreadOrderRequests } from '../../hooks/useUnreadOrderRequests';
+import { useUnreadChats } from '../../hooks/useUnreadChats';
 import { useCatalog } from '../../hooks/useCatalog';
 import { useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
@@ -23,6 +24,7 @@ interface CustomTabBarProps {
     insets: { top: number; right: number; bottom: number; left: number };
     isDark: boolean;
     totalUnread: number;
+    unreadChats: number;
     userProfilePicture?: string;
     hideTabBar: boolean;
     onTabPress: (tabName: string) => void;
@@ -35,6 +37,7 @@ function CustomTabBar({
     insets,
     isDark,
     totalUnread,
+    unreadChats,
     userProfilePicture,
     hideTabBar,
     onTabPress,
@@ -127,11 +130,35 @@ function CustomTabBar({
                     } else if (route.name === 'chats') {
                         label = 'Chats';
                         iconNode = (
-                            <Messages1
-                                size={22}
-                                color={isFocused ? activeColor : inactiveColor}
-                                variant={isFocused ? 'Bold' : 'Linear'}
-                            />
+                            <View style={{ position: 'relative' }}>
+                                <Messages1
+                                    size={22}
+                                    color={isFocused ? activeColor : inactiveColor}
+                                    variant={isFocused ? 'Bold' : 'Linear'}
+                                />
+                                {unreadChats > 0 && (
+                                    <View
+                                        style={{
+                                            position: 'absolute',
+                                            top: -5,
+                                            right: -8,
+                                            minWidth: 16,
+                                            height: 16,
+                                            borderRadius: 8,
+                                            backgroundColor: '#EF4444',
+                                            borderWidth: 2,
+                                            borderColor: isDark ? '#000000' : '#FFFFFF',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            paddingHorizontal: 2,
+                                        }}
+                                    >
+                                        <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white', lineHeight: 11 }}>
+                                            {unreadChats > 99 ? '99+' : unreadChats}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         );
                     } else if (route.name === 'extras') {
                         label = 'Extras';
@@ -253,6 +280,7 @@ export default function TabLayout() {
     const { user } = useAuth();
     const { isDark } = useTheme();
     const { unreadCount } = useUnreadOrderRequests();
+    const { unreadChats } = useUnreadChats();
     const { needsVisibility } = useCatalog();
     const posthog = usePostHog();
     const insets = useSafeAreaInsets();
@@ -298,6 +326,7 @@ export default function TabLayout() {
                             {...props}
                             isDark={isDark}
                             totalUnread={totalUnread}
+                            unreadChats={unreadChats}
                             userProfilePicture={user?.profilePicture}
                             hideTabBar={hideTabBar}
                             onTabPress={(tabName) => {

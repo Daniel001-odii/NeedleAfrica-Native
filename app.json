@@ -3,7 +3,7 @@
     "name": "NeedleX",
     "slug": "needleafrica-app",
     "scheme": "needlex",
-    "version": "2.0.05",
+    "version": "2.0.08",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
