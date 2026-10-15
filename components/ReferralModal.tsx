@@ -132,10 +132,10 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({ visible, onClose }
     // Dynamic calculations for dynamic limit overview in Rewards tab
     const activatedCount = data?.referrals.filter(r => r.status === 'ACTIVATED').length || 0;
     const dynamicLimits = {
-        orders: 5 + activatedCount * 5,
-        customers: 5 + activatedCount * 5,
+        orders: 10 + activatedCount * 5,
+        customers: 10 + activatedCount * 5,
         templates: 3 + activatedCount * 3,
-        invoices: 5 + activatedCount * 5,
+        invoices: 10 + activatedCount * 5,
         catalogItems: 3 + activatedCount * 5,
     };
 

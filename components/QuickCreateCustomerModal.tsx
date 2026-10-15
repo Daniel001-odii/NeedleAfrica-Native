@@ -40,7 +40,7 @@ export function QuickCreateCustomerModal({
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitModalData, setLimitModalData] = useState({
     currentCount: 0,
-    limit: 5,
+    limit: 10,
   });
 
   if (!visible && !showLimitModal) return null;

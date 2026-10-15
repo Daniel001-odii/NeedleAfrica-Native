@@ -40,10 +40,10 @@ export interface UseResourceLimitsReturn {
 }
 
 const BASE_LIMITS: Record<ResourceType, number> = {
-  orders: 5,
-  customers: 5,
+  orders: 10,
+  customers: 10,
   templates: 3,
-  invoices: 5,
+  invoices: 10,
 };
 
 const REFERRAL_BONUS: Record<ResourceType, number> = {

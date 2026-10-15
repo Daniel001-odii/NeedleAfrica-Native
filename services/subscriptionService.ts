@@ -139,13 +139,13 @@ class SubscriptionService {
       isActive: true,
       isPopular: false,
       features: [
-        'Up to 5 active orders',
+        'Up to 10 active orders',
         '3 basic measurement templates',
-        'Up to 5 customer profiles',
-        'Up to 5 invoices',
+        'Up to 10 customer profiles',
+        'Up to 10 invoices',
         'Static invoices',
       ],
-      limits: { orders: 5, customers: 5, templates: 3, invoices: 5 },
+      limits: { orders: 10, customers: 10, templates: 3, invoices: 10 },
       createdAt: '',
       updatedAt: '',
     };
@@ -197,10 +197,10 @@ class SubscriptionService {
     referralCount: number = 0
   ): { allowed: boolean; limit: number } {
     const baseLimits = {
-      orders: 5,
-      customers: 5,
+      orders: 10,
+      customers: 10,
       templates: 3,
-      invoices: 5,
+      invoices: 10,
     };
 
     const bonus = {

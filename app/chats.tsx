@@ -58,36 +58,43 @@ export default function ChatsScreen() {
     useFocusEffect(useCallback(() => {
         fetchRooms();
         let mounted = true;
+        let activeSocket: any = null;
+
+        const handleMessage = (msg: any) => {
+            setRooms(prev =>
+                prev
+                    .map(r => r.id === msg.chatRoomId
+                        ? {
+                            ...r,
+                            lastMessageText: msg.text,
+                            lastMessageAt: msg.createdAt,
+                            unreadTailor: msg.senderType === 'CLIENT'
+                                ? r.unreadTailor + 1
+                                : r.unreadTailor,
+                        }
+                        : r
+                    )
+                    .sort((a, b) =>
+                        new Date(b.lastMessageAt ?? b.createdAt).getTime() -
+                        new Date(a.lastMessageAt ?? a.createdAt).getTime()
+                    )
+            );
+        };
 
         getSocket().then(socket => {
             if (!mounted) return;
+            activeSocket = socket;
             socketRef.current = socket;
-
-            socket.on('message_received', (msg: any) => {
-                setRooms(prev =>
-                    prev
-                        .map(r => r.id === msg.chatRoomId
-                            ? {
-                                ...r,
-                                lastMessageText: msg.text,
-                                lastMessageAt: msg.createdAt,
-                                unreadTailor: msg.senderType === 'CLIENT'
-                                    ? r.unreadTailor + 1
-                                    : r.unreadTailor,
-                            }
-                            : r
-                        )
-                        .sort((a, b) =>
-                            new Date(b.lastMessageAt ?? b.createdAt).getTime() -
-                            new Date(a.lastMessageAt ?? a.createdAt).getTime()
-                        )
-                );
-            });
-        }).catch(() => { });
+            socket.on('message_received', handleMessage);
+        }).catch((err) => {
+            console.warn('[chats] failed to initialize socket:', err);
+        });
 
         return () => {
             mounted = false;
-            socketRef.current?.off('message_received');
+            if (activeSocket) {
+                activeSocket.off('message_received', handleMessage);
+            }
         };
     }, [fetchRooms]));
 
@@ -101,9 +108,9 @@ export default function ChatsScreen() {
             pathname: '/chat-room',
             params: {
                 roomId: room.id,
-                clientName: room.client.fullName,
-                clientAvatar: room.client.avatar ?? '',
-                clientCity: room.client.city ?? '',
+                clientName: room.client?.fullName ?? 'Client',
+                clientAvatar: room.client?.avatar ?? '',
+                clientCity: room.client?.city ?? '',
             },
         });
     };
@@ -112,12 +119,9 @@ export default function ChatsScreen() {
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* <SafeAreaView edges={['top']} className="flex-1"> */}
             {/* Header */}
-            <View className="px-4 pt-2 pb-3">
-                <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-black'}>
+            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-black' : 'bg-white'}`}>
+                <Typography variant="h2" weight="bold" className="text-2xl">
                     Chats
-                </Typography>
-                <Typography variant="small" color="gray" className="mt-0.5">
-                    Customer messages from your catalog
                 </Typography>
             </View>
 
@@ -154,8 +158,9 @@ export default function ChatsScreen() {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FF5678" />}
                 >
                     {rooms.map((room, index) => {
-                        const initials = room.client.fullName
-                            .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+                        const clientName = room.client?.fullName ?? 'Client';
+                        const initials = clientName
+                            .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 
                         return (
                             <React.Fragment key={room.id}>
@@ -165,7 +170,7 @@ export default function ChatsScreen() {
                                     className={`flex-row items-center px-4 py-4`}
                                 >
                                     {/* Avatar */}
-                                    {room.client.avatar ? (
+                                    {room.client?.avatar ? (
                                         <Image
                                             source={{ uri: room.client.avatar }}
                                             style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12 }}
@@ -173,7 +178,7 @@ export default function ChatsScreen() {
                                     ) : (
                                         <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#FF5678', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                                             <Typography weight="bold" color="white" className="text-[15px]">
-                                                {initials || '?'}
+                                                {initials}
                                             </Typography>
                                         </View>
                                     )}
@@ -186,7 +191,7 @@ export default function ChatsScreen() {
                                                 className={`text-[15px] ${isDark ? 'text-white' : 'text-black'}`}
                                                 numberOfLines={1}
                                             >
-                                                {room.client.fullName}
+                                                {clientName}
                                             </Typography>
                                             <Typography variant="small" color="gray" className="text-[12px] ml-2 shrink-0">
                                                 {timeAgo(room.lastMessageAt)}

@@ -11,18 +11,20 @@ const ENV = (process.env.EXPO_PUBLIC_APP_ENV as 'development' | 'staging' | 'pro
 const hostUri = Constants.expoConfig?.hostUri;
 // e.g. "192.168.1.23:8081"
 
-const ip = hostUri?.split(":")[0];
+const ip = hostUri?.split(":")[0] || 'localhost';
 
 // export const API_URL = `http://${ip}:8000/api`;
 
 const API_CONFIG = {
     development: `http://${ip}:5001/api`,
     staging: `http://${ip}:3000/api`, // Pointing to local for both dev/staging as requested
-    production: 'https://needle-africa-api.vercel.app/api'
+    // production: 'https://needle-africa-api.vercel.app/api'
+    production: 'https://api.needleafrica.com/api'
 };
 
 // const API_URL = Constants.expoConfig?.extra?.rootApiUrl || API_CONFIG[ENV];
-const API_URL = API_CONFIG[ENV];
+export const API_URL = API_CONFIG[ENV];
+
 
 const axiosInstance = axios.create({
     baseURL: API_URL,

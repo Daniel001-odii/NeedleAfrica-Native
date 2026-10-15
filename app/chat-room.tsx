@@ -59,28 +59,35 @@ export default function ChatRoomScreen() {
     useEffect(() => {
         if (!roomId) return;
         let mounted = true;
+        let activeSocket: any = null;
+
+        const handleMessage = (msg: ChatMessage) => {
+            if (msg.chatRoomId !== roomId) return;
+            setMessages(prev => {
+                if (prev.find(m => m.id === msg.id)) return prev;
+                return [...prev, msg];
+            });
+            // Mark as read immediately since we're in the room
+            activeSocket?.emit('mark_read', { roomId });
+        };
 
         getSocket().then(socket => {
             if (!mounted) return;
+            activeSocket = socket;
             socketRef.current = socket;
 
             socket.emit('join_room', roomId);
             socket.emit('mark_read', { roomId });
-
-            socket.on('message_received', (msg: ChatMessage) => {
-                if (msg.chatRoomId !== roomId) return;
-                setMessages(prev => {
-                    if (prev.find(m => m.id === msg.id)) return prev;
-                    return [...prev, msg];
-                });
-                // Mark as read immediately since we're in the room
-                socket.emit('mark_read', { roomId });
-            });
-        }).catch(() => { });
+            socket.on('message_received', handleMessage);
+        }).catch((err) => {
+            console.warn('[chat-room] failed to initialize socket:', err);
+        });
 
         return () => {
             mounted = false;
-            socketRef.current?.off('message_received');
+            if (activeSocket) {
+                activeSocket.off('message_received', handleMessage);
+            }
         };
     }, [roomId]);
 
@@ -91,10 +98,23 @@ export default function ChatRoomScreen() {
         }
     }, [messages.length]);
 
-    const sendMessage = useCallback(() => {
+    const sendMessage = useCallback(async () => {
         const text = inputText.trim();
-        if (!text || !socketRef.current || !roomId) return;
-        socketRef.current.emit('send_message', { roomId, text });
+        if (!text || !roomId) return;
+
+        let socket = socketRef.current;
+        if (!socket || !socket.connected) {
+            try {
+                socket = await getSocket();
+                socketRef.current = socket;
+                socket.emit('join_room', roomId);
+            } catch (err) {
+                console.warn('[chat-room] Reconnect socket error:', err);
+            }
+        }
+
+        if (!socket) return;
+        socket.emit('send_message', { roomId, text });
         setInputText('');
     }, [inputText, roomId]);
 

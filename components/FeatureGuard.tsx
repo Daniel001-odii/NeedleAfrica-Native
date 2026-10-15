@@ -111,10 +111,10 @@ export function LimitGuard({ children, resource, currentCount }: LimitGuardProps
 
   // Define free tier limits including referral bonuses
   const baseLimits = {
-    orders: 5,
-    customers: 5,
+    orders: 10,
+    customers: 10,
     templates: 3,
-    invoices: 5,
+    invoices: 10,
   };
   const bonus = {
     orders: 5,

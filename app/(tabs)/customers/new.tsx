@@ -34,7 +34,7 @@ export default function NewCustomer() {
     const [limitModalData, setLimitModalData] = useState({
         allowed: true,
         currentCount: 0,
-        limit: 5,
+        limit: 10,
         message: '',
         isAtLimit: false,
         isNearLimit: false,

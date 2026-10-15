@@ -1,20 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
+import { API_URL } from './axios';
 
-const ENV = (process.env.EXPO_PUBLIC_APP_ENV as 'development' | 'staging' | 'production') ||
-    (__DEV__ ? 'development' : 'production');
-
-const hostUri = Constants.expoConfig?.hostUri;
-const ip = hostUri?.split(':')[0] ?? 'localhost';
-
-const SOCKET_URL_CONFIG = {
-    development: `http://${ip}:5001`,
-    staging: `http://${ip}:5001`,
-    production: 'https://needle-africa-api.vercel.app',
-};
-
-export const SOCKET_BASE_URL = SOCKET_URL_CONFIG[ENV];
+export const SOCKET_BASE_URL = API_URL.replace(/\/api\/?$/, '');
 
 let _socket: Socket | null = null;
 
@@ -31,11 +19,15 @@ export async function getSocket(): Promise<Socket> {
 
     _socket = io(SOCKET_BASE_URL, {
         auth: { token: `Bearer ${token}` },
-        transports: ['websocket'],
+        transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionDelay: 1500,
-        reconnectionAttempts: 5,
-        timeout: 10000,
+        reconnectionAttempts: 10,
+        timeout: 15000,
+    });
+
+    _socket.on('connect_error', (err) => {
+        console.warn('[socket] connection error:', err?.message || err);
     });
 
     return _socket;
