@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Messages1 } from 'iconsax-react-native';
+import { Send } from 'iconsax-react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Typography } from '../components/ui/Typography';
 import { useTheme } from '../contexts/ThemeContext';
@@ -66,7 +66,7 @@ export default function ChatsScreen() {
                     .map(r => r.id === msg.chatRoomId
                         ? {
                             ...r,
-                            lastMessageText: msg.text,
+                            lastMessageText: msg.text || (msg.imageUrl ? '📷 Photo' : ''),
                             lastMessageAt: msg.createdAt,
                             unreadTailor: msg.senderType === 'CLIENT'
                                 ? r.unreadTailor + 1
@@ -142,7 +142,7 @@ export default function ChatsScreen() {
                             borderColor: isDark ? 'rgba(255,86,120,0.25)' : 'rgba(255,86,120,0.15)',
                         }}
                     >
-                        <Messages1 size={48} color="#FF5678" variant="Bold" />
+                        <Send size={44} color="#FF5678" variant="Bold" />
                     </View>
                     <Typography variant="h3" weight="bold" className={`text-center text-xl mb-3 ${isDark ? 'text-white' : 'text-neutral-900'}`}>
                         No conversations yet
