@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View, ScrollView, TextInput, TouchableOpacity,
-    KeyboardAvoidingView, Platform, ActivityIndicator, Image, Modal, Pressable, Text, Animated, Dimensions,
+    KeyboardAvoidingView, Platform, ActivityIndicator, Image, Modal, Pressable, Text, Animated, Dimensions, PanResponder,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Send, Camera, CloseCircle, Forward, Edit2, Copy, ArrowDown2, ArrowLeft2, ArrowRight2, Ruler } from 'iconsax-react-native';
@@ -199,6 +199,74 @@ function MeasurementCardRN({ profile, isDark }: { profile: ChatMeasurement; isDa
                     </View>
                 ))}
             </View>
+        </View>
+    );
+}
+
+const SWIPE_THRESHOLD = 56;
+const SWIPE_MAX = 72;
+
+// Swipe a message horizontally to reply (own messages swipe left, incoming swipe right)
+function SwipeToReplyRN({ children, onReply, isOwn, isDark, disabled }: {
+    children: React.ReactNode;
+    onReply: () => void;
+    isOwn: boolean;
+    isDark: boolean;
+    disabled?: boolean;
+}) {
+    const dir = isOwn ? -1 : 1;
+    const translateX = useRef(new Animated.Value(0)).current;
+    const triggered = useRef(false);
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponder: (_evt, g) => {
+                if (disabled) return false;
+                return Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5;
+            },
+            onPanResponderMove: (_evt, g) => {
+                const v = dir > 0 ? Math.max(0, Math.min(g.dx, SWIPE_MAX)) : Math.min(0, Math.max(g.dx, -SWIPE_MAX));
+                translateX.setValue(v);
+                triggered.current = Math.abs(v) >= SWIPE_THRESHOLD;
+            },
+            onPanResponderRelease: () => {
+                if (triggered.current) onReply();
+                triggered.current = false;
+                Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+            },
+            onPanResponderTerminate: () => {
+                triggered.current = false;
+                Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+            },
+        })
+    ).current;
+
+    const iconOpacity = translateX.interpolate({
+        inputRange: dir > 0 ? [0, SWIPE_THRESHOLD] : [-SWIPE_THRESHOLD, 0],
+        outputRange: dir > 0 ? [0, 1] : [1, 0],
+        extrapolate: 'clamp',
+    });
+
+    return (
+        <View style={{ width: '100%', justifyContent: 'center' }}>
+            <Animated.View
+                pointerEvents="none"
+                style={{
+                    position: 'absolute',
+                    [isOwn ? 'right' : 'left']: 6,
+                    opacity: iconOpacity,
+                }}
+            >
+                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: isDark ? '#3f1620' : '#FFE3E8', alignItems: 'center', justifyContent: 'center' }}>
+                    <Forward size={16} color="#FF5678" style={{ transform: [{ scaleX: -1 }] }} />
+                </View>
+            </Animated.View>
+            <Animated.View
+                {...panResponder.panHandlers}
+                style={{ width: '100%', alignItems: isOwn ? 'flex-end' : 'flex-start', transform: [{ translateX }] }}
+            >
+                {children}
+            </Animated.View>
         </View>
     );
 }
@@ -672,6 +740,12 @@ export default function ChatRoomScreen() {
                                             marginBottom: hasReactions ? 18 : 8,
                                         }}
                                     >
+                                        <SwipeToReplyRN
+                                            isOwn={isTailor}
+                                            isDark={isDark}
+                                            disabled={!!msg.status}
+                                            onReply={() => startReply(msg)}
+                                        >
                                         <Pressable
                                             onPress={isFailed ? () => retrySend(msg) : undefined}
                                             onLongPress={msg.status ? undefined : () => setActionMenuMsg(msg)}
@@ -839,6 +913,7 @@ export default function ChatRoomScreen() {
                                                 </Typography>
                                             ) : null}
                                         </Pressable>
+                                        </SwipeToReplyRN>
 
                                         {/* Reaction chips */}
                                         {hasReactions ? (
@@ -1038,8 +1113,7 @@ export default function ChatRoomScreen() {
                                     lineHeight: 20,
                                     padding: 0,
                                 }}
-                                onSubmitEditing={sendMessage}
-                                returnKeyType="send"
+                                returnKeyType="default"
                                 blurOnSubmit={false}
                             />
                         </View>
