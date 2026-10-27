@@ -190,7 +190,10 @@ function RootLayoutNav() {
                 <Stack.Screen name="extras" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="chats" options={{ headerShown: false, animation: 'slide_from_right' }} />
-                <Stack.Screen name="chat-room" options={{ headerShown: false, animation: 'slide_from_right' }} />
+                {/* gestureEnabled:false — the message rows use their own horizontal swipe-to-reply,
+                    which otherwise collides with iOS's edge swipe-back (left-aligned incoming
+                    bubbles start near the edge). Users go back via the header button. */}
+                <Stack.Screen name="chat-room" options={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: false }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (

@@ -4,7 +4,8 @@ import {
     KeyboardAvoidingView, Platform, ActivityIndicator, Image, Modal, Pressable, Text, Animated, Dimensions, PanResponder,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Send, Camera, CloseCircle, Forward, Edit2, Copy, ArrowDown2, ArrowLeft2, ArrowRight2, Ruler } from 'iconsax-react-native';
+import { ArrowLeft, Send, Camera, CloseCircle, Edit2, Copy, ArrowDown2, ArrowLeft2, ArrowRight2, Ruler } from 'iconsax-react-native';
+import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,16 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../lib/axios';
 import { getSocket } from '../lib/socket';
+
+// Backward curved arrow used for "reply" (mirrors the client app's reply icon)
+function ReplyArrow({ size = 22, color = '#000', style }: { size?: number; color?: string; style?: any }) {
+    return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+            <Path d="M9 14 4 9l5-5" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+    );
+}
 
 interface MessageReaction {
     emoji: string;
@@ -139,6 +150,61 @@ function MessagesSkeleton({ isDark }: { isDark: boolean }) {
     );
 }
 
+// Animated three-dot "is typing" bubble shown at the bottom of the thread
+function TypingBubble({ isDark }: { isDark: boolean }) {
+    const d1 = useRef(new Animated.Value(0.3)).current;
+    const d2 = useRef(new Animated.Value(0.3)).current;
+    const d3 = useRef(new Animated.Value(0.3)).current;
+    const dots = [d1, d2, d3];
+
+    useEffect(() => {
+        const anims = dots.map((d, i) =>
+            Animated.loop(
+                Animated.sequence([
+                    Animated.delay(i * 160),
+                    Animated.timing(d, { toValue: 1, duration: 320, useNativeDriver: true }),
+                    Animated.timing(d, { toValue: 0.3, duration: 320, useNativeDriver: true }),
+                    Animated.delay((2 - i) * 160),
+                ])
+            )
+        );
+        anims.forEach((a) => a.start());
+        return () => anims.forEach((a) => a.stop());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+        <View style={{ alignItems: 'flex-start', marginBottom: 8 }}>
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: isDark ? '#27272a' : '#F3F4F6',
+                    borderRadius: 18,
+                    borderBottomLeftRadius: 4,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                }}
+            >
+                {dots.map((d, i) => (
+                    <Animated.View
+                        key={i}
+                        style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: 3.5,
+                            backgroundColor: isDark ? '#a1a1aa' : '#9CA3AF',
+                            opacity: d,
+                            transform: [{ scale: d }],
+                            marginLeft: i === 0 ? 0 : 4,
+                        }}
+                    />
+                ))}
+            </View>
+        </View>
+    );
+}
+
 function previewText(msg: { text?: string | null; imageUrl?: string | null; imageUrls?: string[] | null; measurementProfile?: ChatMeasurement | null }): string {
     if (msg.text) return msg.text;
     if (msg.measurementProfile) return `📏 ${msg.measurementProfile.name || 'Measurement profile'}`;
@@ -258,7 +324,7 @@ function SwipeToReplyRN({ children, onReply, isOwn, isDark, disabled }: {
                 }}
             >
                 <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: isDark ? '#3f1620' : '#FFE3E8', alignItems: 'center', justifyContent: 'center' }}>
-                    <Forward size={16} color="#FF5678" style={{ transform: [{ scaleX: -1 }] }} />
+                    <ReplyArrow size={16} color="#FF5678" />
                 </View>
             </Animated.View>
             <Animated.View
@@ -300,6 +366,12 @@ export default function ChatRoomScreen() {
     // Scroll helpers
     const [showScrollDown, setShowScrollDown] = useState(false);
     const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+    // "is typing" indicator — the other participant is composing a message
+    const [peerTyping, setPeerTyping] = useState(false);
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const peerTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isTypingRef = useRef(false);
 
     const scrollRef = useRef<ScrollView>(null);
     const socketRef = useRef<any>(null);
@@ -370,6 +442,20 @@ export default function ChatRoomScreen() {
             setMessages(prev => prev.map(m => (m.id === messageId ? { ...m, text, isEdited, editedAt } : m)));
         };
 
+        const handlePeerTyping = ({ roomId: rid }: { roomId: string }) => {
+            if (rid !== roomId) return;
+            setPeerTyping(true);
+            // Auto-clear in case the stop event is missed
+            if (peerTypingTimerRef.current) clearTimeout(peerTypingTimerRef.current);
+            peerTypingTimerRef.current = setTimeout(() => setPeerTyping(false), 4000);
+        };
+
+        const handlePeerStopTyping = ({ roomId: rid }: { roomId: string }) => {
+            if (rid !== roomId) return;
+            if (peerTypingTimerRef.current) clearTimeout(peerTypingTimerRef.current);
+            setPeerTyping(false);
+        };
+
         getSocket().then(socket => {
             if (!mounted) return;
             activeSocket = socket;
@@ -380,16 +466,27 @@ export default function ChatRoomScreen() {
             socket.on('message_received', handleMessage);
             socket.on('message_reacted', handleReacted);
             socket.on('message_edited', handleEdited);
+            socket.on('user_typing', handlePeerTyping);
+            socket.on('user_stop_typing', handlePeerStopTyping);
         }).catch((err) => {
             console.warn('[chat-room] failed to initialize socket:', err);
         });
 
         return () => {
             mounted = false;
+            if (peerTypingTimerRef.current) clearTimeout(peerTypingTimerRef.current);
+            setPeerTyping(false);
             if (activeSocket) {
                 activeSocket.off('message_received', handleMessage);
                 activeSocket.off('message_reacted', handleReacted);
                 activeSocket.off('message_edited', handleEdited);
+                activeSocket.off('user_typing', handlePeerTyping);
+                activeSocket.off('user_stop_typing', handlePeerStopTyping);
+                // Let the other side know we've left the composer
+                if (isTypingRef.current) {
+                    activeSocket.emit('stop_typing', { roomId });
+                    isTypingRef.current = false;
+                }
             }
         };
     }, [roomId]);
@@ -400,6 +497,13 @@ export default function ChatRoomScreen() {
             setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
         }
     }, [messages.length]);
+
+    // Keep the typing bubble in view when it appears
+    useEffect(() => {
+        if (peerTyping && isNearBottomRef.current) {
+            setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+        }
+    }, [peerTyping]);
 
     // Keep the per-room cache fresh (confirmed messages only) for instant reopen
     useEffect(() => {
@@ -473,6 +577,35 @@ export default function ChatRoomScreen() {
         return socket;
     }, [roomId]);
 
+    // Tell the other participant we're typing (throttled; auto-stops after a pause)
+    const emitTyping = useCallback(() => {
+        const socket = socketRef.current;
+        if (!socket || !roomId) return;
+        if (!isTypingRef.current) {
+            isTypingRef.current = true;
+            socket.emit('typing', { roomId });
+        }
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            isTypingRef.current = false;
+            socketRef.current?.emit('stop_typing', { roomId });
+        }, 2500);
+    }, [roomId]);
+
+    const stopTypingNow = useCallback(() => {
+        if (typingTimeoutRef.current) { clearTimeout(typingTimeoutRef.current); typingTimeoutRef.current = null; }
+        if (isTypingRef.current) {
+            isTypingRef.current = false;
+            socketRef.current?.emit('stop_typing', { roomId });
+        }
+    }, [roomId]);
+
+    const handleInputChange = useCallback((text: string) => {
+        setInputText(text);
+        if (text.trim()) emitTyping();
+        else stopTypingNow();
+    }, [emitTyping, stopTypingNow]);
+
     const handlePickImage = async () => {
         const remaining = MAX_IMAGES - selectedImages.length;
         if (remaining <= 0) return;
@@ -501,6 +634,7 @@ export default function ChatRoomScreen() {
     const sendMessage = useCallback(async () => {
         if (!roomId) return;
         const text = inputText.trim();
+        stopTypingNow();
 
         // Edit mode — update existing message text
         if (editingMessage) {
@@ -574,7 +708,7 @@ export default function ChatRoomScreen() {
             console.error('[chat-room] Send error:', err);
             setMessages(prev => prev.map(m => (m.clientTempId === tempId ? { ...m, status: 'failed' } : m)));
         }
-    }, [inputText, selectedImages, roomId, editingMessage, replyingTo, ensureSocket, user?.id]);
+    }, [inputText, selectedImages, roomId, editingMessage, replyingTo, ensureSocket, user?.id, stopTypingNow]);
 
     const retrySend = useCallback(async (msg: ChatMessage) => {
         if (!msg.clientTempId) return;
@@ -670,7 +804,11 @@ export default function ChatRoomScreen() {
                         <Typography weight="bold" className={`text-[15px] ${isDark ? 'text-white' : 'text-black'}`}>
                             {clientName ?? 'Client'}
                         </Typography>
-                        {clientCity ? (
+                        {peerTyping ? (
+                            <Typography variant="small" weight="medium" className="text-[12px]" style={{ color: '#FF5678' }}>
+                                typing…
+                            </Typography>
+                        ) : clientCity ? (
                             <Typography variant="small" color="gray" className="text-[12px]">
                                 {clientCity}
                             </Typography>
@@ -681,7 +819,10 @@ export default function ChatRoomScreen() {
                 {/* Messages */}
                 <KeyboardAvoidingView
                     className="flex-1"
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    // 'padding' works reliably on both platforms. On Android edge-to-edge
+                    // (edgeToEdgeEnabled) the OS 'adjustResize' is ignored, so 'height' left
+                    // the input hidden behind the keyboard — padding lifts it correctly.
+                    behavior="padding"
                     keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
                 >
                     <View style={{ flex: 1 }}>
@@ -955,6 +1096,8 @@ export default function ChatRoomScreen() {
                                     </View>
                                 );
                             })}
+
+                            {peerTyping ? <TypingBubble isDark={isDark} /> : null}
                         </ScrollView>
                     )}
 
@@ -1103,7 +1246,7 @@ export default function ChatRoomScreen() {
                             <TextInput
                                 ref={inputRef}
                                 value={inputText}
-                                onChangeText={setInputText}
+                                onChangeText={handleInputChange}
                                 placeholder={editingMessage ? 'Edit your message…' : `Reply to ${clientName ?? 'client'}…`}
                                 placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                                 multiline
@@ -1195,7 +1338,7 @@ export default function ChatRoomScreen() {
                             onPress={() => actionMenuMsg && startReply(actionMenuMsg)}
                             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14 }}
                         >
-                            <Forward size={22} color={isDark ? '#e4e4e7' : '#3f3f46'} style={{ transform: [{ scaleX: -1 }] }} />
+                            <ReplyArrow size={22} color={isDark ? '#e4e4e7' : '#3f3f46'} />
                             <Typography className={`text-[15px] ml-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Reply</Typography>
                         </TouchableOpacity>
 

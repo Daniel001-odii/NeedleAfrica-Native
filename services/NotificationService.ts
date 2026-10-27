@@ -23,11 +23,13 @@ export class NotificationService {
 
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('default', {
-                name: 'default',
+                name: 'Default Notifications',
                 importance: Notifications.AndroidImportance.MAX,
                 vibrationPattern: [0, 250, 250, 250],
                 lightColor: '#FF231F7C',
                 sound: 'notify_1.wav',
+                enableVibrate: true,
+                showBadge: true,
             });
         }
 
@@ -39,16 +41,19 @@ export class NotificationService {
                 finalStatus = status;
             }
             if (finalStatus !== 'granted') {
-                console.log('Failed to get push token for push notification!');
+                console.warn('[PushNotifications] Permission not granted. Status:', finalStatus);
                 return;
             }
 
+            const projectId =
+                Constants?.expoConfig?.extra?.eas?.projectId ??
+                Constants?.easConfig?.projectId ??
+                '98abe4c7-3401-411c-bdf7-8ce4adb0f761';
+
             try {
-                const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-                if (!projectId) {
-                    throw new Error('Project ID not found in expo config');
-                }
-                token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+                const pushToken = await Notifications.getExpoPushTokenAsync({ projectId });
+                console.log('Push notification token acquired:', pushToken.data);
+                token = pushToken.data;
             } catch (e) {
                 console.error('Error fetching push token:', e);
             }
