@@ -41,6 +41,7 @@ function RootLayoutNav() {
         clientAvatar?: string;
         clientCity?: string;
     }>(null);
+    const [pendingInstantRequest, setPendingInstantRequest] = useState<null | { requestId: string }>(null);
     const { sync } = useSync();
     const { isDark } = useTheme();
     const segments = useSegments();
@@ -62,6 +63,7 @@ function RootLayoutNav() {
         const inOrderRequestDetails = segments[0] === 'order-request-details';
         const inChats = segments[0] === 'chats';
         const inChatRoom = segments[0] === 'chat-room';
+        const inInstantRequests = segments[0] === 'instant-requests';
 
         if (!user && !inAuthGroup && !inOnboarding) {
             setTimeout(() => router.replace('/(auth)'), 0);
@@ -70,7 +72,7 @@ function RootLayoutNav() {
                 if (!inOnboarding) {
                     setTimeout(() => router.replace('/onboarding'), 0);
                 }
-            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails && !inChats && !inChatRoom) {
+            } else if (!inTabs && !inMeasurements && !inTemplates && !inInvoices && !inNotifications && !inCatalogExplainer && !inAiLab && !inExtras && !inOrderRequestDetails && !inChats && !inChatRoom && !inInstantRequests) {
                 setTimeout(() => router.replace('/(tabs)'), 0);
             }
         }
@@ -132,6 +134,8 @@ function RootLayoutNav() {
                     clientAvatar: data.clientAvatar ? String(data.clientAvatar) : undefined,
                     clientCity: data.clientCity ? String(data.clientCity) : undefined,
                 });
+            } else if (data?.type === 'instant_request' && data?.requestId) {
+                setPendingInstantRequest({ requestId: String(data.requestId) });
             }
         };
 
@@ -169,6 +173,14 @@ function RootLayoutNav() {
         });
     }, [pendingChat, user, isNewUser, isNavReady]);
 
+    // 5b. Navigate to the instant request lead once the app is ready & authenticated
+    useEffect(() => {
+        if (!pendingInstantRequest || !user || isNewUser || !isNavReady) return;
+        const { requestId } = pendingInstantRequest;
+        setPendingInstantRequest(null);
+        router.push({ pathname: '/instant-requests/[id]', params: { id: requestId } });
+    }, [pendingInstantRequest, user, isNewUser, isNavReady]);
+
     if (isLoading) {
         return <LoadingScreen />;
     }
@@ -194,6 +206,7 @@ function RootLayoutNav() {
                     which otherwise collides with iOS's edge swipe-back (left-aligned incoming
                     bubbles start near the edge). Users go back via the header button. */}
                 <Stack.Screen name="chat-room" options={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: false }} />
+                <Stack.Screen name="instant-requests/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             {(!isNavReady) && (
