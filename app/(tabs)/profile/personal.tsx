@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, ScrollView, TextInput, TouchableOpacity, Pressable, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import * as ExpoLocation from 'expo-location';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Trash, Logout, Warning2, CloseCircle, ArrowRight2, TickCircle, Location } from 'iconsax-react-native';
+import { ArrowLeft, Trash, Logout, Warning2, CloseCircle, ArrowRight2, TickCircle, Location, User } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -521,144 +522,126 @@ export default function PersonalInformation() {
                 <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                     {/* Section: Account Settings */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Account Settings
-                        </Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-
-                            {/* Email Row — tappable for verify or change */}
-                            <TouchableOpacity
-                                onPress={() => {
-                                    if (user?.emailIsVerified) {
-                                        setShowEmailModal(true);
-                                        setEmailStep('initiate');
-                                        setNewEmail('');
-                                        setEmailPassword('');
-                                        setOtpArray(Array(6).fill(''));
-                                    } else {
-                                        setShowVerifyEmailModal(true);
-                                        setVerifyEmailStep('send');
-                                        setOtpArray(Array(6).fill(''));
-                                    }
-                                }}
-                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
-                            >
-                                <View className="flex-1">
-                                    <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Email</Typography>
-                                    <View className="flex-row items-center mt-0.5">
-                                        <Typography className="text-gray-400 text-[14px] mr-1">{email || 'No email set'}</Typography>
-                                        {user?.emailIsVerified ? (
-                                            <View className="flex-row items-center bg-green-100 dark:bg-green-800/30 px-1.5 py-0.5 rounded-full">
-                                                <TickCircle size={12} color="#16A34A" variant="Bold" />
-                                                <Typography variant="small" className="text-green-700 dark:text-green-400 ml-1 text-[10px]">Verified</Typography>
-                                            </View>
-                                        ) : (
-                                            <View className="flex-row items-center bg-amber-100 dark:bg-amber-800/30 px-1.5 py-0.5 rounded-full">
-                                                <Warning2 size={12} color="#D97706" variant="Bold" />
-                                                <Typography variant="small" className="text-amber-700 dark:text-amber-400 ml-1 text-[10px]">Unverified</Typography>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-                                <ArrowRight2 size={14} color="#9CA3AF" />
-                            </TouchableOpacity>
-
-                            {/* Password Menu Item */}
-                            {(!user?.provider || user?.provider === 'NEEDLEX') && (
-                                <TouchableOpacity
-                                    onPress={() => setShowPasswordModal(true)}
-                                    className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
-                                >
-                                    <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Security</Typography>
-                                    <View className="flex-row items-center">
-                                        <Typography className="text-gray-400 text-[14px] mr-1">Update password</Typography>
-                                        <ArrowRight2 size={14} color="#9CA3AF" />
-                                    </View>
-                                </TouchableOpacity>
-                            )}
-
-                            <ProfileRowInput
-                                label="Username"
-                                value={username}
-                                onChangeText={setUsername}
-                                placeholder="Choose username"
-                                isDark={isDark}
-                            />
-
-                            {/* Country Picker Inline */}
-                            <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">
-                                    Country
-                                </Typography>
-                                <View className="flex-1 items-end flex-row justify-end">
-                                    <CountryPicker
-                                        withFilter
-                                        withFlag
-                                        withCountryNameButton
-                                        withAlphaFilter
-                                        withEmoji
-                                        countryCode={countryCode}
-                                        onSelect={(c: any) => {
-                                            setCountry(c.name);
-                                            setCountryCode(c.cca2);
-                                        }}
-                                        theme={{
-                                            fontFamily: 'Inter-Medium',
-                                            fontSize: 16,
-                                            onBackgroundTextColor: '#111827'
-                                        }}
-                                        containerButtonStyle={{ padding: 0, margin: 0 }}
-                                    />
+                    <SectionCard
+                        icon={User}
+                        title="Account Settings"
+                        innerClassName="p-0"
+                        className="mb-4"
+                    >
+                        {/* Email Row — tappable for verify or change */}
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (user?.emailIsVerified) {
+                                    setShowEmailModal(true);
+                                    setEmailStep('initiate');
+                                    setNewEmail('');
+                                    setEmailPassword('');
+                                    setOtpArray(Array(6).fill(''));
+                                } else {
+                                    setShowVerifyEmailModal(true);
+                                    setVerifyEmailStep('send');
+                                    setOtpArray(Array(6).fill(''));
+                                }
+                            }}
+                            className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
+                        >
+                            <View className="flex-1">
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Email</Typography>
+                                <View className="flex-row items-center mt-0.5">
+                                    <Typography className="text-gray-400 text-[14px] mr-1">{email || 'No email set'}</Typography>
+                                    {user?.emailIsVerified ? (
+                                        <View className="flex-row items-center bg-green-100 dark:bg-green-800/30 px-1.5 py-0.5 rounded-full">
+                                            <TickCircle size={12} color="#16A34A" variant="Bold" />
+                                            <Typography variant="small" className="text-green-700 dark:text-green-400 ml-1 text-[10px]">Verified</Typography>
+                                        </View>
+                                    ) : (
+                                        <View className="flex-row items-center bg-amber-100 dark:bg-amber-800/30 px-1.5 py-0.5 rounded-full">
+                                            <Warning2 size={12} color="#D97706" variant="Bold" />
+                                            <Typography variant="small" className="text-amber-700 dark:text-amber-400 ml-1 text-[10px]">Unverified</Typography>
+                                        </View>
+                                    )}
                                 </View>
                             </View>
+                            <ArrowRight2 size={14} color="#9CA3AF" />
+                        </TouchableOpacity>
 
-                            {/* Address — managed in Catalog Storefront Settings */}
-                            {/* <TouchableOpacity
-                                onPress={openAddressModal}
-                                className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
-                            >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Address</Typography>
-                                <View className="flex-row items-center flex-1 justify-end ml-4">
-                                    <Typography
-                                        numberOfLines={1}
-                                        className={`text-[14px] mr-2 flex-shrink text-right ${address ? 'text-blue-600' : 'text-gray-400'}`}
-                                    >
-                                        {address || 'Set address'}
-                                    </Typography>
-                                    <ArrowRight2 size={14} color="#9CA3AF" />
-                                </View>
-                            </TouchableOpacity> */}
-
-                            {/* Business Type (Specialization) */}
+                        {/* Password Menu Item */}
+                        {(!user?.provider || user?.provider === 'NEEDLEX') && (
                             <TouchableOpacity
-                                onPress={() => setShowBusinessTypeModal(true)}
+                                onPress={() => setShowPasswordModal(true)}
                                 className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
                             >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Specialization</Typography>
+                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Security</Typography>
                                 <View className="flex-row items-center">
-                                    <Typography className={`text-[14px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>
-                                        {businessType || 'Select'}
-                                    </Typography>
+                                    <Typography className="text-gray-400 text-[14px] mr-1">Update password</Typography>
                                     <ArrowRight2 size={14} color="#9CA3AF" />
                                 </View>
                             </TouchableOpacity>
+                        )}
 
-                            {/* Team Size */}
-                            <TouchableOpacity
-                                onPress={() => setShowEmployeesModal(true)}
-                                className="flex-row items-center justify-between px-4 py-4"
-                            >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Team Size</Typography>
-                                <View className="flex-row items-center">
-                                    <Typography className={`text-[15px] mr-2 ${noOfEmployees ? 'text-blue-600' : 'text-gray-400'}`}>
-                                        {noOfEmployees || 'Select'}
-                                    </Typography>
-                                    <ArrowRight2 size={14} color="#9CA3AF" />
-                                </View>
-                            </TouchableOpacity>
+                        <ProfileRowInput
+                            label="Username"
+                            value={username}
+                            onChangeText={setUsername}
+                            placeholder="Choose username"
+                            isDark={isDark}
+                        />
+
+                        {/* Country Picker Inline */}
+                        <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-white/5">
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">
+                                Country
+                            </Typography>
+                            <View className="flex-1 items-end flex-row justify-end">
+                                <CountryPicker
+                                    withFilter
+                                    withFlag
+                                    withCountryNameButton
+                                    withAlphaFilter
+                                    withEmoji
+                                    countryCode={countryCode}
+                                    onSelect={(c: any) => {
+                                        setCountry(c.name);
+                                        setCountryCode(c.cca2);
+                                    }}
+                                    theme={{
+                                        fontFamily: 'Inter-Medium',
+                                        fontSize: 16,
+                                        onBackgroundTextColor: '#111827'
+                                    }}
+                                    containerButtonStyle={{ padding: 0, margin: 0 }}
+                                />
+                            </View>
                         </View>
-                    </View>
+
+                        {/* Business Type (Specialization) */}
+                        <TouchableOpacity
+                            onPress={() => setShowBusinessTypeModal(true)}
+                            className="flex-row items-center justify-between px-4 py-4 border-b border-gray-50 dark:border-white/5"
+                        >
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Specialization</Typography>
+                            <View className="flex-row items-center">
+                                <Typography className={`text-[14px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    {businessType || 'Select'}
+                                </Typography>
+                                <ArrowRight2 size={14} color="#9CA3AF" />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Team Size */}
+                        <TouchableOpacity
+                            onPress={() => setShowEmployeesModal(true)}
+                            className="flex-row items-center justify-between px-4 py-4"
+                        >
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white text-[15px]">Team Size</Typography>
+                            <View className="flex-row items-center">
+                                <Typography className={`text-[15px] mr-2 ${noOfEmployees ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    {noOfEmployees || 'Select'}
+                                </Typography>
+                                <ArrowRight2 size={14} color="#9CA3AF" />
+                            </View>
+                        </TouchableOpacity>
+                    </SectionCard>
 
                     {/* Primary Safe/Save Button */}
                     <Button
@@ -671,25 +654,25 @@ export default function PersonalInformation() {
                     </Button>
 
                     {/* Section: Danger Zone */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="red" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">
-                            Danger Zone
-                        </Typography>
-                        <View className={`rounded-[24px] overflow-hidden ${cardBaseStyle}`}>
-                            <TouchableOpacity
-                                onPress={() => setShowDeleteModal(true)}
-                                className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10"
-                            >
-                                <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-3 ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                                    <Trash size={18} color="#EF4444" variant="Bulk" />
-                                </View>
-                                <View className="flex-1">
-                                    <Typography weight="bold" className="text-red-500 text-[15px]">Delete Account</Typography>
-                                    <Typography variant="small" color="red" className="opacity-60 text-[12px] mt-0.5">Permanently remove all your data</Typography>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    <SectionCard
+                        icon={<Warning2 size={16} color="#EF4444" variant="Bold" />}
+                        title={<Typography weight="semibold" className="text-red-500 text-[13px]">Danger Zone</Typography>}
+                        innerClassName="p-0"
+                        className="mb-6"
+                    >
+                        <TouchableOpacity
+                            onPress={() => setShowDeleteModal(true)}
+                            className="flex-row items-center p-4 active:bg-red-50 dark:active:bg-red-900/10"
+                        >
+                            <View className={`w-10 h-10 items-center justify-center rounded-[14px] mr-3 ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
+                                <Trash size={18} color="#EF4444" variant="Bulk" />
+                            </View>
+                            <View className="flex-1">
+                                <Typography weight="bold" className="text-red-500 text-[15px]">Delete Account</Typography>
+                                <Typography variant="small" color="red" className="opacity-60 text-[12px] mt-0.5">Permanently remove all your data</Typography>
+                            </View>
+                        </TouchableOpacity>
+                    </SectionCard>
 
                 </ScrollView>
             </KeyboardAvoidingView>

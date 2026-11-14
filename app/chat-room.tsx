@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View, ScrollView, TextInput, TouchableOpacity,
     KeyboardAvoidingView, Platform, ActivityIndicator, Image, Modal, Pressable, Text, Animated, Dimensions, PanResponder,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Send, Camera, CloseCircle, Edit2, Copy, ArrowDown2, ArrowLeft2, ArrowRight2, Ruler } from 'iconsax-react-native';
+import { ArrowLeft, Send, Camera, CloseCircle, Edit2, Copy, ArrowDown2, ArrowLeft2, ArrowRight2, Ruler, SearchNormal1, ArrowUp2 } from 'iconsax-react-native';
 import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
@@ -79,6 +79,22 @@ const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 function formatTime(iso: string): string {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderHighlightedTextRN(text: string, query: string) {
+    if (!query.trim()) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+    if (parts.length <= 1) return text;
+    return parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+            <Text key={i} style={{ backgroundColor: '#FDE047', color: '#000000', fontWeight: '700' }}>
+                {part}
+            </Text>
+        ) : (
+            part
+        )
+    );
 }
 
 const MAX_IMAGES = 3;
@@ -779,6 +795,34 @@ export default function ChatRoomScreen() {
 
     const initials = clientName?.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase() ?? '?';
 
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchMatchIndex, setSearchMatchIndex] = useState(0);
+
+    const searchMatches = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const q = searchQuery.toLowerCase();
+        return messages.filter(m => (m.text || '').toLowerCase().includes(q));
+    }, [messages, searchQuery]);
+
+    const jumpToMatch = useCallback((index: number) => {
+        if (searchMatches.length === 0) return;
+        const targetMsg = searchMatches[index];
+        if (!targetMsg) return;
+        setSearchMatchIndex(index);
+        scrollToMessage(targetMsg.id);
+    }, [searchMatches, scrollToMessage]);
+
+    useEffect(() => {
+        if (searchMatches.length > 0) {
+            const latestIdx = searchMatches.length - 1;
+            setSearchMatchIndex(latestIdx);
+            scrollToMessage(searchMatches[latestIdx].id);
+        } else {
+            setSearchMatchIndex(0);
+        }
+    }, [searchQuery, searchMatches.length, scrollToMessage]);
+
     const canSend = editingMessage ? !!inputText.trim() : (!!inputText.trim() || selectedImages.length > 0) && !isUploading;
 
     return (
@@ -814,7 +858,82 @@ export default function ChatRoomScreen() {
                             </Typography>
                         ) : null}
                     </View>
+
+                    <TouchableOpacity
+                        onPress={() => {
+                            setIsSearchOpen(v => {
+                                if (v) setSearchQuery('');
+                                return !v;
+                            });
+                        }}
+                        className="p-2 -mr-1"
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <SearchNormal1 size={19} color={isSearchOpen ? '#FF5678' : (isDark ? '#fff' : '#000')} />
+                    </TouchableOpacity>
                 </View>
+
+                {/* In-Chat Search Bar */}
+                {isSearchOpen && (
+                    <View className={`flex-row items-center px-4 py-2 border-b ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}>
+                        <SearchNormal1 size={16} color={isDark ? '#A1A1AA' : '#8E8E93'} />
+                        <TextInput
+                            className={`flex-1 ml-2 text-[14px] ${isDark ? 'text-white' : 'text-black'}`}
+                            placeholder="Search in this conversation..."
+                            placeholderTextColor={isDark ? '#71717A' : '#8E8E93'}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            autoFocus
+                            returnKeyType="search"
+                            onSubmitEditing={() => {
+                                if (searchMatches.length > 0) {
+                                    const nextIdx = (searchMatchIndex + 1) % searchMatches.length;
+                                    jumpToMatch(nextIdx);
+                                }
+                            }}
+                        />
+                        {searchQuery.length > 0 && (
+                            <View className="flex-row items-center gap-1.5 ml-2">
+                                <Typography variant="caption" color="gray" className="text-[11px] font-semibold">
+                                    {searchMatches.length > 0
+                                        ? `${searchMatchIndex + 1} of ${searchMatches.length}`
+                                        : '0 matches'}
+                                </Typography>
+                                {searchMatches.length > 0 && (
+                                    <View className="flex-row items-center gap-0.5">
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                const prevIdx = (searchMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+                                                jumpToMatch(prevIdx);
+                                            }}
+                                            className="p-1 rounded-full"
+                                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                        >
+                                            <ArrowUp2 size={15} color={isDark ? '#E4E4E7' : '#3F3F46'} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                const nextIdx = (searchMatchIndex + 1) % searchMatches.length;
+                                                jumpToMatch(nextIdx);
+                                            }}
+                                            className="p-1 rounded-full"
+                                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                        >
+                                            <ArrowDown2 size={15} color={isDark ? '#E4E4E7' : '#3F3F46'} />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => setSearchQuery('')}
+                                    className="p-1 ml-0.5"
+                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                    <CloseCircle size={16} color={isDark ? '#A1A1AA' : '#8E8E93'} variant="Bold" />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 {/* Messages */}
                 <KeyboardAvoidingView
@@ -1037,7 +1156,7 @@ export default function ChatRoomScreen() {
                                                 <Typography
                                                     className={`text-[14px] leading-[20px] ${isTailor ? 'text-white' : (isDark ? 'text-white' : 'text-gray-900')}`}
                                                 >
-                                                    {msg.text}
+                                                    {renderHighlightedTextRN(msg.text, searchQuery)}
                                                 </Typography>
                                             ) : null}
 

@@ -3,11 +3,12 @@ import { View, TextInput, ScrollView, Platform, Pressable, KeyboardAvoidingView,
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box, Gallery, Trash } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Add, TickCircle, ArrowDown2, Box, Gallery, Trash, DocumentText } from 'iconsax-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useCustomers, Customer } from '../../../hooks/useCustomers';
@@ -300,203 +301,203 @@ export default function NewOrder() {
                     keyboardShouldPersistTaps="handled"
                 >
                     {/* Group 1: Identity */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-widest opacity-60">
-                            Order Identity
-                        </Typography>
-                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
-                            {/* Dress Type */}
-                            <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#007AFF]/10' : 'bg-blue-50'}`}>
-                                    <Box size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
-                                </View>
-                                <TextInput
-                                    className={`flex-1 h-14 font-semibold text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                    placeholder="Dress Type (e.g. Senator Suit)"
-                                    placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
-                                    value={dressType}
-                                    onChangeText={setDressType}
-                                />
+                    <SectionCard
+                        icon={Box}
+                        title="Order identity"
+                        className="mb-4"
+                        innerClassName="p-0 overflow-hidden"
+                    >
+                        {/* Dress Type */}
+                        <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
+                            <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#007AFF]/10' : 'bg-blue-50'}`}>
+                                <Box size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
                             </View>
-
-                            {/* Client Selection */}
-                            <TouchableOpacity
-                                onPress={() => setShowCustomerModal(true)}
-                                className={`flex-row items-center justify-between px-4 h-14 ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
-                            >
-                                <View className="flex-row items-center">
-                                    <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#FF9500]/10' : 'bg-orange-50'}`}>
-                                        <User size={16} color={isDark ? "#FF9F0A" : "#FF9500"} variant="Bulk" />
-                                    </View>
-                                    <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                        {selectedCustomer ? selectedCustomer.fullName : "Select Client"}
-                                    </Typography>
-                                </View>
-                                <ArrowDown2 size={14} color="#C7C7CC" />
-                            </TouchableOpacity>
-                        </Surface>
-                    </View>
-
-                    {/* Group 2: Schedule & Financials */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-widest opacity-60">
-                            Schedule & Billing
-                        </Typography>
-                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
-                            {/* Date */}
-                            <TouchableOpacity
-                                onPress={() => setShowDatePicker(true)}
-                                className={`flex-row items-center justify-between px-4 h-14 border-b ${isDark ? 'border-white/5' : 'border-gray-50'} ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
-                            >
-                                <View className="flex-row items-center">
-                                    <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#5856D6]/10' : 'bg-indigo-50'}`}>
-                                        <Calendar size={16} color={isDark ? "#5E5CE6" : "#5856D6"} variant="Bulk" />
-                                    </View>
-                                    <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                        Delivery Date
-                                    </Typography>
-                                </View>
-                                <View className="flex-row items-center">
-                                    <Typography variant="small" weight="semibold" className="mr-1 text-brand-primary">{formatDate(dueDate)}</Typography>
-                                    <ArrowDown2 size={14} color="pink" />
-                                </View>
-                            </TouchableOpacity>
-
-                            {/* Total Price */}
-                            <View className={`flex-row items-center px-4 h-14 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                <Typography weight="semibold" className={`flex-1 text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                    Total Price ({currencySymbol})
-                                </Typography>
-                                <TextInput
-                                    className={`flex-1 text-right text-[15px] font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                    placeholder="0"
-                                    placeholderTextColor="#C7C7CC"
-                                    keyboardType="numeric"
-                                    value={price}
-                                    onChangeText={(value) => handleAmountInput(value, setPrice)}
-                                />
-                            </View>
-
-                            {/* Deposit */}
-                            <View className="flex-row items-center px-4 h-14">
-                                <Typography weight="semibold" className={`flex-1 text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                    Initial Deposit ({currencySymbol})
-                                </Typography>
-                                <TextInput
-                                    className={`flex-1 text-right text-[15px] font-semibold ${isDark ? 'text-[#30D158]' : 'text-[#34C759]'}`}
-                                    placeholder="0"
-                                    placeholderTextColor="#C7C7CC"
-                                    keyboardType="numeric"
-                                    value={amountPaid}
-                                    onChangeText={(value) => handleAmountInput(value, setAmountPaid)}
-                                />
-                            </View>
-                        </Surface>
-                    </View>
-
-                    {/* Group 3: Media & Notes */}
-                    <View className="mb-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-widest opacity-60">
-                            Design & Fabric
-                        </Typography>
-                        <View className="flex-row gap-3 mb-4">
-                            {/* Fabric Image */}
-                            <View className="flex-1 aspect-square relative">
-                                <TouchableOpacity
-                                    activeOpacity={0.8}
-                                    onPress={() => pickImage('fabric')}
-                                    className="w-full h-full"
-                                >
-                                    <Surface variant="white" className="w-full h-full items-center justify-center overflow-hidden" rounded="2xl">
-                                        {fabricImage ? (
-                                            <>
-                                                <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
-                                                <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
-                                                    <Typography variant="caption" className="text-white text-[10px] font-semibold">Fabric</Typography>
-                                                </View>
-                                            </>
-                                        ) : (
-                                            <View className="items-center">
-                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
-                                                    <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
-                                                </View>
-                                                <Typography variant="small" color="gray" weight="semibold">Fabric</Typography>
-                                            </View>
-                                        )}
-                                    </Surface>
-                                </TouchableOpacity>
-
-                                {fabricImage && (
-                                    <TouchableOpacity
-                                        activeOpacity={0.7}
-                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                        onPress={() => setFabricImage(null)}
-                                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
-                                        accessibilityLabel="Delete fabric image"
-                                    >
-                                        <Svg width="18" height="18" viewBox="0 0 24 24">
-                                            <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
-                                        </Svg>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-
-                            {/* Style / Design Image */}
-                            <View className="flex-1 aspect-square relative">
-                                <TouchableOpacity
-                                    activeOpacity={0.8}
-                                    onPress={() => pickImage('style')}
-                                    className="w-full h-full"
-                                >
-                                    <Surface variant="white" className="w-full h-full items-center justify-center overflow-hidden" rounded="2xl">
-                                        {styleImage ? (
-                                            <>
-                                                <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
-                                                <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
-                                                    <Typography variant="caption" className="text-white text-[10px] font-semibold">Design</Typography>
-                                                </View>
-                                            </>
-                                        ) : (
-                                            <View className="items-center">
-                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
-                                                    <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
-                                                </View>
-                                                <Typography variant="small" color="gray" weight="semibold">Design</Typography>
-                                            </View>
-                                        )}
-                                    </Surface>
-                                </TouchableOpacity>
-
-                                {styleImage && (
-                                    <TouchableOpacity
-                                        activeOpacity={0.7}
-                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                        onPress={() => setStyleImage(null)}
-                                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
-                                        accessibilityLabel="Delete style image"
-                                    >
-                                        <Svg width="18" height="18" viewBox="0 0 24 24">
-                                            <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
-                                        </Svg>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
+                            <TextInput
+                                className={`flex-1 h-14 font-semibold text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                placeholder="Dress Type (e.g. Senator Suit)"
+                                placeholderTextColor={isDark ? "#4B5563" : "#9CA3AF"}
+                                value={dressType}
+                                onChangeText={setDressType}
+                            />
                         </View>
 
-                        <Surface variant="white" className={`overflow-hidden`} rounded="2xl">
-                            <View className="px-4 py-4">
-                                <TextInput
-                                    className={`text-[15px] font-medium min-h-[100px] ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                    placeholder="Add specific notes or requirements..."
-                                    placeholderTextColor="#C7C7CC"
-                                    multiline
-                                    textAlignVertical="top"
-                                    value={notes}
-                                    onChangeText={setNotes}
-                                />
+                        {/* Client Selection */}
+                        <TouchableOpacity
+                            onPress={() => setShowCustomerModal(true)}
+                            className={`flex-row items-center justify-between px-4 h-14 ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
+                        >
+                            <View className="flex-row items-center">
+                                <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#FF9500]/10' : 'bg-orange-50'}`}>
+                                    <User size={16} color={isDark ? "#FF9F0A" : "#FF9500"} variant="Bulk" />
+                                </View>
+                                <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                    {selectedCustomer ? selectedCustomer.fullName : "Select Client"}
+                                </Typography>
                             </View>
-                        </Surface>
-                    </View>
+                            <ArrowDown2 size={14} color="#C7C7CC" />
+                        </TouchableOpacity>
+                    </SectionCard>
+
+                    {/* Group 2: Schedule & Financials */}
+                    <SectionCard
+                        icon={Calendar}
+                        title="Schedule & billing"
+                        className="mb-4"
+                        innerClassName="p-0 overflow-hidden"
+                    >
+                        {/* Date */}
+                        <TouchableOpacity
+                            onPress={() => setShowDatePicker(true)}
+                            className={`flex-row items-center justify-between px-4 h-14 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'} ${isDark ? 'active:bg-white/5' : 'active:bg-gray-50'}`}
+                        >
+                            <View className="flex-row items-center">
+                                <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isDark ? 'bg-[#5856D6]/10' : 'bg-indigo-50'}`}>
+                                    <Calendar size={16} color={isDark ? "#5E5CE6" : "#5856D6"} variant="Bulk" />
+                                </View>
+                                <Typography weight="semibold" className={`text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                    Delivery Date
+                                </Typography>
+                            </View>
+                            <View className="flex-row items-center">
+                                <Typography variant="small" weight="semibold" className="mr-1 text-brand-primary">{formatDate(dueDate)}</Typography>
+                                <ArrowDown2 size={14} color="pink" />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Total Price */}
+                        <View className={`flex-row items-center px-4 h-14 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
+                            <Typography weight="semibold" className={`flex-1 text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                Total Price ({currencySymbol})
+                            </Typography>
+                            <TextInput
+                                className={`flex-1 text-right text-[15px] font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                placeholder="0"
+                                placeholderTextColor="#C7C7CC"
+                                keyboardType="numeric"
+                                value={price}
+                                onChangeText={(value) => handleAmountInput(value, setPrice)}
+                            />
+                        </View>
+
+                        {/* Deposit */}
+                        <View className="flex-row items-center px-4 h-14">
+                            <Typography weight="semibold" className={`flex-1 text-[15px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                Initial Deposit ({currencySymbol})
+                            </Typography>
+                            <TextInput
+                                className={`flex-1 text-right text-[15px] font-semibold ${isDark ? 'text-[#30D158]' : 'text-[#34C759]'}`}
+                                placeholder="0"
+                                placeholderTextColor="#C7C7CC"
+                                keyboardType="numeric"
+                                value={amountPaid}
+                                onChangeText={(value) => handleAmountInput(value, setAmountPaid)}
+                            />
+                        </View>
+                    </SectionCard>
+
+                    {/* Group 3: Media & Notes */}
+                    <SectionCard
+                        icon={Gallery}
+                        title="Design & fabric"
+                        className="mb-4"
+                        innerClassName="p-3 flex-row gap-3"
+                    >
+                        {/* Fabric Image */}
+                        <View className="flex-1 aspect-square relative">
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => pickImage('fabric')}
+                                className={`w-full h-full rounded-2xl items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}
+                            >
+                                {fabricImage ? (
+                                    <>
+                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                        <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
+                                            <Typography variant="caption" className="text-white text-[10px] font-semibold">Fabric</Typography>
+                                        </View>
+                                    </>
+                                ) : (
+                                    <View className="items-center">
+                                        <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                            <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                                        </View>
+                                        <Typography variant="small" color="gray" weight="semibold">Fabric</Typography>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+
+                            {fabricImage && (
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    onPress={() => setFabricImage(null)}
+                                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
+                                    accessibilityLabel="Delete fabric image"
+                                >
+                                    <Svg width="18" height="18" viewBox="0 0 24 24">
+                                        <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
+                                    </Svg>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        {/* Style / Design Image */}
+                        <View className="flex-1 aspect-square relative">
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => pickImage('style')}
+                                className={`w-full h-full rounded-2xl items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}
+                            >
+                                {styleImage ? (
+                                    <>
+                                        <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                        <View className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60">
+                                            <Typography variant="caption" className="text-white text-[10px] font-semibold">Design</Typography>
+                                        </View>
+                                    </>
+                                ) : (
+                                    <View className="items-center">
+                                        <View className={`w-10 h-10 rounded-xl items-center justify-center mb-2 ${isDark ? 'bg-[#007AFF]/15' : 'bg-blue-50'}`}>
+                                            <Gallery size={20} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bulk" />
+                                        </View>
+                                        <Typography variant="small" color="gray" weight="semibold">Design</Typography>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+
+                            {styleImage && (
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    onPress={() => setStyleImage(null)}
+                                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black items-center justify-center z-20"
+                                    accessibilityLabel="Delete style image"
+                                >
+                                    <Svg width="18" height="18" viewBox="0 0 24 24">
+                                        <Path fill="none" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 6L6 18m12 0L6 6" />
+                                    </Svg>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </SectionCard>
+
+                    {/* Notes */}
+                    <SectionCard
+                        icon={DocumentText}
+                        title="Special notes"
+                        className="mb-6"
+                        innerClassName="p-4"
+                    >
+                        <TextInput
+                            className={`text-[15px] font-medium min-h-[100px] p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                            placeholder="Add specific notes or requirements..."
+                            placeholderTextColor="#C7C7CC"
+                            multiline
+                            textAlignVertical="top"
+                            value={notes}
+                            onChangeText={setNotes}
+                        />
+                    </SectionCard>
 
                     <View className="mb-8">
                         <Button

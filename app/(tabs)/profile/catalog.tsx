@@ -20,9 +20,11 @@ import {
     ArrowRight,
     Location,
     ArrowRight2,
+    DocumentText,
 } from 'iconsax-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Typography } from '../../../components/ui/Typography';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -502,250 +504,253 @@ export default function BusinessSettings() {
             ) : (
                 <ScrollView contentContainerClassName="p-5 pb-10" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     {/* BRANDING */}
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Business Branding</Typography>
-                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-5`}>
-                            <View className="flex-col items-start ">
-                                <TouchableOpacity onPress={handlePickLogo} className="relative mb-4">
-                                    <View className={`w-24 h-24 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                        {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={40} color={isDark ? '#52525b' : '#d1d5db'} variant="Bulk" />}
-                                    </View>
-                                    <View className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-4 border-white dark:border-zinc-900">
-                                        <Camera size={16} color="white" variant="Bulk" />
-                                    </View>
-                                </TouchableOpacity>
-                                <Typography weight="bold" className="text-[14px] text-blue-600 mb-6" onPress={handlePickLogo}>Change Business Logo</Typography>
-                            </View>
+                    <SectionCard
+                        icon={Building}
+                        title="Business Branding"
+                        innerClassName="p-4"
+                        className="mb-4"
+                    >
+                        <View className="flex-col items-start">
+                            <TouchableOpacity onPress={handlePickLogo} className="relative mb-3">
+                                <View className={`w-20 h-20 rounded-full overflow-hidden items-center justify-center ${isDark ? 'bg-zinc-700' : 'bg-gray-100'}`}>
+                                    {logo ? <Image source={{ uri: logo }} className="w-full h-full" /> : <Building size={36} color={isDark ? '#71717A' : '#9CA3AF'} variant="Bulk" />}
+                                </View>
+                                <View className="absolute bottom-0 right-0 bg-blue-600 p-1.5 rounded-full border-2 border-white dark:border-zinc-800">
+                                    <Camera size={14} color="white" variant="Bulk" />
+                                </View>
+                            </TouchableOpacity>
+                            <Typography weight="bold" className="text-[13px] text-blue-600 mb-4" onPress={handlePickLogo}>Change Business Logo</Typography>
+                        </View>
 
-                            <View className="w-full gap-y-4">
-                                <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Business Headline</Typography>
-                                    <TextInput
-                                        className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[15px]`}
-                                        placeholder="e.g. House of Luxury" value={headline} onChangeText={setHeadline}
-                                    />
-                                </View>
-                                <View>
-                                    <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase">Description</Typography>
-                                    <TextInput
-                                        className={`px-4 py-3 rounded-2xl border ${isDark ? 'bg-zinc-800/50 border-zinc-800 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-medium text-[14px] min-h-[100px]`}
-                                        placeholder="Briefly describe your craft" value={brandDescription} onChangeText={setBrandDescription} multiline
-                                        textAlignVertical="top"
-                                    />
-                                </View>
+                        <View className="w-full gap-y-3">
+                            <View>
+                                <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase text-[10px]">Business Headline</Typography>
+                                <TextInput
+                                    className={`px-4 py-2.5 rounded-xl border ${isDark ? 'bg-zinc-700/50 border-zinc-700 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-semibold text-[14px]`}
+                                    placeholder="e.g. House of Luxury" value={headline} onChangeText={setHeadline}
+                                />
                             </View>
-                        </Surface>
-                    </View>
+                            <View>
+                                <Typography variant="caption" color="gray" weight="bold" className="mb-1 ml-1 uppercase text-[10px]">Description</Typography>
+                                <TextInput
+                                    className={`px-4 py-2.5 rounded-xl border ${isDark ? 'bg-zinc-700/50 border-zinc-700 text-white' : 'bg-gray-50 border-gray-100 text-gray-900'} font-medium text-[13px] min-h-[90px]`}
+                                    placeholder="Briefly describe your craft" value={brandDescription} onChangeText={setBrandDescription} multiline
+                                    textAlignVertical="top"
+                                />
+                            </View>
+                        </View>
+                    </SectionCard>
 
                     {/* BASIC DETAILS */}
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Basic Details</Typography>
-                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-5`}>
-                            <ProfileRowInput label="Brand Name" value={businessName} onChangeText={setBusinessName} placeholder="Studio Name" isDark={isDark} />
-                            <TouchableOpacity
-                                onPress={() => setShowBusinessTypeModal(true)}
-                                className="flex-row items-center justify-between py-4 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
-                            >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white text-[14px]">Craft</Typography>
-                                <View className="flex-row items-center">
-                                    <Typography weight="medium" className={`text-[15px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>{businessType || 'Specialization'}</Typography>
-                                    <Building size={16} color="#9CA3AF" variant="Bulk" />
-                                </View>
-                            </TouchableOpacity>
-
-                            <View className="flex-row items-center py-4 border-b border-gray-50 dark:border-white/5">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">WhatsApp</Typography>
-                                <View className="flex-1 items-end">
-                                    <PhoneInput
-                                        style={{ fontSize: 14, fontWeight: '600', color: isDark ? 'white' : '#111827', textAlign: 'right', width: '100%' }}
-                                        defaultCountry={countryCode || "NG"} value={phone} onChange={(val: any) => setPhone(val || '')}
-                                    />
-                                </View>
+                    <SectionCard
+                        icon={DocumentText}
+                        title="Basic Details"
+                        innerClassName="p-4"
+                        className="mb-4"
+                    >
+                        <ProfileRowInput label="Brand Name" value={businessName} onChangeText={setBusinessName} placeholder="Studio Name" isDark={isDark} />
+                        <TouchableOpacity
+                            onPress={() => setShowBusinessTypeModal(true)}
+                            className="flex-row items-center justify-between py-3.5 border-b border-gray-50 dark:border-white/5 active:bg-gray-50 dark:active:bg-white/5"
+                        >
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white text-[14px]">Craft</Typography>
+                            <View className="flex-row items-center">
+                                <Typography weight="medium" className={`text-[14px] mr-2 ${businessType ? 'text-blue-600' : 'text-gray-400'}`}>{businessType || 'Specialization'}</Typography>
+                                <Building size={16} color="#9CA3AF" variant="Bulk" />
                             </View>
+                        </TouchableOpacity>
 
-                            <View className="flex-row items-center py-4">
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Country</Typography>
-                                <View className="flex-1 items-end">
-                                    <CountryPicker
-                                        withFilter withFlag withCountryNameButton withAlphaFilter withEmoji
-                                        onSelect={(c: any) => { setCountry(c.name as string); setCountryCode(c.cca2); }}
-                                        countryCode={countryCode}
-                                        theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
-                                        containerButtonStyle={{ padding: 0 }}
-                                    />
-                                </View>
+                        <View className="flex-row items-center py-3.5 border-b border-gray-50 dark:border-white/5">
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">WhatsApp</Typography>
+                            <View className="flex-1 items-end">
+                                <PhoneInput
+                                    style={{ fontSize: 14, fontWeight: '600', color: isDark ? 'white' : '#111827', textAlign: 'right', width: '100%' }}
+                                    defaultCountry={countryCode || "NG"} value={phone} onChange={(val: any) => setPhone(val || '')}
+                                />
                             </View>
+                        </View>
 
-                            <TouchableOpacity
-                                onPress={openAddressModal}
-                                className="flex-row items-center py-4"
-                            >
-                                <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Address</Typography>
-                                <View className="flex-row items-center flex-1 justify-end ml-2">
-                                    <Typography
-                                        numberOfLines={1}
-                                        className={`text-[14px] mr-2 flex-shrink text-right ${address ? 'text-blue-600' : 'text-gray-400'}`}
-                                    >
-                                        {address || 'Set address'}
-                                    </Typography>
-                                    <ArrowRight2 size={14} color="#9CA3AF" />
-                                </View>
-                            </TouchableOpacity>
-                        </Surface>
-                    </View>
+                        <View className="flex-row items-center py-3.5 border-b border-gray-50 dark:border-white/5">
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Country</Typography>
+                            <View className="flex-1 items-end">
+                                <CountryPicker
+                                    withFilter withFlag withCountryNameButton withAlphaFilter withEmoji
+                                    onSelect={(c: any) => { setCountry(c.name as string); setCountryCode(c.cca2); }}
+                                    countryCode={countryCode}
+                                    theme={isDark ? { onBackgroundTextColor: '#ffffff', backgroundColor: '#1C1C1E', filterPlaceholderTextColor: '#9CA3AF' } : {}}
+                                    containerButtonStyle={{ padding: 0 }}
+                                />
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={openAddressModal}
+                            className="flex-row items-center py-3.5"
+                        >
+                            <Typography weight="semibold" className="text-gray-900 dark:text-white w-1/3 text-[14px]">Address</Typography>
+                            <View className="flex-row items-center flex-1 justify-end ml-2">
+                                <Typography
+                                    numberOfLines={1}
+                                    className={`text-[14px] mr-2 flex-shrink text-right ${address ? 'text-blue-600' : 'text-gray-400'}`}
+                                >
+                                    {address || 'Set address'}
+                                </Typography>
+                                <ArrowRight2 size={14} color="#9CA3AF" />
+                            </View>
+                        </TouchableOpacity>
+                    </SectionCard>
 
                     {/* SOCIAL MEDIA */}
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Social Presence</Typography>
-                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
-                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
-                                <View className="mr-3"><InstagramIcon color="#E4405F" /></View>
-                                <Typography weight="semibold" className="w-1/4 text-[14px]">Instagram</Typography>
-                                <TextInput
-                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                    placeholder="@handle" value={instagram} onChangeText={setInstagram}
-                                    onBlur={() => setInstagram(normalizeSocialHandle(instagram))}
-                                />
-                            </View>
-                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
-                                <View className="mr-3"><XIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
-                                <Typography weight="semibold" className="w-1/4 text-[14px]">Twitter (X)</Typography>
-                                <TextInput
-                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                    placeholder="@handle" value={twitter} onChangeText={setTwitter}
-                                    onBlur={() => setTwitter(normalizeSocialHandle(twitter))}
-                                />
-                            </View>
-                            <View className="flex-row items-center py-4 border-b border-gray-100 dark:border-white/5">
-                                <View className="mr-3"><FacebookIcon color="#1877F2" /></View>
-                                <Typography weight="semibold" className="w-1/4 text-[14px]">Facebook</Typography>
-                                <TextInput
-                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                    placeholder="page name" value={facebook} onChangeText={setFacebook}
-                                    onBlur={() => setFacebook(normalizeSocialHandle(facebook))}
-                                />
-                            </View>
-                            <View className="flex-row items-center py-4">
-                                <View className="mr-3"><TikTokIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
-                                <Typography weight="semibold" className="w-1/4 text-[14px]">TikTok</Typography>
-                                <TextInput
-                                    className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                    placeholder="@handle" value={tiktok} onChangeText={setTiktok}
-                                    onBlur={() => setTiktok(normalizeSocialHandle(tiktok))}
-                                />
-                            </View>
-                        </Surface>
-                    </View>
+                    <SectionCard
+                        icon={Share}
+                        title="Social Presence"
+                        innerClassName="p-3"
+                        className="mb-4"
+                    >
+                        <View className="flex-row items-center py-3.5 border-b border-gray-100 dark:border-white/5">
+                            <View className="mr-3"><InstagramIcon color="#E4405F" /></View>
+                            <Typography weight="semibold" className="w-1/4 text-[14px]">Instagram</Typography>
+                            <TextInput
+                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                placeholder="@handle" value={instagram} onChangeText={setInstagram}
+                                onBlur={() => setInstagram(normalizeSocialHandle(instagram))}
+                            />
+                        </View>
+                        <View className="flex-row items-center py-3.5 border-b border-gray-100 dark:border-white/5">
+                            <View className="mr-3"><XIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
+                            <Typography weight="semibold" className="w-1/4 text-[14px]">Twitter (X)</Typography>
+                            <TextInput
+                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                placeholder="@handle" value={twitter} onChangeText={setTwitter}
+                                onBlur={() => setTwitter(normalizeSocialHandle(twitter))}
+                            />
+                        </View>
+                        <View className="flex-row items-center py-3.5 border-b border-gray-100 dark:border-white/5">
+                            <View className="mr-3"><FacebookIcon color="#1877F2" /></View>
+                            <Typography weight="semibold" className="w-1/4 text-[14px]">Facebook</Typography>
+                            <TextInput
+                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                placeholder="page name" value={facebook} onChangeText={setFacebook}
+                                onBlur={() => setFacebook(normalizeSocialHandle(facebook))}
+                            />
+                        </View>
+                        <View className="flex-row items-center py-3.5">
+                            <View className="mr-3"><TikTokIcon color={isDark ? '#FFFFFF' : '#000000'} /></View>
+                            <Typography weight="semibold" className="w-1/4 text-[14px]">TikTok</Typography>
+                            <TextInput
+                                className={`flex-1 text-right font-semibold text-[14px] ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                placeholder="@handle" value={tiktok} onChangeText={setTiktok}
+                                onBlur={() => setTiktok(normalizeSocialHandle(tiktok))}
+                            />
+                        </View>
+                    </SectionCard>
 
                     {/* THEME PICKER */}
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Catalog Appearance</Typography>
-                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
-                            <View className="flex-row items-center justify-between mb-4">
-                                <Typography weight="bold" className="text-[14px]">Store Accent Color</Typography>
-                                <Typography variant="small" color="primary" weight="semibold">Customized</Typography>
-                            </View>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
-                                {PREDEFINED_THEMES.map((theme) => {
-                                    const isSelected = selectedTheme === theme.color;
-                                    return (
-                                        <View key={theme.color} className="mr-2">
-                                            <View style={{ width: 48, height: 48, borderRadius: 24, borderWidth: isSelected ? 2 : 0, borderColor: theme.color, alignItems: 'center', justifyContent: 'center' }}>
-                                                <Pressable
-                                                    onPress={() => setSelectedTheme(theme.color)}
-                                                    style={{ backgroundColor: theme.color, width: 36, height: 36, borderRadius: 18, borderWidth: isSelected ? 2.5 : 0, borderColor: isDark ? '#1C1C1E' : 'white' }}
-                                                    className={isSelected ? 'scale-100 shadow-sm' : 'scale-90 opacity-80'}
-                                                />
-                                            </View>
+                    <SectionCard
+                        icon={Magicpen}
+                        title="Catalog Appearance"
+                        innerClassName="p-4"
+                        className="mb-4"
+                    >
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Typography weight="bold" className="text-[14px]">Store Accent Color</Typography>
+                            <Typography variant="small" color="primary" weight="semibold">Customized</Typography>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
+                            {PREDEFINED_THEMES.map((theme) => {
+                                const isSelected = selectedTheme === theme.color;
+                                return (
+                                    <View key={theme.color} className="mr-2">
+                                        <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: isSelected ? 2 : 0, borderColor: theme.color, alignItems: 'center', justifyContent: 'center' }}>
+                                            <Pressable
+                                                onPress={() => setSelectedTheme(theme.color)}
+                                                style={{ backgroundColor: theme.color, width: 34, height: 34, borderRadius: 17, borderWidth: isSelected ? 2.5 : 0, borderColor: isDark ? '#27272A' : 'white' }}
+                                                className={isSelected ? 'scale-100 shadow-sm' : 'scale-90 opacity-80'}
+                                            />
                                         </View>
-                                    );
-                                })}
-                            </ScrollView>
-                        </Surface>
-                    </View>
+                                    </View>
+                                );
+                            })}
+                        </ScrollView>
+                    </SectionCard>
 
-                    <View className="mb-8">
-                        <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Visibility Settings</Typography>
-                        <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
-                            <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
-                                <View className="flex-1 mr-4">
-                                    <View className="flex-row items-center mb-1">
-                                        <Typography weight="bold" className="text-[15px]">Catalog Visibility</Typography>
-                                    </View>
-                                    <Typography variant="small" color="gray">
-                                        {userIsPro ? 'Allow anyone with your link to view your products' : 'Freemium: up to 3 items. Pro: unlimited catalog items'}
-                                    </Typography>
+                    {/* VISIBILITY */}
+                    <SectionCard
+                        icon={Eye}
+                        title="Visibility Settings"
+                        innerClassName="p-0"
+                        className="mb-4"
+                    >
+                        <View className="p-4 flex-row items-center justify-between border-b border-gray-50 dark:border-white/5">
+                            <View className="flex-1 mr-4">
+                                <View className="flex-row items-center mb-1">
+                                    <Typography weight="bold" className="text-[14px]">Catalog Visibility</Typography>
                                 </View>
-                                <Switch
-                                    value={isEnabled}
-                                    onValueChange={(val) => {
-                                        setIsEnabled(val);
-                                        posthog.capture('catalog_visibility_toggled', { enabled: val });
-                                    }}
-                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
-                                    thumbColor="#FFFFFF"
-                                />
+                                <Typography variant="small" color="gray" className="text-[12px]">
+                                    {userIsPro ? 'Allow anyone with your link to view your products' : 'Freemium: up to 3 items. Pro: unlimited catalog items'}
+                                </Typography>
                             </View>
-                            <View className="p-4 flex-row items-center justify-between">
-                                <View className="flex-1 mr-4">
-                                    <View className="flex-row items-center mb-1">
-                                        <Typography weight="bold" className="text-[15px]">Show Price Tags</Typography>
-                                        {/*  {!userIsPro && (
-                                            <View className="ml-2 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-                                                <Typography className="text-[8px] font-black text-amber-700 dark:text-amber-400 uppercase">PRO</Typography>
-                                            </View>
-                                        )} */}
-                                    </View>
-                                    <Typography variant="small" color="gray">Display prices to every visitor</Typography>
+                            <Switch
+                                value={isEnabled}
+                                onValueChange={(val) => {
+                                    setIsEnabled(val);
+                                    posthog.capture('catalog_visibility_toggled', { enabled: val });
+                                }}
+                                trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                thumbColor="#FFFFFF"
+                            />
+                        </View>
+                        <View className="p-4 flex-row items-center justify-between">
+                            <View className="flex-1 mr-4">
+                                <View className="flex-row items-center mb-1">
+                                    <Typography weight="bold" className="text-[14px]">Show Price Tags</Typography>
                                 </View>
-                                <Switch
-                                    // value={userIsPro ? showPrices : false}
-                                    value={showPrices}
-                                    onValueChange={(val) => {
-                                        /*  if (!userIsPro) {
-                                             Toast.show({ type: 'info', text1: 'Pro Feature', text2: 'Upgrade to Pro to customize store prices' });
-                                             return;
-                                         } */
-                                        setShowPrices(val);
-                                    }}
-                                    trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
-                                    thumbColor="#FFFFFF"
-                                />
+                                <Typography variant="small" color="gray" className="text-[12px]">Display prices to every visitor</Typography>
                             </View>
-                        </Surface>
-                    </View>
+                            <Switch
+                                value={showPrices}
+                                onValueChange={(val) => {
+                                    setShowPrices(val);
+                                }}
+                                trackColor={{ false: '#D1D5DB', true: '#3b82f6' }}
+                                thumbColor="#FFFFFF"
+                            />
+                        </View>
+                    </SectionCard>
 
                     {/* STORE LINK */}
                     {catalogId && (
-                        <View className="mb-8">
-                            <Typography variant="caption" color="gray" weight="bold" className="ml-4 mb-2 uppercase tracking-wider text-[11px]">Your Store Link</Typography>
-                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden p-3`}>
-                                <Typography weight="medium" numberOfLines={1} className={`text-[14px] mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                    https://catalog.needleafrica.com/cg/{nxFormattedId || catalogId}
-                                </Typography>
+                        <SectionCard
+                            icon={Gallery}
+                            title="Your Store Link"
+                            innerClassName="p-4"
+                            className="mb-4"
+                        >
+                            <Typography weight="medium" numberOfLines={1} className={`text-[13px] mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                https://catalog.needleafrica.com/cg/{nxFormattedId || catalogId}
+                            </Typography>
 
-                                <View className="flex-row gap-x-3">
-                                    <TouchableOpacity
-                                        onPress={async () => {
-                                            posthog.capture('catalog_link_copied');
-                                            await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${nxFormattedId || catalogId}`);
-                                            Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
-                                        }}
-                                        className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30"
-                                    >
-                                        <Typography weight="bold" className="text-blue-600">Copy Link</Typography>
-                                    </TouchableOpacity>
+                            <View className="flex-row gap-x-3">
+                                <TouchableOpacity
+                                    onPress={async () => {
+                                        posthog.capture('catalog_link_copied');
+                                        await Clipboard.setStringAsync(`https://catalog.needleafrica.com/cg/${nxFormattedId || catalogId}`);
+                                        Toast.show({ type: 'success', text1: 'Copied', text2: 'Link copied to clipboard' });
+                                    }}
+                                    className="flex-1 flex-row items-center justify-center h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30"
+                                >
+                                    <Typography weight="bold" className="text-blue-600 text-[13px]">Copy Link</Typography>
+                                </TouchableOpacity>
 
-                                    <TouchableOpacity
-                                        onPress={() => setShareCardModalVisible(true)}
-                                        className="flex-1 flex-row items-center justify-center h-14 rounded-2xl bg-gray-100 dark:bg-white/10"
-                                    >
-                                        <Share size={18} color={isDark ? 'white' : '#111827'} variant="Linear" style={{ marginRight: 8 }} />
-                                        <Typography weight="bold" className={isDark ? 'text-white' : 'text-gray-900'}>Share Card</Typography>
-                                    </TouchableOpacity>
-                                </View>
-                            </Surface>
-                        </View>
+                                <TouchableOpacity
+                                    onPress={() => setShareCardModalVisible(true)}
+                                    className="flex-1 flex-row items-center justify-center h-12 rounded-xl bg-gray-100 dark:bg-white/10"
+                                >
+                                    <Share size={16} color={isDark ? 'white' : '#111827'} variant="Linear" style={{ marginRight: 6 }} />
+                                    <Typography weight="bold" className={`text-[13px] ${isDark ? 'text-white' : 'text-gray-900'}`}>Share Card</Typography>
+                                </TouchableOpacity>
+                            </View>
+                        </SectionCard>
                     )}
 
                     <Button onPress={handleSave} isLoading={isSaving} className="h-16 rounded-full bg-blue-600 border-0 mb-8 mt-4" textClassName="text-white text-[16px] font-bold">

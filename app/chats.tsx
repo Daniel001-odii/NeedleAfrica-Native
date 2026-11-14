@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Send } from 'iconsax-react-native';
+import { Send, SearchNormal1, CloseCircle } from 'iconsax-react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Typography } from '../components/ui/Typography';
 import { useTheme } from '../contexts/ThemeContext';
@@ -40,6 +40,8 @@ export default function ChatsScreen() {
     const [rooms, setRooms] = useState<ChatRoom[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [search, setSearch] = useState('');
+    const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
     const socketRef = useRef<any>(null);
 
     const fetchRooms = useCallback(async (silent = false) => {
@@ -115,14 +117,120 @@ export default function ChatsScreen() {
         });
     };
 
+    const unreadCount = useMemo(() => {
+        return rooms.reduce((acc, r) => acc + ((r.unreadTailor || 0) > 0 ? 1 : 0), 0);
+    }, [rooms]);
+
+    const filteredRooms = useMemo(() => {
+        let list = rooms;
+        if (activeFilter === 'unread') {
+            list = list.filter(r => (r.unreadTailor || 0) > 0);
+        }
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            list = list.filter(r =>
+                (r.client?.fullName || '').toLowerCase().includes(q) ||
+                (r.lastMessageText || '').toLowerCase().includes(q) ||
+                (r.client?.city || '').toLowerCase().includes(q)
+            );
+        }
+        return list;
+    }, [rooms, activeFilter, search]);
+
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
-            {/* <SafeAreaView edges={['top']} className="flex-1"> */}
-            {/* Header */}
-            <View className={`px-6 pt-5 pb-4 ${isDark ? 'bg-black' : 'bg-white'}`}>
-                <Typography variant="h2" weight="bold" className="text-2xl">
-                    Chats
-                </Typography>
+            {/* Header with Title, Search and Filters */}
+            <View className={`px-5 pt-5 pb-3 border-b ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-gray-100'}`}>
+                <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-row items-center">
+                        <Typography variant="h2" weight="bold" className="text-2xl">
+                            Chats
+                        </Typography>
+                        {rooms.length > 0 && (
+                            <View className={`ml-2.5 px-2.5 py-0.5 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-pink-50'}`}>
+                                <Typography variant="caption" weight="bold" className={isDark ? 'text-zinc-300' : 'text-[#FF5678]'}>
+                                    {rooms.length}
+                                </Typography>
+                            </View>
+                        )}
+                    </View>
+                </View>
+
+                {/* Chat Search Bar */}
+                <View className={`flex-row items-center px-3.5 h-11 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-[#F2F2F7]'}`}>
+                    <SearchNormal1 size={17} color={isDark ? '#A1A1AA' : '#8E8E93'} />
+                    <TextInput
+                        className={`flex-1 ml-2.5 text-[15px] font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                        placeholder="Search conversations..."
+                        placeholderTextColor={isDark ? '#71717A' : '#8E8E93'}
+                        value={search}
+                        onChangeText={setSearch}
+                        autoCapitalize="none"
+                    />
+                    {search.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                            <CloseCircle size={18} color={isDark ? '#A1A1AA' : '#8E8E93'} variant="Bold" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Chat Filter Chips */}
+                <View className="flex-row items-center gap-2 mt-3">
+                    <TouchableOpacity
+                        onPress={() => setActiveFilter('all')}
+                        activeOpacity={0.7}
+                        className={`px-3.5 py-1.5 rounded-full ${
+                            activeFilter === 'all'
+                                ? (isDark ? 'bg-white' : 'bg-black')
+                                : (isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-[#F2F2F7]')
+                        }`}
+                    >
+                        <Typography
+                            variant="small"
+                            weight="bold"
+                            className={`text-[12px] ${
+                                activeFilter === 'all'
+                                    ? (isDark ? 'text-black' : 'text-white')
+                                    : (isDark ? 'text-zinc-400' : 'text-zinc-600')
+                            }`}
+                        >
+                            All {rooms.length > 0 ? `(${rooms.length})` : ''}
+                        </Typography>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => setActiveFilter('unread')}
+                        activeOpacity={0.7}
+                        className={`flex-row items-center px-3.5 py-1.5 rounded-full ${
+                            activeFilter === 'unread'
+                                ? 'bg-[#FF5678]'
+                                : (isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-[#F2F2F7]')
+                        }`}
+                    >
+                        <Typography
+                            variant="small"
+                            weight="bold"
+                            className={`text-[12px] ${
+                                activeFilter === 'unread'
+                                    ? 'text-white'
+                                    : (isDark ? 'text-zinc-400' : 'text-zinc-600')
+                            }`}
+                        >
+                            Unread
+                        </Typography>
+                        {unreadCount > 0 && (
+                            <View
+                                className={`ml-1.5 px-1.5 py-0.2 rounded-full ${
+                                    activeFilter === 'unread' ? 'bg-white/20' : 'bg-[#FF5678]'
+                                }`}
+                            >
+                                <Typography variant="caption" weight="bold" className="text-[10px] text-white">
+                                    {unreadCount}
+                                </Typography>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {loading ? (
@@ -151,13 +259,30 @@ export default function ChatsScreen() {
                         Messages from customers on your NeedleX catalog will appear here in real time.
                     </Typography>
                 </ScrollView>
+            ) : filteredRooms.length === 0 ? (
+                <View className="flex-1 items-center justify-center py-20 px-6">
+                    <Typography variant="body" weight="bold" className={`text-center mb-1 text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                        No matching conversations
+                    </Typography>
+                    <Typography variant="small" color="gray" className="text-center mb-4">
+                        Try checking your spelling or reset active filters.
+                    </Typography>
+                    <TouchableOpacity
+                        onPress={() => { setSearch(''); setActiveFilter('all'); }}
+                        className="px-4 py-2 rounded-full bg-[#FF5678]"
+                    >
+                        <Typography variant="small" weight="bold" color="white">
+                            Reset Filters
+                        </Typography>
+                    </TouchableOpacity>
+                </View>
             ) : (
                 <ScrollView
                     className="flex-1"
                     showsVerticalScrollIndicator={false}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FF5678" />}
                 >
-                    {rooms.map((room, index) => {
+                    {filteredRooms.map((room, index) => {
                         const clientName = room.client?.fullName ?? 'Client';
                         const initials = clientName
                             .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';

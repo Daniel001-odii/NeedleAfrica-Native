@@ -14,7 +14,7 @@ import Toast from 'react-native-toast-message';
 import { WebView } from 'react-native-webview';
 import { useSubscription } from '../../../../hooks/useSubscription';
 import { ModernTemplate, ClassicTemplate, MinimalTemplate, CreativeTemplate, ElegantTemplate, BoldTemplate, CorporateTemplate, EditorialTemplate } from '../../../../components/invoice-templates';
-import { Surface } from '../../../../components/ui/Surface';
+import { SectionCard } from '../../../../components/ui/SectionCard';
 
 export default function InvoiceSettingsScreen() {
     const router = useRouter();
@@ -116,8 +116,12 @@ export default function InvoiceSettingsScreen() {
                     </View>
 
                     {/* Business Info Group */}
-                    <SectionLabel label="Business Details" isFirst />
-                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
+                    <SectionCard
+                        icon={Building}
+                        title="Business details"
+                        className="mb-4"
+                        innerClassName="p-0 overflow-hidden"
+                    >
                         <InputRow
                             label="Name"
                             icon={<Building size={18} color="#3b82f6" variant="Bulk" />}
@@ -142,11 +146,15 @@ export default function InvoiceSettingsScreen() {
                             multiline
                             last
                         />
-                    </Surface>
+                    </SectionCard>
 
                     {/* Bank Details Group */}
-                    <SectionLabel label="Bank Account Details" />
-                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
+                    <SectionCard
+                        icon={Bank}
+                        title="Bank account details"
+                        className="mb-4"
+                        innerClassName="p-0 overflow-hidden"
+                    >
                         <InputRow
                             label="Bank Name"
                             icon={<Bank size={18} color="#3b82f6" variant="Bulk" />}
@@ -170,45 +178,43 @@ export default function InvoiceSettingsScreen() {
                             placeholder="e.g. John Doe Enterprises"
                             last
                         />
-                    </Surface>
+                    </SectionCard>
 
-                    <SectionLabel label="Terms & Conditions" />
-                    <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
-                        <View className={`px-4 py-4 min-h-[120px]`}>
-                            <View className={`w-9 h-9 items-center justify-center rounded-xl mr-3 mb-2 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
-                                <DocumentText size={18} color="#3b82f6" variant="Bulk" />
-                            </View>
-                            <Typography variant="caption" color="gray" weight="bold" className="mb-1.5">TERMS TEXT</Typography>
-                            <TextInput
-                                value={form.invoiceTerms}
-                                onChangeText={(t: string) => setForm({ ...form, invoiceTerms: t })}
-                                placeholder={`e.g. Payment is due within 15 days. Refunds are not applicable to completed garments.`}
-                                placeholderTextColor="#9CA3AF"
-                                multiline
-                                numberOfLines={4}
-                                textAlignVertical="top"
-                                className={` p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                style={{ minHeight: 80 }}
-                            />
-                        </View>
-                    </Surface>
+                    {/* Terms & Conditions Group */}
+                    <SectionCard
+                        icon={DocumentText}
+                        title="Terms & conditions"
+                        className="mb-4"
+                        innerClassName="p-4"
+                    >
+                        <TextInput
+                            value={form.invoiceTerms}
+                            onChangeText={(t: string) => setForm({ ...form, invoiceTerms: t })}
+                            placeholder="e.g. Payment is due within 15 days. Refunds are not applicable to completed garments."
+                            placeholderTextColor="#9CA3AF"
+                            multiline
+                            numberOfLines={4}
+                            textAlignVertical="top"
+                            className={`p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                            style={{ minHeight: 80 }}
+                        />
+                    </SectionCard>
 
                     {/* Template Selection */}
-                    <View className="flex-row items-center justify-between mt-8 mb-4 px-6">
-                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest">
-                            Invoice Template
-                        </Typography>
-                        <View className="flex-row items-center">
-                            <Brush size={14} color="#3b82f6" />
-                            <Typography variant="small" color="primary" className="ml-1 font-bold">Select Style</Typography>
-                        </View>
-                    </View>
-
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                    <SectionCard
+                        icon={Brush}
+                        title="Invoice template"
+                        rightElement={
+                            <Typography variant="small" color="primary" weight="bold">Select Style</Typography>
+                        }
+                        className="mb-4"
+                        innerClassName="p-3"
                     >
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ gap: 12 }}
+                        >
                         {[
                             { id: 0, name: 'Modern', TemplateComp: ModernTemplate },
                             { id: 1, name: 'Classic', TemplateComp: ClassicTemplate },
@@ -279,7 +285,8 @@ export default function InvoiceSettingsScreen() {
                                 </View>
                             );
                         })}
-                    </ScrollView>
+                        </ScrollView>
+                    </SectionCard>
 
                     {/* Full Preview Modal */}
                     <Modal
@@ -409,7 +416,7 @@ function InputRow({ label, icon, value, onChangeText, placeholder, last, multili
                     className={`p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
                 />
             </View>
-            {!last && <View className={`absolute bottom-0 right-0 left-16 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`} />}
+            {!last && <View className={`absolute bottom-0 right-0 left-16 h-[1px] ${isDark ? 'bg-zinc-700/60' : 'bg-gray-100'}`} />}
         </View>
     );
 }

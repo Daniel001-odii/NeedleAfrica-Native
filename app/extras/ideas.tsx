@@ -24,6 +24,8 @@ import { StoreReviewService } from '../../services/StoreReviewService';
 import { PinterestIcon, UnsplashIcon } from '../../components/ui/CustomIcons';
 import axiosInstance from '../../lib/axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Reanimated from 'react-native-reanimated';
+import { useSegmentSlider } from '../../hooks/useSegmentSlider';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 2;
@@ -120,6 +122,7 @@ export default function StyleInspirations() {
 
     // Tab source: 'unsplash' or 'pinterest'
     const [activeTab, setActiveTab] = useState<'unsplash' | 'pinterest'>('unsplash');
+    const tabSlider = useSegmentSlider(activeTab);
 
     // Unsplash States
     const [query, setQuery] = useState('');
@@ -268,24 +271,24 @@ export default function StyleInspirations() {
 
             {/* Segmented Control Tabs */}
             <View className="px-4 py-3">
-                <View className={`flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-100'}`}>
+                <View className={`relative flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-100'}`}>
+                    <Reanimated.View
+                        pointerEvents="none"
+                        style={[
+                            {
+                                position: 'absolute',
+                                borderRadius: 999,
+                                backgroundColor: isDark ? '#27272a' : '#fff',
+                                ...(!isDark ? { shadowColor: '#9CA3AF', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 1 } : {}),
+                            },
+                            tabSlider.indicatorStyle,
+                        ]}
+                    />
                     <Pressable
                         onPress={() => handleTabChange('unsplash')}
-                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-full ${
-                            activeTab === 'unsplash'
-                                ? isDark ? 'bg-zinc-800' : 'bg-white'
-                                : ''
-                        }`}
-                        style={({ pressed }) => [
-                            { opacity: pressed ? 0.7 : 1 },
-                            (!isDark && activeTab === 'unsplash') ? {
-                                shadowColor: '#E5E7EB',
-                                shadowOffset: { width: 0, height: 1 },
-                                shadowOpacity: 0.15,
-                                shadowRadius: 1,
-                                elevation: 1,
-                            } : {}
-                        ]}
+                        onLayout={tabSlider.onTabLayout('unsplash')}
+                        className="flex-1 flex-row items-center justify-center py-2.5 rounded-full"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                     >
                         <UnsplashIcon size={16} color={activeTab === 'unsplash' ? (isDark ? '#fff' : '#000') : '#9CA3AF'} />
                         <Typography
@@ -303,21 +306,9 @@ export default function StyleInspirations() {
 
                     <Pressable
                         onPress={() => handleTabChange('pinterest')}
-                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-full ${
-                            activeTab === 'pinterest'
-                                ? isDark ? 'bg-zinc-800' : 'bg-white'
-                                : ''
-                        }`}
-                        style={({ pressed }) => [
-                            { opacity: pressed ? 0.7 : 1 },
-                            (!isDark && activeTab === 'pinterest') ? {
-                                shadowColor: '#E5E7EB',
-                                shadowOffset: { width: 0, height: 1 },
-                                shadowOpacity: 0.15,
-                                shadowRadius: 1,
-                                elevation: 1,
-                            } : {}
-                        ]}
+                        onLayout={tabSlider.onTabLayout('pinterest')}
+                        className="flex-1 flex-row items-center justify-center py-2.5 rounded-full"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                     >
                         <PinterestIcon size={16} color={activeTab === 'pinterest' ? '#E60023' : '#9CA3AF'} />
                         <Typography

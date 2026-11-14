@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking';
 import { ArrowLeft, Call, Message, User, InfoCircle, Edit2, Trash, ShoppingCart, Box, ArrowRight2, Ruler, DocumentText } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -26,6 +27,7 @@ import Animated, {
     interpolate,
     Extrapolation,
 } from 'react-native-reanimated';
+import { useSegmentSlider } from '../../../hooks/useSegmentSlider';
 
 export default function CustomerDetail() {
     const { id } = useLocalSearchParams();
@@ -41,6 +43,7 @@ export default function CustomerDetail() {
 
     type TabType = 'measurements' | 'orders' | 'payments';
     const [activeTab, setActiveTab] = useState<TabType>('measurements');
+    const tabSlider = useSegmentSlider(activeTab);
 
     const currency = user?.currency || 'NGN';
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '₦';
@@ -241,25 +244,25 @@ export default function CustomerDetail() {
                 >
                     {!isEditing ? (
                         <>
-                            {/* Profile Header Row */}
-                            <View className="flex-row items-center mb-8 px-5 pt-4">
-                                <View className={`w-24 h-24 items-center justify-center rounded-full mr-5 ${isDark ? 'bg-zinc-900 border border-white/5' : 'bg-gray-100 shadow-gray-200/50'}`}>
-                                    <Typography weight="bold" color="primary" className="text-3xl">{initials}</Typography>
-                                </View>
-                                <View className="flex-1">
-                                    <View>
-                                        <Typography variant="h2" weight="bold" className="text-2xl">{customer.fullName}</Typography>
-                                        <Typography color="gray" variant="body" className="capitalize mt-0.5 font-semibold opacity-70 text-sm">{customer.gender || 'Client'}  {customer.phoneNumber}</Typography>
-
+                            {/* Profile Overview - SectionCard */}
+                            <View className="px-4 mb-4">
+                                <SectionCard icon={User} title="Customer overview">
+                                    <View className="flex-row items-center mb-4">
+                                        <View className={`w-16 h-16 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-zinc-700' : 'bg-indigo-50'}`}>
+                                            <Typography weight="bold" color="primary" className="text-2xl">{initials}</Typography>
+                                        </View>
+                                        <View className="flex-1">
+                                            <Typography variant="h2" weight="bold" className="text-xl">{customer.fullName}</Typography>
+                                            <Typography color="gray" variant="body" className="capitalize mt-0.5 font-semibold opacity-70 text-xs">
+                                                {customer.gender || 'Client'}{customer.phoneNumber ? ` • ${customer.phoneNumber}` : ''}
+                                            </Typography>
+                                        </View>
                                     </View>
 
                                     {/* Action Chips */}
-                                    <View className="flex-row mt-4 gap-2">
+                                    <View className="flex-row gap-2 pt-3 border-t border-gray-100 dark:border-zinc-700/60">
                                         <TouchableOpacity
                                             onPress={handleWhatsApp}
-                                            // style={{
-                                            //     backgroundColor: "#25D366"
-                                            // }}
                                             className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}
                                         >
                                             <WhatsAppIcon size={16} color={isDark ? "#30D158" : "#34C759"} />
@@ -267,7 +270,6 @@ export default function CustomerDetail() {
                                                 variant="small"
                                                 weight="bold"
                                                 numberOfLines={1}
-                                                color="white"
                                                 className="ml-1.5"
                                                 style={{ color: isDark ? '#30D158' : '#34C759' }}
                                             >
@@ -306,71 +308,26 @@ export default function CustomerDetail() {
                                                 Text
                                             </Typography>
                                         </TouchableOpacity>
-
-
                                     </View>
-                                </View>
-                            </View>
 
-                            {/* Stats Summary */}
-                            <View className="px-4 mb-6">
-                                {/* <Surface variant="white" className="flex-row py-4" rounded="2xl"> */}
-                                <View className="flex-row py-4">
-                                    <TouchableOpacity
-                                        activeOpacity={0.7}
-                                        onPress={() => setActiveTab('measurements')}
-                                        className={`flex-1 items-center ${isDark ? 'border-r border-white/5' : 'border-r border-gray-100'}`}
-                                    >
-                                        <Typography variant="h3" weight="bold" color={activeTab === 'measurements' ? 'primary' : undefined}>
-                                            {measurements.length}
-                                        </Typography>
-                                        <Typography variant="caption" color="gray" weight="semibold" className="text-[10px] uppercase opacity-60">
-                                            Measurements
-                                        </Typography>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        activeOpacity={0.7}
-                                        onPress={() => setActiveTab('orders')}
-                                        className={`flex-1 items-center ${isDark ? 'border-r border-white/5' : 'border-r border-gray-100'}`}
-                                    >
-                                        <Typography variant="h3" weight="bold" color={activeTab === 'orders' ? 'primary' : undefined}>
-                                            {orders.length}
-                                        </Typography>
-                                        <Typography variant="caption" color="gray" weight="semibold" className="text-[10px] uppercase opacity-60">
-                                            Orders
-                                        </Typography>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        activeOpacity={0.7}
-                                        onPress={() => setActiveTab('payments')}
-                                        className="flex-1 items-center"
-                                    >
-                                        <Typography variant="h3" weight="bold" color={activeTab === 'payments' ? 'primary' : undefined}>
-                                            {invoices.length}
-                                        </Typography>
-                                        <Typography variant="caption" color="gray" weight="semibold" className="text-[10px] uppercase opacity-60">
-                                            Payments
-                                        </Typography>
-                                    </TouchableOpacity>
-                                </View>
-                                {/* </Surface> */}
-                            </View>
-
-                            {/* Notes Section */}
-                            <SectionLabel>About & Notes</SectionLabel>
-                            <View className="px-5 mb-12">
-                                {/* <Surface variant="white" className="p-4" rounded="2xl"> */}
-                                <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium text-[14px]`}>
-                                    {customer.notes || "No additional notes for this customer."}
-                                </Typography>
-                                {/* </Surface> */}
+                                    {/* About & Notes */}
+                                    {customer.notes ? (
+                                        <View className="pt-3 mt-3 border-t border-gray-100 dark:border-zinc-700/60">
+                                            <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-5 font-medium text-xs`}>
+                                                {customer.notes}
+                                            </Typography>
+                                        </View>
+                                    ) : null}
+                                </SectionCard>
                             </View>
 
                             {/* Tabs Controller */}
                             <View className="px-4 mb-4">
-                                <View className={`flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900 border border-white/5' : 'bg-gray-100'}`}>
+                                <View className={`relative flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900 border border-white/5' : 'bg-gray-100'}`}>
+                                    <Animated.View
+                                        pointerEvents="none"
+                                        style={[{ position: 'absolute', borderRadius: 999, backgroundColor: isDark ? '#3f3f46' : '#000' }, tabSlider.indicatorStyle]}
+                                    />
                                     {(
                                         [
                                             { id: 'measurements', label: 'Measurements', count: measurements.length },
@@ -383,11 +340,9 @@ export default function CustomerDetail() {
                                             <TouchableOpacity
                                                 key={tab.id}
                                                 activeOpacity={0.7}
+                                                onLayout={tabSlider.onTabLayout(tab.id)}
                                                 onPress={() => setActiveTab(tab.id)}
-                                                className={`flex-1 flex-row items-center justify-center py-2.5 rounded-full ${isActive
-                                                    ? (isDark ? 'bg-zinc-700' : 'bg-black')
-                                                    : 'bg-transparent'
-                                                    }`}
+                                                className="flex-1 flex-row items-center justify-center py-2.5 rounded-full"
                                             >
                                                 <Typography
                                                     variant="small"
@@ -423,195 +378,186 @@ export default function CustomerDetail() {
 
                             {/* Active Tab Records */}
                             {activeTab === 'measurements' && (
-                                <>
-                                    <SectionLabel
-                                        rightAction={
+                                <View className="px-4 mb-6">
+                                    <SectionCard
+                                        icon={Ruler}
+                                        title="Client measurements"
+                                        rightElement={
                                             <TouchableOpacity onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}>
                                                 <Typography variant="small" weight="bold" color="primary">Add New</Typography>
                                             </TouchableOpacity>
                                         }
                                     >
-                                        Measurements
-                                    </SectionLabel>
-                                    <View className="px-4 mb-6">
-                                        <Surface variant="white" rounded="2xl" className="overflow-hidden">
-                                            {measurements.length === 0 ? (
-                                                <View className="p-8 items-center justify-center">
-                                                    <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                                        <Ruler size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                                    </View>
-                                                    <Typography color="gray" variant="body" weight="medium" className="mb-3">No measurements yet</Typography>
-                                                    <TouchableOpacity
-                                                        onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}
-                                                        className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
-                                                    >
-                                                        <Typography variant="small" weight="bold" className="text-[#007AFF]">Record Measurement</Typography>
-                                                    </TouchableOpacity>
+                                        {measurements.length === 0 ? (
+                                            <View className="py-8 items-center justify-center">
+                                                <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-700' : 'bg-gray-100'}`}>
+                                                    <Ruler size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
                                                 </View>
-                                            ) : (
-                                                measurements.map((m, idx) => (
-                                                    <Pressable
-                                                        key={m.id}
-                                                        onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: id } })}
-                                                        className={`p-4 flex-row items-center justify-between ${idx !== measurements.length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}
-                                                    >
-                                                        <View className="flex-row items-center flex-1 mr-2">
-                                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/20' : 'bg-indigo-50'}`}>
-                                                                <Ruler size={18} color="#6366F1" />
-                                                            </View>
-                                                            <View className="flex-1">
-                                                                <Typography weight="bold" className="text-[15px]">{m.title}</Typography>
-                                                                <Typography variant="caption" color="gray" className="mt-0.5">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
-                                                            </View>
+                                                <Typography color="gray" variant="body" weight="medium" className="mb-3">No measurements yet</Typography>
+                                                <TouchableOpacity
+                                                    onPress={() => router.push({ pathname: '/measurements/create', params: { customerId: customer?.id } })}
+                                                    className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
+                                                >
+                                                    <Typography variant="small" weight="bold" className="text-[#007AFF]">Record Measurement</Typography>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ) : (
+                                            measurements.map((m, idx) => (
+                                                <Pressable
+                                                    key={m.id}
+                                                    onPress={() => router.push({ pathname: '/measurements/edit', params: { measurementId: m.id, customerId: id } })}
+                                                    className={`py-3 flex-row items-center justify-between ${idx !== measurements.length - 1 ? (isDark ? 'border-b border-zinc-700/60' : 'border-b border-gray-100') : ''}`}
+                                                >
+                                                    <View className="flex-row items-center flex-1 mr-2">
+                                                        <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
+                                                            <Ruler size={18} color="#6366F1" />
                                                         </View>
-                                                        <ArrowRight2 size={18} color="#D1D1D6" />
-                                                    </Pressable>
-                                                ))
-                                            )}
-                                        </Surface>
-                                    </View>
-                                </>
+                                                        <View className="flex-1">
+                                                            <Typography weight="bold" className="text-[15px]">{m.title}</Typography>
+                                                            <Typography variant="caption" color="gray" className="mt-0.5">{new Date(m.createdAt || 0).toLocaleDateString()}</Typography>
+                                                        </View>
+                                                    </View>
+                                                    <ArrowRight2 size={18} color="#D1D1D6" />
+                                                </Pressable>
+                                            ))
+                                        )}
+                                    </SectionCard>
+                                </View>
                             )}
 
                             {activeTab === 'orders' && (
-                                <>
-                                    <SectionLabel
-                                        rightAction={
+                                <View className="px-4 mb-6">
+                                    <SectionCard
+                                        icon={Box}
+                                        title="Customer orders"
+                                        rightElement={
                                             <TouchableOpacity onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}>
                                                 <Typography variant="small" weight="bold" color="primary">Add New</Typography>
                                             </TouchableOpacity>
                                         }
                                     >
-                                        Orders
-                                    </SectionLabel>
-                                    <View className="px-4 mb-6">
-                                        <Surface variant="white" rounded="2xl" className="overflow-hidden">
-                                            {orders.length === 0 ? (
-                                                <View className="p-8 items-center justify-center">
-                                                    <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                                        <Box size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                                    </View>
-                                                    <Typography color="gray" variant="body" weight="medium" className="mb-3">No orders yet</Typography>
-                                                    <TouchableOpacity
-                                                        onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
-                                                        className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
-                                                    >
-                                                        <Typography variant="small" weight="bold" className="text-[#007AFF]">Create Order</Typography>
-                                                    </TouchableOpacity>
+                                        {orders.length === 0 ? (
+                                            <View className="py-8 items-center justify-center">
+                                                <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-700' : 'bg-gray-100'}`}>
+                                                    <Box size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
                                                 </View>
-                                            ) : (
-                                                orders.map((order, idx) => {
-                                                    const isDelivered = order.status === 'DELIVERED';
-                                                    const statusBg = isDelivered ? (isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10') : (isDark ? 'bg-[#FF9500]/20' : 'bg-[#FF9500]/10');
-                                                    const statusColor = isDelivered ? (isDark ? '#30D158' : '#34C759') : (isDark ? '#FF9F0A' : '#FF9500');
+                                                <Typography color="gray" variant="body" weight="medium" className="mb-3">No orders yet</Typography>
+                                                <TouchableOpacity
+                                                    onPress={() => router.push({ pathname: '/(tabs)/orders/new', params: { customerId: customer?.id } })}
+                                                    className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
+                                                >
+                                                    <Typography variant="small" weight="bold" className="text-[#007AFF]">Create Order</Typography>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ) : (
+                                            orders.map((order, idx) => {
+                                                const isDelivered = order.status === 'DELIVERED';
+                                                const statusBg = isDelivered ? (isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10') : (isDark ? 'bg-[#FF9500]/20' : 'bg-[#FF9500]/10');
+                                                const statusColor = isDelivered ? (isDark ? '#30D158' : '#34C759') : (isDark ? '#FF9F0A' : '#FF9500');
 
-                                                    return (
-                                                        <Pressable
-                                                            key={order.id}
-                                                            onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}
-                                                            className={`p-4 flex-row items-center justify-between ${idx !== orders.length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}
-                                                        >
-                                                            <View className="flex-row items-center flex-1 mr-2">
-                                                                <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${statusBg}`}>
-                                                                    <Box size={18} color={statusColor} variant="Bulk" />
-                                                                </View>
-                                                                <View className="flex-1">
-                                                                    <Typography weight="bold" className="text-[14px]">{order.styleName}</Typography>
-                                                                    <View className="flex-row items-center mt-1 gap-2 flex-wrap">
-                                                                        <View className={`px-2 py-0.5 rounded-full ${statusBg}`}>
-                                                                            <Typography variant="caption" weight="bold" className="text-[9px] uppercase" style={{ color: statusColor }}>
-                                                                                {order.status}
-                                                                            </Typography>
-                                                                        </View>
-                                                                        {order.deliveryDate && (
-                                                                            <Typography variant="caption" color="gray" className="text-[11px]">
-                                                                                Due {new Date(order.deliveryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                                            </Typography>
-                                                                        )}
+                                                return (
+                                                    <Pressable
+                                                        key={order.id}
+                                                        onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: order.id } })}
+                                                        className={`py-3 flex-row items-center justify-between ${idx !== orders.length - 1 ? (isDark ? 'border-b border-zinc-700/60' : 'border-b border-gray-100') : ''}`}
+                                                    >
+                                                        <View className="flex-row items-center flex-1 mr-2">
+                                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${statusBg}`}>
+                                                                <Box size={18} color={statusColor} variant="Bulk" />
+                                                            </View>
+                                                            <View className="flex-1">
+                                                                <Typography weight="bold" className="text-[14px]">{order.styleName}</Typography>
+                                                                <View className="flex-row items-center mt-1 gap-2 flex-wrap">
+                                                                    <View className={`px-2 py-0.5 rounded-full ${statusBg}`}>
+                                                                        <Typography variant="caption" weight="bold" className="text-[9px] uppercase" style={{ color: statusColor }}>
+                                                                            {order.status}
+                                                                        </Typography>
                                                                     </View>
+                                                                    {order.deliveryDate && (
+                                                                        <Typography variant="caption" color="gray" className="text-[11px]">
+                                                                            Due {new Date(order.deliveryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                                        </Typography>
+                                                                    )}
                                                                 </View>
                                                             </View>
-                                                            <View className="items-end mr-2">
-                                                                <Typography weight="bold" className="text-[13px]">
-                                                                    {currencySymbol}{(order.amount || 0).toLocaleString()}
+                                                        </View>
+                                                        <View className="items-end mr-2">
+                                                            <Typography weight="bold" className="text-[13px]">
+                                                                {currencySymbol}{(order.amount || 0).toLocaleString()}
+                                                            </Typography>
+                                                            {order.amountPaid !== undefined && (
+                                                                <Typography variant="caption" color="gray" className="text-[10px]">
+                                                                    Paid: {currencySymbol}{(order.amountPaid || 0).toLocaleString()}
                                                                 </Typography>
-                                                                {order.amountPaid !== undefined && (
-                                                                    <Typography variant="caption" color="gray" className="text-[10px]">
-                                                                        Paid: {currencySymbol}{(order.amountPaid || 0).toLocaleString()}
-                                                                    </Typography>
-                                                                )}
-                                                            </View>
-                                                            <ArrowRight2 size={18} color="#D1D1D6" />
-                                                        </Pressable>
-                                                    );
-                                                })
-                                            )}
-                                        </Surface>
-                                    </View>
-                                </>
+                                                            )}
+                                                        </View>
+                                                        <ArrowRight2 size={18} color="#D1D1D6" />
+                                                    </Pressable>
+                                                );
+                                            })
+                                        )}
+                                    </SectionCard>
+                                </View>
                             )}
 
                             {activeTab === 'payments' && (
-                                <>
-                                    <SectionLabel
-                                        rightAction={
+                                <View className="px-4 mb-6">
+                                    <SectionCard
+                                        icon={DocumentText}
+                                        title="Invoices & payments"
+                                        rightElement={
                                             <TouchableOpacity onPress={() => router.push({ pathname: '/(tabs)/orders/invoices/new', params: { customerId: customer?.id } })}>
                                                 <Typography variant="small" weight="bold" color="primary">Add New</Typography>
                                             </TouchableOpacity>
                                         }
                                     >
-                                        Invoices & Payments
-                                    </SectionLabel>
-                                    <View className="px-4 mb-6">
-                                        <Surface variant="white" rounded="2xl" className="overflow-hidden">
-                                            {invoices.length === 0 ? (
-                                                <View className="p-8 items-center justify-center">
-                                                    <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                                                        <DocumentText size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                                    </View>
-                                                    <Typography color="gray" variant="body" weight="medium" className="mb-3">No payments or invoices yet</Typography>
-                                                    <TouchableOpacity
-                                                        onPress={() => router.push({ pathname: '/(tabs)/orders/invoices/new', params: { customerId: customer?.id } })}
-                                                        className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
-                                                    >
-                                                        <Typography variant="small" weight="bold" className="text-[#007AFF]">Create Invoice</Typography>
-                                                    </TouchableOpacity>
+                                        {invoices.length === 0 ? (
+                                            <View className="py-8 items-center justify-center">
+                                                <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 ${isDark ? 'bg-zinc-700' : 'bg-gray-100'}`}>
+                                                    <DocumentText size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
                                                 </View>
-                                            ) : (
-                                                invoices.map((inv, idx) => (
-                                                    <Pressable
-                                                        key={inv.id}
-                                                        onPress={() => router.push(`/(tabs)/orders/invoices/${inv.id}`)}
-                                                        className={`p-4 flex-row items-center justify-between ${idx !== invoices.length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-50') : ''}`}
-                                                    >
-                                                        <View className="flex-row items-center flex-1 mr-2">
-                                                            <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}>
-                                                                <DocumentText size={18} color={isDark ? '#30D158' : '#34C759'} variant="Bulk" />
-                                                            </View>
-                                                            <View className="flex-1">
-                                                                <Typography weight="bold" className="text-[14px]">{inv.invoiceNumber}</Typography>
-                                                                <Typography variant="caption" color="gray" className="mt-0.5">
-                                                                    {new Date(inv.createdAt || 0).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                                </Typography>
-                                                            </View>
+                                                <Typography color="gray" variant="body" weight="medium" className="mb-3">No payments or invoices yet</Typography>
+                                                <TouchableOpacity
+                                                    onPress={() => router.push({ pathname: '/(tabs)/orders/invoices/new', params: { customerId: customer?.id } })}
+                                                    className="px-4 py-2 bg-[#007AFF]/10 rounded-full"
+                                                >
+                                                    <Typography variant="small" weight="bold" className="text-[#007AFF]">Create Invoice</Typography>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ) : (
+                                            invoices.map((inv, idx) => (
+                                                <Pressable
+                                                    key={inv.id}
+                                                    onPress={() => router.push(`/(tabs)/orders/invoices/${inv.id}`)}
+                                                    className={`py-3 flex-row items-center justify-between ${idx !== invoices.length - 1 ? (isDark ? 'border-b border-zinc-700/60' : 'border-b border-gray-100') : ''}`}
+                                                >
+                                                    <View className="flex-row items-center flex-1 mr-2">
+                                                        <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}>
+                                                            <DocumentText size={18} color={isDark ? '#30D158' : '#34C759'} variant="Bulk" />
                                                         </View>
-                                                        <View className="items-end mr-2">
-                                                            <Typography weight="bold" className="text-[14px]">
-                                                                {currencySymbol}{(inv.amount || 0).toLocaleString()}
+                                                        <View className="flex-1">
+                                                            <Typography weight="bold" className="text-[14px]">{inv.invoiceNumber}</Typography>
+                                                            <Typography variant="caption" color="gray" className="mt-0.5">
+                                                                {new Date(inv.createdAt || 0).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                                                             </Typography>
-                                                            <View className={`mt-0.5 px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
-                                                                <Typography variant="caption" weight="bold" className="text-[9px] uppercase opacity-70">
-                                                                    PAID
-                                                                </Typography>
-                                                            </View>
                                                         </View>
-                                                        <ArrowRight2 size={18} color="#D1D1D6" />
-                                                    </Pressable>
-                                                ))
-                                            )}
-                                        </Surface>
-                                    </View>
-                                </>
+                                                    </View>
+                                                    <View className="items-end mr-2">
+                                                        <Typography weight="bold" className="text-[14px]">
+                                                            {currencySymbol}{(inv.amount || 0).toLocaleString()}
+                                                        </Typography>
+                                                        <View className={`mt-0.5 px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
+                                                            <Typography variant="caption" weight="bold" className="text-[9px] uppercase opacity-70">
+                                                                PAID
+                                                            </Typography>
+                                                        </View>
+                                                    </View>
+                                                    <ArrowRight2 size={18} color="#D1D1D6" />
+                                                </Pressable>
+                                            ))
+                                        )}
+                                    </SectionCard>
+                                </View>
                             )}
 
                             <View className="px-4 mt-2 mb-10">
@@ -637,15 +583,15 @@ export default function CustomerDetail() {
                         </>
                     ) : (
                         <View className="px-4">
-                            <SectionLabel>Profile Details</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden ${isDark ? 'bg-[#1C1C1E]' : 'bg-soft-pink'}`}>
-                                <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
+                            {/* Personal Information - SectionCard */}
+                            <SectionCard icon={User} title="Personal information">
+                                <View className={`flex-row items-center pb-3 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
                                     <Typography weight="medium" color="gray" className="w-24 text-[14px]">Full Name</Typography>
-                                    <TextInput value={fullName} onChangeText={setFullName} className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`} />
+                                    <TextInput value={fullName} onChangeText={setFullName} className={`flex-1 h-12 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`} />
                                 </View>
-                                <View className="flex-row items-center px-4">
+                                <View className={`flex-row items-center py-3 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
                                     <Typography weight="medium" color="gray" className="w-24 text-[14px]">Phone</Typography>
-                                    <View className="flex-1 h-14 justify-center">
+                                    <View className="flex-1 h-12 justify-center">
                                         <PhoneInput
                                             style={{ color: isDark ? 'white' : 'black', fontWeight: 'bold' }}
                                             defaultCountry="NG"
@@ -654,37 +600,39 @@ export default function CustomerDetail() {
                                         />
                                     </View>
                                 </View>
-                            </Surface>
+                                <View className="pt-3">
+                                    <Typography weight="medium" color="gray" className="text-[12px] mb-2 uppercase tracking-wider">Gender</Typography>
+                                    <View className={`p-1 rounded-xl flex-row ${isDark ? 'bg-zinc-700' : 'bg-gray-100'}`}>
+                                        {['female', 'male', 'other'].map((g) => {
+                                            const isActive = gender === g;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={g}
+                                                    onPress={() => setGender(g)}
+                                                    className={`flex-1 py-2 rounded-lg items-center ${isActive ? (isDark ? 'bg-zinc-600' : 'bg-white') : ''}`}
+                                                >
+                                                    <Typography variant="small" weight={isActive ? "bold" : "medium"} className={`capitalize ${isActive ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
+                                                        {g}
+                                                    </Typography>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+                            </SectionCard>
 
-                            <SectionLabel>Gender</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`p-1 mb-6 flex-row ${isDark ? 'bg-[#1C1C1E]' : 'bg-gray-200/50 shadow-sm'}`}>
-                                {['female', 'male', 'other'].map((g) => {
-                                    const isActive = gender === g;
-                                    return (
-                                        <TouchableOpacity
-                                            key={g}
-                                            onPress={() => setGender(g)}
-                                            className={`flex-1 py-2.5 rounded-xl items-center ${isActive ? (isDark ? 'bg-zinc-700' : 'bg-white shadow-sm') : ''}`}
-                                        >
-                                            <Typography variant="small" weight={isActive ? "bold" : "medium"} className={`capitalize ${isActive ? (isDark ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
-                                                {g}
-                                            </Typography>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </Surface>
-
-                            <SectionLabel>Notes</SectionLabel>
-                            <Surface variant="white" rounded="2xl" className={`p-4 mb-10 ${isDark ? 'bg-[#1C1C1E]' : 'bg-soft-pink'}`}>
+                            {/* Notes - SectionCard */}
+                            <SectionCard icon={DocumentText} title="Customer notes">
                                 <TextInput
                                     value={notes}
                                     onChangeText={setNotes}
                                     multiline
                                     placeholder="Add measurements or preferences..."
-                                    className={`min-h-[120px] font-medium text-[15px] ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                    placeholderTextColor="#9CA3AF"
+                                    className={`min-h-[100px] font-medium text-[15px] ${isDark ? 'text-white' : 'text-zinc-800'}`}
                                     textAlignVertical="top"
                                 />
-                            </Surface>
+                            </SectionCard>
 
                             <Button onPress={handleDelete} variant="ghost" className="h-14 mb-10 bg-red-500/10 rounded-2xl" textClassName="text-[#FF3B30] font-bold">
                                 Delete Customer

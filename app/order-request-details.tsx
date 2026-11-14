@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { View, ScrollView, Image, Linking, Pressable, Modal, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, User, Call, Sms, MessageText1, Ruler, Gallery, CloseCircle, TickCircle, CloseSquare } from 'iconsax-react-native';
+import { ArrowLeft, User, Call, Sms, MessageText1, Ruler, Gallery, CloseCircle, TickCircle, CloseSquare, Colorfilter, DocumentText } from 'iconsax-react-native';
 import { Typography } from '../components/ui/Typography';
 import { IconButton } from '../components/ui/IconButton';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../contexts/ThemeContext';
 import { OrderRequest, OrderRequestService } from '../services/OrderRequestService';
 import { Surface } from '../components/ui/Surface';
+import { SectionCard, SectionRow } from '../components/ui/SectionCard';
 import Toast from 'react-native-toast-message';
 
 export default function OrderRequestDetailsScreen() {
@@ -136,8 +137,8 @@ export default function OrderRequestDetailsScreen() {
                 </View>
 
                 <ScrollView className="flex-1" contentContainerClassName="p-4 pb-20">
-                    {/* Header Info */}
-                    <Surface variant="white" className="p-4 mb-3" rounded="3xl">
+                    {/* Header Info - Nested SectionCard */}
+                    <SectionCard icon={User} title="Customer details">
                         <View className="flex-row items-center mb-4">
                             <View className="w-12 h-12 rounded-full bg-[#FF5678] items-center justify-center mr-4">
                                 <User size={24} color="white" />
@@ -154,10 +155,10 @@ export default function OrderRequestDetailsScreen() {
 
                         {/* Contact Details */}
                         {(orderRequest.phoneNumber || orderRequest.email) && (
-                            <View className="border-t border-gray-200 dark:border-zinc-800 pt-4 mt-2 mb-3">
+                            <View className="border-t border-gray-100 dark:border-zinc-700/60 pt-3 mt-1 mb-2">
                                 {orderRequest.phoneNumber && (
                                     <Pressable onPress={handleCall} className="flex-row items-center mb-3">
-                                        <View className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center mr-3">
+                                        <View className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/40 items-center justify-center mr-3">
                                             <Call size={18} color="#3b82f6" variant="Bold" />
                                         </View>
                                         <View className="flex-1">
@@ -172,7 +173,7 @@ export default function OrderRequestDetailsScreen() {
                                 )}
                                 {orderRequest.email && (
                                     <Pressable onPress={handleEmail} className="flex-row items-center">
-                                        <View className="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900 items-center justify-center mr-3">
+                                        <View className="w-9 h-9 rounded-full bg-orange-50 dark:bg-orange-900/40 items-center justify-center mr-3">
                                             <Sms size={18} color="#f97316" variant="Bold" />
                                         </View>
                                         <View className="flex-1">
@@ -189,17 +190,17 @@ export default function OrderRequestDetailsScreen() {
                         )}
 
                         {/* Quick Actions */}
-                        <View className="flex-row justify-around border-t border-gray-200 dark:border-zinc-800 pt-4">
+                        <View className="flex-row justify-around border-t border-gray-100 dark:border-zinc-700/60 pt-3">
                             {orderRequest.phoneNumber && (
                                 <>
                                     <Pressable onPress={handleCall} className="items-center">
-                                        <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center mb-1">
+                                        <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 items-center justify-center mb-1">
                                             <Call size={20} color="#3b82f6" variant="Bold" />
                                         </View>
                                         <Typography variant="small" className={isDark ? 'text-white' : 'text-black'}>Call</Typography>
                                     </Pressable>
                                     <Pressable onPress={handleWhatsApp} className="items-center">
-                                        <View className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mb-1">
+                                        <View className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/40 items-center justify-center mb-1">
                                             <MessageText1 size={20} color="#22c55e" variant="Bold" />
                                         </View>
                                         <Typography variant="small" className={isDark ? 'text-white' : 'text-black'}>WhatsApp</Typography>
@@ -208,119 +209,84 @@ export default function OrderRequestDetailsScreen() {
                             )}
                             {orderRequest.email && (
                                 <Pressable onPress={handleEmail} className="items-center">
-                                    <View className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900 items-center justify-center mb-1">
+                                    <View className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/40 items-center justify-center mb-1">
                                         <Sms size={20} color="#f97316" variant="Bold" />
                                     </View>
                                     <Typography variant="small" className={isDark ? 'text-white' : 'text-black'}>Email</Typography>
                                 </Pressable>
                             )}
                         </View>
-                    </Surface>
+                    </SectionCard>
 
                     {/* Description */}
                     {orderRequest.description && (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <View className="flex-row items-center mb-2">
-                                <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} font-semibold`}>
-                                    Notes
-                                </Typography>
-                            </View>
-                            <Typography variant="body" className={`mt-2 ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
+                        <SectionCard icon={MessageText1} title="Styling instructions">
+                            <Typography variant="body" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>
                                 {orderRequest.description}
                             </Typography>
-                        </Surface>
+                        </SectionCard>
                     )}
 
                     {/* Fabric Sourcing */}
                     {orderRequest.fabricOption && (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} font-semibold mb-3`}>
-                                Fabric Sourcing
-                            </Typography>
-                            <View className="flex-row flex-wrap">
-                                <View className="w-1/2 mb-3">
-                                    <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
-                                        Option
-                                    </Typography>
-                                    <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
-                                        {orderRequest.fabricOption}
-                                    </Typography>
-                                </View>
-                                {orderRequest.fabricBudget != null && (
-                                    <View className="w-1/2 mb-3">
-                                        <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
-                                            Fabric Budget
-                                        </Typography>
-                                        <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
-                                            {orderRequest.fabricBudget.toLocaleString()}
-                                        </Typography>
-                                    </View>
-                                )}
-                            </View>
-                        </Surface>
+                        <SectionCard icon={Colorfilter} title="Fabric sourcing">
+                            <SectionRow
+                                label="Option"
+                                value={orderRequest.fabricOption}
+                                isLast={orderRequest.fabricBudget == null}
+                            />
+                            {orderRequest.fabricBudget != null && (
+                                <SectionRow
+                                    label="Fabric Budget"
+                                    value={`₦${orderRequest.fabricBudget.toLocaleString()}`}
+                                    isLast={true}
+                                />
+                            )}
+                        </SectionCard>
                     )}
 
                     {/* Measurements */}
                     {(orderRequest.bust || orderRequest.waist || orderRequest.hips || orderRequest.length ||
                         (orderRequest.customMeasurements && orderRequest.customMeasurements.length > 0)) && (
-                            <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                                <View className="flex-row items-center mb-4">
-                                    <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} font-semibold`}>
-                                        Measurements
-                                    </Typography>
-                                </View>
-
-                                <View className="flex-row flex-wrap">
-                                    {[
-                                        { label: 'Bust', value: orderRequest.bust },
-                                        { label: 'Waist', value: orderRequest.waist },
-                                        { label: 'Hips', value: orderRequest.hips },
-                                        { label: 'Length', value: orderRequest.length },
-                                    ].map((m, i) => m.value ? (
-                                        <View key={i} className="w-1/2 mb-3">
-                                            <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
-                                                {m.label}
-                                            </Typography>
-                                            <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
-                                                {m.value}
-                                            </Typography>
-                                        </View>
-                                    ) : null)}
-
-                                    {orderRequest.customMeasurements && orderRequest.customMeasurements.map((cm, i) => (
-                                        <View key={`cm-${i}`} className="w-1/2 mb-3">
-                                            <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">
-                                                {cm.name}
-                                            </Typography>
-                                            <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>
-                                                {cm.value}
-                                            </Typography>
-                                        </View>
-                                    ))}
-                                </View>
-                            </Surface>
-                        )}
+                        <SectionCard icon={Ruler} title="Client measurements">
+                            {(() => {
+                                const allMeasurements: { label: string; value: string | number }[] = [];
+                                if (orderRequest.bust) allMeasurements.push({ label: 'Bust', value: `${orderRequest.bust}"` });
+                                if (orderRequest.waist) allMeasurements.push({ label: 'Waist', value: `${orderRequest.waist}"` });
+                                if (orderRequest.hips) allMeasurements.push({ label: 'Hips', value: `${orderRequest.hips}"` });
+                                if (orderRequest.length) allMeasurements.push({ label: 'Length', value: `${orderRequest.length}"` });
+                                if (orderRequest.customMeasurements) {
+                                    orderRequest.customMeasurements.forEach((cm) => {
+                                        if (cm.value) allMeasurements.push({ label: cm.name, value: cm.value });
+                                    });
+                                }
+                                return allMeasurements.map((m, idx) => (
+                                    <SectionRow
+                                        key={idx}
+                                        label={m.label}
+                                        value={m.value}
+                                        isLast={idx === allMeasurements.length - 1}
+                                    />
+                                ));
+                            })()}
+                        </SectionCard>
+                    )}
 
                     {/* Images */}
                     {orderRequest.inspoImages && orderRequest.inspoImages.length > 0 && (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <View className="flex-row items-center mb-4">
-                                <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} font-semibold`}>
-                                    Reference Images
-                                </Typography>
-                            </View>
+                        <SectionCard icon={Gallery} title="Inspiration & sketches">
                             <View className="flex-row flex-wrap gap-2">
                                 {orderRequest.inspoImages.map((img, i) => (
                                     <Pressable key={i} onPress={() => openViewer(img, `Reference ${i + 1}`)} className="flex-1">
                                         <Image
                                             source={{ uri: img }}
-                                            className="h-[150] aspect-square rounded-lg bg-gray-200"
+                                            className="h-[150] aspect-square rounded-xl bg-gray-200"
                                             resizeMode="cover"
                                         />
                                     </Pressable>
                                 ))}
                             </View>
-                        </Surface>
+                        </SectionCard>
                     )}
 
                     {/* Action Buttons / Status */}

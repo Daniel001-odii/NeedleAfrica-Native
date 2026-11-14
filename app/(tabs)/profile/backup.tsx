@@ -7,6 +7,7 @@ import {
     ShieldTick, Danger, InfoCircle, Cloud
 } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useSync } from '../../../hooks/useSync';
@@ -87,8 +88,12 @@ export default function BackupData() {
                 </View>
 
                 {/* Status Group */}
-                <SectionLabel label="Sync Status" isFirst />
-                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                <SectionCard
+                    icon={CloudChange}
+                    title="Sync Status"
+                    innerClassName="p-0"
+                    className="mb-4"
+                >
                     <InfoRow
                         label="Database Status"
                         value={lastSyncError ? 'Attention Required' : 'Up to date'}
@@ -100,11 +105,15 @@ export default function BackupData() {
                         value={formatDate(lastSyncedAt)}
                         last
                     />
-                </View>
+                </SectionCard>
 
                 {/* Features Info Group */}
-                <SectionLabel label="Security & Logic" />
-                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm shadow-gray-200'}`}>
+                <SectionCard
+                    icon={ShieldTick}
+                    title="Security & Sync Logic"
+                    innerClassName="p-0"
+                    className="mb-4"
+                >
                     <SettingItem
                         icon={<ShieldTick size={20} color="#3b82f6" variant="Bulk" />}
                         title="End-to-End Encryption"
@@ -116,7 +125,7 @@ export default function BackupData() {
                         subtitle="Syncs when connected to Wi-Fi"
                         last
                     />
-                </View>
+                </SectionCard>
 
                 {/* Action Buttons */}
                 <View className="mt-10">

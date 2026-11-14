@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal, Linking } from 'react-native';
+import { View, ScrollView, Image, TextInput, Platform, KeyboardAvoidingView, Pressable, TouchableOpacity, Modal, Linking, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add, ArrowRight2 } from 'iconsax-react-native';
+import { ArrowLeft, Calendar, Edit2, Timer1, DocumentText, Money, Call, User, CloseCircle, Add, ArrowRight2, Gallery, Global, Copy, Send2 } from 'iconsax-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
+import { SectionCard, SectionRow } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useOrders } from '../../../hooks/useOrders';
@@ -21,6 +23,7 @@ import { CURRENCIES } from '../../../constants/currencies';
 import * as StoreReview from 'expo-store-review';
 import { StoreReviewService } from '../../../services/StoreReviewService';
 import { usePostHog } from 'posthog-react-native';
+import { OrderProgressSection } from '../../../components/OrderProgressSection';
 
 const isLocalUri = (uri: string | null) => uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
@@ -166,7 +169,7 @@ export default function OrderDetail() {
             onConfirm: async () => {
                 try {
                     posthog.capture('order_deleted', {
-                        style_name: order.styleName,
+                        style_name: order.styleName || '',
                     });
                     await deleteOrder(id as string);
                     router.back();
@@ -202,7 +205,7 @@ export default function OrderDetail() {
             try {
                 await updateOrderStatus(id as string, newStatus);
                 posthog.capture('order_status_changed', {
-                    from_status: order.status,
+                    from_status: order.status || '',
                     to_status: newStatus,
                 });
                 Toast.show({
@@ -244,6 +247,48 @@ export default function OrderDetail() {
         }
     };
 
+    const clientBaseUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://client.needleafrica.com';
+    const trackingUrl = `${clientBaseUrl}/track/${order.id}`;
+
+    const handleShareWhatsApp = () => {
+        const designerName = user?.businessName || user?.username || 'our atelier';
+        const clientName = customer?.fullName ? `Hello ${customer.fullName}!` : 'Hello!';
+        const message = `${clientName} You can track the live progress and production milestones for your bespoke outfit (${order.styleName}) with ${designerName} here: ${trackingUrl}`;
+        const cleanPhone = customer?.phoneNumber?.replace(/\D/g, '') || '';
+        const encoded = encodeURIComponent(message);
+        const waUrl = cleanPhone.length >= 7
+            ? `https://wa.me/${cleanPhone.startsWith('0') ? '234' + cleanPhone.slice(1) : cleanPhone}?text=${encoded}`
+            : `whatsapp://send?text=${encoded}`;
+
+        Linking.openURL(waUrl).catch(() => {
+            Linking.openURL(`https://api.whatsapp.com/send?text=${encoded}`).catch(() => {
+                Toast.show({ type: 'error', text1: 'WhatsApp not available' });
+            });
+        });
+    };
+
+    const handleNativeShare = async () => {
+        try {
+            const designerName = user?.businessName || user?.username || 'our atelier';
+            await Share.share({
+                title: `Track ${order.styleName} on NeedleX`,
+                message: `Follow the live progress of your bespoke outfit (${order.styleName}) with ${designerName}: ${trackingUrl}`,
+                url: trackingUrl,
+            });
+        } catch (err) {
+            console.error('Share error:', err);
+        }
+    };
+
+    const handleCopyTrackingLink = async () => {
+        await Clipboard.setStringAsync(trackingUrl);
+        Toast.show({
+            type: 'success',
+            text1: 'Tracking link copied',
+            text2: 'Send this unique link to your client',
+        });
+    };
+
     const SectionLabel = ({ children, rightAction }: { children: string, rightAction?: React.ReactNode }) => (
         <View className="flex-row justify-between items-center ml-5 mb-2 mr-5 mt-4">
             <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-wider opacity-50 text-[11px]">
@@ -279,149 +324,214 @@ export default function OrderDetail() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                 <ScrollView contentContainerClassName="py-6 pb-24" showsVerticalScrollIndicator={false}>
                     {!isEditing ? (
-                        <>
-                            {/* Order Basics */}
-                            <SectionLabel>Order Basics</SectionLabel>
-                            <View className="px-4 mb-6">
-                                <Surface variant="white" className={`p-5`} rounded="2xl">
-                                    <View className={`p-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                        <Typography variant="h2" weight="bold" className="text-2xl">{order.styleName}</Typography>
-                                        <Typography color="gray" variant="caption" weight="bold" className="opacity-50 mt-1">ID: #{order.id.slice(-8).toUpperCase()}</Typography>
-                                    </View>
-                                    <View className={`p-4 flex-row justify-between items-center`}>
-                                        <Typography weight="semibold">Status</Typography>
-                                        <Surface variant={order.status === 'DELIVERED' ? 'green' : 'peach'} className={`px-3 py-1 ${isDark ? (order.status === 'DELIVERED' ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`} rounded="full">
-                                            <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
-                                                {order.status}
-                                            </Typography>
-                                        </Surface>
-                                    </View>
-                                </Surface>
-                            </View>
+                        <View className="px-4">
+                            {/* Order Basics - SectionCard */}
+                            <SectionCard
+                                icon={DocumentText}
+                                title="Order basics"
+                                rightElement={
+                                    <Surface
+                                        variant={order.status === 'DELIVERED' ? 'green' : 'peach'}
+                                        className={`px-3 py-1 ${isDark ? (order.status === 'DELIVERED' ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`}
+                                        rounded="full"
+                                    >
+                                        <Typography variant="small" weight="bold" className={order.status === 'DELIVERED' ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
+                                            {order.status}
+                                        </Typography>
+                                    </Surface>
+                                }
+                            >
+                                <View>
+                                    <Typography variant="h2" weight="bold" className="text-2xl">{order.styleName}</Typography>
+                                    <Typography color="gray" variant="caption" weight="bold" className="opacity-50 mt-1">ID: #{order.id.slice(-8).toUpperCase()}</Typography>
+                                </View>
+                            </SectionCard>
 
-                            {/* Client Section */}
+                            {/* Client Section - SectionCard */}
                             {customer && (
-                                <>
-                                    <SectionLabel>Client</SectionLabel>
-                                    <View className="px-4 mb-6">
-                                        <Surface variant="white" className={``} rounded="2xl">
-                                            <TouchableOpacity
-                                                onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: customer.id } })}
-                                                className={`p-4 flex-row items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}
-                                            >
-                                                <View className={`w-12 h-12 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-zinc-800' : 'bg-indigo-50'}`}>
-                                                    <Typography weight="bold" color="primary">
-                                                        {(customer.fullName || '??').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                                                    </Typography>
-                                                </View>
-                                                <View className="flex-1">
-                                                    <Typography weight="bold" className="text-[16px]">{customer.fullName}</Typography>
-                                                    <Typography variant="caption" color="gray" className="mt-0.5">{customer.phoneNumber}</Typography>
-                                                </View>
-                                            </TouchableOpacity>
+                                <SectionCard icon={User} title="Client details">
+                                    <TouchableOpacity
+                                        onPress={() => router.push({ pathname: '/(tabs)/customers/[id]', params: { id: customer.id } })}
+                                        className={`pb-3 flex-row items-center border-b ${isDark ? 'border-zinc-700/60' : 'border-zinc-100'}`}
+                                    >
+                                        <View className={`w-12 h-12 items-center justify-center rounded-full mr-4 ${isDark ? 'bg-zinc-700' : 'bg-indigo-50'}`}>
+                                            <Typography weight="bold" color="primary">
+                                                {(customer.fullName || '??').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                            </Typography>
+                                        </View>
+                                        <View className="flex-1">
+                                            <Typography weight="bold" className="text-[16px]">{customer.fullName}</Typography>
+                                            <Typography variant="caption" color="gray" className="mt-0.5">{customer.phoneNumber}</Typography>
+                                        </View>
+                                    </TouchableOpacity>
 
-                                            <View className="p-3 flex-row gap-3">
-                                                <TouchableOpacity
-                                                    onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
-                                                    className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
-                                                >
-                                                    <Call size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
-                                                    <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>Call Client</Typography>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
-                                                    className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}
-                                                >
-                                                    <Timer1 size={16} color={isDark ? "#30D158" : "#34C759"} variant="Bold" />
-                                                    <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#30D158]' : 'text-[#34C759]'}`}>Text Client</Typography>
-                                                </TouchableOpacity>
-                                            </View>
-                                        </Surface>
+                                    <View className="pt-3 flex-row gap-3">
+                                        <TouchableOpacity
+                                            onPress={() => customer?.phoneNumber && Linking.openURL(`tel:${customer.phoneNumber}`)}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
+                                        >
+                                            <Call size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>Call Client</Typography>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => customer?.phoneNumber && Linking.openURL(`sms:${customer.phoneNumber}`)}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#34C759]/20' : 'bg-[#34C759]/10'}`}
+                                        >
+                                            <Timer1 size={16} color={isDark ? "#30D158" : "#34C759"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#30D158]' : 'text-[#34C759]'}`}>Text Client</Typography>
+                                        </TouchableOpacity>
                                     </View>
-                                </>
+                                </SectionCard>
                             )}
 
-                            {/* Logistics & Payment */}
-                            <SectionLabel>Logistics & Billing</SectionLabel>
-                            <View className="px-4 mb-6">
-                                <Surface variant="white" className={``} rounded="2xl">
-                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                        <Typography weight="semibold" color="gray">Delivery Date</Typography>
-                                        <Typography weight="bold" color="primary">{formatDateShort(deliveryDate)}</Typography>
-                                    </View>
-                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                        <Typography weight="semibold" color="gray">Total Amount</Typography>
-                                        <Typography weight="bold" className="text-lg">{currencySymbol}{order.amount?.toLocaleString()}</Typography>
-                                    </View>
-                                    <View className={`p-4 flex-row justify-between items-center border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                        <Typography weight="semibold" color="gray">Amount Paid</Typography>
-                                        <Typography weight="bold" className="text-lg text-[#34C759]">{currencySymbol}{order.amountPaid?.toLocaleString()}</Typography>
-                                    </View>
-                                    <View className="p-4">
-                                        <View className="flex-row justify-between items-center mb-3">
-                                            <Typography weight="semibold" color="gray">Balance Due</Typography>
-                                            <Typography weight="bold" className={`text-lg ${(order.balance || 0) > 0 ? 'text-[#FF9500]' : 'text-[#34C759]'}`}>
-                                                {currencySymbol}{order.balance?.toLocaleString()}
-                                            </Typography>
-                                        </View>
-                                        <View className={`${isDark ? 'bg-white/5' : 'bg-gray-100'} h-2 rounded-full overflow-hidden`}>
-                                            <View
-                                                className={`h-full ${(order.balance || 0) > 0 ? 'bg-[#FF9500]' : 'bg-[#34C759]'}`}
-                                                style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
-                                            />
-                                        </View>
-                                    </View>
-                                </Surface>
-                            </View>
-
-                            {/* Reference Images */}
-                            <SectionLabel>Design References</SectionLabel>
-                            <View className="px-4 mb-6">
-                                <Surface variant="white" className={`p-2 flex-row gap-2`} rounded="2xl">
-                                    <TouchableOpacity
-                                        className="flex-1 aspect-square rounded-xl overflow-hidden bg-gray-100"
-                                        onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
+                            {/* Client Tracking Portal - SectionCard */}
+                            <SectionCard
+                                icon={Global}
+                                title="Client tracking portal"
+                                rightElement={
+                                    <Surface
+                                        variant={(order as any).clientId ? 'green' : 'peach'}
+                                        className={`px-3 py-1 ${isDark ? ((order as any).clientId ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`}
+                                        rounded="full"
                                     >
-                                        {fabricImage ? (
-                                            <Image source={{ uri: fabricImage }} className="w-full h-full" />
-                                        ) : (
-                                            <View className="w-full h-full items-center justify-center">
-                                                <Typography variant="caption" color="gray">No Fabric</Typography>
-                                            </View>
-                                        )}
-                                        <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
-                                            <Typography variant="caption" color="white" weight="bold">Fabric</Typography>
-                                        </View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        className="flex-1 aspect-square rounded-xl overflow-hidden bg-gray-100"
-                                        onPress={() => styleImage && openViewer(styleImage, 'Style')}
-                                    >
-                                        {styleImage ? (
-                                            <Image source={{ uri: styleImage }} className="w-full h-full" />
-                                        ) : (
-                                            <View className="w-full h-full items-center justify-center">
-                                                <Typography variant="caption" color="gray">No Style</Typography>
-                                            </View>
-                                        )}
-                                        <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
-                                            <Typography variant="caption" color="white" weight="bold">Style</Typography>
-                                        </View>
-                                    </TouchableOpacity>
-                                </Surface>
-                            </View>
-
-                            {/* Notes */}
-                            <SectionLabel>Special Notes</SectionLabel>
-                            <View className="px-4 mb-8">
-                                <Surface variant="white" className={`p-4`} rounded="2xl">
-                                    <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium`}>
-                                        {order.notes || "No additional notes for this order."}
+                                        <Typography variant="small" weight="bold" className={(order as any).clientId ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
+                                            {(order as any).clientId ? 'Linked & Tracking' : 'Ready to Share'}
+                                        </Typography>
+                                    </Surface>
+                                }
+                            >
+                                <View className="space-y-3">
+                                    <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} text-xs leading-5`}>
+                                        Share this live tracking link with your client. They can view real-time production updates, confirm outfit details, and sign up to chat directly with your studio.
                                     </Typography>
-                                </Surface>
-                            </View>
 
-                            <View className="px-4 mb-12">
+                                    {/* Link box with Copy Button */}
+                                    <View className={`flex-row items-center justify-between p-3 rounded-2xl ${isDark ? 'bg-zinc-800/80 border border-zinc-700/60' : 'bg-gray-50 border border-gray-100'}`}>
+                                        <Typography variant="small" weight="semibold" className={`flex-1 mr-2 ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`} numberOfLines={1}>
+                                            {trackingUrl}
+                                        </Typography>
+                                        <TouchableOpacity
+                                            onPress={handleCopyTrackingLink}
+                                            className={`px-3 py-1.5 rounded-xl flex-row items-center ${isDark ? 'bg-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}
+                                        >
+                                            <Copy size={14} color={isDark ? "#fff" : "#111827"} variant="Linear" />
+                                            <Typography variant="caption" weight="bold" className="ml-1.5">Copy</Typography>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Action Buttons: WhatsApp & Native Share */}
+                                    <View className="pt-1 flex-row gap-2.5">
+                                        <TouchableOpacity
+                                            onPress={handleShareWhatsApp}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#25D366]/20' : 'bg-[#25D366]/10'}`}
+                                        >
+                                            <Send2 size={16} color={isDark ? "#25D366" : "#128C7E"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#25D366]' : 'text-[#128C7E]'}`}>
+                                                WhatsApp
+                                            </Typography>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={handleNativeShare}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
+                                        >
+                                            <Global size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>
+                                                Share Link
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </SectionCard>
+
+                            {/* Logistics & Payment - SectionCard */}
+                            <SectionCard icon={Money} title="Logistics & billing">
+                                <SectionRow
+                                    label="Delivery Date"
+                                    value={formatDateShort(deliveryDate)}
+                                />
+                                <SectionRow
+                                    label="Total Amount"
+                                    value={`${currencySymbol}${order.amount?.toLocaleString()}`}
+                                />
+                                <SectionRow
+                                    label="Amount Paid"
+                                    value={`${currencySymbol}${order.amountPaid?.toLocaleString()}`}
+                                    valueClassName="text-[#34C759]"
+                                />
+                                <View className="pt-3 mt-1">
+                                    <View className="flex-row justify-between items-center mb-2">
+                                        <Typography weight="semibold" color="gray" className="text-xs">Balance Due</Typography>
+                                        <Typography weight="bold" className={`text-sm ${(order.balance || 0) > 0 ? 'text-[#FF9500]' : 'text-[#34C759]'}`}>
+                                            {currencySymbol}{order.balance?.toLocaleString()}
+                                        </Typography>
+                                    </View>
+                                    <View className={`${isDark ? 'bg-zinc-700' : 'bg-gray-100'} h-2 rounded-full overflow-hidden`}>
+                                        <View
+                                            className={`h-full ${(order.balance || 0) > 0 ? 'bg-[#FF9500]' : 'bg-[#34C759]'}`}
+                                            style={{ width: `${Math.min(100, ((order.amountPaid || 0) / (order.amount || 1)) * 100)}%` }}
+                                        />
+                                    </View>
+                                </View>
+                            </SectionCard>
+
+                            {/* Reference Images - SectionCard */}
+                            <SectionCard
+                                icon={Gallery}
+                                title="Design references"
+                                innerClassName="p-2 flex-row gap-2"
+                            >
+                                <TouchableOpacity
+                                    className={`flex-1 aspect-square rounded-xl overflow-hidden ${isDark ? 'bg-zinc-700/30' : 'bg-gray-100'}`}
+                                    onPress={() => fabricImage && openViewer(fabricImage, 'Fabric')}
+                                >
+                                    {fabricImage ? (
+                                        <Image source={{ uri: fabricImage }} className="w-full h-full" resizeMode="cover" />
+                                    ) : (
+                                        <View className="w-full h-full items-center justify-center">
+                                            <Typography variant="caption" color="gray">No Fabric</Typography>
+                                        </View>
+                                    )}
+                                    <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
+                                        <Typography variant="caption" color="white" weight="bold">Fabric</Typography>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    className={`flex-1 aspect-square rounded-xl overflow-hidden ${isDark ? 'bg-zinc-700/30' : 'bg-gray-100'}`}
+                                    onPress={() => styleImage && openViewer(styleImage, 'Style')}
+                                >
+                                    {styleImage ? (
+                                        <Image source={{ uri: styleImage }} className="w-full h-full" resizeMode="cover" />
+                                    ) : (
+                                        <View className="w-full h-full items-center justify-center">
+                                            <Typography variant="caption" color="gray">No Style</Typography>
+                                        </View>
+                                    )}
+                                    <View className="absolute bottom-2 left-2 bg-black/50 px-2 py-0.5 rounded-md">
+                                        <Typography variant="caption" color="white" weight="bold">Style</Typography>
+                                    </View>
+                                </TouchableOpacity>
+                            </SectionCard>
+
+                            {/* Notes - SectionCard */}
+                            {order.notes ? (
+                                <SectionCard icon={Timer1} title="Special notes">
+                                    <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} leading-6 font-medium text-xs`}>
+                                        {order.notes}
+                                    </Typography>
+                                </SectionCard>
+                            ) : null}
+
+                            {/* Progress updates for the client to follow */}
+                            <SectionCard icon={Timer1} title="Milestone progress tracker">
+                                <OrderProgressSection
+                                    orderServerId={(order as any).syncStatus === 'created' ? undefined : order.id}
+                                    isDark={isDark}
+                                />
+                            </SectionCard>
+
+                            <View className="pt-2 mb-12">
                                 <Button
                                     onPress={handleStatusToggle}
                                     className={`h-16 rounded-full ${order.status === 'DELIVERED' ? 'bg-[#FF9500]' : 'bg-[#34C759]'} border-0 shadow-none`}
@@ -431,7 +541,7 @@ export default function OrderDetail() {
                                     {order.status === 'DELIVERED' ? 'Reopen Order' : 'Mark as Delivered'}
                                 </Button>
                             </View>
-                        </>
+                        </View>
                     ) : (
                         <View className="px-4">
                             {/* Edit Mode Header */}

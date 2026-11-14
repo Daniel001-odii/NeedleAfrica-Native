@@ -6,9 +6,9 @@ import { useCustomers } from '../../../hooks/useCustomers';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useSync } from '../../../hooks/useSync';
-import { User, Call, InfoCircle, ArrowLeft, UserCirlceAdd, UserAdd } from 'iconsax-react-native';
+import { User, Call, InfoCircle, ArrowLeft, UserCirlceAdd, UserAdd, Ruler } from 'iconsax-react-native';
 import { Typography } from '../../../components/ui/Typography';
-import { Surface } from '../../../components/ui/Surface';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { Button } from '../../../components/ui/Button';
 import { IconButton } from '../../../components/ui/IconButton';
 import Toast from 'react-native-toast-message';
@@ -154,12 +154,6 @@ export default function NewCustomer() {
         }
     };
 
-    const SectionLabel = ({ children }: { children: string }) => (
-        <Typography variant="caption" color="gray" weight="bold" className="uppercase ml-4 mb-2 tracking-widest opacity-60">
-            {children}
-        </Typography>
-    );
-
     return (
         <View className={`flex-1 ${isDark ? 'bg-black' : 'bg-white'}`}>
             {/* Standard Refined Header */}
@@ -182,20 +176,26 @@ export default function NewCustomer() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                 <ScrollView contentContainerClassName="py-6 px-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-                    {/* Basic Info Section */}
-                    <View className="flex-row justify-between items-center mb-2 mx-4">
-                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest opacity-60">
-                            Personal Information
-                        </Typography>
-                        <TouchableOpacity onPress={handleImportContact} className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${isDark ? 'bg-zinc-800' : 'bg-blue-500/10'}`}>
-                            <UserAdd size={14} color={isDark ? '#60a5fa' : '#2563eb'} variant="Bulk" />
-                            <Typography variant="caption" className={isDark ? 'text-blue-400' : 'text-blue-600'} weight="bold">
-                                Add from contact
-                            </Typography>
-                        </TouchableOpacity>
-                    </View>
-                    <Surface variant="white" rounded="2xl" className="mb-6 overflow-hidden">
-                        <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-50'}`}>
+                    {/* Personal Information Section */}
+                    <SectionCard
+                        icon={User}
+                        title="Personal information"
+                        rightElement={
+                            <TouchableOpacity
+                                onPress={handleImportContact}
+                                className={`px-2.5 py-1 rounded-full flex-row items-center gap-1.5 ${isDark ? 'bg-blue-500/20' : 'bg-blue-500/10'}`}
+                            >
+                                <UserAdd size={13} color={isDark ? '#60a5fa' : '#2563eb'} variant="Bulk" />
+                                <Typography variant="caption" className={isDark ? 'text-blue-400' : 'text-blue-600'} weight="bold">
+                                    Add from contact
+                                </Typography>
+                            </TouchableOpacity>
+                        }
+                        className="mb-4"
+                        innerClassName="p-0 overflow-hidden"
+                    >
+                        {/* Full Name */}
+                        <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
                             <User size={18} color="#94a3b8" variant="Bulk" />
                             <TextInput
                                 className={`flex-1 h-14 ml-3 font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
@@ -205,7 +205,9 @@ export default function NewCustomer() {
                                 onChangeText={setFullName}
                             />
                         </View>
-                        <View className="flex-row items-center px-4">
+
+                        {/* Phone Number */}
+                        <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-zinc-700/60' : 'border-gray-100'}`}>
                             <Call size={18} color="#94a3b8" variant="Bulk" />
                             <View className="flex-1 ml-3 h-14 justify-center">
                                 <PhoneInput
@@ -218,46 +220,48 @@ export default function NewCustomer() {
                                 />
                             </View>
                         </View>
-                    </Surface>
 
-                    {/* Gender Section (Segmented Control Style) */}
-                    <SectionLabel>Gender</SectionLabel>
-                    <Surface variant="white" rounded="full" className="p-1 mb-6 flex-row">
-                        {['female', 'male', 'other'].map((g) => {
-                            const isActive = gender === g;
-                            return (
-                                <TouchableOpacity
-                                    key={g}
-                                    onPress={() => setGender(g)}
-                                    className={`flex-1 py-2.5 rounded-full items-center ${isActive ? 'bg-brand-primary' : ''}`}
-                                >
-                                    <Typography
-                                        variant="small"
-                                        weight={isActive ? "bold" : "medium"}
-                                        className={`capitalize ${isActive ? 'text-white' : 'text-zinc-400'}`}
-                                    >
-                                        {g}
-                                    </Typography>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </Surface>
+                        {/* Gender Segmented Control */}
+                        <View className="p-3">
+                            <View className={`p-1 rounded-full flex-row ${isDark ? 'bg-zinc-900' : 'bg-gray-100'}`}>
+                                {['female', 'male', 'other'].map((g) => {
+                                    const isActive = gender === g;
+                                    return (
+                                        <TouchableOpacity
+                                            key={g}
+                                            onPress={() => setGender(g)}
+                                            className={`flex-1 py-2 rounded-full items-center ${isActive ? 'bg-brand-primary' : ''}`}
+                                        >
+                                            <Typography
+                                                variant="small"
+                                                weight={isActive ? "bold" : "medium"}
+                                                className={`capitalize ${isActive ? 'text-white' : 'text-zinc-400'}`}
+                                            >
+                                                {g}
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                    </SectionCard>
 
                     {/* Measurements Section */}
-                    <View className="flex-row items-center justify-between ml-4 mb-2 pr-4">
-                        <Typography variant="caption" color="gray" weight="bold" className="uppercase tracking-widest opacity-60">
-                            Measurements (Optional)
-                        </Typography>
-                        {selectedTemplate && (
-                            <TouchableOpacity onPress={() => { setSelectedTemplate(null); setMValues({}); }}>
-                                <Typography variant="caption" color="red" weight="bold">Clear</Typography>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-
-                    {!selectedTemplate ? (
-                        <Surface variant="white" rounded="2xl" className="mb-6 p-1">
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-1">
+                    <SectionCard
+                        icon={Ruler}
+                        title="Measurements (optional)"
+                        rightElement={
+                            selectedTemplate ? (
+                                <TouchableOpacity onPress={() => { setSelectedTemplate(null); setMValues({}); }}>
+                                    <Typography variant="caption" color="red" weight="bold">Clear</Typography>
+                                </TouchableOpacity>
+                            ) : null
+                        }
+                        className="mb-4"
+                        innerClassName="p-3"
+                    >
+                        {!selectedTemplate ? (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                                 {templates.map((template) => (
                                     <TouchableOpacity
                                         key={template.id}
@@ -268,67 +272,68 @@ export default function NewCustomer() {
                                             template.fields.forEach((f: string) => initialValues[f] = '');
                                             setMValues(initialValues);
                                         }}
-                                        className={`mr-2 px-6 py-4 rounded-xl items-center justify-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}
+                                        className={`px-5 py-3.5 rounded-xl items-center justify-center border ${isDark ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}
                                     >
                                         <DocumentText size={18} color={isDark ? '#94a3b8' : '#64748b'} variant="Bulk" />
-                                        <Typography variant="small" weight="bold" className="mt-2">{template.name}</Typography>
+                                        <Typography variant="small" weight="bold" className="mt-1.5">{template.name}</Typography>
                                     </TouchableOpacity>
                                 ))}
                                 <TouchableOpacity
                                     onPress={() => router.push('/measurement-templates/create')}
-                                    className={`px-6 py-4 rounded-xl items-center justify-center border border-dashed ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}
+                                    className={`px-5 py-3.5 rounded-xl items-center justify-center border border-dashed ${isDark ? 'border-zinc-700' : 'border-gray-300'}`}
                                 >
                                     <Add size={18} color="#94a3b8" />
-                                    <Typography variant="small" color="gray" className="mt-2">New Template</Typography>
+                                    <Typography variant="small" color="gray" className="mt-1.5">New Template</Typography>
                                 </TouchableOpacity>
                             </ScrollView>
-                        </Surface>
-                    ) : (
-                        <Surface variant="white" rounded="2xl" className="p-4 mb-6">
-                            <View className="flex-row items-center mb-4">
-                                <DocumentText size={20} color="#3b82f6" variant="Bulk" />
-                                <TextInput
-                                    className={`flex-1 ml-3 font-bold text-lg ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                    placeholder="Measurement Title"
-                                    value={mTitle}
-                                    onChangeText={setMTitle}
-                                />
-                            </View>
+                        ) : (
+                            <View>
+                                <View className="flex-row items-center mb-3">
+                                    <DocumentText size={20} color="#3b82f6" variant="Bulk" />
+                                    <TextInput
+                                        className={`flex-1 ml-2 font-bold text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                        placeholder="Measurement Title"
+                                        value={mTitle}
+                                        onChangeText={setMTitle}
+                                    />
+                                </View>
 
-                            <View className="flex-row flex-wrap gap-3">
-                                {selectedTemplate.fields.map((field: string) => (
-                                    <View key={field} style={{ width: '47%' }} className={`p-3 rounded-xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-zinc-100'}`}>
-                                        <Typography variant="caption" color="gray" weight="bold" className="mb-1 uppercase text-[10px]">{field} ({unit})</Typography>
-                                        <TextInput
-                                            className={`font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
-                                            placeholder="0"
-                                            placeholderTextColor="#94a3b8"
-                                            keyboardType="decimal-pad"
-                                            value={mValues[field]}
-                                            onChangeText={(val) => setMValues(prev => ({ ...prev, [field]: val }))}
-                                        />
-                                    </View>
-                                ))}
+                                <View className="flex-row flex-wrap gap-2.5">
+                                    {selectedTemplate.fields.map((field: string) => (
+                                        <View key={field} style={{ width: '48%' }} className={`p-2.5 rounded-xl border ${isDark ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
+                                            <Typography variant="caption" color="gray" weight="bold" className="mb-1 uppercase text-[10px]">{field} ({unit})</Typography>
+                                            <TextInput
+                                                className={`font-bold p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                                placeholder="0"
+                                                placeholderTextColor="#94a3b8"
+                                                keyboardType="decimal-pad"
+                                                value={mValues[field]}
+                                                onChangeText={(val) => setMValues(prev => ({ ...prev, [field]: val }))}
+                                            />
+                                        </View>
+                                    ))}
+                                </View>
                             </View>
-                        </Surface>
-                    )}
+                        )}
+                    </SectionCard>
 
                     {/* Notes Section */}
-                    <SectionLabel>Notes</SectionLabel>
-                    <Surface variant="white" rounded="2xl" className="p-4 mb-8">
-                        <View className="flex-row items-start">
-                            <InfoCircle size={18} color="#94a3b8" variant="Bulk" className="mt-1" />
-                            <TextInput
-                                className={`flex-1 ml-3 min-h-[120px] font-medium ${isDark ? 'text-white' : 'text-zinc-800'}`}
-                                placeholder="Any extra preferences..."
-                                placeholderTextColor="#94a3b8"
-                                value={notes}
-                                onChangeText={setNotes}
-                                multiline
-                                textAlignVertical="top"
-                            />
-                        </View>
-                    </Surface>
+                    <SectionCard
+                        icon={InfoCircle}
+                        title="Additional notes"
+                        className="mb-6"
+                        innerClassName="p-4"
+                    >
+                        <TextInput
+                            className={`min-h-[100px] font-medium p-0 m-0 ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                            placeholder="Any extra preferences or notes..."
+                            placeholderTextColor="#94a3b8"
+                            value={notes}
+                            onChangeText={setNotes}
+                            multiline
+                            textAlignVertical="top"
+                        />
+                    </SectionCard>
 
                     {/* Primary Action Button (Standard Bottom Placement) */}
                     <Button

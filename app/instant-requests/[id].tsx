@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, ScrollView, Image, Pressable, Modal, TouchableOpacity, TextInput, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, User, Ruler, CloseCircle, People, Clock, Location } from 'iconsax-react-native';
+import { ArrowLeft, User, Ruler, CloseCircle, People, Clock, Location, Gallery, DocumentText, Colorfilter, DollarCircle } from 'iconsax-react-native';
 import { Typography } from '../../components/ui/Typography';
 import { IconButton } from '../../components/ui/IconButton';
 import { Button } from '../../components/ui/Button';
 import { Surface } from '../../components/ui/Surface';
+import { SectionCard, SectionRow } from '../../components/ui/SectionCard';
 import { useTheme } from '../../contexts/ThemeContext';
 import { InstantRequestService, InstantLead } from '../../services/InstantRequestService';
 import { getSocket } from '../../lib/socket';
@@ -214,8 +215,8 @@ export default function InstantRequestDetailScreen() {
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5678" colors={["#FF5678"]} />
                     }
                 >
-                    {/* Header + live bid count */}
-                    <Surface variant="white" className="p-4 mb-3" rounded="3xl">
+                    {/* Header + live bid count - Nested SectionCard */}
+                    <SectionCard icon={User} title="Request overview">
                         <View className="flex-row items-center mb-3">
                             <View className="w-12 h-12 rounded-full bg-[#FF5678] items-center justify-center mr-4">
                                 <User size={24} color="white" />
@@ -234,7 +235,7 @@ export default function InstantRequestDetailScreen() {
                             </View>
                         </View>
 
-                        <View className="border-t border-gray-200 dark:border-zinc-800 pt-3">
+                        <View className="border-t border-gray-100 dark:border-zinc-700/60 pt-3">
                             <View className="flex-row items-center justify-between">
                                 {/* Social proof — blurred avatars of other designers who've bid */}
                                 {lead.otherBidAvatars && lead.otherBidAvatars.length > 0 ? (
@@ -285,74 +286,72 @@ export default function InstantRequestDetailScreen() {
                                 </View>
                             )}
                         </View>
-                    </Surface>
+                    </SectionCard>
 
                     {/* Description */}
                     {lead.description ? (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} mb-2`}>What they need</Typography>
+                        <SectionCard icon={DocumentText} title="What they need">
                             <Typography variant="body" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{lead.description}</Typography>
-                        </Surface>
+                        </SectionCard>
                     ) : null}
 
                     {/* Specs */}
-                    <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                        <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} mb-3`}>Details</Typography>
-                        <View className="flex-row flex-wrap">
-                            {[
+                    <SectionCard icon={Colorfilter} title="Specifications">
+                        {(() => {
+                            const specs: { label: string; value: string | null | undefined }[] = [
                                 { label: 'Budget', value: lead.targetBudget != null ? `₦${lead.targetBudget.toLocaleString()}` : null },
                                 { label: 'Needed by', value: lead.targetDate ? new Date(lead.targetDate).toLocaleDateString() : null },
-                                { label: 'Fabric', value: lead.fabricOption },
-                            ].map((d, i) => d.value ? (
-                                <View key={i} className="w-1/2 mb-3">
-                                    <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">{d.label}</Typography>
-                                    <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>{d.value}</Typography>
-                                </View>
-                            ) : null)}
-                        </View>
-                    </Surface>
+                                { label: 'Fabric Option', value: lead.fabricOption },
+                            ].filter((d): d is { label: string; value: string } => !!d.value);
+
+                            return specs.map((d, i) => (
+                                <SectionRow
+                                    key={i}
+                                    label={d.label}
+                                    value={d.value}
+                                    isLast={i === specs.length - 1}
+                                />
+                            ));
+                        })()}
+                    </SectionCard>
 
                     {/* Measurements */}
                     {(lead.bust || lead.waist || lead.hips || lead.length || (lead.customMeasurements && lead.customMeasurements.length > 0)) && (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <View className="flex-row items-center mb-4">
-                                <Ruler size={18} color="#FF5678" variant="Bold" />
-                                <Typography weight="bold" className={`ml-2 ${isDark ? 'text-white' : 'text-black'}`}>Measurements</Typography>
-                            </View>
-                            <View className="flex-row flex-wrap">
-                                {[
-                                    { label: 'Bust', value: lead.bust },
-                                    { label: 'Waist', value: lead.waist },
-                                    { label: 'Hips', value: lead.hips },
-                                    { label: 'Length', value: lead.length },
-                                ].map((m, i) => m.value ? (
-                                    <View key={i} className="w-1/2 mb-3">
-                                        <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">{m.label}</Typography>
-                                        <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>{m.value}</Typography>
-                                    </View>
-                                ) : null)}
-                                {lead.customMeasurements?.map((cm, i) => (
-                                    <View key={`cm-${i}`} className="w-1/2 mb-3">
-                                        <Typography variant="small" color="gray" className="uppercase tracking-wider text-[10px] mb-1">{cm.name}</Typography>
-                                        <Typography variant="body" weight="semibold" className={isDark ? 'text-white' : 'text-black'}>{cm.value}</Typography>
-                                    </View>
-                                ))}
-                            </View>
-                        </Surface>
+                        <SectionCard icon={Ruler} title="Client measurements">
+                            {(() => {
+                                const measurements: { label: string; value: string | number }[] = [];
+                                if (lead.bust) measurements.push({ label: 'Bust', value: `${lead.bust}"` });
+                                if (lead.waist) measurements.push({ label: 'Waist', value: `${lead.waist}"` });
+                                if (lead.hips) measurements.push({ label: 'Hips', value: `${lead.hips}"` });
+                                if (lead.length) measurements.push({ label: 'Length', value: `${lead.length}"` });
+                                if (lead.customMeasurements) {
+                                    lead.customMeasurements.forEach((cm) => {
+                                        if (cm.value) measurements.push({ label: cm.name, value: cm.value });
+                                    });
+                                }
+                                return measurements.map((m, idx) => (
+                                    <SectionRow
+                                        key={idx}
+                                        label={m.label}
+                                        value={m.value}
+                                        isLast={idx === measurements.length - 1}
+                                    />
+                                ));
+                            })()}
+                        </SectionCard>
                     )}
 
                     {/* Inspiration */}
                     {lead.inspoImages && lead.inspoImages.length > 0 && (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} mb-4`}>Inspiration</Typography>
+                        <SectionCard icon={Gallery} title="Inspiration & sketches">
                             <View className="flex-row flex-wrap gap-2">
                                 {lead.inspoImages.map((img, i) => (
                                     <Pressable key={i} onPress={() => setViewerUri(img)} className="flex-1">
-                                        <Image source={{ uri: img }} className="h-[150] aspect-square rounded-lg bg-gray-200" resizeMode="cover" />
+                                        <Image source={{ uri: img }} className="h-[150] aspect-square rounded-xl bg-gray-200" resizeMode="cover" />
                                     </Pressable>
                                 ))}
                             </View>
-                        </Surface>
+                        </SectionCard>
                     )}
 
                     {/* Bid form / status */}
@@ -369,11 +368,7 @@ export default function InstantRequestDetailScreen() {
                             </Typography>
                         </Surface>
                     ) : (
-                        <Surface variant="white" className="p-4 mb-3" rounded="3xl">
-                            <Typography weight="bold" className={`${isDark ? 'text-white' : 'text-black'} mb-3`}>
-                                {hasActiveBid ? 'Revise your bid' : 'Submit your bid'}
-                            </Typography>
-
+                        <SectionCard icon={DollarCircle} title={hasActiveBid ? 'Revise your bid' : 'Submit your quote'}>
                             <View className="flex-row gap-3 mb-3">
                                 <View className="flex-1">
                                     <Typography variant="small" color="gray" className="mb-1.5">Your quote (₦)</Typography>
@@ -428,7 +423,7 @@ export default function InstantRequestDetailScreen() {
                                     </Typography>
                                 </Pressable>
                             )}
-                        </Surface>
+                        </SectionCard>
                     )}
                 </ScrollView>
 

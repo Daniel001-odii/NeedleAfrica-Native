@@ -10,6 +10,7 @@ import {
 import { CURRENCIES } from '../../../constants/currencies';
 import { Typography } from '../../../components/ui/Typography';
 import { Surface } from '../../../components/ui/Surface';
+import { SectionCard } from '../../../components/ui/SectionCard';
 import { IconButton } from '../../../components/ui/IconButton';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -87,18 +88,24 @@ export default function Preferences() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="p-5 pb-10" keyboardShouldPersistTaps="handled">
 
                 {/* Appearance Section */}
-                <SectionLabel label="Appearance" isFirst />
-                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                <SectionCard
+                    icon={Sun}
+                    title="Appearance"
+                    innerClassName="p-2"
+                >
                     <ThemeRow
                         current={theme}
                         onChange={(t) => setTheme(t)}
                         isDark={isDark}
                     />
-                </View>
+                </SectionCard>
 
                 {/* Notifications Section */}
-                <SectionLabel label="Notifications" />
-                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                <SectionCard
+                    icon={Notification}
+                    title="Notifications"
+                    innerClassName="p-0"
+                >
                     <SettingRow
                         icon={<Sms size={20} color="#3b82f6" variant="Bulk" />}
                         title="SMS Alerts"
@@ -138,11 +145,14 @@ export default function Preferences() {
                             thumbColor={Platform.OS === 'ios' ? undefined : '#fff'}
                         />
                     </SettingRow>
-                </View>
+                </SectionCard>
 
-                {/* Delivery & Personal Section */}
-                <SectionLabel label="App Settings" />
-                <View className={`rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white shadow-sm'}`}>
+                {/* Delivery & App Settings Section */}
+                <SectionCard
+                    icon={Ruler}
+                    title="App Settings"
+                    innerClassName="p-0"
+                >
                     <Pressable onPress={() => setShowCustomInput(!showCustomInput)}>
                         <SettingRow
                             icon={<CalendarTick size={20} color="#3b82f6" variant="Bulk" />}
@@ -159,7 +169,7 @@ export default function Preferences() {
                     </Pressable>
 
                     {/* Compact Reminder Picker */}
-                    <View className={`px-4 pb-4 flex-row justify-between bg-transparent`}>
+                    <View className="px-4 pb-4 flex-row justify-between bg-transparent">
                         {['1', '2', '3'].map((day) => (
                             <TouchableOpacity
                                 key={day}
@@ -216,7 +226,7 @@ export default function Preferences() {
                             </View>
                         </SettingRow>
                     </Pressable>
-                </View>
+                </SectionCard>
 
                 {/* Main Save Button */}
                 <Button

@@ -10,6 +10,8 @@ import { useRouter } from 'expo-router';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSync } from '../../../hooks/useSync';
 import { useTheme } from '../../../contexts/ThemeContext';
+import Animated from 'react-native-reanimated';
+import { useSegmentSlider } from '../../../hooks/useSegmentSlider';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useResourceLimits } from '../../../hooks/useResourceLimits';
 import Toast from 'react-native-toast-message';
@@ -39,6 +41,7 @@ import { usePostHog } from 'posthog-react-native';
 export default function Orders() {
     const posthog = usePostHog();
     const [activeTab, setActiveTab] = useState<TabType>('All');
+    const tabSlider = useSegmentSlider(activeTab);
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -299,7 +302,11 @@ export default function Orders() {
 
             {/* Tabs */}
             <View className="mx-4 mt-3">
-                <View className={`flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900' : 'bg-gray-100'}`}>
+                <View className={`relative flex-row p-1 rounded-full ${isDark ? 'bg-zinc-900' : 'bg-gray-100'}`}>
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[{ position: 'absolute', borderRadius: 999, backgroundColor: isDark ? '#3f3f46' : '#000' }, tabSlider.indicatorStyle]}
+                    />
                     {TABS.map((tab) => {
                         const isActive = activeTab === tab;
                         const count = tab === 'All'
@@ -310,11 +317,9 @@ export default function Orders() {
                             <TouchableOpacity
                                 key={tab}
                                 activeOpacity={0.7}
+                                onLayout={tabSlider.onTabLayout(tab)}
                                 onPress={() => setActiveTab(tab)}
-                                className={`flex-1 flex-row items-center justify-center py-3 rounded-full ${isActive
-                                    ? (isDark ? 'bg-zinc-700' : 'bg-black')
-                                    : 'bg-transparent'
-                                    }`}
+                                className="flex-1 flex-row items-center justify-center py-3 rounded-full"
                             >
                                 <Typography
                                     variant="small"
