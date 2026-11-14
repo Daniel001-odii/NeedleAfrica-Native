@@ -311,7 +311,7 @@ export default function OrderDetail() {
                     onPress={() => isEditing ? setIsEditing(false) : router.replace('/(tabs)/orders')}
                     variant="ghost"
                 />
-                <Typography variant="h3" weight="bold">
+                <Typography variant="h3" weight="bold" className={isDark ? 'text-white' : 'text-zinc-900'}>
                     {isEditing ? 'Edit Order' : 'Order Details'}
                 </Typography>
                 <TouchableOpacity onPress={() => isEditing ? handleUpdate() : setIsEditing(true)}>
@@ -342,8 +342,8 @@ export default function OrderDetail() {
                                 }
                             >
                                 <View>
-                                    <Typography variant="h2" weight="bold" className="text-2xl">{order.styleName}</Typography>
-                                    <Typography color="gray" variant="caption" weight="bold" className="opacity-50 mt-1">ID: #{order.id.slice(-8).toUpperCase()}</Typography>
+                                    <Typography variant="h2" weight="bold" className={`text-2xl ${isDark ? 'text-white' : 'text-zinc-900'}`}>{order.styleName}</Typography>
+                                    <Typography color="gray" variant="caption" weight="bold" className={`opacity-50 mt-1 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>ID: #{order.id.slice(-8).toUpperCase()}</Typography>
                                 </View>
                             </SectionCard>
 
@@ -360,8 +360,8 @@ export default function OrderDetail() {
                                             </Typography>
                                         </View>
                                         <View className="flex-1">
-                                            <Typography weight="bold" className="text-[16px]">{customer.fullName}</Typography>
-                                            <Typography variant="caption" color="gray" className="mt-0.5">{customer.phoneNumber}</Typography>
+                                            <Typography weight="bold" className={`text-[16px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>{customer.fullName}</Typography>
+                                            <Typography variant="caption" color="gray" className={`mt-0.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{customer.phoneNumber}</Typography>
                                         </View>
                                     </TouchableOpacity>
 
@@ -383,66 +383,6 @@ export default function OrderDetail() {
                                     </View>
                                 </SectionCard>
                             )}
-
-                            {/* Client Tracking Portal - SectionCard */}
-                            <SectionCard
-                                icon={Global}
-                                title="Client tracking portal"
-                                rightElement={
-                                    <Surface
-                                        variant={(order as any).clientId ? 'green' : 'peach'}
-                                        className={`px-3 py-1 ${isDark ? ((order as any).clientId ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`}
-                                        rounded="full"
-                                    >
-                                        <Typography variant="small" weight="bold" className={(order as any).clientId ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
-                                            {(order as any).clientId ? 'Linked & Tracking' : 'Ready to Share'}
-                                        </Typography>
-                                    </Surface>
-                                }
-                            >
-                                <View className="space-y-3">
-                                    <Typography className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'} text-xs leading-5`}>
-                                        Share this live tracking link with your client. They can view real-time production updates, confirm outfit details, and sign up to chat directly with your studio.
-                                    </Typography>
-
-                                    {/* Link box with Copy Button */}
-                                    <View className={`flex-row items-center justify-between p-3 rounded-2xl ${isDark ? 'bg-zinc-800/80 border border-zinc-700/60' : 'bg-gray-50 border border-gray-100'}`}>
-                                        <Typography variant="small" weight="semibold" className={`flex-1 mr-2 ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`} numberOfLines={1}>
-                                            {trackingUrl}
-                                        </Typography>
-                                        <TouchableOpacity
-                                            onPress={handleCopyTrackingLink}
-                                            className={`px-3 py-1.5 rounded-xl flex-row items-center ${isDark ? 'bg-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}
-                                        >
-                                            <Copy size={14} color={isDark ? "#fff" : "#111827"} variant="Linear" />
-                                            <Typography variant="caption" weight="bold" className="ml-1.5">Copy</Typography>
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {/* Action Buttons: WhatsApp & Native Share */}
-                                    <View className="pt-1 flex-row gap-2.5">
-                                        <TouchableOpacity
-                                            onPress={handleShareWhatsApp}
-                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#25D366]/20' : 'bg-[#25D366]/10'}`}
-                                        >
-                                            <Send2 size={16} color={isDark ? "#25D366" : "#128C7E"} variant="Bold" />
-                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#25D366]' : 'text-[#128C7E]'}`}>
-                                                WhatsApp
-                                            </Typography>
-                                        </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            onPress={handleNativeShare}
-                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
-                                        >
-                                            <Global size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
-                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>
-                                                Share Link
-                                            </Typography>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </SectionCard>
 
                             {/* Logistics & Payment - SectionCard */}
                             <SectionCard icon={Money} title="Logistics & billing">
@@ -524,11 +464,78 @@ export default function OrderDetail() {
                             ) : null}
 
                             {/* Progress updates for the client to follow */}
-                            <SectionCard icon={Timer1} title="Milestone progress tracker">
+                            <SectionCard
+                                icon={Timer1}
+                                title="Milestone progress tracker"
+                                collapsible
+                                defaultExpanded={false}
+                            >
                                 <OrderProgressSection
                                     orderServerId={(order as any).syncStatus === 'created' ? undefined : order.id}
                                     isDark={isDark}
                                 />
+                            </SectionCard>
+
+                            {/* Client Tracking Portal - SectionCard */}
+                            <SectionCard
+                                icon={Global}
+                                title="Client tracking portal"
+                                collapsible
+                                defaultExpanded={false}
+                                rightElement={
+                                    <Surface
+                                        variant={(order as any).clientId ? 'green' : 'peach'}
+                                        className={`px-3 py-1 ${isDark ? ((order as any).clientId ? 'bg-[#34C759]/20' : 'bg-[#FF9500]/20') : ''}`}
+                                        rounded="full"
+                                    >
+                                        <Typography variant="small" weight="bold" className={(order as any).clientId ? (isDark ? 'text-[#30D158]' : 'text-[#34C759]') : (isDark ? 'text-[#FF9F0A]' : 'text-[#FF9500]')}>
+                                            {(order as any).clientId ? 'Linked & Tracking' : 'Ready to Share'}
+                                        </Typography>
+                                    </Surface>
+                                }
+                            >
+                                <View className="space-y-3">
+                                    <Typography className={`${isDark ? 'text-zinc-300' : 'text-zinc-600'} text-xs leading-5`}>
+                                        Share this live tracking link with your client. They can view real-time production updates, confirm outfit details, and sign up to chat directly with your studio.
+                                    </Typography>
+
+                                    {/* Link box with Copy Button */}
+                                    <View className={`flex-row items-center justify-between p-3 my-3 rounded-2xl ${isDark ? 'bg-zinc-800 border border-zinc-700/60' : 'bg-gray-50 border border-gray-100'}`}>
+                                        <Typography variant="small" weight="semibold" className={`flex-1 mr-2 ${isDark ? 'text-zinc-100' : 'text-zinc-800'}`} numberOfLines={1}>
+                                            {trackingUrl}
+                                        </Typography>
+                                        <TouchableOpacity
+                                            onPress={handleCopyTrackingLink}
+                                            className={`px-3 py-1.5 rounded-xl flex-row items-center ${isDark ? 'bg-zinc-700 border border-zinc-600' : 'bg-white border border-gray-200 shadow-sm'}`}
+                                        >
+                                            <Copy size={14} color={isDark ? "#FFFFFF" : "#111827"} variant="Linear" />
+                                            <Typography variant="caption" weight="bold" className={`ml-1.5 ${isDark ? 'text-white' : 'text-zinc-900'}`}>Copy</Typography>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Action Buttons: WhatsApp & Native Share */}
+                                    <View className="pt-1 flex-row gap-2.5">
+                                        <TouchableOpacity
+                                            onPress={handleShareWhatsApp}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#25D366]/20' : 'bg-[#25D366]/10'}`}
+                                        >
+                                            <Send2 size={16} color={isDark ? "#25D366" : "#128C7E"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#25D366]' : 'text-[#128C7E]'}`}>
+                                                WhatsApp
+                                            </Typography>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={handleNativeShare}
+                                            className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ${isDark ? 'bg-[#007AFF]/20' : 'bg-[#007AFF]/10'}`}
+                                        >
+                                            <Global size={16} color={isDark ? "#0A84FF" : "#007AFF"} variant="Bold" />
+                                            <Typography variant="small" weight="bold" className={`ml-2 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>
+                                                Share Link
+                                            </Typography>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
                             </SectionCard>
 
                             <View className="pt-2 mb-12">
@@ -548,34 +555,40 @@ export default function OrderDetail() {
                             <SectionLabel>Order Information</SectionLabel>
                             <Surface variant="white" rounded="2xl" className={`mb-6 overflow-hidden`}>
                                 <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Style Name</Typography>
+                                    <Typography weight="medium" color="gray" className={`w-24 text-[14px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Style Name</Typography>
                                     <TextInput
                                         value={styleName}
                                         onChangeText={setStyleName}
                                         className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                        style={{ color: isDark ? '#FFFFFF' : '#18181B' }}
                                         placeholder="Senator Suit..."
+                                        placeholderTextColor={isDark ? '#71717A' : '#A1A1AA'}
                                     />
                                 </View>
 
                                 <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Total ({currencySymbol})</Typography>
+                                    <Typography weight="medium" color="gray" className={`w-24 text-[14px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Total ({currencySymbol})</Typography>
                                     <TextInput
                                         value={amount}
                                         onChangeText={(v) => handleAmountInput(v, setAmount)}
                                         keyboardType="numeric"
                                         className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                                        style={{ color: isDark ? '#FFFFFF' : '#18181B' }}
                                         placeholder="0"
+                                        placeholderTextColor={isDark ? '#71717A' : '#A1A1AA'}
                                     />
                                 </View>
 
                                 <View className={`flex-row items-center px-4 border-b ${isDark ? 'border-white/5' : 'border-gray-50'}`}>
-                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Paid ({currencySymbol})</Typography>
+                                    <Typography weight="medium" color="gray" className={`w-24 text-[14px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Paid ({currencySymbol})</Typography>
                                     <TextInput
                                         value={amountPaid}
                                         onChangeText={(v) => handleAmountInput(v, setAmountPaid)}
                                         keyboardType="numeric"
                                         className={`flex-1 h-14 font-bold ${isDark ? 'text-white' : 'text-[#34C759]'}`}
+                                        style={{ color: isDark ? '#FFFFFF' : '#34C759' }}
                                         placeholder="0"
+                                        placeholderTextColor={isDark ? '#71717A' : '#A1A1AA'}
                                     />
                                 </View>
 
@@ -583,9 +596,9 @@ export default function OrderDetail() {
                                     onPress={() => setShowDatePicker(true)}
                                     className={`flex-row items-center px-4 h-14`}
                                 >
-                                    <Typography weight="medium" color="gray" className="w-24 text-[14px]">Due Date</Typography>
+                                    <Typography weight="medium" color="gray" className={`w-24 text-[14px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Due Date</Typography>
                                     <Typography weight="bold" color="primary" className="flex-1">{formatDateShort(deliveryDate)}</Typography>
-                                    <ArrowRight2 size={16} color="#C7C7CC" />
+                                    <ArrowRight2 size={16} color={isDark ? "#71717A" : "#C7C7CC"} />
                                 </Pressable>
                             </Surface>
 
@@ -598,9 +611,9 @@ export default function OrderDetail() {
                                         ) : (
                                             <View className="items-center">
                                                 <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
-                                                    <Add size={20} color="black" />
+                                                    <Add size={20} color={isDark ? "white" : "black"} />
                                                 </View>
-                                                <Typography variant="caption" color="gray" weight="bold">Fabric</Typography>
+                                                <Typography variant="caption" color="gray" weight="bold" className={isDark ? 'text-zinc-300' : 'text-zinc-500'}>Fabric</Typography>
                                             </View>
                                         )}
                                     </Surface>
@@ -613,9 +626,9 @@ export default function OrderDetail() {
                                         ) : (
                                             <View className="items-center">
                                                 <View className={`w-10 h-10 rounded-full items-center justify-center mb-1 ${isDark ? 'bg-zinc-800' : 'bg-gray-50'}`}>
-                                                    <Add size={20} color="black" />
+                                                    <Add size={20} color={isDark ? "white" : "black"} />
                                                 </View>
-                                                <Typography variant="caption" color="gray" weight="bold">Design</Typography>
+                                                <Typography variant="caption" color="gray" weight="bold" className={isDark ? 'text-zinc-300' : 'text-zinc-500'}>Design</Typography>
                                             </View>
                                         )}
                                     </Surface>
@@ -629,7 +642,9 @@ export default function OrderDetail() {
                                     onChangeText={setNotes}
                                     multiline
                                     placeholder="Add styling details or measurements..."
+                                    placeholderTextColor={isDark ? '#71717A' : '#A1A1AA'}
                                     className={`min-h-[120px] font-medium text-[15px] ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                    style={{ color: isDark ? '#FFFFFF' : '#18181B' }}
                                     textAlignVertical="top"
                                 />
                             </Surface>

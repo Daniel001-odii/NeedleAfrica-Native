@@ -34,8 +34,8 @@ export function Typography({
     };
 
     const colors = {
-        black: isDark ? 'text-text-dark' : 'text-text-default',
-        gray: isDark ? 'text-text-muted-dark' : 'text-text-muted',
+        black: isDark ? 'text-white' : 'text-[#1C1C1E]',
+        gray: isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]',
         white: 'text-white',
         primary: 'text-brand-primary',
         red: 'text-red-500',
@@ -75,7 +75,14 @@ export function Typography({
                 colors[color],
                 className
             )}
-            style={[{ fontFamily: getFontFamily() }, style]}
+            style={[
+                {
+                    fontFamily: getFontFamily(),
+                    ...(color === 'black' ? { color: isDark ? '#FFFFFF' : '#1C1C1E' } : {}),
+                    ...(color === 'gray' ? { color: isDark ? '#9CA3AF' : '#6B7280' } : {}),
+                },
+                style
+            ]}
             {...props}
         >
             {children}

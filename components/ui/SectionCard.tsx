@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, ViewProps } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ViewProps, TouchableOpacity } from 'react-native';
+import { ArrowDown2 } from 'iconsax-react-native';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -9,6 +10,10 @@ export interface SectionCardProps extends ViewProps {
     rightElement?: React.ReactNode;
     children?: React.ReactNode;
     innerClassName?: string;
+    collapsible?: boolean;
+    defaultExpanded?: boolean;
+    isExpanded?: boolean;
+    onToggleExpanded?: () => void;
 }
 
 export function SectionCard({
@@ -18,9 +23,21 @@ export function SectionCard({
     children,
     className,
     innerClassName,
+    collapsible = false,
+    defaultExpanded = true,
+    isExpanded,
+    onToggleExpanded,
     ...props
 }: SectionCardProps) {
     const { isDark } = useTheme();
+    const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
+    const expanded = isExpanded !== undefined ? isExpanded : localExpanded;
+
+    const toggle = () => {
+        if (!collapsible) return;
+        if (onToggleExpanded) onToggleExpanded();
+        else setLocalExpanded(prev => !prev);
+    };
 
     const renderIcon = () => {
         if (!icon) return null;
@@ -49,8 +66,13 @@ export function SectionCard({
             ]}
             {...props}
         >
-            {(title || icon || rightElement) && (
-                <View className="flex-row items-center justify-between py-2.5 px-2">
+            {(title || icon || rightElement || collapsible) && (
+                <TouchableOpacity
+                    activeOpacity={collapsible ? 0.7 : 1}
+                    onPress={collapsible ? toggle : undefined}
+                    disabled={!collapsible}
+                    className="flex-row items-center justify-between py-2.5 px-2"
+                >
                     <View className="flex-row items-center gap-2 flex-1 mr-2">
                         {renderIcon()}
                         {typeof title === 'string' ? (
@@ -67,27 +89,41 @@ export function SectionCard({
                             title
                         )}
                     </View>
-                    {rightElement ? <View className="shrink-0">{rightElement}</View> : null}
-                </View>
+                    <View className="flex-row items-center gap-1.5 shrink-0">
+                        {rightElement ? <View className="shrink-0">{rightElement}</View> : null}
+                        {collapsible && (
+                            <ArrowDown2
+                                size={14}
+                                color={isDark ? '#A1A1AA' : '#71717A'}
+                                variant="Linear"
+                                style={{
+                                    transform: [{ rotate: expanded ? '180deg' : '0deg' }],
+                                }}
+                            />
+                        )}
+                    </View>
+                </TouchableOpacity>
             )}
 
-            <View
-                className={twMerge(
-                    'rounded-2xl p-4',
-                    isDark ? 'bg-zinc-800' : 'bg-white',
-                    innerClassName
-                )}
-                style={{
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    backgroundColor: isDark ? '#27272A' : '#FFFFFF',
-                    borderWidth: 0,
-                    shadowOpacity: 0,
-                    elevation: 0,
-                }}
-            >
-                {children}
-            </View>
+            {expanded && (
+                <View
+                    className={twMerge(
+                        'rounded-2xl p-4',
+                        isDark ? 'bg-zinc-800' : 'bg-white',
+                        innerClassName
+                    )}
+                    style={{
+                        borderRadius: 10,
+                        overflow: 'hidden',
+                        backgroundColor: isDark ? '#27272A' : '#FFFFFF',
+                        borderWidth: 0,
+                        shadowOpacity: 0,
+                        elevation: 0,
+                    }}
+                >
+                    {children}
+                </View>
+            )}
         </View>
     );
 }
@@ -129,6 +165,7 @@ export function SectionRow({
                             isDark ? 'text-zinc-400' : 'text-zinc-500',
                             labelClassName
                         )}
+                        style={{ color: isDark ? '#A1A1AA' : '#71717A' }}
                     >
                         {label}
                     </Text>
@@ -141,9 +178,10 @@ export function SectionRow({
                     <Text
                         className={twMerge(
                             'text-xs font-bold text-right',
-                            isDark ? 'text-zinc-100' : 'text-zinc-900',
+                            isDark ? 'text-white' : 'text-zinc-900',
                             valueClassName
                         )}
+                        style={!valueClassName ? { color: isDark ? '#FFFFFF' : '#18181B' } : undefined}
                     >
                         {value}
                     </Text>

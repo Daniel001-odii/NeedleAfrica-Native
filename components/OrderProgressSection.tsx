@@ -176,6 +176,7 @@ export function OrderProgressSection({ orderServerId, isDark }: Props) {
                     placeholder="e.g. Cutting the fabric"
                     placeholderTextColor="#9CA3AF"
                     className={`h-12 ${inputBase}`}
+                    style={{ color: isDark ? '#FFFFFF' : '#000000' }}
                 />
 
                 {/* Optional note */}
@@ -193,6 +194,7 @@ export function OrderProgressSection({ orderServerId, isDark }: Props) {
                     numberOfLines={2}
                     textAlignVertical="top"
                     className={`min-h-[64px] py-3 ${inputBase}`}
+                    style={{ color: isDark ? '#FFFFFF' : '#000000' }}
                 />
 
                 <Button
